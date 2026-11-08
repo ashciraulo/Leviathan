@@ -1,0 +1,11 @@
+# Godot
+.godot/
+*.translation
+export/
+export_presets.cfg
+*.tmp
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

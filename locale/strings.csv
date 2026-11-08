@@ -1,0 +1,15 @@
+keys,en
+GAME_TITLE,LEVIATHAN
+TITLE_SUBTITLE,Prototype build
+TITLE_CONTROLS,Move: WASD / arrows    Sword: J    Hum: hold H    Pause: Esc
+MENU_CONTINUE,Continue
+MENU_NEW_GAME,New game
+MENU_QUIT,Quit
+MENU_RESUME,Resume
+MENU_QUIT_TO_TITLE,Quit to title
+PAUSE_TITLE,Paused
+TOAST_TIDESTONE_SAVED,The Tidestone hums. Progress saved.
+ROOM_SHORE,Saltmarrow Shore
+ROOM_TIDEPOOLS,The Tidepools
+ROOM_BARNACLE_WALL,Barnacle Wall
+ROOM_WRECK,Wreck Hollow
