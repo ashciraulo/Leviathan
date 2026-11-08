@@ -22,6 +22,7 @@ func hitstop(frames: int = 2) -> void:
 		_active_hitstops = 0
 		Engine.time_scale = 1.0
 
+
 func shake(strength: float) -> void:
 	if Settings.screen_shake_scale > 0.0:
 		shake_requested.emit(strength * Settings.screen_shake_scale)

@@ -231,6 +231,11 @@ func _test_play() -> void:
 	await _wait(3.0)
 	_check(GameState.bubbles < 3 or _count_projectiles(room) > 0, "Spitter shoots at Wren")
 	spitter.queue_free()
+	for child in room.get_children():
+		if child is Projectile:
+			child.queue_free()
+	# Let any invulnerability from a Spitter hit run out first.
+	await _wait(Player.INVULN_TIME + 0.2)
 
 	# Dying returns Wren to the last Tidestone with full breath.
 	GameState.bubbles = 1
