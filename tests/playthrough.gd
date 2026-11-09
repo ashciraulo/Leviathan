@@ -70,6 +70,12 @@ func _ready() -> void:
 		await _save_and_reload(spec[0])
 	print("Playthrough cleared %d of %d built dungeons." % [cleared, built])
 	_check(cleared == built and built >= 6, "the run clears every built dungeon (%d of %d)" % [cleared, built])
+	# Every chest opened along the way: Wren ends wearing the best of each.
+	if cleared == built:
+		for kind in [Items.SWORD, Items.SHIELD, Items.TUNIC]:
+			var worn := GameState.equipped_item(kind)
+			_check(Items.tier(worn) == 3, "the run ends with the best %s worn (%s)" % [kind, worn])
+	await _sweep_overworld()
 	_game.queue_free()
 	await _wait(0.1)
 	SaveManager.delete_save()
@@ -162,6 +168,8 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 				bells[0].interact()
 				await _play_scene(25.0)
 				_check(GameState.has_flag(Tidebell.flag_for(bells[0].bell)) and GameState.item_count("tidebell") == before + 1, "%s: ringing its bell counts" % id)
+				var saved := SaveManager.read_summary(TEST_SLOT)
+				_check(saved.get("bells", 0) == before + 1, "%s: the rung bell is saved at once (%s)" % [id, saved.get("bells", 0)])
 	# Out by the shaft of daylight that opens where the boss fell.
 	room = _game.current_room
 	var out: Doorway = null
@@ -177,6 +185,34 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		await _play_scene(30.0)
 		_check(GameState.dungeon == "" and _rooms.has(_game.current_room.coord) and _rooms[_game.current_room.coord][0] == "", "%s: it leads back out to the overworld (%s)" % [id, _game.current_room.coord])
 	return true
+
+
+## After the ending: every overworld screen, as the world is once the Old
+## One sleeps (alt layouts, NPCs' last lines, the turned tide). Each one
+## builds, its scenes play, and Wren stands a few seconds on its open floor
+## without being hurt by the scenery or carried off it.
+func _sweep_overworld() -> void:
+	print("Playthrough: overworld after the ending")
+	var coords: Array[Vector2i] = []
+	for coord: Vector2i in _rooms:
+		if _rooms[coord][0] == "":
+			coords.append(coord)
+	coords.sort()
+	for coord in coords:
+		var room := await _goto(coord)
+		await _play_scene(20.0)
+		_check(room != null and room.coord == coord, "after the ending: %s loads (in %s)" % [coord, room.coord if room else null])
+		if room == null or room.coord != coord:
+			continue
+		var bubbles := GameState.bubbles
+		_game.player._invuln = 0.0
+		var start: Vector2 = _game.player.global_position
+		await _wait(1.5)
+		_read_dialogue()
+		_check(GameState.bubbles == bubbles, "after the ending: standing still in %s is safe" % coord)
+		_check(_game.current_room == room and _game.player.global_position.distance_to(start) < 24.0, "after the ending: nothing carries Wren off in %s" % coord)
+		_check(_can_step(), "after the ending: Wren can walk on from where they come into %s" % coord)
+		_keep_safe()
 
 
 ## The Dreaming Heart: every bell already rung, Wren hums it to sleep. The
@@ -200,7 +236,30 @@ func _finale(heart: DreamingHeart) -> bool:
 	_check(credits._scroll > 0.0, "the credits roll")
 	credits._leaving = true
 	credits.queue_free()
+	# Continue after the credits: the file wakes Wren in the Heart's chamber,
+	# free to walk, with the Old One still asleep.
+	var heart_room: Vector2i = GameState.checkpoint_room
+	_game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	_check(SaveManager.load_game(), "after the ending: the file loads")
+	_game = _new_game()
+	await _wait(0.6)
+	await _play_scene(20.0)
+	var room: Room = _game.current_room
+	_check(room != null and room.coord == heart_room, "after the ending: Continue starts in the Heart's chamber")
+	_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and Audio.music_cue != "boss", "after the ending: the Old One stays asleep (%s)" % Audio.music_cue)
+	_check(_can_step(), "after the ending: Wren isn't stuck in a wall")
 	return true
+
+
+## True when Wren can take a step at least one way (not wedged in a wall).
+func _can_step() -> bool:
+	var wren: Player = _game.player
+	for way in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+		if not wren.test_move(wren.global_transform, way * 6.0):
+			return true
+	return false
 
 
 ## Saves, throws the game away, loads it into a fresh one, and checks that
@@ -233,6 +292,7 @@ func _save_and_reload(after: String) -> void:
 	await _wait(0.6)
 	await _play_scene(20.0)
 	_check(_game.current_room != null and _game.current_room.coord == GameState.room_coord, "after %s: the game picks up where it was saved" % after)
+	_check(_game.player != null and _can_step(), "after %s: Wren isn't stuck in a wall after loading" % after)
 
 
 ## A copy with every whole float turned back into an int.

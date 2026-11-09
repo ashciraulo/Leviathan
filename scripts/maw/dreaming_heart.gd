@@ -53,6 +53,10 @@ const CALM_TIME := 1.6
 static var roll_credits := true
 
 var mode := Mode.WAKING
+## True when the chamber loads with the Heart already at rest (after the
+## ending): the room's own music plays, not the boss's. Sleeping during the
+## finale leaves this false, so the ending keeps the music it has.
+var asleep := false
 var stage := 0
 var hum_held := 0.0
 var _room: Room
@@ -74,6 +78,7 @@ static func spawn_in(room: Room, pos: Vector2) -> Node2D:
 	heart.position = pos
 	if GameState.has_flag(DEFEATED_FLAG):
 		heart.mode = Mode.SLEEP
+		heart.asleep = true
 		heart._beat = BEAT_SLOW * 1.5
 	return heart
 
