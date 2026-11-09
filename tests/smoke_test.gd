@@ -2582,8 +2582,12 @@ func _test_verge() -> void:
 	# tiles (Frostfang arrows) make a way over. Six rows of water is more
 	# than a Kite Cloak glide carries.
 	var causeway: Room = (load("res://rooms/room_1_2.tscn") as PackedScene).instantiate()
-	var rows := Room.parse_layout(causeway.layout)
+	# Until the Old One turns (the Gale Bell), the Verge is still under the sea.
+	var drowned := Room.parse_layout(causeway.layout)
+	var rows := Room.parse_layout(causeway.alt_layout)
+	_check(causeway.alt_flag == "old_one_turned" and not causeway.layout.contains("r") and rows[9].contains("r"), "the Verge's flats only rise once the Old One turns")
 	causeway.free()
+	_check(drowned[10].count("~") == Room.COLS - 2, "before the turn Causeway End is open sea")
 	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(2, 10)), "the Causeway End channel can't be crossed on foot")
 	var frozen := rows.duplicate()
 	for y in range(3, 9):

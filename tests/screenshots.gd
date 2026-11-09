@@ -177,7 +177,7 @@ func _ready() -> void:
 		Vector2i(2, -2): ["64_shiver_coast", Vector2i(11, 2)],
 		Vector2i(1, -2): ["65_floe_strand", Vector2i(9, 7)],
 		Vector2i(0, -2): ["66_still_cove", Vector2i(21, 7)],
-		Vector2i(1, 2): ["67_causeway_end", Vector2i(11, 1)],
+		Vector2i(1, 2): ["67_causeway_end", Vector2i(11, 1), Tide.Phase.LOW, "old_one_turned"],
 		Vector2i(0, 2): ["68_cockle_flats", Vector2i(6, 7)],
 		Vector2i(2, 2): ["69_wrack_shore", Vector2i(3, 8)],
 		Vector2i(0, 3): ["70_drowned_lane", Vector2i(8, 4)],
