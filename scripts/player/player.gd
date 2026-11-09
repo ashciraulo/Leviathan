@@ -385,6 +385,8 @@ func _enter(new_state: State) -> void:
 	state = new_state
 	_state_time = 0.0
 	hum_progress = 0.0
+	if new_state == State.CHARGE:
+		_charge_chimed = false
 
 
 func _hum_requested() -> bool:

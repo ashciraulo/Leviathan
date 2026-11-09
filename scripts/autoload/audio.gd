@@ -90,6 +90,8 @@ const SFX := {
 	"save": {"wave": "triangle", "f0": 523.0, "f1": 523.0, "dur": 0.4, "vol": 0.35, "steps": 3},
 	# Jingles (until Ash's real ones exist)
 	"jingle_item": {"wave": "square", "f0": 523.0, "f1": 523.0, "dur": 0.7, "vol": 0.3, "steps": 4},
+	"jingle_pearl": {"wave": "triangle", "f0": 784.0, "f1": 784.0, "dur": 0.9, "vol": 0.35, "steps": 4},
+	"jingle_secret": {"wave": "square", "f0": 440.0, "f1": 880.0, "dur": 0.8, "vol": 0.28, "steps": 4},
 	"jingle_bell": {"wave": "triangle", "f0": 392.0, "f1": 392.0, "dur": 1.4, "vol": 0.4, "steps": 5},
 	"jingle_puzzle": {"wave": "square", "f0": 659.0, "f1": 659.0, "dur": 0.5, "vol": 0.28, "steps": 3, "caption": "CAPTION_PUZZLE"},
 	"jingle_game_over": {"wave": "triangle", "f0": 392.0, "f1": 196.0, "dur": 1.4, "vol": 0.4},
@@ -108,6 +110,7 @@ var _streams: Dictionary = {}
 var _last_played: Dictionary = {}
 var _warned: Dictionary = {}
 var _duck_tween: Tween
+var _music_tween: Tween
 
 
 func _ready() -> void:
@@ -145,15 +148,24 @@ func play_music(cue: String, fade: float = FADE_TIME) -> void:
 	_music_index = 1 - _music_index
 	var new := _music[_music_index]
 	var stream := _load(MUSIC_DIR, cue) if cue != "" else null
-	var tween := create_tween().set_parallel(true)
+	# A cue change mid-fade or mid-jingle: the old tweens would otherwise
+	# keep pushing (and later stop) the player about to be reused.
+	if _music_tween:
+		_music_tween.kill()
+	if _duck_tween:
+		_duck_tween.kill()
+	new.stop()
+	if not old.playing and stream == null:
+		return
+	_music_tween = create_tween().set_parallel(true)
 	if old.playing:
-		tween.tween_property(old, "volume_db", -60.0, fade)
-		tween.chain().tween_callback(old.stop)
+		_music_tween.tween_property(old, "volume_db", -60.0, fade)
+		_music_tween.tween_callback(old.stop).set_delay(fade)
 	if stream:
 		new.stream = stream
 		new.volume_db = -60.0
 		new.play()
-		tween.tween_property(new, "volume_db", 0.0, fade)
+		_music_tween.tween_property(new, "volume_db", 0.0, fade)
 
 
 func stop_music(fade: float = FADE_TIME) -> void:
