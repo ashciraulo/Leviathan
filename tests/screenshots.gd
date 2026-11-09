@@ -31,20 +31,26 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle", "lowe", "crucible"]:
-		if OS.get_environment("SHOTS_ONLY") == "kiln":
-			await _kiln_shots(game)
-		elif OS.get_environment("SHOTS_ONLY") in ["mantle", "lowe", "crucible"]:
-			game.queue_free()
-			await _wait(0.2)
-			if OS.get_environment("SHOTS_ONLY") == "mantle":
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle", "lowe", "crucible"]:
+		match OS.get_environment("SHOTS_ONLY"):
+			"kiln":
+				await _kiln_shots(game)
+			"mire":
+				await _mire_shots(game)
+			"gale":
+				await _gale_shots(game)
+			"mantle":
+				game.queue_free()
+				await _wait(0.2)
 				await _mantle_shots()
-			elif OS.get_environment("SHOTS_ONLY") == "lowe":
+			"lowe":
+				game.queue_free()
+				await _wait(0.2)
 				await _lowe_shots()
-			else:
+			"crucible":
+				game.queue_free()
+				await _wait(0.2)
 				await _crucible_shots()
-		else:
-			await _mire_shots(game)
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -256,6 +262,9 @@ func _ready() -> void:
 
 	# 8d. Lantern Mire.
 	await _mire_shots(game)
+
+	# 8e. Gale Spire.
+	await _gale_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -577,6 +586,72 @@ func _mire_shots(game: Node) -> void:
 	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 8 * Room.TILE + 12)
 	await _wait(0.3)
 	await _capture("84_moth_bell")
+	game.player._invuln = 0.0
+
+
+func _gale_shots(game: Node) -> void:
+	GameState.give_item("kite_cloak")
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(28, 10), "90_gale_entry", Vector2i(11, 10)],
+		[Vector2i(27, 10), "91_gale_rope_store", Vector2i(10, 8)],
+		[Vector2i(28, 9), "92_gale_fan_hall", Vector2i(11, 9)],
+		[Vector2i(27, 9), "93_gale_sail_loft", Vector2i(11, 9)],
+		[Vector2i(29, 9), "94_gale_gust_gallery", Vector2i(2, 6)],
+		[Vector2i(28, 8), "95_gale_bell_shaft", Vector2i(11, 11)],
+		[Vector2i(29, 8), "96_gale_weathervane", Vector2i(2, 6)],
+		[Vector2i(27, 8), "97_gale_rookery", Vector2i(21, 6)],
+	]
+	for shot: Array in rooms:
+		await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		await _wait(0.4)
+		await _capture(shot[1])
+
+	# Gliding over the drop on the fan's wind.
+	await _jump(game, Vector2i(29, 9), Vector2i(4, 6))
+	game.player._invuln = 600.0
+	game.player.facing = Vector2.RIGHT
+	game.player.use_item("kite_cloak")
+	await _wait(0.6)
+	await _capture("98_gale_gliding")
+	await _wait(2.0)
+
+	# The Stormheron.
+	var room := await _jump(game, Vector2i(28, 7), Vector2i(11, 10))
+	game.player._invuln = 600.0
+	await _wait(2.4)
+	await _capture("99_stormheron_perched")
+	var heron: Stormheron = null
+	for child in room.get_children():
+		if child is Stormheron:
+			heron = child
+	if heron:
+		heron._throws = 0
+		heron.mode = Stormheron.Mode.FLARE
+		heron._timer = 0.3
+		await _wait(0.45)
+		await _capture("100_stormheron_feathers")
+		heron._throws = Stormheron.THROWS_PER_STORM
+		heron.mode = Stormheron.Mode.PERCH
+		heron._timer = 0.0
+		await _wait(0.8)
+		await _capture("101_stormheron_storm")
+		await _wait(0.75)
+		await _capture("102_stormheron_struck")
+		await _wait(0.5)
+		game.player.global_position = heron.global_position + Vector2(-20, 6)
+		await _wait(0.3)
+		await _capture("103_stormheron_grounded")
+		while is_instance_valid(heron) and heron.hp > 0:
+			heron._stun = 0.0
+			heron._hits_this_landing = 0
+			heron.mode = Stormheron.Mode.GROUNDED
+			heron.take_hit(1, Vector2.UP)
+	await _wait(4.0)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
+	await _wait(0.3)
+	await _capture("104_storm_bell")
 	game.player._invuln = 0.0
 
 

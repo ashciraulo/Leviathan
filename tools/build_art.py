@@ -32,6 +32,7 @@ import kiln_art
 import cinderreach_art
 import mire_art
 import gloamfen_art
+import gale_art
 import windmere_art
 import frostspine_art
 
@@ -999,6 +1000,7 @@ RAMPS.update(cinderreach_art.RAMPS)
 FLAT.update(cinderreach_art.FLAT)
 TILE_LAYOUT += cinderreach_art.TILES
 TILE_LAYOUT += mire_art.TILES
+TILE_LAYOUT += gale_art.TILES
 _names = [entry[0] for entry in TILE_LAYOUT if entry]
 assert len(_names) == len(set(_names)), "tile names used twice: %s" % sorted(n for n in set(_names) if _names.count(n) > 1)
 
@@ -1185,6 +1187,8 @@ def main():
         write_png(os.path.join(OUT, "kiln", name + ".png"), px)
     for name, px in mire_art.build(_lit_with(mire_art), sheet).items():
         write_png(os.path.join(OUT, "mire", name + ".png"), px)
+    for name, px in gale_art.build(_lit_with(gale_art), sheet).items():
+        write_png(os.path.join(OUT, "gale", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())

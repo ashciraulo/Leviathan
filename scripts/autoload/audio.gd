@@ -65,6 +65,11 @@ const SFX := {
 	"brazier_catch": {"wave": "noise", "f0": 900.0, "f1": 2400.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_FLAME"},
 	"wisp_chime": {"wave": "triangle", "f0": 1568.0, "f1": 1568.0, "dur": 0.25, "vol": 0.2, "steps": 2},
 	"heart_beat": {"wave": "triangle", "f0": 110.0, "f1": 70.0, "dur": 0.22, "vol": 0.5, "caption": "CAPTION_HEARTBEAT"},
+	"cloak_open": {"wave": "noise", "f0": 1400.0, "f1": 500.0, "dur": 0.2, "vol": 0.3},
+	"thunder": {"wave": "noise", "f0": 300.0, "f1": 40.0, "dur": 0.9, "vol": 0.7, "caption": "CAPTION_THUNDER"},
+	"storm_gather": {"wave": "noise", "f0": 2000.0, "f1": 4000.0, "dur": 1.2, "vol": 0.25, "caption": "CAPTION_STORM"},
+	"heron_cry": {"wave": "square", "f0": 900.0, "f1": 500.0, "dur": 0.35, "vol": 0.35, "caption": "CAPTION_HERON"},
+	"wingbeat": {"wave": "noise", "f0": 250.0, "f1": 120.0, "dur": 0.3, "vol": 0.3},
 	"mantle_wings": {"wave": "noise", "f0": 300.0, "f1": 150.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_WINGS"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},

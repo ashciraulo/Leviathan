@@ -384,6 +384,26 @@ ROOM_LUMEN_POOL,Lumen Pool
 ROOM_DROWNED_CAUSEWAY,Drowned Causeway
 ROOM_WITHERROOT_HOLLOW,Witherroot Hollow
 ROOM_MIRELIGHT_EDGE,Mirelight Edge
+ROOM_GALE_ENTRY,Gale Spire
+ROOM_GALE_FANS,Gale Spire: Fan Hall
+ROOM_GALE_STORE,Gale Spire: Rope Store
+ROOM_GALE_SAIL_LOFT,Gale Spire: Sail Loft
+ROOM_GALE_GUSTS,Gale Spire: Gust Gallery
+ROOM_GALE_SHAFT,Gale Spire: Bell Shaft
+ROOM_GALE_VANE,Gale Spire: Weathervane Room
+ROOM_GALE_ROOKERY,Gale Spire: Rookery
+ROOM_GALE_BOSS,Gale Spire: the Crown
+DUNGEON_GALE,Gale Spire
+TOAST_GOT_KITE_CLOAK,You found the Kite Cloak!
+GOT_KITE_CLOAK_1,"The Kite Cloak! Old sailcloth stitched over a frame of cane, with a red kite painted on its back."
+GOT_KITE_CLOAK_2,"Press its item key (U or I) to throw it open and glide. A fan's wind will carry you further. Press the key again to come down."
+BOSS_STORMHERON,The Stormheron
+BELL_GALE_1,"You ring the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
+BELL_GALE_2,"The clouds part over the bay. Down in the deep, the great sleeper's breathing evens out, slow and steady."
+BELL_GALE_3,You learned the fourth phrase of the lullaby. Your Resonance grows.
+CAPTION_THUNDER,Thunder
+CAPTION_STORM,Storm gathering
+CAPTION_HERON,Heron screeches
 ROOM_GULLWATCH_STEPS,Gullwatch Steps
 ROOM_MILL_ROW,Mill Row
 ROOM_GALE_FLATS,Gale Flats
