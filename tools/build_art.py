@@ -478,21 +478,26 @@ QUEST_CRAB_RAMPS = {
 
 
 def quest_crab_frame(rows):
-    out = [list(r.replace("c", "(")) for r in rows]
+    # Two columns of room each side, so the third claw can stand clear.
+    out = [list(".." + r.replace("c", "(") + "..") for r in rows]
     # The two front claws.
     for y in (3, 4, 5):
-        for x in list(range(0, 5)) + list(range(11, 16)):
+        for x in list(range(2, 7)) + list(range(13, 18)):
             if out[y][x] == "(":
                 out[y][x] = ")"
-    # The third claw, tucked against the right of the shell.
-    for x, y in ((14, 6), (14, 7), (15, 7), (15, 8)):
-        out[y][x] = ")"
+    # The third claw: a full pincer reaching out from the right of the shell.
+    # The third claw: a copy of the left front claw, lower down and further
+    # out, held clear of the others so it reads at a glance.
+    for y in (3, 4, 5):
+        for x in range(2, 7):
+            if out[y][x] == ")":
+                out[y + 4][x - 3] = ")"
     return ["".join(r) for r in out]
 
 
 def build_enemies():
     out = {}
-    out["quest_crab"] = sheet([[lit(quest_crab_frame(SCUTTLER[k]), 3) for k in ("walk_a", "walk_b")]], 16, 14)
+    out["quest_crab"] = sheet([[lit(quest_crab_frame(SCUTTLER[k]), 3) for k in ("walk_a", "walk_b")]], 20, 14)
     out["scuttler"] = sheet([[lit(SCUTTLER[k], 3) for k in ("walk_a", "walk_b", "windup")]], 16, 14)
     out["spitter"] = sheet([[lit(SPITTER[k], 4) for k in ("idle", "windup")]], 16, 14)
     out["shellback"] = sheet([[lit(SHELLBACK[k], 5) for k in ("down", "up", "side")]], 16, 14)
