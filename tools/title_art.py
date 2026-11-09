@@ -237,42 +237,41 @@ def _whale_top(x):
 
 HEAD_FRONT = 372
 MOUTH_Y = 196
-JAW = (258, 352)
+MOUTH_CORNER = 290
+JAW_TIP = 352
+
+
+def _mouth_y(x):
+    """The line of the mouth, from the corner under the eye (where the lip
+    curls up) to the tip of the jaw."""
+    return MOUTH_Y - round(3 * max(0.0, 1 - (x - MOUTH_CORNER) / 10.0))
 
 
 def _whale_mask():
-    """Every pixel of the whale, and which part it belongs to:
-    'body' (back and head) or 'jaw' (the narrow lower jaw)."""
+    """Every pixel of the whale, and which part it belongs to: 'body' (the
+    back and the great head) or 'jaw' (the narrow lower jaw, which widens
+    back from its tip into the throat)."""
     parts = {}
     for x in range(W):
-        top = round(_whale_top(x))
         if x > HEAD_FRONT:
             continue
+        top = round(_whale_top(x))
         bottom = H
-        # The head's underside, above the mouth, from the jaw corner forward.
-        if x >= JAW[0]:
-            bottom = MOUTH_Y
+        # From the mouth's corner forward the head ends at the mouth.
+        if x >= MOUTH_CORNER:
+            bottom = _mouth_y(x) if x <= JAW_TIP else MOUTH_Y
             if x > HEAD_FRONT - 12:
                 d = x - (HEAD_FRONT - 12)
                 bottom = MOUTH_Y - 12 + round(math.sqrt(max(0.0, 12 ** 2 - d ** 2)))
         for y in range(max(top, SURFACE), min(bottom, H)):
             parts[(x, y)] = "body"
-    # The lower jaw: long and narrow, set back from the head's front.
-    for x in range(JAW[0] - 10, JAW[1] + 1):
-        t = (x - JAW[0] + 10) / float(JAW[1] - JAW[0] + 10)
-        depth = round(9 - 5 * t)
-        if x > JAW[1] - 3:
-            depth -= x - (JAW[1] - 3)
-        lift = round(2 * t * t)
-        for y in range(MOUTH_Y + 2 - lift, min(MOUTH_Y + 2 - lift + depth, H)):
+    for x in range(MOUTH_CORNER, JAW_TIP + 1):
+        t = (JAW_TIP - x) / float(JAW_TIP - MOUTH_CORNER)
+        bottom = _mouth_y(x) + 5 + round(34 * t ** 2)
+        if x > JAW_TIP - 3:
+            bottom -= x - (JAW_TIP - 3)
+        for y in range(_mouth_y(x), min(bottom, H)):
             parts[(x, y)] = "jaw"
-    # Under the jaw corner the throat runs back into the body.
-    for x in range(0, JAW[0] + 4):
-        for y in range(MOUTH_Y, H):
-            parts.setdefault((x, y), "body")
-    for x in range(JAW[0], JAW[1] - 20):
-        for y in range(MOUTH_Y + 9 + (x - JAW[0]) // 6, H):
-            parts.setdefault((x, y), "body")
     return parts
 
 
@@ -360,7 +359,7 @@ def build_title_bg():
     # lit by the moon along its back and fading into the deep below.
     parts = _whale_mask()
     for (x, y), part in parts.items():
-        top = round(_whale_top(x)) if part == "body" else MOUTH_Y + 2
+        top = round(_whale_top(x)) if part == "body" else _mouth_y(x)
         depth = y - top
         # Moonlight from above: bright along the top, quickly into shadow.
         head = 0 if x > 240 else 2
@@ -373,8 +372,19 @@ def build_title_bg():
         if part == "body" and x > HEAD_FRONT - 18 and y < MOUTH_Y:
             # The blunt front faces the moon.
             f = min(f, (HEAD_FRONT - x) / 5.0 + (y - 150) / 30.0)
+        if part == "body" and 240 <= x < MOUTH_CORNER:
+            # Behind the mouth's corner the jaw line runs on back into the
+            # throat, fading into the body's shadow.
+            line = MOUTH_Y - 3 + (MOUTH_CORNER - x) * 0.35
+            if y >= line:
+                d = y - line
+                jaw_f = 2.0 + d * 0.8 if d < 3 else 4.0 + (d - 3) / 10.0
+                blend = (x - 240) / float(MOUTH_CORNER - 240)
+                f = jaw_f * blend + max(f, 4.0) * (1 - blend)
         if part == "jaw":
-            f = 1.5 + depth * 0.5
+            # The jaw lies in the shadow of the overhanging head: only its
+            # lip catches a little light.
+            f = 2.0 + depth * 0.8 if depth < 3 else 4.0 + (depth - 3) / 10.0
         f = max(0.0, f)
         i = min(5, int(f + (0.5 if (x + y) % 2 and f % 1 > 0.5 else 0)))
         if y > 202 and (x + y) % 2 == 0:
@@ -430,17 +440,21 @@ def build_title_bg():
                 px[y][x] = hex_color("#E8E0D0")
                 if (x + 1, y) in parts:
                     px[y][x + 1] = PALE[3]
-    # The mouth: a dark seam, with teeth along the narrow lower jaw.
-    for x in range(JAW[0], HEAD_FRONT - 10):
-        for y in (MOUTH_Y, MOUTH_Y + 1):
-            if 0 <= y < H:
-                px[y][x] = hex_color("#0A0E1A")
-    for x in range(JAW[0] + 4, JAW[1] - 4, 6):
-        x += rnd2.randrange(0, 2)
-        lift = round(2 * ((x - JAW[0] + 10) / float(JAW[1] - JAW[0] + 10)) ** 2)
-        px[MOUTH_Y + 1 - lift][x] = hex_color("#E8E0D0")
-        if rnd2.random() < 0.7:
-            px[MOUTH_Y - lift][x] = hex_color("#C8C0B0")
+    # The mouth: a dark seam from the corner to the jaw's tip, with a few
+    # worn teeth showing, and the crease under the jaw running back into
+    # the throat.
+    for x in range(MOUTH_CORNER, JAW_TIP + 2):
+        y = _mouth_y(x)
+        px[y][x] = hex_color("#0A0E1A")
+    for x in range(MOUTH_CORNER + 8, JAW_TIP - 3, 7):
+        x += rnd2.randrange(0, 3)
+        px[_mouth_y(x)][x] = hex_color("#E8E0D0")
+    for x in range(MOUTH_CORNER + 6, JAW_TIP - 2):
+        t = (JAW_TIP - x) / float(JAW_TIP - MOUTH_CORNER)
+        y = _mouth_y(x) + 5 + round(34 * t ** 2)
+        if (x, y - 1) in parts and y < H:
+            px[y][x] = PALE[5]
+            px[y - 1][x] = PALE[4]
     # The eye, small for so vast a head, shut, low by the jaw's corner.
     ex, ey = _whale_eye()
     for dx in range(-4, 5):
