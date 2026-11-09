@@ -294,7 +294,7 @@ func _ready() -> void:
 	GameState.set_flag("found_crab")
 	GameState.set_checkpoint(Vector2i(0, -1), Vector2(8 * Room.TILE + 8, 9 * Room.TILE + 12))
 	SaveManager.save_game()
-	pools._on_player_died()
+	pools.respawn()
 	await _wait(2.4)
 	for child in pools.current_room.get_children():
 		if child is Npc and child.kind == "pell":
@@ -304,6 +304,15 @@ func _ready() -> void:
 	Conversations.talk("pell")
 	await _wait(1.5)
 	await _capture("34_pell_pearl")
+	_finish_talk(pools)
+	# Nettle, with their paper lantern held up as they talk.
+	for child in pools.current_room.get_children():
+		if child is Npc and child.kind == "nettle":
+			pools.player.global_position = child.global_position + Vector2(0, 18)
+	pools.player.facing = Vector2.UP
+	Conversations.talk("nettle")
+	await _wait(1.5)
+	await _capture("37_nettle")
 	_finish_talk(pools)
 
 	SaveManager.delete_save()
