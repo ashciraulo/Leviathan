@@ -94,6 +94,10 @@ func _process(delta: float) -> void:
 	# The game scene stops while paused, so menus don't count.
 	if not _game_over:
 		GameState.play_time += delta
+	# A boss that falls without sending boss_defeated still hands the room
+	# back its own music.
+	if Audio.music_cue == "boss" and not busy and current_room and not _room_has_boss():
+		_on_boss_defeated()
 
 
 ## Build the world at the checkpoint in GameState. With by_mantle, Mantle
