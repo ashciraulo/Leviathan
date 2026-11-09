@@ -271,7 +271,7 @@ func has_seen(coord: Vector2i) -> bool:
 	return bool(flags.get(seen_flag(coord), false))
 
 
-## Remembers a woken Tidestone and where Wren stands when she lands there.
+## Remembers a woken Tidestone and where Wren stands when they land there.
 func wake_tidestone(coord: Vector2i, stand_at: Vector2) -> void:
 	tidestones["%d_%d" % [coord.x, coord.y]] = [stand_at.x, stand_at.y]
 

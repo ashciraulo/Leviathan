@@ -203,7 +203,7 @@ func _draw_view() -> void:
 				var flag := "chest_%d_%d_%d_%d" % [coord.x, coord.y, tile.x, tile.y]
 				if not GameState.flags.get(flag, false):
 					MenuKit.draw_marker(_view, MenuKit.Marker.CHEST, rect.position + Vector2(tile) * PX + Vector2(1, 1))
-	# Wren, blinking, where she stands now.
+	# Wren, blinking, where they stand now.
 	var here := _room_rect(GameState.room_coord)
 	if _rooms.has(GameState.room_coord) and blink:
 		var local := _player_local() / float(Room.TILE) * PX

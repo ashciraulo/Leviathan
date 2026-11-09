@@ -58,11 +58,11 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 @export var gate := ""
 ## When true, the chest (C) only appears once the gate is solved.
 @export var chest_hidden := false
-## A listing deck: Wren drifts this way (pixels per second) unless she walks
+## A listing deck: Wren drifts this way (pixels per second) unless they walk
 ## against it.
 @export var tilt := Vector2.ZERO
 ## Rising lava: rows per second it climbs from the bottom of the room once
-## Wren is inside (0 for none), and the row where she's safe from it.
+## Wren is inside (0 for none), and the row where they're safe from it.
 @export var lava_rise := 0.0
 @export var lava_safe_row := 2
 ## What signposts (n) in this room say: a translation key.
