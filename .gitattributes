@@ -14,3 +14,6 @@
 # from code, so they stay in plain git (no LFS bandwidth on every CI run).
 audio/sfx/*.wav -filter -diff -merge -text
 audio/ambience/*.wav -filter -diff -merge -text
+# The music too: about 4 MB of placeholder OGGs from tools/music_gen.py, and
+# CI exports with every track, so LFS would spend its bandwidth on each run.
+audio/music/*.ogg -filter -diff -merge -text

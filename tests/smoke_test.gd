@@ -25,7 +25,7 @@ func _ready() -> void:
 		_test_save_load()
 		_test_keys()
 		_test_items()
-		_test_audio()
+		await _test_audio()
 		_test_text_fit()
 		await _test_menus()
 		await _test_play()
@@ -578,6 +578,7 @@ func _test_story() -> void:
 	add_child(hold)
 	await _wait(0.2)
 	_check(Cutscene.active, "the Matriarch's chamber starts Lowe's scene")
+	_check(Audio.music_cue == "dungeon_hull", "no boss theme while she sleeps through Lowe's scene (%s)" % Audio.music_cue)
 	var choir: Array = hold.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
 	_check(choir.size() == 3, "Lowe and two singers are in the chamber (%d)" % choir.size())
 	var sleeper: BarnacleMatriarch = null
@@ -598,6 +599,7 @@ func _test_story() -> void:
 		_check(y < 9 * Room.TILE, "the Choir stands clear of the dialogue box")
 	await _wait(1.6)
 	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO and sleeper.modulate == Color.WHITE, "the Matriarch wakes and fights")
+	_check(Audio.music_cue == "boss", "the boss theme starts as she wakes (%s)" % Audio.music_cue)
 	hold.queue_free()
 	await _wait(0.1)
 	# Coming back (the scene has played): she rises at once, wide awake.
@@ -605,6 +607,7 @@ func _test_story() -> void:
 	add_child(back)
 	await _wait(0.2)
 	_check(not Cutscene.active, "Lowe's scene only plays once")
+	_check(Audio.music_cue == "boss", "a boss's chamber plays the boss theme (%s)" % Audio.music_cue)
 	for child in back.current_room.get_children():
 		if child is BarnacleMatriarch:
 			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
@@ -632,6 +635,7 @@ func _test_story() -> void:
 				child.take_hit(1, Vector2.UP)
 	await _wait(0.1)
 	_check(Cutscene.active and GameState.has_flag(StoryDirector.CALF_FLAG), "laying the Congregation to rest starts the calf scene")
+	_check(Audio.music_cue == "dungeon_mire", "the Mire's own music comes back once its boss falls (%s)" % Audio.music_cue)
 	var calf_pages := await _play_scene(mire, 15.0)
 	_check(not Cutscene.active and not mire.player.in_cutscene, "the calf scene hands Wren back")
 	_check(calf_pages == 3, "Murmur speaks three times (%d)" % calf_pages)
@@ -946,7 +950,7 @@ func _test_play() -> void:
 		if game.player != null and not game.busy:
 			break
 	_check(GameState.bubbles == GameState.max_bubbles, "respawn refills breath")
-	_check(game.current_room != null and game.current_room.coord == Vector2i.ZERO, "respawn at the Tidestone's room")
+	_check(game.current_room != null and game.current_room.coord == Vector2i.ZERO, "respawn at the Tidestone's room (%s)" % (game.current_room.coord if game.current_room else "none"))
 	_check(game.player != null and game.player.state != Player.State.DEAD, "Wren is back on their feet")
 	game.queue_free()
 	await _wait(0.1)
@@ -2545,7 +2549,34 @@ func _test_audio() -> void:
 	outlined.free()
 	_check(on == Palette.CONTRAST_WREN and off.a == 0.0, "high contrast outlines Wren only when it's on")
 	Audio.play_music("region_saltmarrow")
-	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
+	_check(Audio.music_cue == "region_saltmarrow", "music cues switch")
+	var playing: AudioStreamPlayer = Audio._music[Audio._music_index]
+	var track := playing.stream as AudioStreamOggVorbis
+	_check(track != null and track.loop, "region music loops")
+	_check(not (Audio._load(Audio.MUSIC_DIR, "region_saltmarrow") as AudioStreamOggVorbis).loop, "looping doesn't change the shared track")
+	for cue: String in Audio.MUSIC_CUES:
+		if cue.begins_with("region_") or cue.begins_with("dungeon_") or cue.begins_with("bell_") or cue in ["title", "overworld", "boss", "miniboss", "credits", "lullaby"]:
+			_check(Audio._load(Audio.MUSIC_DIR, cue) != null, "%s has a track" % cue)
+	_check(Audio.BELL_ORDER.size() == 7 and Audio.BELL_ORDER.has("hull"), "the seven bells are in lullaby order")
+	for bell: String in Tidebell.BELLS:
+		_check(Audio.BELL_ORDER.has(bell), "the %s bell has a lullaby phrase" % bell)
+	# A phrase rung while the track is still fading in dips it all the same.
+	Audio.play_bell_phrase("kiln")
+	var phrase := Audio._phrase.stream as AudioStreamPlaylist
+	_check(Audio._phrase.playing and phrase != null and phrase.stream_count == 1 and phrase.get_list_stream(0).resource_path.ends_with("bell_2.ogg"), "ringing the Kiln's bell plays the lullaby's second phrase")
+	await _wait(Audio.FADE_TIME + 0.3)
+	_check(playing.playing and playing.volume_db < -15.0, "the music dips under a bell's phrase, even mid-fade (%.1f dB)" % playing.volume_db)
+	# A new track while the phrase still rings comes in dipped too.
+	Audio.play_music("dungeon_hull")
+	await _wait(Audio.FADE_TIME + 0.3)
+	var next: AudioStreamPlayer = Audio._music[Audio._music_index]
+	_check(Audio._phrase.playing and next.playing and next.volume_db < -15.0, "a new track stays under the ringing phrase (%.1f dB)" % next.volume_db)
+	_check(not playing.playing, "the old track fades out and stops")
+	_check(is_equal_approx(phrase.get_list_stream(0).get_length(), 9 * 60.0 / 80.0), "a phrase is three bars long, so phrases run on in time")
+	Audio.play_lullaby(3)
+	phrase = Audio._phrase.stream as AudioStreamPlaylist
+	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")
+	Audio._phrase.stop()
 	Audio.stop_music(0.01)
 
 
