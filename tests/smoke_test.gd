@@ -32,6 +32,7 @@ func _ready() -> void:
 	await _test_hull_dungeon()
 	await _test_villagers()
 	await _test_brinewood_pearl()
+	await _test_cinderreach()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -932,5 +933,91 @@ func _test_brinewood_pearl() -> void:
 		for child in game.get_children():
 			if child is DialogueBox and DialogueBox.is_open:
 				child.close()
+		# And back again: the island has to have a way off.
+		await _wait(0.3)
+		player.global_position = room.global_position + Vector2(9 * Room.TILE + 8, 4 * Room.TILE + 12)
+		player.facing = Vector2.DOWN
+		await _wait(0.1)
+		_check(player.use_item("tide_hook"), "Wren hooks the mainland post from the island")
+		await _wait(1.6)
+		# Feet rest against the post's base, so look just above them.
+		var back := Vector2i((player.global_position - room.global_position - Vector2(0, 4)) / Room.TILE)
+		_check(on_foot.has(back), "the hook brings Wren back to the shore (tile %s)" % back)
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Cinderreach: the Tide Hook gate at Ashfall Gate, the Slagbeetle's charge
+## and flip, and a geyser's cycle.
+func _test_cinderreach() -> void:
+	var probe := (load("res://rooms/room_7_-2.tscn") as PackedScene).instantiate() as Room
+	var rows := Room.parse_layout(probe.layout)
+	probe.free()
+	var on_foot := _walkable_from(rows, Vector2i(0, 6))
+	_check(not on_foot.has(Vector2i(15, 6)), "Cinderreach is cut off by lava until the Tide Hook")
+	var mouth := (load("res://rooms/room_10_-2.tscn") as PackedScene).instantiate() as Room
+	_check(mouth.door_to == Vector2i(21, 10), "the Kiln's Mouth leads into the Kiln")
+	mouth.free()
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(7, -2), Vector2(9 * Room.TILE + 8, 5 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var player: Player = game.player
+	var room: Room = game.current_room
+	GameState.give_item("tide_hook")
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	_check(player.use_item("tide_hook"), "Wren hooks the post across the lava")
+	await _wait(1.6)
+	var local := player.global_position - room.global_position
+	_check(local.x > 13 * Room.TILE, "the hook carries Wren over the lava (at %s)" % local)
+
+	# Slagbeetle: shell blocks, cracks when lined up, charges, flips on a wall.
+	var row_y := 8 * Room.TILE + 12
+	var beetle := Slagbeetle.new()
+	beetle.position = Vector2(15 * Room.TILE, row_y)
+	room.add_child(beetle)
+	player.global_position = room.global_position + Vector2(21 * Room.TILE, 2 * Room.TILE + 12)
+	await _wait(0.2)
+	_check(beetle.take_hit(1, Vector2.LEFT) == Enemy.HitResult.BLOCKED, "the slag shell turns the sword")
+	await _wait(0.4)
+	player.global_position = room.global_position + Vector2(21 * Room.TILE, row_y)
+	var cracked := false
+	for i in 20:
+		await _wait(0.05)
+		if beetle.mode == Slagbeetle.Mode.CRACK:
+			cracked = true
+			break
+	_check(cracked, "the Slagbeetle cracks open when Wren lines up with it")
+	# Step aside so it charges past into the wall.
+	player.global_position = room.global_position + Vector2(18 * Room.TILE, 3 * Room.TILE + 12)
+	var flipped := false
+	for i in 40:
+		await _wait(0.05)
+		if beetle.is_flipped():
+			flipped = true
+			break
+	_check(flipped, "a charging Slagbeetle flips when it hits a wall")
+	_check(beetle.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a flipped Slagbeetle can be hit")
+	beetle.queue_free()
+	GameState.refill()
+
+	# Geyser: idle, hiss, blow, and the steam only hurts while blowing.
+	var vent := Geyser.new()
+	vent.position = Vector2(4 * Room.TILE, 3 * Room.TILE)
+	room.add_child(vent)
+	var seen_hiss := false
+	var seen_blow := false
+	for i in 80:
+		await _wait(0.05)
+		seen_hiss = seen_hiss or vent.phase == Geyser.Phase.HISS
+		if vent.is_blowing():
+			seen_blow = seen_hiss
+			break
+	_check(seen_blow, "a geyser hisses before it blows")
 	game.queue_free()
 	await _wait(0.1)
