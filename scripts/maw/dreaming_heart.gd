@@ -173,6 +173,10 @@ func _start_stage() -> void:
 	_bell.heart = self
 	var tile: Vector2i = BELL_TILES[stage]
 	_bell.position = Vector2(tile.x * Room.TILE + Room.TILE / 2.0, tile.y * Room.TILE + Room.TILE - 4)
+	# Never rise up on top of Wren: shift two tiles toward the middle.
+	var wren := get_tree().get_first_node_in_group("player") as Node2D
+	if wren and _room and (wren.global_position - _room.global_position).distance_to(_bell.position) < 20.0:
+		_bell.position.x += signf(Room.SIZE.x / 2.0 - _bell.position.x) * 2.0 * Room.TILE
 	get_parent().add_child(_bell)
 
 
@@ -199,6 +203,9 @@ func _start_eighth() -> void:
 	mode = Mode.EIGHTH
 	hum_held = 0.0
 	GameState.final_line = true
+	# Nothing left in the air while Wren stands still to hum.
+	for shot in get_tree().get_nodes_in_group("enemy_shots"):
+		shot.queue_free()
 
 
 func _eighth(delta: float) -> void:
@@ -220,6 +227,9 @@ func _sleep() -> void:
 	mode = Mode.SLEEP
 	GameState.final_line = false
 	GameState.set_flag(DEFEATED_FLAG)
+	# Not boss_defeated: the ending keeps its own music. Clear stray shots.
+	for shot in get_tree().get_nodes_in_group("enemy_shots"):
+		shot.queue_free()
 	# Keep the ending: Continue after the credits starts here, not before
 	# the Maw.
 	GameState.set_checkpoint(_room.coord if _room else GameState.room_coord, GameState.NO_POSITION)

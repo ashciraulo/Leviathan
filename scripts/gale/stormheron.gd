@@ -112,8 +112,9 @@ func _ground_spot(on: LightningRod) -> Vector2:
 func _think(delta: float) -> void:
 	velocity = Vector2.ZERO
 	_timer -= delta
-	# Only its flight and its dive hurt to touch; perched, it's far above.
-	_contact.active = mode in [Mode.FLY, Mode.SWOOP]
+	# Only its dive hurts to touch: perched or flying it's far above, and
+	# taking off it gets clear before it can be blamed for a hit.
+	_contact.active = mode == Mode.SWOOP
 	var wren := get_player()
 	var to_wren := Vector2.ZERO if wren == null else wren.global_position - global_position
 	match mode:

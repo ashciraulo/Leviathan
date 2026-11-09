@@ -123,7 +123,8 @@ func _enter(new_mode: Mode, time: float) -> void:
 ## A verse: notes sung one after another, fanned toward Wren.
 func _sing_verse(wren: Player, count: int) -> void:
 	for i in count:
-		if dying or not is_inside_tree():
+		# Thrown off his verse (a note sung back at him): he stops.
+		if dying or not is_inside_tree() or mode != Mode.SING:
 			return
 		var note := SungNote.new()
 		note.singer = self
@@ -144,10 +145,12 @@ func _chant(wren: Player, angry: bool) -> void:
 	if angry:
 		for singer in _singers:
 			spots.append(singer.global_position)
-	for spot: Vector2 in spots:
+	for i in spots.size():
 		var wave := ChantWave.new()
+		# Angry, the singers join in one after another, not all at once.
+		wave.delay = i * 0.9
 		get_parent().add_child(wave)
-		wave.global_position = spot
+		wave.global_position = spots[i]
 
 
 ## A note sung back at him: it breaks his song.
@@ -193,6 +196,7 @@ func _listen() -> void:
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
 	GameState.set_flag(DEFEATED_FLAG)
+	Events.boss_defeated.emit()
 	for node in get_tree().get_nodes_in_group("sung_notes"):
 		(node as SungNote).burst()
 	for child in get_parent().get_children():
