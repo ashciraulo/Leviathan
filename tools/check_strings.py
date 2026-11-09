@@ -50,6 +50,9 @@ def missing_glyphs():
     header = rows[0]
     for n, row in enumerate(rows[1:], start=2):
         for col, text in enumerate(row[1:], start=1):
+            # Godot skips columns headed "_..." (translator notes).
+            if col < len(header) and header[col].startswith("_"):
+                continue
             # "\n" in a cell is Godot's line break, not text.
             missing = sorted({ch for ch in text.replace("\\n", "") if ch not in GLYPHS and ch not in "\n\t"})
             if missing:

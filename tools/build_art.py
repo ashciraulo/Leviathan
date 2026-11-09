@@ -1145,7 +1145,7 @@ def build_font():
         glyph = GLYPHS[ch]
         gw = len(glyph[0])
         extra = len(glyph) - 9
-        assert 0 <= extra <= TALL and gw + 2 <= cell_w, ch
+        assert 0 <= extra <= TALL and gw + 2 <= cell_w and len(set(map(len, glyph))) == 1, ch
         ox, oy = (i % per_row) * cell_w, (i // per_row) * cell_h + TALL - extra
         on = {(x, y) for y, r in enumerate(glyph) for x, c in enumerate(r) if c == "#"}
         for x, y in on:

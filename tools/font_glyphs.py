@@ -118,7 +118,8 @@ MARKS = {
 
 
 def _centre(mark, width):
-    pad = max(0, (width - len(mark[0])) // 2)
+    assert len(mark[0]) <= width, "mark wider than its letter"
+    pad = (width - len(mark[0])) // 2
     return ["." * pad + row + "." * (width - pad - len(row)) for row in mark]
 
 
@@ -130,21 +131,32 @@ def _squash(glyph):
     return glyph[:1] + glyph[2:]
 
 
+def _accented_i(glyph, mark):
+    """i and j: the dot gives way to the mark, and the letter widens to 3."""
+    width = len(glyph[0])
+    pad = (3 - width) // 2
+    body = ["." * pad + r + "." * (3 - width - pad) for r in glyph]
+    top = _centre(MARKS[mark], 3)
+    if mark == "diaeresis":
+        return [top[1]] + body[1:]
+    return [top[0], top[1]] + body[1:]
+
+
 def _accented(base, mark):
     glyph = GLYPHS[base]
     width = len(glyph[0])
+    if base in ("i", "j"):
+        return _accented_i(glyph, mark)
     top = _centre(MARKS[mark], width)
+    if mark == "diaeresis":
+        # One-row dots: the capital keeps its full height, and the
+        # lowercase letter fits its usual cell.
+        if base.isupper():
+            return [top[1], "." * width] + glyph
+        return [top[1]] + glyph[1:]
     if base.isupper():
         # Mark, a gap row, then the six-row capital and its descender rows.
         return top + ["." * width] + _squash(glyph)
-    if base in ("i", "j"):
-        # The dot gives way to the mark.
-        body = ["." * width] + glyph[1:]
-        top = _centre(MARKS[mark], max(width, 3))
-        if width < 3:
-            pad = (3 - width) // 2
-            body = ["." * pad + r + "." * (3 - width - pad) for r in body]
-        return [top[0]] + [top[1]] + body[1:]
     # Lowercase: the mark sits in rows -1 and 0, row 1 is the gap.
     return [top[0], top[1]] + glyph[1:]
 
@@ -190,6 +202,15 @@ EXTRA = {
     "–": [".....", ".....", ".....", "#####", ".....", ".....", ".....", ".....", "....."],
     "—": ["......", "......", "......", "######", "......", "......", "......", "......", "......"],
     "°": [".#.", "#.#", ".#.", "...", "...", "...", "...", "...", "..."],
+    "‚": ["..", "..", "..", "..", "..", "..", ".#", "#.", ".."],
+    # No-break spaces (French puts them before ; : ! ? and inside « »).
+    "\u00a0": ["...", "...", "...", "...", "...", "...", "...", "...", "..."],
+    "\u202f": ["..", "..", "..", "..", "..", "..", "..", "..", ".."],
+    # Icelandic.
+    "Ð": [".###.", ".#..#", ".#..#", "###.#", ".#..#", ".#..#", ".###.", ".....", "....."],
+    "ð": [".#.#.", "..#..", ".#.#.", "....#", ".####", "#...#", ".###.", ".....", "....."],
+    "Þ": ["#....", "####.", "#...#", "#...#", "####.", "#....", "#....", ".....", "....."],
+    "þ": ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
 }
 
 for _ch, (_base, _mark) in ACCENTED.items():
