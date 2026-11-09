@@ -202,13 +202,18 @@ def wall_light(name):
         put(px, cx - 1, cy + 5, b0)
         put(px, cx + 1, cy + 5, b0)
         if kind == "lantern":
-            for y in range(cy - 2, cy + 3):
-                put(px, cx - 2, y, b1)
-                put(px, cx + 2, y, b1)
-            for x in range(cx - 2, cx + 3):
-                put(px, x, cy - 3, b2)
-                put(px, x, cy + 2, b2)
-            put(px, cx, cy - 4, b0)
+            # A ship's lantern: a cage of dark iron round lit glass.
+            for y in range(cy - 3, cy + 3):
+                for x in range(cx - 3, cx + 4):
+                    put(px, x, y, g1 if abs(x - cx) < 3 else b1)
+            for x in range(cx - 3, cx + 4):
+                put(px, x, cy - 4, b2)
+                put(px, x, cy + 3, b2)
+            for y in range(cy - 3, cy + 3):
+                put(px, cx, y, b0)
+            put(px, cx, cy - 5, b0)
+            put(px, cx - 1, cy - 5, b0)
+            put(px, cx + 1, cy - 5, b0)
         elif kind == "brazier":
             for x in range(cx - 3, cx + 4):
                 put(px, x, cy + 1, b1)
@@ -218,11 +223,16 @@ def wall_light(name):
             put(px, cx - 1, cy - 2, g1)
             put(px, cx + 1, cy - 3, g2)
         elif kind == "candle":
-            for y in range(cy - 1, cy + 2):
+            # A niche in the stone with a fat candle in it.
+            for y in range(cy - 4, cy + 4):
+                for x in range(cx - 3, cx + 4):
+                    put(px, x, y, b0)
+            for y in range(cy, cy + 4):
+                put(px, cx - 1, y, b2)
                 put(px, cx, y, b2)
-            put(px, cx - 1, cy + 2, b1)
-            put(px, cx + 1, cy + 2, b1)
-            put(px, cx, cy + 2, b1)
+                put(px, cx + 1, y, b1)
+            for x in range(cx - 3, cx + 4):
+                put(px, x, cy + 4, b1)
         elif kind == "skull":
             for x in range(cx - 2, cx + 3):
                 for y in range(cy, cy + 3):
@@ -292,7 +302,7 @@ def light_pool(name):
         for x in range(T):
             d = ((x + 0.5 - 8) / 8.0) ** 2 + ((y + 0.5) / 9.0) ** 2
             if d < 1.0:
-                px[y][x] = (r, g, b, int(64 * (1 - d)))
+                px[y][x] = (r, g, b, int(88 * (1 - d)))
     return px
 
 

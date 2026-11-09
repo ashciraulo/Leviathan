@@ -582,14 +582,18 @@ func _hash(x: int, y: int) -> int:
 	return absi((x * 73856093) ^ (y * 19349663) ^ (coord.x * 83492791) ^ (coord.y * 2654435))
 
 
-## Dungeon wall lights hang in pairs, mirrored across the room, on straight
-## runs of wall face (both neighbours are faces too).
+## Dungeon wall lights hang in pairs, mirrored across the room (x 5 and 18,
+## clear of the HUD), on straight runs of wall face: both neighbours are
+## faces, and so is the mirrored spot.
 func _lit_face(x: int, y: int) -> bool:
 	if not x in [5, 18]:
 		return false
-	for dx in [-1, 1]:
-		if _tile_at(x + dx, y) != "#" or _tile_at(x + dx, y + 1) == "#":
+	for fx in [x, 23 - x]:
+		if _tile_at(fx, y) != "#" or _tile_at(fx, y + 1) == "#":
 			return false
+		for dx in [-1, 1]:
+			if _tile_at(fx + dx, y) != "#" or _tile_at(fx + dx, y + 1) == "#":
+				return false
 	return true
 
 
@@ -661,9 +665,10 @@ func _draw_ground() -> void:
 					_draw_tile("shade_top", x, y)
 					# A wall light's glow pooled below it; elsewhere, now and
 					# then, debris fallen at the foot of a dungeon wall.
-					if tiles.has("wall_deco") and _lit_face(x, y - 1):
+					if tiles.has("wall_deco") and _rows[y][x] == "." and _lit_face(x, y - 1):
 						_draw_tile("%s_lightpool" % tiles["wall_deco"], x, y)
-					elif tiles.has("wall_deco") and _rows[y][x] == "." and (h >> 4) % 6 == 0:
+					elif tiles.has("wall_deco") and _rows[y][x] == "." and x > 0 and x < _rows[y].length() - 1 \
+							and y < _rows.size() - 1 and (h >> 4) % 6 == 0:
 						_draw_tile("%s_rubble_%d" % [tiles["wall_deco"], (h >> 7) % 2], x, y)
 				if _tile_at(x - 1, y) == "#":
 					_draw_tile("shade_left", x, y)
