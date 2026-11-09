@@ -46,7 +46,9 @@ func _fire_at(target: Vector2) -> void:
 	var shot := Projectile.new()
 	shot.position = position + Vector2(0, -8)
 	shot.velocity = (target - (global_position + Vector2(0, -8))).normalized() * SHOT_SPEED
-	get_parent().add_child.call_deferred(shot)
+	# Direct add: this runs in _physics_process, and a deferred add could land
+	# after the room was freed.
+	get_parent().add_child(shot)
 
 
 func _make_sprite() -> Sprite2D:

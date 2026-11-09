@@ -37,6 +37,10 @@ func _ready() -> void:
 func _on_touch(body: Node2D) -> void:
 	if not (body is Player):
 		return
+	# Touch areas of neighbouring hatch tiles overlap, so Wren can enter two in
+	# one step. Once the lock is open (or this hatch is going), ignore it.
+	if GameState.flags.get(lock_flag(room_coord), false) or not is_in_group("locked_doors"):
+		return
 	if GameState.use_key(dungeon):
 		open_lock(room_coord)
 		Events.toast.emit("TOAST_UNLOCKED")
