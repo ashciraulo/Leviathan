@@ -74,6 +74,8 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 @export var dungeon := ""
 ## What a chest (C) in this room holds.
 @export var chest_item := "small_key"
+## How many of chest_item the chest holds (a cache of glints, say).
+@export var chest_count := 1
 ## Where a doorway (D) in this room leads, and the tile Wren arrives on.
 @export var door_to := Vector2i.ZERO
 @export var door_spawn := Vector2i.ZERO
@@ -428,6 +430,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			chest.tile = Vector2i(int(pos.x) / TILE, int(pos.y) / TILE)
 			chest.dungeon = dungeon
 			chest.item = chest_item
+			chest.count = chest_count
 			node = chest
 		"X":
 			var hatch := LockedDoor.new()

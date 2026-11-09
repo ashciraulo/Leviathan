@@ -31,6 +31,8 @@ var room_coord := Vector2i.ZERO
 var tile := Vector2i.ZERO
 var dungeon := ""
 var item := "small_key"
+## How many of item it holds.
+var count := 1
 var opened := false
 var _sprite: Sprite2D
 
@@ -72,7 +74,7 @@ func interact() -> void:
 		"map", "compass", "big_key":
 			GameState.give_item(Items.dungeon_item(dungeon, item))
 		_:
-			GameState.give_item(item)
+			GameState.give_item(item, count)
 	var spec: Array = ITEMS.get(item, [Items.name_key(item), null])
 	Events.toast.emit(spec[0])
 	# Show the item lifting out of the chest (its satchel icon if it has no

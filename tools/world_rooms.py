@@ -4,8 +4,9 @@ each dungeon's item in turn, and reports which screens open at each stage.
 
     python3 tools/world_rooms.py          # print the route, stage by stage
     python3 tools/world_rooms.py --check  # fail on a soft-lock, an
-                                          # unreachable screen or floor, or
-                                          # dungeons opening out of order
+                                          # unreachable screen, floor or
+                                          # chest, a secret that needs no
+                                          # tool, or dungeons out of order
 
 It reads the room layouts straight from rooms/*.tscn (overworld rooms are
 the ones with no `dungeon`), crosses screen edges where both sides are open,
@@ -58,6 +59,18 @@ DUNGEONS = {
 ORDER = ["Rotting Hull", "Kiln", "Lantern Mire", "Gale Spire", "Hollow Glacier",
          "Drowned Belfry", "Marrow Tomb", "The Maw"]
 START = ((0, 0), None)
+# Overworld secrets: the room whose chest (C) is one, and the tools that
+# reach it. Even once Wren is in the room (on any edge tile they can reach
+# with everything), the chest must be out of reach without one of those.
+SECRETS = {
+    (8, -3): ("stonebreaker",),               # Ember Ridge: a jar behind a cracked boulder
+    (4, 2): ("kite_cloak", "frostfang_bow"),  # Gloamfen: the Coral Buckler on a lake islet
+    (6, -4): ("kite_cloak", "frostfang_bow"), # Windmere: glints on a sea stack
+    (1, -3): ("kite_cloak", "frostfang_bow"), # Frostspine: glints on an islet
+    (0, 3): ("kite_cloak", "frostfang_bow"),  # the Verge: Scaleweave on a skerry
+}
+# The Ossuary's jar (7, 1) needs no tool: it sits inside a ring of sinking
+# sand, and the challenge is walking in without being swallowed.
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
 PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
 # Solid things that aren't scenery: stones, chests, hook posts, NPCs, and
@@ -84,12 +97,14 @@ def load_rooms():
 
         door = re.search(r"^door_to = Vector2i\((-?\d+), (-?\d+)\)", text, re.M)
         flag = re.search(r'^alt_flag = "(.*?)"', text, re.M)
+        chest = re.search(r'^chest_item = "(.*?)"', text, re.M)
         rooms[coord] = {
             "layout": field("layout"),
             "alt": field("alt_layout"),
             "alt_flag": flag.group(1) if flag else "",
             "door_to": (int(door.group(1)), int(door.group(2))) if door else None,
             "name": os.path.basename(path),
+            "chest": chest.group(1) if chest else "small_key",
         }
     return rooms
 
@@ -199,12 +214,44 @@ def route(rooms):
     while True:
         seen, doors = explore(rooms, items)
         new = [DUNGEONS[d] for d in sorted(doors) if d in DUNGEONS and DUNGEONS[d][0] not in done]
-        stages.append((sorted(items), {c for c, _ in seen}, [n for n, _ in new]))
+        stages.append((sorted(items), {c for c, _ in seen}, [n for n, _ in new], seen))
         if not new:
             return stages, seen, done
         for name, item in new:
             done.append(name)
             items.add(item)
+
+
+def inside(rooms, coord, seen, items):
+    """Tiles of one room Wren reaches with `items`, starting from every edge
+    tile of it they reach with everything."""
+    rows = rows_for(rooms[coord], items)
+    start = {(coord, t) for c, t in seen if c == coord and
+             (t[0] in (0, COLS - 1) or t[1] in (0, ROWS - 1) or rows[t[1]][t[0]] == "D")
+             and walkable(rows[t[1]][t[0]], items)}
+    reached = set(start)
+    queue = deque(start)
+    while queue:
+        _, (x, y) = queue.popleft()
+        steps = [(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+        steps += hook_hops(rows, x, y, items) + glide_hops(rows, x, y, items)
+        for nx, ny in steps:
+            if 0 <= nx < COLS and 0 <= ny < ROWS and (coord, (nx, ny)) not in reached \
+                    and walkable(rows[ny][nx], items):
+                reached.add((coord, (nx, ny)))
+                queue.append((coord, (nx, ny)))
+    return reached
+
+
+def chest_tiles(room, items):
+    rows = rows_for(room, items)
+    return [(x, y) for y in range(ROWS) for x in range(COLS) if rows[y][x] == "C"]
+
+
+def opens(seen, coord, spot):
+    """True when Wren can stand beside the chest at spot to open it."""
+    x, y = spot
+    return any((coord, (x + dx, y + dy)) in seen for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
 
 
 def main():
@@ -213,7 +260,7 @@ def main():
     stages, seen, done = route(rooms)
     problems = []
     opened = set()
-    for i, (items, coords, dungeons) in enumerate(stages):
+    for i, (items, coords, dungeons, _) in enumerate(stages):
         fresh = sorted(coords - opened)
         opened |= coords
         if not check:
@@ -222,7 +269,7 @@ def main():
             if dungeons:
                 print("  dungeons open: %s" % ", ".join(dungeons))
     # Dungeons must open one at a time, in the plan's order.
-    for i, (_, _, dungeons) in enumerate(stages[:-1]):
+    for i, (_, _, dungeons, _) in enumerate(stages[:-1]):
         if len(dungeons) != 1 or dungeons[0] != ORDER[i]:
             problems.append("stage %d opens %s (expected %s)" % (i, dungeons or "nothing", ORDER[i] if i < len(ORDER) else "nothing"))
     if done != ORDER:
@@ -239,6 +286,22 @@ def main():
                 t = rows[y][x]
                 if t in ".:xrSpD" and walkable(t, final_items) and (coord, (x, y)) not in reached:
                     problems.append("screen %s tile (%d,%d) '%s' is never reachable" % (coord, x, y, t))
+    # Chests: when each comes within reach, and secrets need their tool.
+    for coord in sorted(rooms):
+        for spot in chest_tiles(rooms[coord], final_items):
+            stage = next((i for i, st in enumerate(stages) if opens(st[3], coord, spot)), None)
+            if stage is None:
+                problems.append("chest %s %s (%s) is never reachable" % (coord, spot, rooms[coord]["chest"]))
+                continue
+            if not check:
+                print("Chest at %s %s (%s): stage %d" % (coord, spot, rooms[coord]["chest"], stage))
+            need = SECRETS.get(coord)
+            if need:
+                if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
+                    problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
+    for coord in SECRETS:
+        if coord not in rooms or not chest_tiles(rooms[coord], final_items):
+            problems.append("secret %s has no chest" % (coord,))
     if problems:
         for p in problems:
             print("FAIL: " + p)
