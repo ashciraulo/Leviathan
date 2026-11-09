@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://ce0xcqo2f23ji"
+path="res://.godot/imported/tide.fnt-06d26e9aaf2354f5c87b176b3df8557a.fontdata"
+
+[deps]
+
+source_file="res://assets/fonts/tide.fnt"
+dest_files=["res://.godot/imported/tide.fnt-06d26e9aaf2354f5c87b176b3df8557a.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

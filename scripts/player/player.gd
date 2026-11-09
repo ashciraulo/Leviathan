@@ -29,6 +29,9 @@ const INVULN_TIME := 1.0
 ## Holding Hum this long spends a third of the Resonance meter for one bubble.
 const HUM_TIME := 0.8
 const FLASH_TIME := 0.1
+## How far from the point in front of Wren something can be and still be
+## talked to or opened.
+const INTERACT_RANGE := 16.0
 
 var state := State.MOVE
 var facing := Vector2.DOWN
@@ -158,12 +161,41 @@ func _move_state() -> void:
 	velocity = direction * SPEED
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
-	if Input.is_action_just_pressed("attack"):
+	if DialogueBox.recently_closed():
+		return
+	if Input.is_action_just_pressed("interact") and try_interact():
+		velocity = Vector2.ZERO
+	elif Input.is_action_just_pressed("attack"):
 		start_attack()
 		velocity = Vector2.ZERO
+	elif _hum_requested() and not GameState.can_hum():
+		# Don't leave Hum toggled on; it would start by itself later.
+		_hum_latched = false
 	elif _hum_requested() and GameState.can_hum():
 		_enter(State.HUM)
 		velocity = Vector2.ZERO
+
+
+## The point just in front of Wren that Interact reaches.
+func interact_point() -> Vector2:
+	return global_position + facing * 12.0 + Vector2(0, -4)
+
+
+## Talks to, or opens, whatever is in front of Wren. False if nothing is.
+func try_interact() -> bool:
+	var best: Node2D = null
+	var best_distance := INTERACT_RANGE
+	for node in get_tree().get_nodes_in_group("interactable"):
+		if node.get("opened") == true:
+			continue
+		var distance := (node as Node2D).global_position.distance_to(interact_point())
+		if distance < best_distance:
+			best = node
+			best_distance = distance
+	if best == null:
+		return false
+	best.interact()
+	return true
 
 
 func _attack_state(delta: float) -> void:

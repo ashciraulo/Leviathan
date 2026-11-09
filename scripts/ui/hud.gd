@@ -9,6 +9,10 @@ const TOAST_TIME := 1.8
 var _gauge: Control
 var _toast: Label
 var _toast_tween: Tween
+var _keys: Label
+
+## Top right: the small-key count, shown only inside a dungeon.
+const KEYS_AT := Vector2(346, 4)
 
 
 func _ready() -> void:
@@ -29,9 +33,20 @@ func _ready() -> void:
 	add_child(_toast)
 	Events.toast.connect(show_toast)
 
+	_keys = UI.label("")
+	_keys.name = "Keys"
+	_keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_keys.position = Vector2(KEYS_AT.x + 14, KEYS_AT.y + 2)
+	_keys.add_theme_color_override("font_color", Palette.KEY_TEXT)
+	add_child(_keys)
+
 
 func _process(_delta: float) -> void:
 	_gauge.queue_redraw()
+	var in_dungeon := GameState.dungeon != ""
+	_keys.visible = in_dungeon
+	if in_dungeon:
+		_keys.text = "x%d" % GameState.keys(GameState.dungeon)
 
 
 func show_toast(text_key: String) -> void:
@@ -59,6 +74,9 @@ func _draw_gauge() -> void:
 	_gauge.draw_rect(bar, Palette.RESONANCE_EMPTY)
 	var fill: float = GameState.resonance / GameState.resonance_max
 	_gauge.draw_rect(Rect2(bar.position, Vector2(bar.size.x * fill, bar.size.y)), Palette.RESONANCE)
+	if GameState.dungeon != "":
+		_gauge.draw_rect(Rect2(KEYS_AT - Vector2(2, 2), Vector2(36, 19)), Palette.UI_DARK)
+		_gauge.draw_texture(Art.SMALL_KEY, KEYS_AT + Vector2(-3, -1))
 	for third in [1, 2]:
 		var x: float = bar.position.x + bar.size.x * third / 3.0
 		_gauge.draw_rect(Rect2(x, bar.position.y, 1, bar.size.y), Palette.OUTLINE)

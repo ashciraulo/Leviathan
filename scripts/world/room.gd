@@ -8,10 +8,15 @@ extends Node2D
 ##          T  Tidestone      c  Scuttler (chaser)
 ##          s  Spitter (shooter)    b  Shellback (blocker)
 ##          m  Bogskipper (ambusher, hides in the mud)
+##          w  Lanternmoth (flyer, circles then dives)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
-##          l  lantern post   (big props: put the letter where the
-##             base centre stands; the art rises above)
+##          l  lantern post   R  beached hull (the Rotting Hull)
+##             (big props: put the letter where the base centre stands;
+##             the art rises above)
+##          h  Old Hessa      C  chest (holds chest_item)
+##          X  locked hatch (all X in a room open with one small key)
+##          D  doorway to door_to, arriving on door_spawn
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
 ## neighbouring room joins, at the same rows or columns on both sides.
@@ -28,6 +33,14 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Which region's tiles to draw with: a key of BIOMES.
 @export var biome := "saltmarrow"
 @export_multiline var layout := ""
+## Dungeon this room belongs to ("" for the overworld). Small keys found
+## here only open doors in the same dungeon.
+@export var dungeon := ""
+## What a chest (C) in this room holds.
+@export var chest_item := "small_key"
+## Where a doorway (D) in this room leads, and the tile Wren arrives on.
+@export var door_to := Vector2i.ZERO
+@export var door_spawn := Vector2i.ZERO
 
 ## Set by the game before the room enters the tree.
 var coord := Vector2i.ZERO
@@ -52,6 +65,14 @@ const BIOMES := {
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
 		"water": "bog_%d", "water_edge": "bank_%s_%d", "damp": "mire_%s",
 		"wet_deco": "reeds_%d", "dry_deco": "fern_%d",
+		# [tile, one in every n tiles]
+		"floor_overlay": ["dapple_%d", 5], "water_overlay": ["lily_%d", 4],
+	},
+	"hull": {
+		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
+		"water": "bilge_%d", "water_edge": "brine_%s_%d", "damp": "soak_%s",
+		"wet_deco": "barnacles_%d", "dry_deco": "rope_%d",
+		"floor_overlay": ["shaft_%d", 9], "door": "exit_glow",
 	},
 }
 
@@ -132,8 +153,29 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Spitter.new()
 		"m":
 			node = Bogskipper.new()
+		"w":
+			node = Lanternmoth.new()
 		"b":
 			node = Shellback.new()
+		"h":
+			node = Npc.new("hessa")
+		"C":
+			var chest := Chest.new()
+			chest.room_coord = coord
+			chest.tile = Vector2i(int(pos.x) / TILE, int(pos.y) / TILE)
+			chest.dungeon = dungeon
+			chest.item = chest_item
+			node = chest
+		"X":
+			var hatch := LockedDoor.new()
+			hatch.room_coord = coord
+			hatch.dungeon = dungeon
+			node = hatch
+		"D":
+			var door := Doorway.new()
+			door.target_room = door_to
+			door.target_tile = door_spawn
+			node = door
 		_ when Prop.is_prop(tile):
 			node = Prop.new(tile)
 		_:
@@ -196,8 +238,8 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["wall_face"] % (h % 2), x, y)
 			elif tile == "~":
 				_draw_tile(tiles["water"] % _water_frame, x, y)
-				if biome == "brinewood" and h % 4 == 0:
-					_draw_tile("lily_%d" % (h % 3 % 2), x, y)
+				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
+					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					if _tile_at(x + side[1], y + side[2]) != "~":
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
@@ -212,9 +254,13 @@ func _draw_ground() -> void:
 					_draw_tile("shade_top", x, y)
 				if _tile_at(x - 1, y) == "#":
 					_draw_tile("shade_left", x, y)
-				if biome == "brinewood" and h % 5 == 1:
-					_draw_tile("dapple_%d" % (h % 2), x, y)
-				if wet and h % 11 == 0:
+				if tile == "D" and tiles.has("door"):
+					_draw_tile(tiles["door"], x, y)
+				elif tiles.has("floor_overlay") and h % int(tiles["floor_overlay"][1]) == 1:
+					_draw_tile(tiles["floor_overlay"][0] % (h % 2), x, y)
+				if tile == "D":
+					pass
+				elif wet and h % 11 == 0:
 					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
 				elif not wet and h % 13 == 0:
 					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)

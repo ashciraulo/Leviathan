@@ -24,10 +24,11 @@ The first open imports the translation file, which takes a few seconds.
 | --- | --- | --- |
 | Move (8 directions) | WASD / arrows | Left stick / D-pad |
 | Sword | J | B / East |
+| Talk / open | K | A / South |
 | Hum (heal) | Hold H | Right shoulder |
 | Pause | Esc | Start |
 
-Interact (K), item slots (U, I) and map (M) are bound but not used yet.
+Item slots (U, I) and map (M) are bound but not used yet.
 
 ## What's in the prototype
 
@@ -81,7 +82,12 @@ east of `room_1_1`), and edit the `layout` text in the Inspector. Each room is
 ```
 #  wall        ~  water       .  floor        P  start (first room only)
 T  Tidestone   c  Scuttler    s  Spitter      b  Shellback
+h  Old Hessa   C  chest       X  locked hatch D  doorway (door_to)
 ```
+
+The full legend, including props, is at the top of `scripts/world/room.gd`.
+Dungeon rooms set `dungeon` (keys found there only open hatches there) and
+use the `hull` biome for the Rotting Hull.
 
 Leave a gap in the border where a neighbour joins, at the same rows or
 columns on both sides. The smoke test checks that every gap lines up. LDtk

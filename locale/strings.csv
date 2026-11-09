@@ -1,7 +1,7 @@
 keys,en
 GAME_TITLE,LEVIATHAN
 TITLE_SUBTITLE,Prototype build
-TITLE_CONTROLS,Move: WASD / arrows    Sword: J    Hum: hold H    Pause: Esc
+TITLE_CONTROLS,Move: WASD / arrows    Sword: J    Talk: K    Hum: hold H    Pause: Esc
 MENU_CONTINUE,Continue
 MENU_NEW_GAME,New game
 MENU_QUIT,Quit
@@ -17,3 +17,28 @@ ROOM_WRECK,Wreck Hollow
 ROOM_BRINEWOOD_EDGE,Brinewood Edge
 ROOM_MANGROVE_DEEP,The Mangrove Deep
 ROOM_WRECK_STRAND,Wreck Strand
+NAME_HESSA,Old Hessa
+HESSA_1,"Wren! There you are. Come round where I can see you. My ears are gone, child, but my eyes still work."
+HESSA_2,"Last night the bell on the point went quiet. Folk in grey robes rowed off with it, singing. I felt it through the floorboards."
+HESSA_3,"The Drowned Choir, they call themselves. Seven bells keep the Old One sleeping, and they mean to take every one."
+HESSA_4,You have the ear I lost. You'll hear where the bells are hidden. The first one sang out from the east.
+HESSA_5,"Past the tidepools, into the Brinewood. There's an old ship rotting in the mangroves. Start there."
+HESSA_6,"Keep your lamp lit, keeper. I'll keep mine."
+HESSA_AGAIN,"East, past the tidepools, to the Rotting Hull. Go on now. The light will be here when you're back."
+TOAST_GOT_KEY,You found a small key.
+TOAST_LOCKED,Locked. A small key would open it.
+TOAST_UNLOCKED,The lock gives way.
+ROOM_LANTERN_WALK,The Lantern Walk
+ROOM_HERON_SHALLOWS,Heron Shallows
+ROOM_HULL_LANDING,Hull Landing
+ROOM_HULL_ENTRY,The Rotting Hull
+ROOM_HULL_BILGE,The Rotting Hull: Bilge
+ROOM_HULL_GALLEY,The Rotting Hull: Galley
+ROOM_HULL_CARGO,The Rotting Hull: Cargo Hold
+ROOM_HULL_ORLOP,The Rotting Hull: Orlop
+ROOM_MOTHLIGHT_GLADE,Mothlight Glade
+ROOM_HOLLOW_BOLE,The Hollow Bole
+ROOM_OLD_STILTS,Old Stilts
+ROOM_BRINE_SPRING,Brine Spring
+ROOM_ROOTMAZE,The Rootmaze
+ROOM_TANGLE_SHORE,Tangle Shore

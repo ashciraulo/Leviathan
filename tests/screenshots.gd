@@ -77,6 +77,18 @@ func _ready() -> void:
 		Vector2i(3, 0): ["11_brinewood_edge", Vector2i(7, 6)],
 		Vector2i(3, -1): ["12_mangrove_deep", Vector2i(8, 11)],
 		Vector2i(4, 0): ["13_wreck_strand", Vector2i(3, 7)],
+		Vector2i(4, -1): ["14_lantern_walk", Vector2i(11, 11)],
+		Vector2i(5, -1): ["15_heron_shallows", Vector2i(19, 11)],
+		Vector2i(5, 0): ["16_hull_landing", Vector2i(11, 9)],
+		Vector2i(10, 10): ["17_hull_entry", Vector2i(11, 10)],
+		Vector2i(10, 9): ["18_hull_bilge", Vector2i(12, 6)],
+		Vector2i(11, 9): ["20_hull_cargo", Vector2i(3, 6)],
+		Vector2i(4, -2): ["24_mothlight_glade", Vector2i(11, 11)],
+		Vector2i(3, -2): ["25_hollow_bole", Vector2i(21, 6)],
+		Vector2i(5, -2): ["26_old_stilts", Vector2i(2, 6)],
+		Vector2i(6, -2): ["27_brine_spring", Vector2i(18, 7)],
+		Vector2i(6, -1): ["28_rootmaze", Vector2i(11, 1)],
+		Vector2i(6, 0): ["29_tangle_shore", Vector2i(11, 2)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
@@ -88,7 +100,45 @@ func _ready() -> void:
 		await _wait(2.2)
 		await _capture(shots[coord][0])
 
-	# 7. Pause menu.
+	# 7. Talking to Old Hessa (we're in the village now).
+	var hessa: Npc = null
+	for child in game.current_room.get_children():
+		if child is Npc:
+			hessa = child
+	if hessa:
+		game.player.global_position = hessa.global_position + Vector2(-2, 16)
+		game.player.facing = Vector2.UP
+		await _wait(0.3)
+		await _capture("21_hessa_listens")
+		game.player.try_interact()
+		await _wait(0.2)
+		for child in game.get_children():
+			if child is DialogueBox:
+				child.advance()
+				child.advance()
+		await _wait(3.5)
+		await _capture("22_hessa_talks")
+		for child in game.get_children():
+			if child is DialogueBox:
+				child.close()
+		await _wait(0.3)
+
+	# 8. Opening a chest in the Hull's galley.
+	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))
+	SaveManager.save_game()
+	game._on_player_died()
+	await _wait(2.2)
+	await _capture("19_hull_galley")
+	for child in game.current_room.get_children():
+		if child is Chest:
+			game.player.facing = Vector2.UP
+			game.player.global_position = child.global_position + Vector2(0, 14)
+			await _wait(0.2)
+			game.player.try_interact()
+			await _wait(0.5)
+			await _capture("23_chest_key")
+
+	# 9. Pause menu.
 	var pause: PauseMenu = null
 	for child in game.get_children():
 		if child is PauseMenu:
