@@ -148,6 +148,7 @@ func _tab_rect() -> Rect2:
 
 ## How many lines a page of text takes in the box.
 func lines_for(text_key: String, with_portrait: bool) -> int:
+	_apply_text_size()
 	var probe := _probe(with_portrait)
 	probe.text = text_key
 	var count := probe.get_line_count()
@@ -189,7 +190,9 @@ func _paginate(pages: Array) -> Array:
 			out.append(page)
 			probe.queue_free()
 			continue
-		var words := text.split(" ", false)
+		var words := PackedStringArray()
+		for word in text.split(" ", false):
+			words.append_array(_break_long_word(word, probe))
 		var chunk := ""
 		for word in words:
 			var trial := word if chunk == "" else chunk + " " + word
@@ -203,6 +206,26 @@ func _paginate(pages: Array) -> Array:
 			out.append(_with_text(page, chunk))
 		probe.queue_free()
 	return out
+
+
+## A word too long for a line on its own (long compounds in some languages)
+## is cut into pieces that fit.
+func _break_long_word(word: String, probe: Label) -> PackedStringArray:
+	probe.text = word
+	if probe.get_line_count() <= 1:
+		return PackedStringArray([word])
+	var pieces := PackedStringArray()
+	var piece := ""
+	for character in word:
+		probe.text = piece + character
+		if piece != "" and probe.get_line_count() > 1:
+			pieces.append(piece)
+			piece = character
+		else:
+			piece += character
+	if piece != "":
+		pieces.append(piece)
+	return pieces
 
 
 static func _with_text(page: Dictionary, text: String) -> Dictionary:

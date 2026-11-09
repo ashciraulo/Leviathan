@@ -26,6 +26,7 @@ func _ready() -> void:
 	add_child(ItemSlotsHud.new())
 	add_child(PauseMenu.new())
 	add_child(DialogueBox.new())
+	add_child(StoryDirector.new())
 	var fade_layer := CanvasLayer.new()
 	fade_layer.layer = 30
 	add_child(fade_layer)
@@ -94,6 +95,7 @@ func _start() -> void:
 	Events.toast.emit(current_room.name_key)
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 0.0, FADE_TIME)
+	Events.game_started.emit()
 
 
 func _spawn_room(coord: Vector2i) -> Room:

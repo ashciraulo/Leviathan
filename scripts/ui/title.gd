@@ -123,6 +123,7 @@ func _on_file_chosen(slot: int, new_game: bool) -> void:
 		# A new file is saved at once, so dying before the first Tidestone
 		# brings Wren back to the start.
 		GameState.reset_new_game()
+		GameState.play_opening = true
 		SaveManager.save_game()
 	elif not SaveManager.load_game():
 		# Never overwrite a file that won't load: show the files instead.

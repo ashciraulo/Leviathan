@@ -4,6 +4,8 @@ extends Node
 
 ## Wren's last breath bubble popped.
 signal player_died
+## The game scene built the world (new game, load, or after dying).
+signal game_started
 ## The camera finished sliding into a new room.
 signal room_entered(coord: Vector2i)
 ## Show a short line of text at the bottom of the screen. Pass a translation key.

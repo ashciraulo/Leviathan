@@ -37,6 +37,10 @@ var state := State.MOVE
 var facing := Vector2.DOWN
 ## Set while the camera slides between rooms; Wren ignores input.
 var frozen := false
+## During a cutscene the player has no control; the story walks Wren with
+## script_move (a direction, or zero to stand still).
+var in_cutscene := false
+var script_move := Vector2.ZERO
 var hum_progress := 0.0
 ## Set by the item in use (State.ITEM): how Wren moves while using it.
 var item_velocity := Vector2.ZERO
@@ -168,7 +172,7 @@ func _move_state() -> void:
 	velocity = direction * SPEED
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
-	if DialogueBox.recently_closed():
+	if in_cutscene or DialogueBox.recently_closed():
 		return
 	if Input.is_action_just_pressed("interact") and try_interact():
 		velocity = Vector2.ZERO
@@ -383,6 +387,8 @@ func _hum_requested() -> bool:
 
 ## Analog or digital input, snapped to 8 directions at a constant speed.
 func _input_direction() -> Vector2:
+	if in_cutscene:
+		return script_move
 	var raw := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if raw.length() < 0.3:
 		return Vector2.ZERO
