@@ -208,6 +208,9 @@ func _test_talk_and_dungeon() -> void:
 	_check(GameState.dungeon == "hull", "GameState knows Wren is in the Hull")
 	_check(GameState.has_flag("entered_hull"), "entering the Hull sets a story flag")
 	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_HULL_1", "Pell asks about the Hull")
+	Conversations.talk("pell")
+	_finish_talk(game)
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_QUEST_1", "after the Hull talk, Pell still asks for a heron feather")
 	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_HULL_1", "Hessa has news for Wren after the Hull")
 
 	# A chest in the Galley holds the key for the Bilge's hatch.

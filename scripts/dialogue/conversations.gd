@@ -27,7 +27,7 @@ const SPEAKERS := {
 
 const TALKS := {
 	"hessa": [
-		{"if": ["met_hessa", "entered_hull"], "lines": ["HESSA_HULL_1", "HESSA_HULL_2"]},
+		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_hessa_hull"], "set": ["heard_hessa_hull"], "lines": ["HESSA_HULL_1", "HESSA_HULL_2"]},
 		{"if": ["met_hessa"], "lines": ["HESSA_AGAIN"]},
 		{
 			"set": ["met_hessa"],
@@ -35,13 +35,13 @@ const TALKS := {
 		},
 	],
 	"corrin": [
-		{"if": ["met_hessa", "entered_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
+		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_corrin_hull"], "set": ["heard_corrin_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
 		{"if": ["talked_corrin_quest"], "lines": ["CORRIN_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_corrin_quest"], "lines": ["CORRIN_QUEST_1", "CORRIN_QUEST_2"]},
 		{"lines": ["CORRIN_1", "CORRIN_2"]},
 	],
 	"pell": [
-		{"if": ["met_hessa", "entered_hull"], "lines": ["PELL_HULL_1", "PELL_HULL_2"]},
+		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_pell_hull"], "set": ["heard_pell_hull"], "lines": ["PELL_HULL_1", "PELL_HULL_2"]},
 		{"if": ["talked_pell_quest"], "lines": ["PELL_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_pell_quest"], "lines": ["PELL_QUEST_1", "PELL_QUEST_2"]},
 		{"lines": ["PELL_1", "PELL_2"]},
