@@ -228,6 +228,32 @@ func _ready() -> void:
 	await _wait(2.0)
 	await _capture("32_wayshell")
 	await _skip_scene(home)
+	home.queue_free()
+	await _wait(0.2)
+
+	# 11. Side quests: Pell's three-clawed crab in the Tidepools, then the pearl.
+	GameState.reset_new_game()
+	for flag in ["seen_opening", "met_hessa", "talked_pell_quest"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(Vector2i(1, 0), Vector2(17 * Room.TILE + 8, 8 * Room.TILE + 12))
+	var pools: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(pools)
+	await _wait(1.2)
+	await _capture("33_three_clawed_crab")
+	GameState.set_flag("found_crab")
+	GameState.set_checkpoint(Vector2i(0, -1), Vector2(8 * Room.TILE + 8, 9 * Room.TILE + 12))
+	SaveManager.save_game()
+	pools._on_player_died()
+	await _wait(2.4)
+	for child in pools.current_room.get_children():
+		if child is Npc and child.kind == "pell":
+			child.set_process(false)
+			child.position = Vector2(8 * Room.TILE + 8, 7 * Room.TILE + 12)
+	pools.player.facing = Vector2.UP
+	Conversations.talk("pell")
+	await _wait(1.5)
+	await _capture("34_pell_pearl")
+	_finish_talk(pools)
 
 	SaveManager.delete_save()
 	print("SCREENSHOTS DONE: " + _out_dir)

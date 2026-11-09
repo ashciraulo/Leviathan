@@ -37,6 +37,7 @@ func _ready() -> void:
 	await _test_cinderreach()
 	await _test_fast_travel()
 	await _test_credits()
+	await _test_side_quests()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -1240,4 +1241,55 @@ func _test_credits() -> void:
 	# Leaving would change scene and end the test: don't let it.
 	credits._leaving = true
 	credits.queue_free()
+	await _wait(0.1)
+## Saltmarrow side quests: Pell's three-clawed crab (a Breath Pearl) and
+## Marga's smoked eel after the Hull (a jar).
+func _test_side_quests() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(1, 0), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var crab: QuestCrab = null
+	for child in game.current_room.get_children():
+		if child is QuestCrab:
+			crab = child
+	_check(crab != null, "the three-clawed crab lives in the Tidepools")
+	if crab == null:
+		game.queue_free()
+		return
+	_check(not crab.visible and not crab.is_in_group("interactable"), "the crab hides until Pell asks for it")
+	GameState.set_flag("met_hessa")
+	Conversations.talk("pell")
+	_finish_talk(game)
+	_check(GameState.has_flag("talked_pell_quest") and crab.visible, "Pell's ask brings the crab out")
+	var player: Player = game.player
+	player.global_position = crab.global_position + Vector2(0, 12)
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	_check(player.try_interact() and GameState.has_flag("found_crab"), "Wren picks up the crab")
+	_finish_talk(game)
+	_check(not crab.visible, "the crab is gone once caught")
+	var bubbles := GameState.max_bubbles
+	var shown := Conversations.talk("pell")
+	_finish_talk(game)
+	_check(shown.size() == 3 and shown[0]["text"] == "PELL_CRAB_1", "Pell thanks Wren for the crab")
+	_check(GameState.item_count("breath_pearl") == 1 and GameState.max_bubbles == bubbles + 1, "Pell's pearl adds a breath bubble")
+	Conversations.talk("pell")
+	_finish_talk(game)
+	_check(GameState.item_count("breath_pearl") == 1, "Pell only gives one pearl")
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_CRAB_AGAIN", "Pell talks about the crab afterwards")
+
+	# Marga feeds Wren after the Hull and gives them a jar.
+	for flag in ["asked_for_rope", "rope_promised", "marga_thanked"]:
+		GameState.set_flag(flag)
+	_check(Conversations.branch_for("marga")["lines"][0] == "MARGA_AGAIN", "Marga waits for Wren to come back")
+	GameState.set_flag("tidebell_hull")
+	Conversations.talk("marga")
+	_finish_talk(game)
+	_check(GameState.item_count("jar") == 1 and GameState.jars.size() == 1, "Marga gives Wren a jar")
+	Conversations.talk("marga")
+	_finish_talk(game)
+	_check(GameState.item_count("jar") == 1, "Marga only gives one jar")
+	game.queue_free()
 	await _wait(0.1)
