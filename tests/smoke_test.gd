@@ -12,14 +12,26 @@ var _checks := 0
 
 func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
+	# Slot 2 is File 3 on the file select: keep a real save safe.
+	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
+	# A run that crashed left the real save in the backup: never overwrite it.
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.remove_absolute(real_save)
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
+	if FileAccess.file_exists(real_save):
+		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
 	SaveManager.delete_save()
 	_test_room_layouts()
 	_test_game_state()
 	_test_save_load()
 	_test_keys()
+	_test_items()
+	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
 	SaveManager.delete_save()
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
 		print("SMOKE TEST PASSED (%d checks)" % _checks)
@@ -420,3 +432,118 @@ func _count_projectiles(room: Room) -> int:
 		if child is Projectile:
 			count += 1
 	return count
+
+
+## The item model: giving, slots, equipment, jars, pearls, saving.
+func _test_items() -> void:
+	GameState.reset_new_game()
+	_check(GameState.has_item("driftwood_sword") and GameState.equipped_item(Items.SWORD) == "driftwood_sword",
+		"a new file starts with the driftwood sword equipped")
+	_check(GameState.item_slots == ["", ""], "item slots start empty")
+	GameState.give_item("tide_hook")
+	_check(GameState.item_slots[0] == "tide_hook", "a new tool goes to the first empty slot")
+	GameState.give_item("puffer_bombs", 5)
+	_check(GameState.item_slots[1] == "puffer_bombs" and GameState.item_count("puffer_bombs") == 5, "counted tools stack")
+	GameState.give_item("puffer_bombs", 99)
+	_check(GameState.item_count("puffer_bombs") == Items.max_count("puffer_bombs"), "counts stop at the max")
+	_check(GameState.take_item("puffer_bombs", 3), "spending bombs")
+	_check(not GameState.take_item("arrows"), "can't spend what you don't have")
+	GameState.assign_slot(0, "puffer_bombs")
+	_check(GameState.item_slots == ["puffer_bombs", "tide_hook"], "assigning a slotted tool swaps the slots")
+	GameState.assign_slot(1, "echo_horn")
+	_check(GameState.item_slots[1] == "tide_hook", "can't slot a tool you don't own")
+	GameState.give_item("scaleweave")
+	_check(GameState.equipped_item(Items.TUNIC) == "scaleweave", "a better tunic is put on")
+	GameState.equip("oilskin")
+	_check(GameState.equipped_item(Items.TUNIC) == "oilskin", "equip switches back")
+	GameState.give_item("jar", 2)
+	_check(GameState.jars == [Items.JAR_EMPTY, Items.JAR_EMPTY], "jars arrive empty")
+	_check(GameState.fill_jar(Items.JAR_SPRITE) and GameState.jars[0] == Items.JAR_SPRITE, "a jar can hold a sea sprite")
+	GameState.give_item("breath_pearl")
+	_check(GameState.max_bubbles == GameState.START_BUBBLES + 1, "a Breath Pearl adds a bubble")
+	GameState.give_item(Items.dungeon_item("hull", "map"))
+	_check(GameState.has_dungeon_item("hull", "map") and not GameState.has_dungeon_item("hull", "compass"),
+		"dungeon items belong to their dungeon")
+	_check(Items.name_key("hull_map") == "ITEM_MAP", "dungeon items share one name")
+	GameState.wake_tidestone(Vector2i(1, 0), Vector2(100, 120))
+	GameState.play_time = 125.0
+	SaveManager.save_game()
+	GameState.reset_new_game()
+	SaveManager.load_game()
+	_check(GameState.item_slots == ["puffer_bombs", "tide_hook"], "load restores the item slots")
+	_check(GameState.item_count("puffer_bombs") == 17, "load restores counts")
+	_check(GameState.equipped_item(Items.TUNIC) == "oilskin", "load restores equipment")
+	_check(GameState.jars == [Items.JAR_SPRITE, Items.JAR_EMPTY], "load restores jars")
+	_check(GameState.tidestone_position(Vector2i(1, 0)) == Vector2(100, 120), "load restores woken Tidestones")
+	_check(is_equal_approx(GameState.play_time, 125.0), "load restores play time")
+	var summary := SaveManager.read_summary(TEST_SLOT)
+	_check(int(summary.get("bubbles", 0)) == 6 and summary.has("saved_at"), "the save has a file-select summary")
+	# A counted tool stays slotted when it runs out, also after loading.
+	GameState.take_item("puffer_bombs", 17)
+	SaveManager.save_game()
+	SaveManager.load_game()
+	_check(GameState.item_slots[0] == "puffer_bombs", "an empty counted tool stays slotted after loading")
+	# Saves from before summaries still show their bubbles and place.
+	var file := FileAccess.open(SaveManager.slot_path(TEST_SLOT), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"state": {"max_bubbles": 8, "checkpoint_room": [0, 0]}}))
+	file.close()
+	var old := SaveManager.read_summary(TEST_SLOT)
+	_check(int(old.get("bubbles", 0)) == 8 and str(old.get("place", "")) != "", "old saves get a summary")
+	# A gamepad button for Tab Next, which has no default button.
+	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	var has_button := false
+	for event in InputMap.action_get_events("tab_next"):
+		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER)
+	_check(has_button, "rebinding Tab Next to a button works")
+	Settings.pad_overrides.erase("tab_next")
+	Settings.apply()
+	for id: String in Items.DEFS:
+		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
+	SaveManager.delete_save()
+
+
+## Every menu page opens, takes input and draws without errors.
+func _test_menus() -> void:
+	GameState.reset_new_game()
+	_check(RoomInfo.has_room(Vector2i(0, 0)), "RoomInfo reads the rooms")
+	_check(RoomInfo.stone_landing(Vector2i(1, 0)) != GameState.NO_POSITION or RoomInfo.get_room(Vector2i(1, 0))["stones"].is_empty(),
+		"Tidestone landings come from the layout")
+	# The options tab saves what it changes: keep the real settings file.
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	var had_settings := FileAccess.file_exists(settings_path)
+	var old_settings := FileAccess.get_file_as_string(settings_path) if had_settings else ""
+	var pause := PauseMenu.new()
+	add_child(pause)
+	for tab in PauseMenu.TABS.size():
+		pause.open(tab)
+		for action: String in ["move_right", "move_down", "interact", "move_left", "move_up"]:
+			var event := InputEventAction.new()
+			event.action = action
+			event.pressed = true
+			pause._unhandled_input(event)
+		await get_tree().process_frame
+		_check(pause.visible and pause.current == tab, "pause tab %d opens" % tab)
+	pause.close()
+	_check(not get_tree().paused, "closing the pause menu unpauses")
+	pause.queue_free()
+	if had_settings:
+		var file := FileAccess.open(settings_path, FileAccess.WRITE)
+		file.store_string(old_settings)
+		file.close()
+	else:
+		DirAccess.remove_absolute(settings_path)
+	Settings.load_settings()
+	Settings.apply()
+	var files := FileSelect.new()
+	add_child(files)
+	files.on_open()
+	await get_tree().process_frame
+	files.queue_free()
+	await get_tree().process_frame
+
+
+func _pad_event(button: JoyButton) -> InputEventJoypadButton:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	event.pressed = true
+	return event

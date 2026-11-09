@@ -1,7 +1,7 @@
 keys,en
 GAME_TITLE,LEVIATHAN
 TITLE_SUBTITLE,Prototype build
-TITLE_CONTROLS,Move: WASD / arrows    Sword: J    Talk: K    Hum: hold H    Pause: Esc
+TITLE_CONTROLS,WASD move   J sword   K talk   H hum   M map   Esc menu
 MENU_CONTINUE,Continue
 MENU_NEW_GAME,New game
 MENU_QUIT,Quit
@@ -36,6 +36,212 @@ ROOM_HULL_BILGE,The Rotting Hull: Bilge
 ROOM_HULL_GALLEY,The Rotting Hull: Galley
 ROOM_HULL_CARGO,The Rotting Hull: Cargo Hold
 ROOM_HULL_ORLOP,The Rotting Hull: Orlop
+MENU_JOURNEYS,Journeys
+MENU_OPTIONS,Options
+TAB_SATCHEL,Satchel
+TAB_MAP,Map
+TAB_OPTIONS,Options
+TAB_JOURNEY,Journey
+SATCHEL_TOOLS,Tools
+SATCHEL_JARS,Jars
+SATCHEL_GEAR,Gear
+SATCHEL_LAMP,Keeper's lamp
+SATCHEL_SLOTS,Item slots
+SATCHEL_BELLS,Tidebells
+SATCHEL_PEARLS,Breath Pearls
+SATCHEL_EMPTY,Nothing here yet.
+SATCHEL_EMPTY_SLOT,Empty slot. Pick a tool and press its slot key.
+SATCHEL_BELL_COUNT,%s  (%d of %d)
+HINT_SATCHEL_TOOL,%s / %s: put on item slot
+HINT_SATCHEL_GEAR,%s: equip
+HINT_SATCHEL_CLEAR,%s: clear slot
+HINT_MAP,Move the cursor to look around
+HINT_MAP_FLY,%s: blow the Wayshell and fly here
+HINT_OPTIONS,Left / right: change
+HINT_CONTROLS,%s: change    %s: back
+HINT_CONTROLS_WAIT,Press the new key or button. Esc cancels.
+ITEM_TIDE_HOOK,Tide Hook
+ITEM_TIDE_HOOK_DESC,A barbed hook on a long line. Pulls small things in and Wren across gaps.
+ITEM_STONEBREAKER,Stonebreaker Mallet
+ITEM_STONEBREAKER_DESC,Heavy enough to crack boulders and flip armoured shells.
+ITEM_GLOWMOTH_LANTERN,Glowmoth Lantern
+ITEM_GLOWMOTH_LANTERN_DESC,Moths that glow in the dark. Shows what hides from light and burns oil.
+ITEM_KITE_CLOAK,Kite Cloak
+ITEM_KITE_CLOAK_DESC,Catch the wind and glide from high places.
+ITEM_FROSTFANG_BOW,Frostfang Bow
+ITEM_FROSTFANG_BOW_DESC,Arrows that freeze what they hit. Uses arrows.
+ITEM_DIVERS_HELM,Diver's Helm
+ITEM_DIVERS_HELM_DESC,Brass and glass. Lets Wren walk under deep water.
+ITEM_ECHO_HORN,Echo Horn
+ITEM_ECHO_HORN_DESC,Its note shatters bone and shows the unseen.
+ITEM_WAYSHELL,Wayshell
+ITEM_WAYSHELL_DESC,Blow it outdoors and Mantle the sky-ray carries you to a woken Tidestone.
+ITEM_PUFFER_BOMBS,Puffer Bombs
+ITEM_PUFFER_BOMBS_DESC,"Dried puffers stuffed with blast-salt. Light, throw, step back."
+ITEM_ARROWS,Arrows
+ITEM_ARROWS_DESC,Driftwood shafts with gull fletching.
+ITEM_LAMP_OIL,Lamp Oil
+ITEM_LAMP_OIL_DESC,Fuel for the lantern.
+ITEM_DRIFTWOOD_SWORD,Driftwood Sword
+ITEM_DRIFTWOOD_SWORD_DESC,A keeper's practice blade. Light and quick.
+ITEM_BRINESTEEL_SWORD,Brinesteel Sword
+ITEM_BRINESTEEL_SWORD_DESC,Forged in Cinderreach and quenched in the sea. Hits harder.
+ITEM_TIDECALLER_SWORD,Tidecaller
+ITEM_TIDECALLER_SWORD_DESC,At full breath it sends a wave along its swing.
+ITEM_CORK_BUCKLER,Cork Buckler
+ITEM_CORK_BUCKLER_DESC,Stops small shots from the front while you walk.
+ITEM_CORAL_BUCKLER,Coral Buckler
+ITEM_CORAL_BUCKLER_DESC,Stops stronger shots.
+ITEM_NACRE_BUCKLER,Nacre Buckler
+ITEM_NACRE_BUCKLER_DESC,Mother-of-pearl. Turns aside almost anything.
+ITEM_OILSKIN,Oilskin
+ITEM_OILSKIN_DESC,Keeps the spray off. No protection to speak of.
+ITEM_SCALEWEAVE,Scaleweave
+ITEM_SCALEWEAVE_DESC,Woven from shed scales. Hits hurt less.
+ITEM_ABYSSAL,Abyssal Coat
+ITEM_ABYSSAL_DESC,Cut from the deep. Hits hurt far less.
+ITEM_JAR,Jar
+ITEM_JAR_DESC,Holds a potion or a sea sprite.
+ITEM_JAR_EMPTY,Empty jar
+ITEM_JAR_EMPTY_DESC,Holds a potion or a sea sprite.
+ITEM_JAR_POTION,Kelp tonic
+ITEM_JAR_POTION_DESC,Drink to refill every breath bubble.
+ITEM_JAR_SPRITE,Sea sprite
+ITEM_JAR_SPRITE_DESC,"If your last bubble pops, it breathes you back to life."
+ITEM_TIDEBELL,Tidebell
+ITEM_TIDEBELL_DESC,Each bell holds one phrase of the lullaby that keeps the Old One asleep.
+ITEM_BREATH_PEARL,Breath Pearl
+ITEM_BREATH_PEARL_DESC,Each one gives Wren another breath bubble.
+ITEM_KEEPER_LAMP,Keeper's lamp
+ITEM_KEEPER_LAMP_DESC,"The Saltmarrow light, small enough to carry. Keep it lit."
+ITEM_GLINT,Glints
+ITEM_GLINT_DESC,Shell coins. Saltmarrow's traders take them.
+ITEM_MAP,Dungeon map
+ITEM_MAP_DESC,Shows every room here.
+ITEM_COMPASS,Compass
+ITEM_COMPASS_DESC,Points to the chests still shut.
+ITEM_BIG_KEY,Great key
+ITEM_BIG_KEY_DESC,Opens the way to this place's heart.
+ITEM_SMALL_KEY,Small key
+ITEM_SMALL_KEY_DESC,Opens one locked door in this place.
+MAP_OVERWORLD,The Shellcoast
+MAP_DUNGEON,Below
+DUNGEON_HULL,The Rotting Hull
+MAP_NOTHING,Nothing mapped yet.
+MAP_UNKNOWN_ROOM,Uncharted
+MAP_YOU_ARE_HERE,You are here.
+MAP_STONE_ASLEEP,A Tidestone sleeps here. Touch it to wake it.
+MAP_STONE_NO_FLY_INSIDE,Tidestone. Mantle can't reach you in here.
+MAP_STONE_NEED_WAYSHELL,Woken Tidestone. Find the Wayshell to fly between them.
+MAP_STONE_FLY,Woken Tidestone. Mantle can fly you here.
+TOAST_MANTLE,Mantle answers the Wayshell.
+OPT_SECTION_TEXT,Text
+OPT_SECTION_ACCESS,Accessibility
+OPT_SECTION_SOUND,Sound
+OPT_SECTION_DISPLAY,Display
+OPT_SECTION_CONTROLS,Controls
+OPT_TEXT_SPEED,Text speed
+OPT_TEXT_SPEED_DESC,How fast talk types itself out.
+OPT_SLOW,Slow
+OPT_NORMAL,Normal
+OPT_FAST,Fast
+OPT_INSTANT,Instant
+OPT_LARGE_TEXT,Large text
+OPT_LARGE_TEXT_DESC,Bigger letters for talk and messages.
+OPT_CAPTIONS,Sound captions
+OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
+OPT_COLOR_FILTER,Colour filter
+OPT_COLOR_FILTER_DESC,"Shifts colours so they stay apart for red, green or blue colour blindness."
+OPT_PROTAN,Protan
+OPT_DEUTAN,Deutan
+OPT_TRITAN,Tritan
+OPT_SCREEN_SHAKE,Screen shake
+OPT_SCREEN_SHAKE_DESC,How hard the screen shakes on big hits.
+OPT_HITSTOP,Hit pause
+OPT_HITSTOP_DESC,The tiny freeze when a hit lands.
+OPT_FLASHES,Flashes
+OPT_FLASHES_DESC,"Full white flashes, or soft ones that are gentler on the eyes."
+OPT_FLASH_SOFT,Soft
+OPT_FLASH_FULL,Full
+OPT_HUM,Hum button
+OPT_HUM_DESC,"Hold to hum, or tap once to start and again to stop."
+OPT_HOLD,Hold
+OPT_TOGGLE,Toggle
+OPT_MUSIC,Music
+OPT_EFFECTS,Effects
+OPT_AMBIENCE,Ambience
+OPT_VOLUME_DESC,Each kind of sound has its own volume.
+OPT_FULLSCREEN,Fullscreen
+OPT_FULLSCREEN_DESC,"Fill the screen, or play in a window."
+OPT_LANGUAGE,Language
+OPT_LANGUAGE_DESC,More languages are on the way.
+OPT_LANG_EN,English
+OPT_ON,On
+OPT_OFF,Off
+OPT_CONTROLS,Change controls
+OPT_CONTROLS_DESC,Change the key or button for every action.
+CONTROLS_KEYBOARD,Keyboard
+CONTROLS_GAMEPAD,Gamepad
+CONTROLS_RESET,Reset to defaults
+CONTROLS_PRESS,Press...
+CONTROLS_DESC,"Pick an action and press Interact, then the new key or button. The arrows and the left stick always move too."
+ACTION_MOVE_UP,Move up
+ACTION_MOVE_DOWN,Move down
+ACTION_MOVE_LEFT,Move left
+ACTION_MOVE_RIGHT,Move right
+ACTION_ATTACK,Sword
+ACTION_INTERACT,Interact
+ACTION_ITEM_1,Item slot 1
+ACTION_ITEM_2,Item slot 2
+ACTION_HUM,Hum
+ACTION_MAP,Map
+ACTION_PAUSE,Pause
+ACTION_TAB_PREV,Previous tab
+ACTION_TAB_NEXT,Next tab
+PAD_BUTTON_0,A / Cross
+PAD_BUTTON_1,B / Circle
+PAD_BUTTON_2,X / Square
+PAD_BUTTON_3,Y / Triangle
+PAD_BUTTON_4,Back
+PAD_BUTTON_5,Guide
+PAD_BUTTON_6,Start
+PAD_BUTTON_7,L stick
+PAD_BUTTON_8,R stick
+PAD_BUTTON_9,LB / L1
+PAD_BUTTON_10,RB / R1
+PAD_BUTTON_11,D-pad up
+PAD_BUTTON_12,D-pad down
+PAD_BUTTON_13,D-pad left
+PAD_BUTTON_14,D-pad right
+PAD_AXIS_0,Left stick
+PAD_AXIS_1,Left stick
+PAD_AXIS_2,Right stick
+PAD_AXIS_3,Right stick
+PAD_AXIS_4,LT / L2
+PAD_AXIS_5,RT / R2
+JOURNEY_FILE,File
+JOURNEY_FILE_N,File %d
+JOURNEY_PLACE,Now at
+JOURNEY_TIME,Time
+JOURNEY_BELLS,Tidebells
+JOURNEY_STONES,Stones woken
+JOURNEY_QUIT_CONFIRM,Quit? Progress since the last Tidestone is lost
+JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps everything up to the last one you touched.
+FILES_TITLE,Choose a journey
+FILES_EMPTY,New journey
+FILES_DAMAGED,This file is damaged.
+FILES_COPY,Copy
+FILES_ERASE,Erase
+FILES_BACK,Back
+FILES_PICK_COPY_FROM,Copy which file?
+FILES_PICK_COPY_TO,Copy it to which empty file?
+FILES_COPY_NEED_EMPTY,Pick an empty file to copy into.
+FILES_COPIED,Copied.
+FILES_PICK_ERASE,Erase which file?
+FILES_ERASE_CONFIRM,Erase file %d for good?
+FILES_ERASED,Erased.
+FILES_YES,Yes
+FILES_NO,No
 ROOM_MOTHLIGHT_GLADE,Mothlight Glade
 ROOM_HOLLOW_BOLE,The Hollow Bole
 ROOM_OLD_STILTS,Old Stilts

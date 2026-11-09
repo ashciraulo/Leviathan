@@ -5,7 +5,7 @@ extends CanvasLayer
 ## The game pauses while it is open. Interact or Sword finishes the page,
 ## then turns to the next one.
 
-const CHARS_PER_SECOND := 45.0
+## Typing speed comes from Settings.text_chars_per_second() (Options > Text speed).
 const BOX := Rect2(8, 148, 368, 60)
 const TEXT_MARGIN := Vector2(9, 7)
 ## Wren ignores Interact and Sword for this long after the box closes, so the
@@ -105,7 +105,7 @@ func _process(delta: float) -> void:
 		return
 	_blink += delta
 	if not page_done():
-		_shown += delta * CHARS_PER_SECOND
+		_shown += delta * Settings.text_chars_per_second()
 		_text.visible_characters = int(_shown)
 	_panel.queue_redraw()
 
