@@ -71,7 +71,10 @@ func show_toast(text_key: String) -> void:
 
 func _draw_gauge() -> void:
 	var count: int = GameState.max_bubbles
-	_gauge.draw_rect(Rect2(2, 2, count * BUBBLE_SPACING + 5, 23), Palette.UI_DARK)
+	var plate := Rect2(2, 2, count * BUBBLE_SPACING + 5, 23)
+	if Settings.high_contrast:
+		_gauge.draw_rect(plate.grow(1), Palette.CONTRAST_WREN)
+	_gauge.draw_rect(plate, Palette.UI_DARK)
 	for i in count:
 		var cell := Rect2(4 + i * BUBBLE_SPACING, 4, 11, 11)
 		var full := i < GameState.bubbles

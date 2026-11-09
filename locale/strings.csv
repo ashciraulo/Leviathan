@@ -168,7 +168,7 @@ OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
 OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
-OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
+OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up. An arrow points to sounds from one side."
 OPT_COLOR_FILTER,Colour filter
 OPT_COLOR_FILTER_DESC,"Shifts colours so they stay apart for red, green or blue colour blindness."
 OPT_PROTAN,Protan
@@ -178,6 +178,8 @@ OPT_SCREEN_SHAKE,Screen shake
 OPT_SCREEN_SHAKE_DESC,How hard the screen shakes on big hits.
 OPT_HITSTOP,Hit pause
 OPT_HITSTOP_DESC,The tiny freeze when a hit lands.
+OPT_HIGH_CONTRAST,High contrast
+OPT_HIGH_CONTRAST_DESC,"Outline Wren and enemies, and put solid backings behind the HUD and captions."
 OPT_FLASHES,Flashes
 OPT_FLASHES_DESC,"Full white flashes, or soft ones that are gentler on the eyes."
 OPT_FLASH_SOFT,Soft
@@ -387,6 +389,13 @@ BELL_GALE_3,You learned the fourth phrase of the lullaby. Your Resonance grows.
 CAPTION_THUNDER,Thunder
 CAPTION_STORM,Storm gathering
 CAPTION_HERON,Heron screeches
+ROOM_GULLWATCH_STEPS,Gullwatch Steps
+ROOM_MILL_ROW,Mill Row
+ROOM_GALE_FLATS,Gale Flats
+ROOM_KESTREL_LEDGE,Kestrel Ledge
+ROOM_THRIFT_POINT,Thrift Point
+ROOM_SPIRE_APPROACH,Spire Approach
+ROOM_WINDBREAK_CLIFFS,Windbreak Cliffs
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast
@@ -394,6 +403,8 @@ CAPTION_WAYSHELL,Wayshell call
 CAPTION_WINGS,Great wings beat
 CAPTION_BLOCK,Clang
 CAPTION_TELL,Enemy winds up
+CAPTION_GUST,Wind gusts
+CAPTION_HISS,Steam hisses
 CAPTION_ROAR,Roar
 CAPTION_UNLOCK,Lock clicks open
 CAPTION_SWITCH,Switch clicks
@@ -402,6 +413,9 @@ CAPTION_BELL,A bell rings
 CAPTION_SECRET,Secret chime
 CAPTION_DOOR,Stone grinds
 CAPTION_PUZZLE,Something opened
+CAPTION_CHARGED,Sword charged
+CAPTION_LOCKED,Locked
+CAPTION_SHOT,Shot fired
 GAMEOVER_TITLE_TEXT,Out of breath
 GAMEOVER_WAKE,Wake at the Tidestone
 GAMEOVER_TITLE,Return to the title
@@ -427,3 +441,28 @@ NARRATE_GOT_JAR,Wren got an empty jar.
 MARGA_AFTER,"Rack's holding. Dunstan even helped tie it, if you can believe it."
 HESSA_MANTLE_1,"The bell! Good. But from the gallery I saw something huge thrashing on the Wreck Strand."
 HESSA_MANTLE_2,"Choir nets, I'd wager. On the strand, just this side of the Hull. Go and see, then come back to me."
+NAME_NETTLE,Nettle
+NETTLE_1,"Are you going up to see Hessa? Can I come? ...She'll say no. She always says no."
+NETTLE_2,"One day I'll have a lamp like yours. A real one, not paper."
+NETTLE_LEARN_1,Will you teach me the signals? I know some. One flash is yes. Two is no.
+NETTLE_LEARN_2,"And the long one is... I always forget the long one."
+NARRATE_WREN_LONG_GLOW,"Wren holds up the lamp in a long, steady glow."
+NETTLE_LEARN_3,"I'm here! The long one means I'm here. I won't forget again."
+NETTLE_AGAIN,"Yes, no, I'm here. Yes, no, I'm here. I'm practising."
+NETTLE_BELL_1,I saw you coming home with the bell! I flashed my lantern at you. Did you see?
+NARRATE_WREN_FLASH_ONCE,Wren flashes the lamp once.
+NETTLE_BELL_2,Yes! I knew you saw.
+NETTLE_WAYSHELL_1,"Hessa gave you the old keepers' shell? Then you're a proper keeper now."
+NETTLE_WAYSHELL_2,"When you're old, I'll take over. That's the plan."
+NAME_AGNA,Agna Holt
+AGNA_1,"A keeper's cap. Haven't seen one of those up the pass in years."
+AGNA_2,"This is the Kiln. All seven bells were cast in there, from bronze and the Old One's shed scale."
+AGNA_3,"The Choir came singing up the pass and took it. I'm the last founder, and I'm not leaving."
+AGNA_AGAIN,"I'm not leaving, keeper. Someone has to remember how it's done."
+AGNA_KILN_1,"You've been inside. Then you've felt it. They've stoked it white-hot."
+AGNA_KILN_2,"They mean to melt the Ember Bell into something that wakes. Get it out of the crucible."
+AGNA_AFTER_1,You pulled the Ember Bell out of my crucible. Not one founder before me managed that.
+AGNA_AFTER_2,"My forge is lit again. Here. Brinesteel, from the same metal as the bells."
+NARRATE_GOT_BRINESTEEL,Wren got the Brinesteel sword.
+AGNA_AFTER_3,"It'll ring when it strikes true. Mind you listen for it."
+AGNA_SMITH,"The forge stays lit now. Come back if that blade ever dulls."

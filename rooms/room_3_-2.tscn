@@ -6,7 +6,7 @@
 script = ExtResource("1_room")
 name_key = "ROOM_HOLLOW_BOLE"
 biome = "brinewood"
-layout = "########################
+layout = "########..##############
 #######.....M.....######
 #####...............####
 ###...~~~~.....m.....###

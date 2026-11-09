@@ -11,6 +11,8 @@ const LETTERS := {
 	"2": "pell",
 	"3": "marga",
 	"4": "dunstan",
+	"5": "nettle",
+	"6": "agna",
 }
 
 ## kind: sheet texture, frame count, the frame shown while Wren is near
@@ -22,6 +24,8 @@ const KINDS := {
 	"pell": {"texture": Art.VILLAGER_PELL, "frames": 5, "near": 0, "talk": 2, "wander": 28.0},
 	"marga": {"texture": Art.VILLAGER_MARGA, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	"dunstan": {"texture": Art.VILLAGER_DUNSTAN, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"nettle": {"texture": Art.VILLAGER_NETTLE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"agna": {"texture": Art.VILLAGER_AGNA, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.

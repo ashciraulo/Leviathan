@@ -30,7 +30,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -38,6 +38,10 @@ func _ready() -> void:
 				await _mire_shots(game)
 			"gale":
 				await _gale_shots(game)
+			"mantle":
+				game.queue_free()
+				await _wait(0.2)
+				await _mantle_shots()
 		SaveManager.delete_save()
 		get_tree().quit(0)
 		return
@@ -53,6 +57,22 @@ func _ready() -> void:
 	Input.action_release("move_right")
 	await _wait(0.4)
 	await _capture("04_tidepools_scuttlers")
+	# Accessibility: high contrast outlines and a caption from each side,
+	# away from the crabs and not mid-blink from a pinch.
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.ai_enabled = false
+	player.global_position = game.current_room.global_position + Vector2(200, 7 * Room.TILE + 12)
+	await _wait(2.0)
+	var contrast_was := Settings.high_contrast
+	var captions_was := Settings.captions
+	Settings.high_contrast = true
+	Settings.captions = true
+	Audio.play_sfx("bell_ring", game.current_room.global_position + Vector2(8, 60))
+	Audio.play_sfx("door_locked", game.current_room.global_position + Vector2(370, 60))
+	await _wait(0.2)
+	await _capture("04b_high_contrast")
+	Settings.high_contrast = contrast_was
+	Settings.captions = captions_was
 
 	# 4. A sword swing connecting with a Scuttler.
 	var room: Room = game.current_room
@@ -115,6 +135,13 @@ func _ready() -> void:
 		Vector2i(4, 2): ["51_drowned_causeway", Vector2i(11, 1)],
 		Vector2i(3, 2): ["52_witherroot_hollow", Vector2i(5, 1)],
 		Vector2i(5, 2): ["53_mirelight_edge", Vector2i(3, 7)],
+		Vector2i(3, -3): ["54_gullwatch_steps", Vector2i(8, 9)],
+		Vector2i(4, -3): ["55_mill_row", Vector2i(11, 4)],
+		Vector2i(5, -3): ["56_gale_flats", Vector2i(13, 4)],
+		Vector2i(4, -4): ["57_kestrel_ledge", Vector2i(11, 10)],
+		Vector2i(3, -4): ["58_thrift_point", Vector2i(16, 7)],
+		Vector2i(5, -4): ["59_spire_approach", Vector2i(11, 3)],
+		Vector2i(6, -4): ["60_windbreak_cliffs", Vector2i(3, 5)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
@@ -245,18 +272,7 @@ func _ready() -> void:
 	await _skip_scene(story)
 	story.queue_free()
 	await _wait(0.2)
-	GameState.reset_new_game()
-	GameState.set_flag("tidebell_hull")
-	GameState.set_checkpoint(Vector2i(4, 0), Vector2(1 * Room.TILE + 8, 6 * Room.TILE + 12))
-	var strand: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
-	add_child(strand)
-	await _wait(1.0)
-	await _capture("35_mantle_netted")
-	await _wait(6.0)
-	await _capture("36_mantle_rises")
-	await _skip_scene(strand)
-	strand.queue_free()
-	await _wait(0.2)
+	await _mantle_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -284,7 +300,7 @@ func _ready() -> void:
 	GameState.set_flag("found_crab")
 	GameState.set_checkpoint(Vector2i(0, -1), Vector2(8 * Room.TILE + 8, 9 * Room.TILE + 12))
 	SaveManager.save_game()
-	pools._on_player_died()
+	pools.respawn()
 	await _wait(2.4)
 	for child in pools.current_room.get_children():
 		if child is Npc and child.kind == "pell":
@@ -294,6 +310,25 @@ func _ready() -> void:
 	Conversations.talk("pell")
 	await _wait(1.5)
 	await _capture("34_pell_pearl")
+	_finish_talk(pools)
+	# Nettle, with their paper lantern held up as they talk.
+	for child in pools.current_room.get_children():
+		if child is Npc and child.kind == "nettle":
+			pools.player.global_position = child.global_position + Vector2(0, 18)
+	pools.player.facing = Vector2.UP
+	Conversations.talk("nettle")
+	await _wait(1.5)
+	await _capture("37_nettle")
+	_finish_talk(pools)
+	# Agna Holt, the last founder, outside the Kiln.
+	GameState.set_checkpoint(Vector2i(10, -2), Vector2(14 * Room.TILE + 8, 6 * Room.TILE + 12))
+	SaveManager.save_game()
+	pools.respawn()
+	await _wait(2.4)
+	pools.player.facing = Vector2.UP
+	Conversations.talk("agna")
+	await _wait(1.5)
+	await _capture("38_agna")
 	_finish_talk(pools)
 
 	SaveManager.delete_save()
@@ -641,3 +676,19 @@ func _capture(file_name: String) -> void:
 	var path := _out_dir.path_join(file_name + ".png")
 	var err := image.save_png(path)
 	print("Saved %s (%s)" % [path, error_string(err)])
+
+
+## Freeing Mantle on the Wreck Strand: netted, then cut free and rising.
+func _mantle_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	GameState.set_checkpoint(Vector2i(4, 0), Vector2(1 * Room.TILE + 8, 6 * Room.TILE + 12))
+	var strand: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(strand)
+	await _wait(1.0)
+	await _capture("35_mantle_netted")
+	await _wait(6.0)
+	await _capture("36_mantle_rises")
+	await _skip_scene(strand)
+	strand.queue_free()
+	await _wait(0.2)

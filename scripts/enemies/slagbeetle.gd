@@ -42,6 +42,7 @@ func _think(delta: float) -> void:
 			if line != Vector2.ZERO:
 				mode = Mode.CRACK
 				_timer = CRACK_TIME
+				Audio.play_sfx("beetle_crack", global_position)
 				_direction = line
 				velocity = Vector2.ZERO
 		Mode.CRACK:

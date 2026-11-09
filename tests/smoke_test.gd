@@ -40,6 +40,7 @@ func _ready() -> void:
 	await _test_brinewood_pearl()
 	await _test_cinderreach()
 	await _test_gloamfen()
+	await _test_windmere()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -317,7 +318,7 @@ func _test_villagers() -> void:
 			people[child.kind] = child
 		elif child is Prop and child.kind == "n":
 			sign = child
-	for who in ["hessa", "pell", "marga", "dunstan"]:
+	for who in ["hessa", "pell", "marga", "dunstan", "nettle"]:
 		_check(people.has(who), "%s lives in Saltmarrow" % who)
 	# On screen, each of them, and Wren standing just below to talk, stays
 	# above the tallest the dialogue box (and its name tab) ever gets.
@@ -1703,7 +1704,7 @@ func _test_audio() -> void:
 	_check(Audio.cue_for_room("brinewood", "") == "region_brinewood", "rooms play their region's music")
 	_check(Audio.cue_for_room("hull", "hull") == "dungeon_hull", "dungeon rooms play the dungeon's music")
 	var heard: Array[String] = []
-	var listen := func(key: String) -> void: heard.append(key)
+	var listen := func(key: String, _side: int) -> void: heard.append(key)
 	Events.caption.connect(listen)
 	var was := Settings.captions
 	Settings.captions = true
@@ -1714,6 +1715,29 @@ func _test_audio() -> void:
 	Settings.captions = was
 	Events.caption.disconnect(listen)
 	_check(heard == ["CAPTION_BELL"], "captions show only when the option is on")
+	var sides: Array[int] = []
+	var listen_side := func(_key: String, side: int) -> void: sides.append(side)
+	Events.caption.connect(listen_side)
+	Settings.captions = true
+	for at: Variant in [Vector2(-1000, 0), Vector2(100000, 0), null]:
+		Audio._last_played.clear()
+		Audio.play_sfx("bell_ring", at)
+	Settings.captions = was
+	Events.caption.disconnect(listen_side)
+	_check(sides == [-1, 1, 0], "captions say which side a sound came from (%s)" % [sides])
+	# High contrast outlines sprites that ask for one, only while it's on.
+	var outlined := Art.sprite(Art.WREN, 6, 3, 22)
+	outlined.set_meta("contrast", Palette.CONTRAST_WREN)
+	var contrast_was := Settings.high_contrast
+	Settings.high_contrast = true
+	Art.set_flash(outlined, 0.0)
+	var on: Color = (outlined.material as ShaderMaterial).get_shader_parameter("outline_color")
+	Settings.high_contrast = false
+	Art.set_flash(outlined, 0.0)
+	var off: Color = (outlined.material as ShaderMaterial).get_shader_parameter("outline_color")
+	Settings.high_contrast = contrast_was
+	outlined.free()
+	_check(on == Palette.CONTRAST_WREN and off.a == 0.0, "high contrast outlines Wren only when it's on")
 	Audio.play_music("region_saltmarrow")
 	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
 	Audio.stop_music(0.01)
@@ -1890,6 +1914,45 @@ func _test_side_quests() -> void:
 	Conversations.talk("marga")
 	_finish_talk(game)
 	_check(GameState.item_count("jar") == 1, "Marga only gives one jar")
+
+	# Nettle learns the lamp signals once Wren has met Hessa.
+	GameState.reset_new_game()
+	_check(Conversations.branch_for("nettle")["lines"][0] == "NETTLE_1", "Nettle wants to come along at first")
+	GameState.set_flag("met_hessa")
+	Conversations.talk("nettle")
+	_finish_talk(game)
+	_check(GameState.has_flag("nettle_learned"), "Wren teaches Nettle the long glow")
+	_check(Conversations.branch_for("nettle")["lines"][0] == "NETTLE_AGAIN", "Nettle practises afterwards")
+	game.queue_free()
+	await _wait(0.1)
+
+	# Agna Holt waits outside the Kiln, and forges Wren a sword after the Ember Bell.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(10, -2), GameState.NO_POSITION)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var agna: Npc = null
+	for child in game.current_room.get_children():
+		if child is Npc and child.kind == "agna":
+			agna = child
+	_check(agna != null, "Agna Holt stands at the Kiln's Mouth")
+	if agna:
+		var feet: float = agna.get_global_transform_with_canvas().origin.y
+		_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "Agna and Wren stay clear of the dialogue box")
+	GameState.set_flag("entered_kiln")
+	_check(Conversations.branch_for("agna")["lines"][0] == "AGNA_1", "Agna introduces herself even after Wren has been inside")
+	Conversations.talk("agna")
+	_finish_talk(game)
+	_check(GameState.has_flag("met_agna"), "Agna introduces the Kiln")
+	_check(Conversations.branch_for("agna")["lines"][0] == "AGNA_KILN_1", "Agna knows Wren has been inside")
+	GameState.set_flag("tidebell_kiln")
+	Conversations.talk("agna")
+	_finish_talk(game)
+	_check(GameState.has_item("brinesteel_sword") and GameState.equipped.get("sword", "") == "brinesteel_sword", "Agna's Brinesteel sword is put on")
+	Conversations.talk("agna")
+	_finish_talk(game)
+	_check(Conversations.branch_for("agna")["lines"][0] == "AGNA_SMITH", "Agna only forges one sword")
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1905,3 +1968,74 @@ func _test_text_fit() -> void:
 	for key: String in Settings.language_keys():
 		_check(tr(key) != key, "%s names its language" % key)
 	canvas.queue_free()
+
+
+## Windmere Heights: gusts pulse (a rising tell, then a shove), carry Wren
+## and the Tumbleburrs downwind, and the chasm at Gullwatch Steps can't be
+## walked across.
+func _test_windmere() -> void:
+	var steps := Room.parse_layout(((load("res://rooms/room_3_-3.tscn") as PackedScene).instantiate() as Room).layout)
+	# In the dark its veiled planks are only water; the Glowmoth Lantern
+	# shows them, a way across.
+	var dark := PackedStringArray()
+	var lit := PackedStringArray()
+	for row in steps:
+		dark.append(row.replace("v", "~"))
+		lit.append(row.replace("v", "."))
+	_check(not _walkable_from(dark, Vector2i(8, 12)).has(Vector2i(8, 3)), "the Gullwatch chasm can't be crossed on foot")
+	_check(steps[5].contains("v") and _walkable_from(lit, Vector2i(8, 12)).has(Vector2i(8, 3)), "lantern planks bridge the Gullwatch chasm")
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(4, -3), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var room: Room = game.current_room
+	var player: Player = game.player
+	var gust := room.get_node_or_null("Gust") as Gust
+	_check(gust != null and gust.wind.x > 0.0, "Mill Row has an eastward wind")
+	if gust == null:
+		game.queue_free()
+		return
+	var burr := Tumbleburr.new()
+	burr.position = Vector2(8 * Room.TILE, 3 * Room.TILE + 12)
+	room.add_child(burr)
+	player.global_position = room.global_position + Vector2(4 * Room.TILE, 6 * Room.TILE + 12)
+	var rose_first := false
+	var seen_rise := false
+	for i in 120:
+		await _wait(0.05)
+		seen_rise = seen_rise or gust.phase == Gust.Phase.RISING
+		if gust.is_blowing():
+			rose_first = seen_rise
+			break
+	_check(rose_first, "the wind rises (the tell) before it gusts")
+	var wren_x := player.global_position.x
+	var burr_x := burr.global_position.x
+	await _wait(0.8)
+	_check(player.global_position.x > wren_x + 10.0, "a gust shoves Wren downwind")
+	_check(burr.global_position.x > burr_x + 10.0, "a gust bowls a Tumbleburr downwind")
+	_check(burr.take_hit(1, Vector2.LEFT) == Enemy.HitResult.HIT, "one cut scatters a Tumbleburr")
+	var mill: Prop = null
+	for child in room.get_children():
+		if child is Prop and child.kind == "J":
+			mill = child
+	var turned := false
+	if mill != null:
+		var first := mill._sprite.frame
+		for i in 10:
+			await _wait(0.05)
+			turned = turned or mill._sprite.frame != first
+	_check(turned, "Mill Row's windmills turn")
+	# A gust can't bowl a burr out through an exit and off the map.
+	var stray := Tumbleburr.new()
+	stray.position = Vector2(22 * Room.TILE, 6 * Room.TILE + 12)
+	room.add_child(stray)
+	for i in 60:
+		await _wait(0.05)
+	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(stray.position), "a Tumbleburr stays in its own room (at %s)" % stray.position)
+	stray.queue_free()
+	game.queue_free()
+	await _wait(0.1)

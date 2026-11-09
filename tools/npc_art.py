@@ -204,7 +204,119 @@ def dunstan_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# Nettle, about nine, who wants to be a keeper too. A keeper's cap far too
+# big for them, a red-striped jumper (Wren's is navy), and a paper lantern. Holds the
+# lantern up when they talk.
+# --------------------------------------------------------------------------
+NETTLE = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "......CCCC......",
+    "....CCCCCCCC....",
+    "...CCCCJCCCCC...",
+    "..CCCCCCCCCCCCC.",
+    "...MVVVVVVVVM...",
+    "...MVeVVVVeVM...",
+    "...MVeVVVVeVM...",
+    "....V%VVVV%V....",
+    ".....VVVVVV.....",
+    "....rrrrrrrr....",
+    "...qqqqqqqqqq...",
+    "..VrrrrrrrrrrV..",
+    "...qqqqqqqqqq.Q.",
+    "...rrrrrrrrrrQQQ",
+    "....pppppppp.QJQ",
+    "....pp....pp.QQQ",
+    "....VV....VV....",
+    "....VV....VV....",
+    "....bb....bb....",
+    "................",
+]
+
+
+NETTLE_TALK = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "......CCCC......",
+    "....CCCCCCCC....",
+    "...CCCCJCCCCC.Q.",
+    "..CCCCCCCCCCCQQQ",
+    "...MVVVVVVVVMQJQ",
+    "...MVeVVVVeVMQQQ",
+    "...MVeVVVVeVM.V.",
+    "....V%VVVV%V..V.",
+    ".....VVVVVV...r.",
+    "....rrrrrrrr.r..",
+    "...qqqqqqqqqqq..",
+    "..Vrrrrrrrrrr...",
+    "...qqqqqqqqqq...",
+    "...rrrrrrrrrr...",
+    "....pppppppp....",
+    "....pp....pp....",
+    "....VV....VV....",
+    "....VV....VV....",
+    "....bb....bb....",
+    "................",
+]
+
+
+def nettle_frames():
+    idle = NETTLE
+    breathe = settle(idle, 15)
+    # Talking: the lantern comes up beside the cap, held high.
+    return [idle, breathe, NETTLE_TALK]
+
+
+# --------------------------------------------------------------------------
+# Agna Holt, the last bell-founder of Cinderreach. Grey hair in a bun,
+# founder's goggles pushed up on her brow, a long leather apron over rolled
+# sleeves and strong arms. Points with one arm when she talks.
+# --------------------------------------------------------------------------
+AGNA = [
+    "................",
+    "......ZZZZ......",
+    ".....ZZZZZZ.....",
+    "....ZZZZZZZZ....",
+    "...ZQeQQQQeQZ...",
+    "...ZAAAAAAAAZ...",
+    "...AAeAAAAeAA...",
+    "...AAeAAAAeAA...",
+    "...AA%AAAA%AA...",
+    "....AAAAAAAA....",
+    ".....AAAAAA.....",
+    "...qqqqqqqqqq...",
+    "..qqbbbbbbbbqq..",
+    ".AqqbbbbbbbbqqA.",
+    ".AAqbbbbbbbbqAA.",
+    ".AA.bbbbbbbb.AA.",
+    ".AA.bbbbbbbb.AA.",
+    "..A.bbbbbbbb.A..",
+    "....bbbbbbbb....",
+    "....bbbbbbbb....",
+    "....pppppppp....",
+    "....ppp..ppp....",
+    "....bbb..bbb....",
+    "................",
+]
+
+
+def agna_frames():
+    idle = AGNA
+    breathe = settle(idle, 11)
+    # Talking: her right arm comes up, pointing the way to the Kiln.
+    talk = paint(idle, [(15, 13, ".."), (16, 13, ".."), (17, 13, "."), (14, 13, "q."),
+                        (12, 14, "AA"), (11, 14, "AA"), (10, 15, "A")])
+    return [idle, breathe, talk]
+
+
 SPRITES = {
+    "agna": agna_frames,
+    "nettle": nettle_frames,
     "corrin": corrin_frames,
     "pell": pell_frames,
     "marga": marga_frames,
@@ -336,7 +448,44 @@ def portrait_dunstan():
     return _rows(c)
 
 
+def portrait_nettle():
+    c = _canvas()
+    # Striped jumper, red and white, after Wren's.
+    _ellipse(c, 16, 32, 13, 8, "r")
+    for y in (26, 29):
+        _box(c, 0, y, P, 1, "q")
+    for y in range(24, 32):
+        for x in range(P):
+            if c[y][x] == "q" and ((x + 0.5 - 16) / 13) ** 2 + ((y + 0.5 - 32) / 8) ** 2 > 1.0:
+                c[y][x] = "."
+    _face(c, "V", eye_row=17, cy=18, rx=7, ry=7)
+    _dots(c, [(8, 15), (8, 16), (9, 17), (23, 15), (23, 16), (22, 17), (8, 18), (23, 18)], "M")  # curls
+    # The cap, much too big, slipping down to the eyebrows.
+    _ellipse(c, 16, 9, 12, 7, "C")
+    _box(c, 3, 12, 26, 3, "C")
+    _box(c, 15, 7, 3, 3, "J")                          # the lamp badge, home-made
+    return _rows(c)
+
+
+def portrait_agna():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "q")                    # rolled-up shirt
+    _box(c, 10, 25, 12, 7, "b")                        # leather apron bib
+    _dots(c, [(9, 24), (22, 24)], "b")                 # straps
+    _ellipse(c, 16, 14, 10, 8, "Z")                    # grey hair
+    _ellipse(c, 16, 5, 5, 3, "Z")                      # the bun
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8)
+    # Founder's goggles pushed up on her brow.
+    _box(c, 8, 11, 16, 2, "Q")
+    _box(c, 10, 10, 3, 3, "e")
+    _box(c, 19, 10, 3, 3, "e")
+    _dots(c, [(21, 20), (22, 21)], "-")                # a smudge of soot
+    return _rows(c)
+
+
 PORTRAITS = {
+    "agna": portrait_agna(),
+    "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),
     "corrin": portrait_corrin(),
     "pell": portrait_pell(),

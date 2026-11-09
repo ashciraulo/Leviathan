@@ -23,6 +23,8 @@ const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
 	"corrin": ["NAME_CORRIN", Art.PORTRAIT_CORRIN],
 	"pell": ["NAME_PELL", Art.PORTRAIT_PELL],
+	"nettle": ["NAME_NETTLE", Art.PORTRAIT_NETTLE],
+	"agna": ["NAME_AGNA", Art.PORTRAIT_AGNA],
 	"marga": ["NAME_MARGA", Art.PORTRAIT_MARGA],
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 }
@@ -54,6 +56,24 @@ const TALKS := {
 		{"lines": ["PELL_1", "PELL_2"]},
 	],
 	# Marga sends Wren to Dunstan for rope: a small errand made of flags.
+	# Nettle wants to be a keeper, and learns the lamp signals from Wren.
+	"nettle": [
+		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
+		{"if": ["tidebell_hull"], "unless": ["heard_nettle_bell"], "set": ["heard_nettle_bell"], "lines": ["NETTLE_BELL_1", ["", "NARRATE_WREN_FLASH_ONCE"], "NETTLE_BELL_2"]},
+		{"if": ["nettle_learned"], "lines": ["NETTLE_AGAIN"]},
+		{"if": ["met_hessa"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
+		{"lines": ["NETTLE_1", "NETTLE_2"]},
+	],
+	# Agna Holt, the last founder, outside the Kiln. After the Ember Bell she
+	# lights her forge again and gives Wren a Brinesteel sword. She always
+	# introduces herself first, even if Wren walked past her into the Kiln.
+	"agna": [
+		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
+		{"unless": ["met_agna"], "set": ["met_agna"], "lines": ["AGNA_1", "AGNA_2", "AGNA_3"]},
+		{"if": ["tidebell_kiln"], "set": ["agna_gave_sword"], "give": {"brinesteel_sword": 1}, "lines": ["AGNA_AFTER_1", "AGNA_AFTER_2", ["", "NARRATE_GOT_BRINESTEEL"], "AGNA_AFTER_3"]},
+		{"if": ["entered_kiln"], "lines": ["AGNA_KILN_1", "AGNA_KILN_2"]},
+		{"lines": ["AGNA_AGAIN"]},
+	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
 		{"if": ["marga_thanked", "tidebell_hull"], "set": ["marga_gave_jar"], "give": {"jar": 1}, "lines": ["MARGA_EEL_1", "MARGA_EEL_2", ["", "NARRATE_GOT_JAR"]]},
