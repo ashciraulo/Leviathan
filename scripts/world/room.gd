@@ -150,6 +150,7 @@ const BIOMES := {
 
 func _ready() -> void:
 	y_sort_enabled = true
+	add_to_group("rooms")
 	_rows = parse_layout(layout)
 	var problem := validate_layout(_rows)
 	if problem != "":
@@ -288,6 +289,15 @@ func _process(delta: float) -> void:
 		_water_time = 0.0
 		_water_frame = 1 - _water_frame
 		_ground.queue_redraw()
+
+
+## The room under a point (global), or null.
+static func under(tree: SceneTree, at: Vector2) -> Room:
+	for node in tree.get_nodes_in_group("rooms"):
+		var room := node as Room
+		if room and not room.is_queued_for_deletion() and Rect2(room.global_position, SIZE).has_point(at):
+			return room
+	return null
 
 
 ## The layout letter at a tile (walls outside the room).

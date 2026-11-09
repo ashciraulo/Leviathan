@@ -1,7 +1,8 @@
 class_name WindFan
 extends StaticBody2D
 ## A fan set in the tower floor (> < N S: the way it blows). It drives a
-## stream of wind straight ahead until a wall stops it. Walking, Wren is
+## stream of wind straight ahead until a wall or the room's edge stops it
+## (it never blows out through a doorway). Walking, Wren is
 ## pushed along it (they can still walk against it, slowly, and it never
 ## blows them off an edge); gliding on the Kite Cloak, the stream carries
 ## them and keeps them up.
@@ -44,6 +45,8 @@ func _ready() -> void:
 	for i in REACH:
 		var next := last + step
 		if room == null or room.tile_at(next.x, next.y) == "#":
+			break
+		if next.x <= 0 or next.y <= 0 or next.x >= Room.COLS - 1 or next.y >= Room.ROWS - 1:
 			break
 		last = next
 	var a := Vector2(mini(tile.x, last.x), mini(tile.y, last.y)) * Room.TILE

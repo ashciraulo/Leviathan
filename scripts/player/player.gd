@@ -300,9 +300,12 @@ func drop_through(coord: Vector2i, tile: Vector2i) -> void:
 	var tween := create_tween()
 	tween.tween_property(_body, "scale", Vector2(0.3, 0.3), 0.3)
 	await tween.finished
-	_body.scale = Vector2.ONE
+	# Out of sight until the room below has faded in.
+	_body.visible = false
 	_enter(State.MOVE)
 	Events.door_entered.emit(coord, tile)
+	await get_tree().create_timer(0.4).timeout
+	_body.scale = Vector2.ONE
 
 
 ## Wren drops through a gap in the deck: shrink away, lose a bubble, and

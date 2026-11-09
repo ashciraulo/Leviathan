@@ -6,7 +6,9 @@ extends Node2D
 ## the wind takes them along and keeps them up as long as they stay in it.
 ## They can lean left and right a little, and fold the cloak (the item key
 ## again) to come down early. When the glide ends they drop where they are
-## (into the sky, if that's where they are).
+## (into the sky, if that's where they are). A glide never comes down on
+## water: it carries on to the far bank, or, blown up against a wall over
+## the water, drops Wren back where they took off, a bubble lighter.
 ##
 ## Lives as a child of Wren while in use, and frees itself when done.
 
@@ -27,11 +29,13 @@ var _time := 0.0
 var _velocity := Vector2.ZERO
 var _lift := 0.0
 var _stuck := 0.0
+var _from := Vector2.ZERO
 
 
 func _ready() -> void:
 	_player = get_parent() as Player
 	_velocity = _player.facing * SPEED
+	_from = _player.global_position
 	_player.airborne = true
 	# Over water and holes alike: only walls stop Wren.
 	_player.collision_mask = 1 << (Layers.WORLD - 1)
@@ -61,7 +65,22 @@ func _physics_process(delta: float) -> void:
 	# Blown up against a wall, there's nowhere to go but down.
 	_stuck = _stuck + delta if _time > 0.1 and _player.get_real_velocity().length() < 20.0 else 0.0
 	if _left <= 0.0 or _time >= MAX_TIME or fold or _stuck > 0.2:
-		_land()
+		if not _over_water():
+			_land()
+		elif _stuck > 0.2 or _time >= MAX_TIME + 1.5:
+			_land()
+			_player.fall(_from)
+		else:
+			_left = 0.05
+
+
+func _over_water() -> bool:
+	var at := _player.global_position + Vector2(0, -3)
+	var room := Room.under(get_tree(), at)
+	if room == null:
+		return false
+	var local := at - room.global_position
+	return room.tile_at(floori(local.x / Room.TILE), floori(local.y / Room.TILE)) == "~"
 
 
 func _land() -> void:
