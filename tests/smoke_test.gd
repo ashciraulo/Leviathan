@@ -1799,6 +1799,36 @@ func _test_side_quests() -> void:
 	game.queue_free()
 	await _wait(0.1)
 
+	# Agna Holt waits outside the Kiln, and forges Wren a sword after the Ember Bell.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(10, -2), GameState.NO_POSITION)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var agna: Npc = null
+	for child in game.current_room.get_children():
+		if child is Npc and child.kind == "agna":
+			agna = child
+	_check(agna != null, "Agna Holt stands at the Kiln's Mouth")
+	if agna:
+		var feet: float = agna.get_global_transform_with_canvas().origin.y
+		_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "Agna and Wren stay clear of the dialogue box")
+	GameState.set_flag("entered_kiln")
+	_check(Conversations.branch_for("agna")["lines"][0] == "AGNA_1", "Agna introduces herself even after Wren has been inside")
+	Conversations.talk("agna")
+	_finish_talk(game)
+	_check(GameState.has_flag("met_agna"), "Agna introduces the Kiln")
+	_check(Conversations.branch_for("agna")["lines"][0] == "AGNA_KILN_1", "Agna knows Wren has been inside")
+	GameState.set_flag("tidebell_kiln")
+	Conversations.talk("agna")
+	_finish_talk(game)
+	_check(GameState.has_item("brinesteel_sword") and GameState.equipped.get("sword", "") == "brinesteel_sword", "Agna's Brinesteel sword is put on")
+	Conversations.talk("agna")
+	_finish_talk(game)
+	_check(Conversations.branch_for("agna")["lines"][0] == "AGNA_SMITH", "Agna only forges one sword")
+	game.queue_free()
+	await _wait(0.1)
+
 
 func _test_text_fit() -> void:
 	var canvas := Control.new()

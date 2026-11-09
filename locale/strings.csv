@@ -425,3 +425,15 @@ NARRATE_WREN_FLASH_ONCE,Wren flashes the lamp once.
 NETTLE_BELL_2,Yes! I knew you saw.
 NETTLE_WAYSHELL_1,"Hessa gave you the old keepers' shell? Then you're a proper keeper now."
 NETTLE_WAYSHELL_2,"When you're old, I'll take over. That's the plan."
+NAME_AGNA,Agna Holt
+AGNA_1,"A keeper's cap. Haven't seen one of those up the pass in years."
+AGNA_2,"This is the Kiln. All seven bells were cast in there, from bronze and the Old One's shed scale."
+AGNA_3,"The Choir came singing up the pass and took it. I'm the last founder, and I'm not leaving."
+AGNA_AGAIN,"I'm not leaving, keeper. Someone has to remember how it's done."
+AGNA_KILN_1,"You've been inside. Then you've felt it. They've stoked it white-hot."
+AGNA_KILN_2,"They mean to melt the Ember Bell into something that wakes. Get it out of the crucible."
+AGNA_AFTER_1,You pulled the Ember Bell out of my crucible. Not one founder before me managed that.
+AGNA_AFTER_2,"My forge is lit again. Here. Brinesteel, from the same metal as the bells."
+NARRATE_GOT_BRINESTEEL,Wren got the Brinesteel sword.
+AGNA_AFTER_3,"It'll ring when it strikes true. Mind you listen for it."
+AGNA_SMITH,"The forge stays lit now. Come back if that blade ever dulls."

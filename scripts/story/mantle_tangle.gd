@@ -2,19 +2,38 @@ class_name MantleTangle
 extends Node2D
 ## Mantle the sky-ray lying caught in grey Choir netting on the Wreck Strand
 ## (cutscene 6). The director spawns it, has Wren cut the net, and then
-## Mantle lifts off. Drawn from Mantle's own sprite sheet plus net lines.
+## Mantle lifts off. Drawn from Mantle's own sprite sheet under a hand-built net.
 
 signal risen
 
 const FRAME_SIZE := Vector2(96, 80)
 const FRAMES := 4
-const NET := Color("#8b8f9c")
-const NET_DARK := Color("#5d6070")
+## Choir netting: pale grey cord, knots, a twisted rim rope, brass weights
+## and guy ropes pegged into the sand.
+const CORD_LIGHT := Color("#c9ccd6")
+const CORD := Color("#9a9eab")
+const CORD_DARK := Color("#5d6070")
+const ROPE := Color("#8a8478")
+const ROPE_DARK := Color("#575247")
+const WEIGHT := Color("#b8914f")
+const WEIGHT_LIGHT := Color("#e2c27e")
+const STAKE := Color("#7a5634")
 const RISE_TIME := 2.2
 ## Offset that puts the flying sprite's body over Mantle's feet.
 const BODY := Vector2(-10, -6)
-## The net, around the body, relative to Mantle's feet.
-const NET_RECT := Rect2(-34, -30, 64, 30)
+## The net is an uneven oval over the body and inner wings, relative to
+## Mantle's feet, drawn into a texture once (see _net_texture).
+const NET_CENTRE := Vector2(0, -7)
+const NET_RADIUS := Vector2(31, 24)
+const NET_ORIGIN := Vector2(-46, -43)
+const NET_SIZE := Vector2i(92, 74)
+## Mesh spacing in pixels at the rim; the middle bulges wider over the body.
+const MESH := 8.0
+const BULGE := 0.25
+## Where Wren's blade parts the net, in texture columns.
+const CUT_X := 46
+
+static var _texture: Texture2D
 
 ## 0 = netted and still, 1 = net gone.
 var _net := 1.0
@@ -75,19 +94,91 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if _net <= 0.0:
 		return
-	# The net: a diamond mesh thrown over the body and pegged into the sand.
-	# Once cut it sags and fades.
-	var sag := (1.0 - _net) * 8.0
-	var colour := Color(NET, _net)
-	var dark := Color(NET_DARK, _net)
-	var top := NET_RECT.position.y + sag
-	var bottom := NET_RECT.end.y
-	var x := NET_RECT.position.x
-	while x < NET_RECT.end.x:
-		draw_line(Vector2(x, top), Vector2(x + 12.0, bottom), colour, -1.0)
-		draw_line(Vector2(x + 12.0, top), Vector2(x, bottom), dark, -1.0)
-		x += 8.0
-	draw_line(Vector2(NET_RECT.position.x, top), Vector2(NET_RECT.end.x + 4.0, top), colour, 1.0)
-	draw_line(Vector2(NET_RECT.position.x, bottom), Vector2(NET_RECT.end.x + 4.0, bottom), dark, 1.0)
-	for peg: Vector2 in [Vector2(NET_RECT.position.x, bottom), Vector2(NET_RECT.end.x + 4.0, bottom), Vector2(NET_RECT.position.x, top), Vector2(NET_RECT.end.x + 4.0, top)]:
-		draw_rect(Rect2(peg.x - 1.0, peg.y - 2.0, 3.0, 4.0), Color(Palette.OUTLINE, _net))
+	# Once cut, the two halves part, slump onto the sand and fade.
+	var texture := _net_texture()
+	var gone := 1.0 - _net
+	var tint := Color(1, 1, 1, _net)
+	var halves := [[0, -1.0], [CUT_X, 1.0]]
+	for half: Array in halves:
+		var from: int = half[0]
+		var width: int = CUT_X if from == 0 else NET_SIZE.x - CUT_X
+		var shift := Vector2(float(half[1]) * gone * 10.0, gone * 9.0).round()
+		draw_texture_rect_region(texture, Rect2(NET_ORIGIN + Vector2(from, 0) + shift, Vector2(width, NET_SIZE.y)),
+			Rect2(from, 0, width, NET_SIZE.y), tint)
+
+
+## The net, drawn pixel by pixel once and shared.
+static func _net_texture() -> Texture2D:
+	if _texture != null:
+		return _texture
+	var image := Image.create(NET_SIZE.x, NET_SIZE.y, false, Image.FORMAT_RGBA8)
+	var inside := func(p: Vector2) -> float:
+		var d := (p - NET_CENTRE) / NET_RADIUS
+		var a := d.angle()
+		var edge := 1.0 + 0.07 * sin(3.0 * a + 1.0) + 0.04 * sin(7.0 * a)
+		return d.length() / edge
+	# Guy ropes from the rim out to stakes in the sand, under everything else.
+	for angle: float in [0.5, 2.6, 3.7, 5.5]:
+		var dir := Vector2.from_angle(angle)
+		var rim := NET_CENTRE + dir * NET_RADIUS * 0.98
+		var peg := NET_CENTRE + dir * NET_RADIUS * 1.32
+		for i in 24:
+			var p := rim.lerp(peg, i / 23.0).round() - NET_ORIGIN
+			_put(image, p, ROPE_DARK if i % 3 == 0 else ROPE)
+		var stake := peg.round() - NET_ORIGIN
+		for y in range(-3, 2):
+			_put(image, stake + Vector2(-1, y), Palette.OUTLINE)
+			_put(image, stake + Vector2(0, y), STAKE)
+			_put(image, stake + Vector2(1, y), Palette.OUTLINE)
+		_put(image, stake + Vector2(0, -4), Palette.OUTLINE)
+	# The mesh: two families of diagonal cords, spread wide over the body's
+	# dome and bunched at the rim, with a knot where they cross and a soft
+	# shadow on Mantle beneath each cord.
+	var cords: Array[Vector2] = []
+	for y in NET_SIZE.y:
+		for x in NET_SIZE.x:
+			var p := NET_ORIGIN + Vector2(x, y)
+			var s: float = inside.call(p)
+			if s >= 1.0:
+				continue
+			var m := (p - NET_CENTRE) / (1.0 + BULGE * (1.0 - s * s))
+			var a := fposmod(m.x + m.y, MESH) < 1.0
+			var b := fposmod(m.x - m.y, MESH) < 1.0
+			if a and b:
+				image.set_pixel(x, y, CORD_DARK)
+				cords.append(Vector2(x, y))
+			elif a:
+				image.set_pixel(x, y, CORD_LIGHT)
+				cords.append(Vector2(x, y))
+			elif b:
+				image.set_pixel(x, y, CORD)
+				cords.append(Vector2(x, y))
+	for c: Vector2 in cords:
+		var below := c + Vector2(1, 1)
+		if below.x < NET_SIZE.x and below.y < NET_SIZE.y and image.get_pixelv(below).a == 0.0:
+			image.set_pixelv(below, Color(0.06, 0.04, 0.14, 0.4))
+	# The rim rope: an outline outside, then a twisted cord.
+	for y in NET_SIZE.y:
+		for x in NET_SIZE.x:
+			var s: float = inside.call(NET_ORIGIN + Vector2(x, y))
+			if s >= 1.0 and s < 1.04:
+				image.set_pixel(x, y, Palette.OUTLINE)
+			elif s >= 0.95 and s < 1.0:
+				image.set_pixel(x, y, ROPE if (x + y) / 2 % 2 == 0 else ROPE_DARK)
+	# Brass weights strung along the rim.
+	for i in 9:
+		var w := (NET_CENTRE + Vector2.from_angle(0.3 + i * TAU / 9.0) * NET_RADIUS).round() - NET_ORIGIN
+		for y in range(-2, 2):
+			for x in range(-2, 3):
+				var edge := absi(x) == 2 or y == -2 or y == 1
+				var corner := absi(x) == 2 and (y == -2 or y == 1)
+				if not corner:
+					_put(image, w + Vector2(x, y), Palette.OUTLINE if edge else WEIGHT)
+		_put(image, w + Vector2(-1, -1), WEIGHT_LIGHT)
+	_texture = ImageTexture.create_from_image(image)
+	return _texture
+
+
+static func _put(image: Image, p: Vector2, colour: Color) -> void:
+	if p.x >= 0 and p.y >= 0 and p.x < image.get_width() and p.y < image.get_height():
+		image.set_pixelv(p, colour)
