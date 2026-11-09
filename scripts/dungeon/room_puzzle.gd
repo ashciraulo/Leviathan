@@ -4,7 +4,7 @@ extends Node
 ## Gates (Room.gate):
 ##   "plates"  every pressure plate held down at once
 ##   "clear"   every enemy beaten. The bars stand open until Wren is well
-##             inside, then slam shut behind her.
+##             inside, then slam shut behind them.
 ## A solved gate stays solved (saved as a flag).
 
 var _room: Room

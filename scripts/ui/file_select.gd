@@ -1,6 +1,6 @@
 class_name FileSelect
 extends MenuPage
-## Pick a journey: three save files, each showing where Wren is, her breath
+## Pick a journey: three save files, each showing where Wren is, their breath
 ## bubbles, the Tidebells rung and the time played. Copy and Erase work on
 ## whole files. An empty file starts a new game.
 

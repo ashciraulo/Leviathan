@@ -1,6 +1,6 @@
 class_name JourneyPage
 extends MenuPage
-## The journey tab: where Wren is, how long this file has run, what she has
+## The journey tab: where Wren is, how long this file has run, what they have
 ## found, and Resume / Quit to title. Saving only happens at Tidestones.
 
 signal resume_pressed

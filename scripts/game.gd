@@ -225,7 +225,7 @@ func _on_player_died() -> void:
 		get_tree().change_scene_to_file(TITLE_SCENE)
 
 
-## Bring Wren back at the last save (her Tidestone), with full breath.
+## Bring Wren back at the last save (their Tidestone), with full breath.
 func respawn() -> void:
 	busy = true
 	if _fade.color.a < 1.0:
@@ -246,7 +246,7 @@ func respawn() -> void:
 
 
 ## The Wayshell: Mantle swoops down, carries Wren over the sea to a woken
-## Tidestone and sets her down there.
+## Tidestone and sets them down there.
 func _on_fast_travel(coord: Vector2i) -> void:
 	# Not mid-fall or mid-death: those sequences end in their own respawn.
 	if busy or player == null or player.state in [Player.State.FALL, Player.State.DEAD]:

@@ -1031,7 +1031,7 @@ func _test_kiln_dungeon() -> void:
 		waited_rise += 0.1
 	await _wait(0.6)
 	local = player.global_position - room.global_position
-	_check(GameState.bubbles == before - 1 and int(local.y) / Room.TILE == 11, "the lava catches Wren and she's back at the way in (at %s)" % local)
+	_check(GameState.bubbles == before - 1 and int(local.y) / Room.TILE == 11, "the lava catches Wren and they're back at the way in (at %s)" % local)
 	_check(field.level >= Room.ROWS - 0.5, "and the lava sinks to start again (level %.1f)" % field.level)
 	player.global_position = _tile_pos(room, Vector2i(11, 1))
 	await _wait(0.3)
