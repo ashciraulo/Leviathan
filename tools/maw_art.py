@@ -47,12 +47,14 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """The palate: soft ridged flesh, now and then a glowing vein."""
+    """The palate: soft ridged flesh, now and then a glowing vein. The
+    ridges are gentle waves with a period of one tile, so they run unbroken
+    from tile to tile across the whole floor instead of stepping like brick."""
     rnd = random.Random(7100 + seed)
     px = blank(GUM[2])
     for y in range(T):
         for x in range(T):
-            ridge = (y + (x // 5 + seed) % 2 * 2) % 6
+            ridge = (y + int(round(1.5 * math.sin(x * math.pi / 8)))) % 8
             if ridge == 0:
                 px[y][x] = GUM[3]
             elif ridge == 1:
