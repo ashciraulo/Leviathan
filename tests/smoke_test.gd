@@ -577,6 +577,19 @@ func _goto(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
 	return game.current_room
 
 
+## Clears a room's enemies and any shots in the air, and fills Wren's
+## breath, so a stray hit can't end the run (and free the room) mid-test.
+## Spitters add their shots a frame late, so it waits and sweeps again.
+func _calm(room: Room) -> void:
+	for enemy in _child_of(room, Enemy):
+		if not enemy.is_in_group("boss"):
+			enemy.queue_free()
+	await _wait(0.2)
+	for shot in _child_of(room, Projectile):
+		shot.queue_free()
+	GameState.refill()
+
+
 func _child_of(room: Room, type: Variant) -> Array:
 	return room.get_children().filter(func(n: Node) -> bool: return is_instance_of(n, type))
 
@@ -591,9 +604,12 @@ func _test_hull_dungeon() -> void:
 	await _wait(0.6)
 	var player: Player = game.player
 
-	# The Orlop's broken deck: walking into a gap costs a bubble.
+	# The Orlop's broken deck: walking into a gap costs a bubble. (Its
+	# crabs and Spitters go first: a stray hit on top of the fall could
+	# empty Wren's breath and reload the room under the test.)
 	var room := await _goto(game, Vector2i(11, 8), Vector2i(11, 11))
 	_check(room.coord == Vector2i(11, 8) and room.has_node("PitField"), "the Orlop has gaps in its deck")
+	await _calm(room)
 	var before := GameState.bubbles
 	Input.action_press("move_up")
 	await _wait(0.6)
@@ -604,15 +620,8 @@ func _test_hull_dungeon() -> void:
 	_check(local.y > 10 * Room.TILE and player.state == Player.State.MOVE, "Wren climbs back onto the deck (at %s)" % local)
 	await _wait(1.1)
 
-	# The Tide Hook carries Wren over the gap to the hook post. (Clear the
-	# crabs out first so none wanders into the chain's path.)
-	for enemy in _child_of(room, Enemy):
-		enemy.queue_free()
-	# ...and any shot still in the air (Spitters add theirs a frame late):
-	# a hit mid-flight drops the hook.
-	await _wait(0.2)
-	for shot in _child_of(room, Projectile):
-		shot.queue_free()
+	# The Tide Hook carries Wren over the gap to the hook post.
+	await _calm(room)
 	await _wait(1.1)
 	_check(not player.use_item("tide_hook"), "no hook before it's found")
 	GameState.give_item("tide_hook")
@@ -630,6 +639,7 @@ func _test_hull_dungeon() -> void:
 	# The Flooded Hold: a sideways throw from the middle of a row still bites
 	# the post, and carries Wren over the water to the big key's island.
 	room = await _goto(game, Vector2i(9, 10), Vector2i(12, 11))
+	await _calm(room)
 	player.global_position = _tile_pos(room, Vector2i(12, 11))
 	player.facing = Vector2.RIGHT
 	await _wait(0.1)
@@ -640,6 +650,7 @@ func _test_hull_dungeon() -> void:
 
 	# The Cargo Hold: shove the crate onto the plate to open the bars.
 	room = await _goto(game, Vector2i(11, 9), Vector2i(8, 6))
+	await _calm(room)
 	var crate: Crate = _child_of(room, Crate)[0]
 	var start := crate.position
 	player.global_position = crate.global_position + Vector2(-15, 0)
@@ -662,6 +673,7 @@ func _test_hull_dungeon() -> void:
 
 	# The Captain's Cabin: the hook drags a crate out of its nook.
 	room = await _goto(game, Vector2i(9, 8), Vector2i(12, 3))
+	await _calm(room)
 	var nook: Crate = null
 	for c in _child_of(room, Crate):
 		if c.position.x < Room.SIZE.x / 2.0:
@@ -703,6 +715,7 @@ func _test_hull_dungeon() -> void:
 
 	# The great door needs the big key.
 	room = await _goto(game, Vector2i(10, 8), Vector2i(11, 2))
+	await _calm(room)
 	var doors: Array = _child_of(room, BigDoor)
 	_check(doors.size() == 2, "the Listing Deck has the great door")
 	player.global_position = (doors[0] as Node2D).global_position + Vector2(0, 8)
