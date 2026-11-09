@@ -61,6 +61,7 @@ func _ready() -> void:
 		built += 1
 	for i in range(built, DUNGEONS.size()):
 		_check(not ResourceLoader.exists(_room_path(DUNGEONS[i][1])), "%s is built but %s before it isn't" % [DUNGEONS[i][0], DUNGEONS[built][0]])
+	await _locked_edge()
 	var cleared := 0
 	for spec: Array in DUNGEONS.slice(0, built):
 		var ok: bool = await _dungeon(spec[0], spec[1], spec[2])
@@ -313,6 +314,34 @@ func _new_game() -> Node:
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	return game
+
+
+## A locked hatch that sits just over a screen edge (the Hull's at 10,8, met
+## walking east from 9,8) holds from both sides: without a key Wren stays
+## put, with one it opens and lets them through.
+func _locked_edge() -> void:
+	var from := Vector2i(9, 8)
+	var lock := LockedDoor.lock_flag(from + Vector2i.RIGHT)
+	var had: int = GameState.keys("hull")
+	for keys in [0, 1]:
+		GameState.flags.erase(lock)
+		GameState.flags["keys_hull"] = keys
+		var room := await _goto(from)
+		await _play_scene(5.0)
+		_keep_safe()
+		_game.player.global_position = room.global_position + Vector2(Room.SIZE.x - 10.0, 104.0)
+		Input.action_press("move_right")
+		await _wait(1.5)
+		Input.action_release("move_right")
+		await _wait(0.5)
+		var now: Vector2i = _game.current_room.coord
+		if keys == 0:
+			_check(now == from, "a locked hatch over a screen edge holds without a key (Wren got to %s)" % now)
+		else:
+			_check(now == from + Vector2i.RIGHT and GameState.flags.get(lock, false), "a key opens a hatch over a screen edge (in %s)" % now)
+		_check(_can_step(), "Wren can walk on after meeting a hatch over an edge")
+	GameState.flags.erase(lock)
+	GameState.flags["keys_hull"] = had
 
 
 ## Sets Wren down in a room (on its first open floor tile near the middle)
