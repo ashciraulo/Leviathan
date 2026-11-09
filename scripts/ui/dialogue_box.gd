@@ -1,30 +1,31 @@
 class_name DialogueBox
 extends CanvasLayer
-## The talk box: a short dark panel, a name tab,
+## The talk box: a dark panel along the bottom of the screen, a name tab,
 ## a portrait of whoever is talking, and text that types itself out.
 ## Opened through Events.conversation_requested (pages with their own
 ## speakers, see Conversations) or Events.dialogue_requested (one speaker).
 ## Pages with no speaker are narration: no tab, no portrait, softer text.
-## The box sits along the bottom of the screen unless that would hide the
-## person talking (or Wren): then it moves to the top. Fixed-view rooms can
-## put people anywhere, so this is decided when the box opens.
+## The box always sits along the bottom of the screen, always the same size. Rooms keep the people Wren
+## talks to on rows the box can't cover (see LAST_SPEAKER_ROW).
 ## The game pauses while it is open. Interact or Sword finishes the page,
 ## then turns to the next one.
 
 const CHARS_PER_SECOND := 45.0
-## Three lines of text, kept short so it covers little of the room.
-const BOX_SIZE := Vector2(368, 48)
-const BOTTOM_BOX := Rect2(Vector2(8, 216 - 8 - 48), BOX_SIZE)
-## Below the HUD (breath and Resonance), with room for the name tab.
-const TOP_BOX := Rect2(Vector2(8, 42), BOX_SIZE)
-const MAX_LINES := 3
-const TEXT_MARGIN := Vector2(9, 5)
-## Roughly where a character's body is, around their feet (screen pixels).
-const BODY := Rect2(-10, -32, 20, 34)
-## The portrait sits in a frame at the left of the box; text moves over.
+const SCREEN := Vector2(384, 216)
+## One fixed size for every conversation: two lines of text, about 15% of
+## the screen. Longer speeches are split over more pages.
+const BOX := Rect2(4, 180, 376, 32)
+const PAD := Vector2(8, 4)
+const MAX_LINES := 2
+## The portrait sits at the left, its frame poking a few pixels above the
+## box; the name tab sits beside it.
 const PORTRAIT_SIZE := 32
-const PORTRAIT_AT := Vector2(7, 8)
-const PORTRAIT_TEXT_INDENT := 42.0
+const PORTRAIT_AT := Vector2(6, -5)
+const PORTRAIT_TEXT_INDENT := 40.0
+const TAB_HEIGHT := 14
+## The highest pixel anything in the box reaches (the name tab).
+const HIGHEST_POINT := 180 - TAB_HEIGHT
+const LAST_SPEAKER_ROW := 8
 ## Wren ignores Interact and Sword for this long after the box closes, so the
 ## press that closed it doesn't start a swing or reopen the talk.
 const CLOSE_GRACE_MSEC := 250
@@ -36,7 +37,6 @@ var _panel: Control
 var _text: Label
 var _name: Label
 var _pages: Array = []
-var _box := BOTTOM_BOX
 var _page := 0
 var _shown := 0.0
 var _blink := 0.0
@@ -57,8 +57,6 @@ func _ready() -> void:
 	add_child(_panel)
 
 	_text = Label.new()
-	_text.position = _box.position + TEXT_MARGIN
-	_text.size = _box.size - TEXT_MARGIN * 2.0
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text.add_theme_font_size_override("font_size", UI.FONT_SIZE)
 	_text.add_theme_color_override("font_color", Palette.MENU_ACTIVE)
@@ -66,7 +64,6 @@ func _ready() -> void:
 	add_child(_text)
 
 	_name = Label.new()
-	_name.position = _box.position + Vector2(8, -13)
 	_name.add_theme_font_size_override("font_size", UI.FONT_SIZE)
 	_name.add_theme_color_override("font_color", Palette.SPEAKER)
 	add_child(_name)
@@ -83,17 +80,15 @@ func open(speaker_key: String, lines: PackedStringArray) -> void:
 	open_pages(pages)
 
 
-## Pages are {"name": key or "", "portrait": Texture2D or null, "text": key},
-## plus optionally "node": the Node2D talking, so the box can keep clear of them.
+## Pages are {"name": key or "", "portrait": Texture2D or null, "text": key}.
 func open_pages(pages: Array) -> void:
 	if pages.is_empty():
 		return
 	_pages = pages
 	_page = 0
-	_box = choose_box(_speaker_node(pages), get_tree().get_first_node_in_group("player") as Node2D)
-	_name.position = _box.position + Vector2(8, -13)
 	visible = true
 	is_open = true
+	_name.position = _tab_rect().position + Vector2(4, 1)
 	get_tree().paused = true
 	_show_page()
 
@@ -129,8 +124,9 @@ func _show_page() -> void:
 	_name.text = speaker
 	_name.visible = speaker != ""
 	var indent := PORTRAIT_TEXT_INDENT if current_portrait() else 0.0
-	_text.position = _box.position + TEXT_MARGIN + Vector2(indent, 0)
-	_text.size = _box.size - TEXT_MARGIN * 2.0 - Vector2(indent, 0)
+	_text.position = BOX.position + PAD + Vector2(indent, 0)
+	_text.size = Vector2(BOX.size.x - PAD.x * 2.0 - indent, BOX.size.y - PAD.y * 2.0)
+	_name.position = _tab_rect().position + Vector2(4, 1)
 	_text.add_theme_color_override("font_color", Palette.MENU_ACTIVE if speaker != "" else Palette.NARRATION)
 	_text.text = str(page.get("text", ""))
 	_text.visible_characters = 0
@@ -138,48 +134,19 @@ func _show_page() -> void:
 	_panel.queue_redraw()
 
 
-## Bottom, unless that hides the speaker or Wren; then top, as long as the
-## top doesn't hide the speaker. The speaker always stays in view.
-static func choose_box(speaker: Node2D, player: Node2D) -> Rect2:
-	var bodies: Array[Rect2] = []
-	for node in [speaker, player]:
-		if node != null and node.is_inside_tree():
-			bodies.append(body_on_screen(node))
-	var bottom_clear := true
-	for body in bodies:
-		if body.intersects(BOTTOM_BOX.grow(2)):
-			bottom_clear = false
-	if bottom_clear:
-		return BOTTOM_BOX
-	if speaker != null and speaker.is_inside_tree() and body_on_screen(speaker).intersects(TOP_BOX.grow_individual(2, 16, 2, 2)):
-		return BOTTOM_BOX
-	return TOP_BOX
+## The name tab: beside the portrait when there is one.
+func _tab_rect() -> Rect2:
+	var x := BOX.position.x + 4
+	if current_portrait():
+		x += PORTRAIT_AT.x + PORTRAIT_SIZE + 2
+	return Rect2(Vector2(x, BOX.position.y - TAB_HEIGHT), Vector2(_name.get_minimum_size().x + 8, TAB_HEIGHT))
 
 
-## Where a character's body is on the screen, in the game's 384x216 pixels.
-static func body_on_screen(node: Node2D) -> Rect2:
-	var at := node.get_global_transform_with_canvas().origin
-	return Rect2(at + BODY.position, BODY.size)
-
-
-func _speaker_node(pages: Array) -> Node2D:
-	for page: Dictionary in pages:
-		var node := page.get("node") as Node2D
-		if node != null and is_instance_valid(node):
-			return node
-	return null
-
-
-func is_at_top() -> bool:
-	return _box == TOP_BOX
-
-
-## How many lines a page of text takes in the box (for checking that every
-## line in every language fits in MAX_LINES).
+## How many lines a page of text takes in the box.
 func lines_for(text_key: String, with_portrait: bool) -> int:
 	var indent := PORTRAIT_TEXT_INDENT if with_portrait else 0.0
 	var probe := _text.duplicate() as Label
-	probe.size = BOX_SIZE - TEXT_MARGIN * 2.0 - Vector2(indent, 0)
+	probe.size = Vector2(BOX.size.x - PAD.x * 2.0 - indent, 200)
 	probe.visible_characters = -1
 	probe.text = text_key
 	add_child(probe)
@@ -218,25 +185,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _draw_panel() -> void:
-	var box := _box
+	var box := BOX
 	_panel.draw_rect(box.grow(1), Palette.OUTLINE)
 	_panel.draw_rect(box, Palette.TALK_BG)
 	_panel.draw_rect(Rect2(box.position, Vector2(box.size.x, 1)), Palette.TALK_EDGE)
 	if _name.visible:
-		var tab := Rect2(box.position + Vector2(4, -14), Vector2(_name.get_minimum_size().x + 8, 14))
+		var tab := _tab_rect()
 		_panel.draw_rect(tab.grow(1), Palette.OUTLINE)
 		_panel.draw_rect(tab, Palette.TALK_BG)
 		_panel.draw_rect(Rect2(tab.position, Vector2(tab.size.x, 1)), Palette.TALK_EDGE)
 	var portrait := current_portrait()
 	if portrait:
-		var frame := Rect2(box.position + PORTRAIT_AT - Vector2(2, 2), Vector2.ONE * (PORTRAIT_SIZE + 4))
+		var at := box.position + PORTRAIT_AT
+		var frame := Rect2(at - Vector2.ONE, Vector2.ONE * (PORTRAIT_SIZE + 2))
 		_panel.draw_rect(frame.grow(1), Palette.OUTLINE)
 		_panel.draw_rect(frame, Palette.TALK_EDGE)
 		_panel.draw_rect(frame.grow(-1), Palette.PORTRAIT_BG)
-		_panel.draw_texture(portrait, box.position + PORTRAIT_AT)
+		_panel.draw_texture(portrait, at)
 	# A small wave mark bobs in the corner when the page is done.
 	if page_done() and int(_blink * 3.0) % 2 == 0:
-		var at := box.end - Vector2(12, 8)
-		_panel.draw_rect(Rect2(at, Vector2(5, 1)), Palette.SPEAKER)
-		_panel.draw_rect(Rect2(at + Vector2(1, 1), Vector2(3, 1)), Palette.SPEAKER)
-		_panel.draw_rect(Rect2(at + Vector2(2, 2), Vector2(1, 1)), Palette.SPEAKER)
+		var mark := box.end - Vector2(12, 7)
+		_panel.draw_rect(Rect2(mark, Vector2(5, 1)), Palette.SPEAKER)
+		_panel.draw_rect(Rect2(mark + Vector2(1, 1), Vector2(3, 1)), Palette.SPEAKER)
+		_panel.draw_rect(Rect2(mark + Vector2(2, 2), Vector2(1, 1)), Palette.SPEAKER)

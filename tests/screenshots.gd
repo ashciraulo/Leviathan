@@ -153,17 +153,6 @@ func _ready() -> void:
 			await _wait(1.5)
 			await _capture("27_dunstan_portrait")
 		await _finish_talk(game)
-		# Someone low on the screen: the box moves to the top.
-		if people.has("pell"):
-			var pell: Npc = people["pell"]
-			pell.position = Vector2(8 * Room.TILE + 8, 11 * Room.TILE + 12)
-			game.player.global_position = pell.global_position + Vector2(0, -16)
-			game.player.facing = Vector2.DOWN
-			await _wait(0.2)
-			game.player.try_interact()
-			await _wait(2.0)
-			await _capture("28_box_moves_up")
-			await _finish_talk(game)
 
 	# 8. Opening a chest in the Hull's galley.
 	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))

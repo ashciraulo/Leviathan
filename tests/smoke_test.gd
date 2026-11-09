@@ -58,6 +58,12 @@ func _test_room_layouts() -> void:
 			continue
 		var rows := Room.parse_layout(room.layout)
 		var problem := Room.validate_layout(rows)
+		# People (and readable signs) stand where the dialogue box can't cover them.
+		for y in rows.size():
+			for x in rows[y].length():
+				var tile := rows[y][x]
+				if Npc.LETTERS.has(tile) or (tile == "n" and room.sign_key != ""):
+					_check(y <= DialogueBox.LAST_SPEAKER_ROW, "%s: '%s' on row %d would sit behind the dialogue box (keep to rows 0-%d)" % [file, tile, y, DialogueBox.LAST_SPEAKER_ROW])
 		_check(problem == "", file + ": " + problem)
 		_check(room.name_key != "" and tr(room.name_key) != room.name_key, file + " has a translated name")
 		var parts := file.get_basename().trim_prefix("room_").split("_")
@@ -201,6 +207,7 @@ func _test_talk_and_dungeon() -> void:
 	_check(game.current_room.coord == Vector2i(10, 10), "walking into the hole enters the Rotting Hull (in %s)" % game.current_room.coord)
 	_check(GameState.dungeon == "hull", "GameState knows Wren is in the Hull")
 	_check(GameState.has_flag("entered_hull"), "entering the Hull sets a story flag")
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_HULL_1", "Pell asks about the Hull")
 	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_HULL_1", "Hessa has news for Wren after the Hull")
 
 	# A chest in the Galley holds the key for the Bilge's hatch.
@@ -260,6 +267,9 @@ func _finish_talk(game: Node) -> int:
 func _test_villagers() -> void:
 	GameState.reset_new_game()
 	_check(not GameState.has_flag("asked_for_rope"), "a new game has no story flags")
+	GameState.set_flag("entered_hull")
+	_check(Conversations.branch_for("hessa").get("set", []).has("met_hessa"), "going to the Hull first still gets Hessa's introduction")
+	GameState.clear_flag("entered_hull")
 	GameState.set_flag("x")
 	_check(GameState.has_flag("x") and GameState.flags_match(["x"], ["y"]), "flags set and match")
 	GameState.clear_flag("x")
@@ -277,6 +287,11 @@ func _test_villagers() -> void:
 			sign = child
 	for who in ["hessa", "pell", "marga", "dunstan"]:
 		_check(people.has(who), "%s lives in Saltmarrow" % who)
+	# On screen, each of them, and Wren standing just below to talk, stays
+	# above the tallest the dialogue box (and its name tab) ever gets.
+	for who in people:
+		var feet: float = people[who].get_global_transform_with_canvas().origin.y
+		_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "%s and Wren stay clear of the dialogue box (%d vs %d)" % [who, feet + Room.TILE, DialogueBox.HIGHEST_POINT])
 	for who in Conversations.TALKS:
 		_check(not Conversations.branch_for(who).is_empty(), "%s always has something to say" % who)
 		for branch: Dictionary in Conversations.TALKS[who]:
@@ -313,7 +328,6 @@ func _test_villagers() -> void:
 	_check(box != null and box.current_page()["name"] == "NAME_MARGA", "the tab names Marga")
 	_finish_talk(game)
 	_check(GameState.has_flag("asked_for_rope"), "Marga's errand is remembered")
-	_check(not box.is_at_top(), "with Marga mid-screen, the box stays at the bottom")
 	await _wait(0.4)
 	player.global_position = people["dunstan"].global_position + Vector2(0, 14)
 	await _wait(0.1)
@@ -337,19 +351,6 @@ func _test_villagers() -> void:
 		var from_x: float = people["pell"].position.x
 		await _wait(4.0)
 		_check(absf(people["pell"].position.x - from_x) > 2.0, "Pell runs about the village")
-
-	# Someone low on the screen: the box moves up so it doesn't cover them.
-	people["dunstan"].position.y = 11 * Room.TILE + 12
-	player.global_position = people["dunstan"].global_position + Vector2(0, -14)
-	player.facing = Vector2.DOWN
-	await _wait(0.1)
-	_check(player.try_interact(), "Wren can talk to Dunstan from above")
-	await _wait(0.05)
-	_check(box.is_at_top(), "the box moves to the top when the speaker is low on screen")
-	var body := DialogueBox.body_on_screen(people["dunstan"])
-	_check(not body.intersects(DialogueBox.TOP_BOX), "the top box keeps clear of Dunstan")
-	_finish_talk(game)
-	await _wait(0.4)
 
 	# The village sign reads out.
 	_check(sign != null and sign.is_in_group("interactable"), "the village sign can be read")

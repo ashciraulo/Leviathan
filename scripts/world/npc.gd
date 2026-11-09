@@ -1,5 +1,5 @@
 class_name Npc
-extends StaticBody2D
+extends AnimatableBody2D
 ## Someone Wren can talk to. Walk up, face them and press Interact.
 ## What they say comes from Conversations, chosen by story flags.
 ## Rooms place people by letter (see LETTERS and Room).
@@ -60,6 +60,8 @@ func _ready() -> void:
 	_spec = KINDS[kind]
 	add_to_group("interactable")
 	add_to_group("npc")
+	# Walkers move by position; this keeps their collision in step.
+	sync_to_physics = false
 	Layers.assign(self, Layers.WORLD, [])
 	add_child(Layers.rect_shape(Vector2(12, 7), Vector2(0, -3.5)))
 	add_child(Art.shadow())
@@ -117,7 +119,7 @@ func current_pages() -> Array:
 
 
 func interact() -> void:
-	if Conversations.talk(kind, self).is_empty():
+	if Conversations.talk(kind).is_empty():
 		return
 	_talking = true
 	_sprite.frame = _spec["talk"]
