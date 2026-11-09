@@ -66,3 +66,16 @@ func flee_into(hole: Vector2, seconds: float) -> void:
 	tween.parallel().tween_property(self, "modulate:a", 0.0, Cutscene.scaled(0.25))
 	await tween.finished
 	visible = false
+
+
+## Run along a path of points and out of the room (through its door).
+func flee_along(points: Array, seconds_per_leg: float) -> void:
+	prying = false
+	talking = false
+	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	for point: Vector2 in points:
+		tween.tween_callback(face.bind(point.x < position.x - 1.0))
+		tween.tween_property(self, "position", point, Cutscene.scaled(seconds_per_leg))
+	tween.tween_property(self, "modulate:a", 0.0, Cutscene.scaled(0.2))
+	await tween.finished
+	visible = false

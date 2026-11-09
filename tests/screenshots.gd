@@ -30,16 +30,18 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle", "lowe"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle", "lowe", "crucible"]:
 		if OS.get_environment("SHOTS_ONLY") == "kiln":
 			await _kiln_shots(game)
-		elif OS.get_environment("SHOTS_ONLY") in ["mantle", "lowe"]:
+		elif OS.get_environment("SHOTS_ONLY") in ["mantle", "lowe", "crucible"]:
 			game.queue_free()
 			await _wait(0.2)
 			if OS.get_environment("SHOTS_ONLY") == "mantle":
 				await _mantle_shots()
-			else:
+			elif OS.get_environment("SHOTS_ONLY") == "lowe":
 				await _lowe_shots()
+			else:
+				await _crucible_shots()
 		else:
 			await _mire_shots(game)
 		SaveManager.delete_save()
@@ -277,6 +279,7 @@ func _ready() -> void:
 	await _wait(0.2)
 	await _mantle_shots()
 	await _lowe_shots()
+	await _crucible_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -474,6 +477,7 @@ func _kiln_shots(game: Node) -> void:
 	await _capture("56_kiln_riser")
 
 	# The Slagwyrm: chasing, plates set hard by a pool, then the wake.
+	GameState.set_flag(StoryDirector.CRUCIBLE_FLAG)
 	room = await _jump(game, Vector2i(21, 7), Vector2i(11, 10))
 	await _wait(1.6)
 	var boss: Slagwyrm = null
@@ -655,4 +659,29 @@ func _lowe_shots() -> void:
 	await _capture("40_choir_scatters")
 	await _skip_scene(hold)
 	hold.queue_free()
+	await _wait(0.2)
+
+
+## The crucible at the Kiln: Lowe's smiths stoke it, then the Slagwyrm
+## bursts out of the melt and the Choir runs.
+func _crucible_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var kiln: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.2)
+		if page == 0:
+			await _capture("41_the_crucible")
+		var box := _dialogue_box(kiln)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _wait(0.6)
+	await _capture("42_slagwyrm_wakes")
+	await _skip_scene(kiln)
+	kiln.queue_free()
 	await _wait(0.2)
