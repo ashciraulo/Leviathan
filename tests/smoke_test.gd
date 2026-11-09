@@ -185,6 +185,39 @@ func _test_save_load() -> void:
 	SaveManager.delete_save()
 	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
 		"delete removes the save and its backup")
+	# Versions: an unversioned (old) save is brought up to date and loads; a
+	# save from a newer version is shown as such and never loaded.
+	GameState.reset_new_game()
+	GameState.flags["test_flag"] = true
+	SaveManager.save_game()
+	var old_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	old_data.erase("format_version")
+	old_data.erase("summary")
+	_write_json(path, old_data)
+	GameState.reset_new_game()
+	_check(SaveManager.load_game() and GameState.flags.get("test_flag") == true,
+		"a save from before versioning still loads")
+	_check(SaveManager._migrate(old_data).get("format_version") == SaveManager.FORMAT_VERSION,
+		"migrating an old save brings it to the current version")
+	var newer_data := old_data.duplicate(true)
+	newer_data["format_version"] = SaveManager.FORMAT_VERSION + 1
+	_write_json(path, newer_data)
+	GameState.reset_new_game()
+	_check(not SaveManager.load_game() and GameState.flags.get("test_flag") != true,
+		"a save from a newer version is not loaded")
+	_check(SaveManager.read_summary(SaveManager.current_slot).get("newer", false),
+		"the file select shows a newer save as such")
+	_check(SaveManager.latest_slot() != SaveManager.current_slot, "Continue skips a newer save")
+	_check(not SaveManager.save_game(), "saving never writes over a newer save")
+	_check(SaveManager.is_newer(JSON.parse_string(FileAccess.get_file_as_string(path))),
+		"the newer save is still there")
+	SaveManager.delete_save()
+
+
+func _write_json(path: String, data: Dictionary) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(data))
+	file.close()
 
 
 func _test_keys() -> void:
