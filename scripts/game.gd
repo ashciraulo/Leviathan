@@ -211,8 +211,8 @@ func _on_player_died() -> void:
 	_start()
 
 
-## The Wayshell: Mantle carries Wren to a woken Tidestone. For now a fade;
-## the flight over the coast comes with Mantle's art.
+## The Wayshell: Mantle swoops down, carries Wren over the sea to a woken
+## Tidestone and sets her down there.
 func _on_fast_travel(coord: Vector2i) -> void:
 	if busy or player == null:
 		return
