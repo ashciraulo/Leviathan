@@ -16,7 +16,7 @@ RAMPS = {
     "F": ["#FFF2A0", "#F7D35A", "#E0A93A", "#A8702E", "#4E3022"],   # oilskin yellow
     "V": ["#DCA47C", "#BC8058", "#9A6244", "#6A4036", "#2E1A22"],   # deep brown skin
     "A": ["#F2C49A", "#DCA07A", "#C08060", "#8A5648", "#46283A"],   # tan skin
-    "U": ["#A87A5A", "#86583E", "#64402E", "#40282A", "#20141E"],   # brown hair
+    "M": ["#A87A5A", "#86583E", "#64402E", "#40282A", "#20141E"],   # brown hair
     "P": ["#D88AB0", "#B4628E", "#8A4470", "#5E2C54", "#2E1630"],   # plum headscarf
     "Y": ["#B8D88A", "#8AB86A", "#5E9050", "#3E6444", "#1E3430"],   # green knit
     "Z": ["#E8E0D0", "#C8BCA8", "#A09080", "#6E6064", "#36283A"],   # grizzled beard
@@ -90,12 +90,12 @@ PELL = [
     "................",
     "................",
     "................",
-    ".....UUUUUU.....",
-    "....UUUUUUUU....",
-    "...UUUUUUUUUU...",
-    "...UUwwwwwwUU...",
-    "...UwewwwwewU...",
-    "...UwewwwwewU...",
+    ".....MMMMMM.....",
+    "....MMMMMMMM....",
+    "...MMMMMMMMMM...",
+    "...MMwwwwwwMM...",
+    "...MwewwwwewM...",
+    "...MwewwwwewM...",
     "....w%wwww%w....",
     ".....wwwwww.....",
     "....rrrrrrrr....",
@@ -133,7 +133,7 @@ MARGA = [
     ".....PPPPPP.....",
     "....PPPPPPPP....",
     "...PPPPPPPPPP...",
-    "...PPUUUUUUPP...",
+    "...PPMMMMMMPP...",
     "...PAAAAAAAAP...",
     "...PAeAAAAeAP...",
     "...PAeAAAAeAP...",
@@ -299,12 +299,12 @@ def portrait_pell():
     _ellipse(c, 16, 32, 13, 8, "t")
     _box(c, 10, 24, 12, 3, "r")                        # scarf
     _box(c, 18, 26, 3, 4, "r")
-    _ellipse(c, 16, 12, 10, 8, "U")                    # mop of hair
+    _ellipse(c, 16, 12, 10, 8, "M")                    # mop of hair
     _face(c, "w", eye_row=16, cy=17, rx=7, ry=7)
     # A ragged fringe.
-    _box(c, 9, 10, 14, 3, "U")
-    _dots(c, [(10, 13), (13, 13), (14, 13), (18, 13), (21, 13), (22, 13), (9, 14)], "U")
-    _dots(c, [(16, 4), (17, 3), (12, 5)], "U")         # tufts
+    _box(c, 9, 10, 14, 3, "M")
+    _dots(c, [(10, 13), (13, 13), (14, 13), (18, 13), (21, 13), (22, 13), (9, 14)], "M")
+    _dots(c, [(16, 4), (17, 3), (12, 5)], "M")         # tufts
     return _rows(c)
 
 
@@ -315,7 +315,7 @@ def portrait_marga():
     _dots(c, [(10, 24), (21, 24)], "q")
     _ellipse(c, 16, 13, 10, 11, "P")                   # headscarf
     _face(c, "A")
-    _box(c, 10, 9, 12, 3, "U")                         # dark fringe under the scarf
+    _box(c, 10, 9, 12, 3, "M")                         # dark fringe under the scarf
     _box(c, 8, 7, 16, 2, "P")
     _dots(c, [(24, 19), (25, 20), (25, 21), (26, 22)], "P")   # scarf knot tail
     return _rows(c)
