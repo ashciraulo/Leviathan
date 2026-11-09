@@ -236,12 +236,15 @@ func _test_talk_and_dungeon() -> void:
 		if child is LockedDoor:
 			hatches += 1
 	_check(hatches == 3, "the Bilge's east way is barred (%d hatches)" % hatches)
-	game.player.global_position = game.current_room.global_position + Vector2(21 * Room.TILE + 8, 6 * Room.TILE + 12)
+	# Carry a spare key and walk in where two hatch tiles' touch areas
+	# overlap: opening the lock must spend only one key.
+	GameState.add_key("hull")
+	game.player.global_position = game.current_room.global_position + Vector2(21 * Room.TILE + 8, 98)
 	Input.action_press("move_right")
 	await _wait(0.5)
 	Input.action_release("move_right")
 	await _wait(0.4)
-	_check(GameState.keys("hull") == 0, "the hatch uses the key")
+	_check(GameState.keys("hull") == 1, "the hatch uses exactly one key (left %d)" % GameState.keys("hull"))
 	_check(GameState.flags.get(LockedDoor.lock_flag(Vector2i(10, 9)), false), "the open hatch is remembered")
 	Input.action_press("move_right")
 	await _wait(1.0)
