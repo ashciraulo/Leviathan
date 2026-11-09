@@ -763,6 +763,19 @@ func _test_story() -> void:
 	barrow.queue_free()
 	await _wait(0.1)
 
+	# A door opening under Wren mid-scene doesn't carry them off.
+	GameState.reset_new_game()
+	GameState.set_flag(HollowRegent.DEFEATED_FLAG)
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var old_barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(old_barrow)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.MURAL_FLAG), "an older save still sees the last mural on the way back in")
+	var old_pages := await _play_scene(old_barrow, 20.0)
+	_check(old_pages == 4 and GameState.room_coord == StoryDirector.TOMB_BOSS, "standing on the way out, Wren stays for the whole scene (%d pages)" % old_pages)
+	old_barrow.queue_free()
+	await _wait(0.1)
+
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))

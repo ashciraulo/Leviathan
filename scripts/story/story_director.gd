@@ -51,12 +51,12 @@ const GALE_BELL_FLAG := "tidebell_" + "gale"
 const PHRASE_PULSE := BellPhrase.PULSE
 const TURNED_FLAG := "old_one_turned"
 const CONFESSION_FLAG := "seen_hessa_confession"
-## Where Wren stops to watch, in any of these chambers.
 const TOMB_BOSS := Vector2i(40, 7)
 const MURAL_FLAG := "seen_last_mural"
 ## Wren stands under the slab; Dace comes up from the way in at the south.
 const MURAL_WATCH := Vector2(16 * 16 + 8, 2 * 16 + 12)
 const DACE_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 7 * 16 + 12), Vector2(14 * 16 + 8, 3 * 16 + 12)]
+## Where Wren stops to watch, in any of these chambers.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
 var game: Node
@@ -94,6 +94,9 @@ func _on_room_entered(coord: Vector2i) -> void:
 		the_wayshell()
 	elif coord == SALTMARROW and GameState.has_flag(TURNED_FLAG) and not GameState.has_flag(CONFESSION_FLAG):
 		hessas_confession()
+	elif coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not GameState.has_flag(MURAL_FLAG):
+		# A save from before the mural existed: show it on the way back in.
+		the_last_mural()
 	elif lowe_waits(coord):
 		if coord == HULL_BOSS:
 			lowe_at_the_hull()
