@@ -220,6 +220,18 @@ func _hull_shots(game: Node) -> void:
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
 		await _wait(0.3)
 		await _capture("40_tidebell")
+		# Ringing it: the talk box stays at the bottom, clear of Wren and the bell.
+		for child in room.get_children():
+			if child is Tidebell:
+				game.player.global_position = child.global_position + Vector2(0, 16)
+				game.player.facing = Vector2.UP
+				await _wait(0.2)
+				game.player.try_interact()
+				await _wait(2.0)
+				await _capture("41_tidebell_rung")
+				for box in game.get_children():
+					if box is DialogueBox:
+						box.close()
 
 
 func _wait(seconds: float) -> void:

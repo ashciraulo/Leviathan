@@ -569,6 +569,11 @@ func _test_hull_dungeon() -> void:
 				bell = child
 		_check(bell != null, "the Tidebell rises where she fell")
 		if bell:
+			# The talk box sits at the bottom of the screen: the bell, and Wren
+			# standing below it to ring it, must stay clear of it.
+			var view_top: float = game.camera.position.y - 216.0 / 2.0
+			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
+			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Tidebell or Wren ringing it")
 			var resonance_before := GameState.resonance_max
 			bell.interact()
 			_check(GameState.resonance_max > resonance_before and GameState.flags.get(Tidebell.BELL_FLAG, false), "ringing the bell grows the Resonance meter")
