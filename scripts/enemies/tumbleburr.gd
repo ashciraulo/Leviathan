@@ -30,6 +30,18 @@ func _think(delta: float) -> void:
 			_drift_timer = randf_range(1.0, 2.0)
 			_drift = Vector2.from_angle(randf() * TAU) * DRIFT_SPEED
 		_velocity = _velocity.move_toward(_drift, 120.0 * delta)
+	# Room edges are open where the exits are, but a burr belongs to its
+	# room: it bounces off the screen's edge instead of rolling away.
+	var room := get_parent() as Room
+	if room != null:
+		var margin := body_size.x / 2.0 + 2.0
+		var lo := Vector2(margin, body_size.y + 2.0)
+		var hi := Room.SIZE - Vector2(margin, 2.0)
+		for axis in 2:
+			if (position[axis] <= lo[axis] and _velocity[axis] < 0.0) or (position[axis] >= hi[axis] and _velocity[axis] > 0.0):
+				_velocity[axis] = -_velocity[axis] * BOUNCE
+				_drift[axis] = -_drift[axis]
+		position = position.clamp(lo, hi)
 	velocity = _velocity
 	if get_slide_collision_count() > 0:
 		var normal := get_slide_collision(0).get_normal()

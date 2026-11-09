@@ -1701,6 +1701,20 @@ func _test_windmere() -> void:
 	for child in room.get_children():
 		if child is Prop and child.kind == "J":
 			mill = child
-	_check(mill != null and mill._frames == 4, "Mill Row's windmills turn")
+	var turned := false
+	if mill != null:
+		var first := mill._sprite.frame
+		for i in 10:
+			await _wait(0.05)
+			turned = turned or mill._sprite.frame != first
+	_check(turned, "Mill Row's windmills turn")
+	# A gust can't bowl a burr out through an exit and off the map.
+	var stray := Tumbleburr.new()
+	stray.position = Vector2(22 * Room.TILE, 6 * Room.TILE + 12)
+	room.add_child(stray)
+	for i in 60:
+		await _wait(0.05)
+	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(stray.position), "a Tumbleburr stays in its own room (at %s)" % stray.position)
+	stray.queue_free()
 	game.queue_free()
 	await _wait(0.1)
