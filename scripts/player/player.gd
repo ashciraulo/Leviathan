@@ -5,7 +5,7 @@ extends CharacterBody2D
 ##
 ## The origin is at Wren's feet so y-sorting lines up with other objects.
 
-enum State { MOVE, ATTACK, CHARGE, SPIN, HURT, HUM, DEAD }
+enum State { MOVE, ATTACK, CHARGE, SPIN, HURT, HUM, DEAD, ITEM, FALL }
 
 const SPEED := 90.0
 const ATTACK_TIME := 0.24
@@ -38,6 +38,10 @@ var facing := Vector2.DOWN
 ## Set while the camera slides between rooms; Wren ignores input.
 var frozen := false
 var hum_progress := 0.0
+## Set by the item in use (State.ITEM): how Wren moves while using it.
+var item_velocity := Vector2.ZERO
+## True while the Tide Hook carries Wren: gaps and water pass underneath.
+var airborne := false
 
 var _state_time := 0.0
 var _knockback := Vector2.ZERO
@@ -108,8 +112,10 @@ func _physics_process(delta: float) -> void:
 			_hurt_state(delta)
 		State.HUM:
 			_hum_state(delta)
-		State.DEAD:
+		State.DEAD, State.FALL:
 			velocity = Vector2.ZERO
+		State.ITEM:
+			velocity = item_velocity
 	move_and_slide()
 	_check_damage()
 	_update_sprite(delta)
@@ -138,8 +144,9 @@ func is_sword_active() -> bool:
 
 
 func take_damage(amount: int, from_position: Vector2) -> void:
-	if _invuln > 0.0 or state == State.DEAD:
+	if _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
+	end_item()
 	GameState.damage(amount)
 	_place_sword()
 	var away := global_position - from_position
@@ -168,6 +175,10 @@ func _move_state() -> void:
 	elif Input.is_action_just_pressed("attack"):
 		start_attack()
 		velocity = Vector2.ZERO
+	elif Input.is_action_just_pressed("item_1") and use_item(GameState.item_slots[0]):
+		velocity = Vector2.ZERO
+	elif Input.is_action_just_pressed("item_2") and use_item(GameState.item_slots[1]):
+		velocity = Vector2.ZERO
 	elif _hum_requested() and GameState.can_hum():
 		_enter(State.HUM)
 		velocity = Vector2.ZERO
@@ -191,6 +202,62 @@ func try_interact() -> bool:
 		return false
 	best.interact()
 	return true
+
+
+## Uses an equipped item. False if it can't be used now.
+func use_item(id: String) -> bool:
+	if state != State.MOVE or not GameState.has_item(id):
+		return false
+	match id:
+		"tide_hook":
+			var hook := TideHook.new()
+			hook.name = "TideHook"
+			add_child(hook)
+			_enter(State.ITEM)
+			item_velocity = Vector2.ZERO
+			return true
+	return false
+
+
+## Called by the item in use when it's done.
+func end_item() -> void:
+	airborne = false
+	item_velocity = Vector2.ZERO
+	if state == State.ITEM:
+		_enter(State.MOVE)
+
+
+func is_using_item() -> bool:
+	return state == State.ITEM
+
+
+## Wren drops through a gap in the deck: shrink away, lose a bubble, and
+## come back on the solid deck at `back_to` (global position).
+func fall(back_to: Vector2) -> void:
+	if state in [State.FALL, State.DEAD]:
+		return
+	end_item()
+	_enter(State.FALL)
+	velocity = Vector2.ZERO
+	# Shrink towards the middle of the body, as if dropping away.
+	var origin := _body.position
+	var middle := Vector2(0, -6)
+	var shrink := func(k: float) -> void:
+		_body.scale = Vector2(k, k)
+		_body.position = middle + (origin - middle) * k
+	var tween := create_tween()
+	tween.tween_method(shrink, 1.0, 0.1, 0.35)
+	await tween.finished
+	GameState.damage(1)
+	shrink.call(1.0)
+	global_position = back_to
+	if GameState.is_dead():
+		_enter(State.DEAD)
+		Events.player_died.emit()
+		return
+	_invuln = INVULN_TIME
+	_flash = FLASH_TIME
+	_enter(State.MOVE)
 
 
 func _attack_state(delta: float) -> void:
@@ -284,7 +351,7 @@ func _hum_state(delta: float) -> void:
 
 
 func _check_damage() -> void:
-	if _invuln > 0.0 or state == State.DEAD:
+	if _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	for area in _hurtbox.get_overlapping_areas():
 		var hazard := area as DamageArea
@@ -352,6 +419,8 @@ func _update_sprite(delta: float) -> void:
 				column = FRAME_WALK[int(_anim_time / WALK_FRAME_TIME) % FRAME_WALK.size()]
 			else:
 				_anim_time = 0.0
+		State.ITEM:
+			column = FRAME_ATTACK
 		State.ATTACK, State.CHARGE:
 			column = FRAME_ATTACK
 			if state == State.CHARGE and velocity.length() > 1.0:

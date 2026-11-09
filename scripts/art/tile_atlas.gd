@@ -96,6 +96,12 @@ const POSITIONS := {
 	"shaft_0": Vector2i(0, 11),
 	"shaft_1": Vector2i(1, 11),
 	"exit_glow": Vector2i(2, 11),
+	"gap_0": Vector2i(3, 11),
+	"gap_1": Vector2i(4, 11),
+	"gap_lip": Vector2i(5, 11),
+	"gap_left": Vector2i(6, 11),
+	"gap_right": Vector2i(7, 11),
+	"gap_bottom": Vector2i(0, 12),
 }
 
 

@@ -16,6 +16,11 @@ extends Node2D
 ##          h  Old Hessa      C  chest (holds chest_item)
 ##          X  locked hatch (all X in a room open with one small key)
 ##          D  doorway to door_to, arriving on door_spawn
+##          Dungeon pieces (see DungeonTiles):
+##          _  gap in the deck (Wren can fall in)   O  hook post
+##          K  crate (push it, or hook it)   =  pressure plate
+##          |  bars (open when the room's gate is solved)
+##          G  big-key door   V  the dungeon's boss
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
 ## neighbouring room joins, at the same rows or columns on both sides.
@@ -40,6 +45,14 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Where a doorway (D) in this room leads, and the tile Wren arrives on.
 @export var door_to := Vector2i.ZERO
 @export var door_spawn := Vector2i.ZERO
+## What opens the bars (|) in this room: "plates" (every pressure plate held
+## down), "clear" (every enemy beaten) or "" (they stay shut).
+@export var gate := ""
+## When true, the chest (C) only appears once the gate is solved.
+@export var chest_hidden := false
+## A listing deck: Wren drifts this way (pixels per second) unless she walks
+## against it.
+@export var tilt := Vector2.ZERO
 
 ## Set by the game before the room enters the tree.
 var coord := Vector2i.ZERO
@@ -133,6 +146,7 @@ func _build() -> void:
 				continue
 			_spawn(tile, Vector2(x * TILE + TILE / 2.0, y * TILE + TILE - 4))
 			x += 1
+	DungeonTiles.finish(self)
 
 
 func _spawn(tile: String, pos: Vector2) -> void:
@@ -175,6 +189,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = door
 		_ when Prop.is_prop(tile):
 			node = Prop.new(tile)
+		_ when DungeonTiles.handles(tile):
+			node = DungeonTiles.make(tile, self, pos)
 		_:
 			push_warning("Room %s: unknown tile '%s'" % [scene_file_path, tile])
 	if node:
@@ -196,6 +212,11 @@ func _process(delta: float) -> void:
 		_water_time = 0.0
 		_water_frame = 1 - _water_frame
 		_ground.queue_redraw()
+
+
+## The layout letter at a tile (walls outside the room).
+func tile_at(x: int, y: int) -> String:
+	return _tile_at(x, y)
 
 
 func _tile_at(x: int, y: int) -> String:

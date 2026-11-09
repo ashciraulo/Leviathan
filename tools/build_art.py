@@ -26,6 +26,7 @@ import zlib
 
 import brinewood_art
 import hull_art
+import hull_dungeon_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -913,10 +914,13 @@ TILE_LAYOUT = [
 TILE_COLUMNS = 8
 TILE_LAYOUT += brinewood_art.TILES
 TILE_LAYOUT += hull_art.TILES
+TILE_LAYOUT += hull_dungeon_art.TILES
 RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
 FLAT.update(hull_art.FLAT)
+RAMPS.update(hull_dungeon_art.RAMPS)
+FLAT.update(hull_dungeon_art.FLAT)
 
 
 def build_tiles():
@@ -1064,6 +1068,8 @@ def main():
     write_png(os.path.join(OUT, "sprites", "shot.png"), shots)
     for name, px in shadows.items():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
+    for name, px in hull_dungeon_art.build(lit, sheet).items():
+        write_png(os.path.join(OUT, "dungeon", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())

@@ -22,6 +22,14 @@ var room_coord := Vector2i.ZERO
 ## The dungeon that room belongs to ("" on the overworld). Not saved.
 var dungeon := ""
 var flags: Dictionary = {}
+## Items Wren carries: id -> count. Tools count 1.
+var inventory: Dictionary = {}
+## The two equipped items (item_1, item_2): item ids, "" for an empty slot.
+var item_slots: Array = ["", ""]
+
+## Items that go in a slot when found.
+const TOOLS := ["tide_hook", "stonebreaker", "glowmoth_lantern", "kite_cloak",
+		"frostfang_bow", "divers_helm", "echo_horn", "wayshell"]
 
 
 func reset_new_game() -> void:
@@ -34,6 +42,8 @@ func reset_new_game() -> void:
 	room_coord = Vector2i.ZERO
 	dungeon = ""
 	flags = {}
+	inventory = {}
+	item_slots = ["", ""]
 
 
 ## Most hits pop one bubble, heavy hits pop two. There are no halves.
@@ -89,6 +99,34 @@ func use_key(dungeon: String) -> bool:
 	return true
 
 
+func give_item(id: String, count := 1) -> void:
+	inventory[id] = item_count(id) + count
+	if id in TOOLS and not id in item_slots:
+		var empty := item_slots.find("")
+		if empty != -1:
+			item_slots[empty] = id
+
+
+func has_item(id: String) -> bool:
+	return item_count(id) > 0
+
+
+func item_count(id: String) -> int:
+	return int(inventory.get(id, 0))
+
+
+func take_item(id: String, count := 1) -> bool:
+	if item_count(id) < count:
+		return false
+	inventory[id] = item_count(id) - count
+	return true
+
+
+## Map, compass and big key: one of each per dungeon, e.g. "hull_big_key".
+func has_dungeon_item(dungeon_id: String, kind: String) -> bool:
+	return has_item("%s_%s" % [dungeon_id, kind])
+
+
 func set_checkpoint(room: Vector2i, pos: Vector2) -> void:
 	checkpoint_room = room
 	checkpoint_pos = pos
@@ -103,6 +141,8 @@ func to_dict() -> Dictionary:
 		"checkpoint_room": [checkpoint_room.x, checkpoint_room.y],
 		"checkpoint_pos": [checkpoint_pos.x, checkpoint_pos.y],
 		"flags": flags.duplicate(true),
+		"inventory": inventory.duplicate(true),
+		"item_slots": item_slots.duplicate(),
 	}
 
 
@@ -117,6 +157,13 @@ func from_dict(data: Dictionary) -> void:
 	room_coord = checkpoint_room
 	var saved_flags = data.get("flags", {})
 	flags = saved_flags if saved_flags is Dictionary else {}
+	var saved_items = data.get("inventory", {})
+	inventory = saved_items if saved_items is Dictionary else {}
+	var saved_slots = data.get("item_slots", ["", ""])
+	item_slots = ["", ""]
+	if saved_slots is Array:
+		for i in mini(saved_slots.size(), 2):
+			item_slots[i] = str(saved_slots[i])
 
 
 static func _to_vec2i(value: Variant) -> Vector2i:

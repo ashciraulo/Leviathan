@@ -15,8 +15,9 @@ def hex_color(h, a=255):
 
 T = 16
 CLEAR = (0, 0, 0, 0)
-# Deck planks: warm, mid-dark, so Wren's navy and white still pop.
-PLANK = [hex_color(c) for c in ("#A07E5E", "#8C6E54", "#7A5E4A", "#664E42", "#523E3A", "#3E2E32")]
+# Deck planks: old, wet and dark with rot, so Wren's navy and white pop.
+PLANK = [hex_color(c) for c in ("#7E6450", "#6A5444", "#5A463A", "#4A3A32", "#3A2C2A", "#2A1E20")]
+ROT = [hex_color(c) for c in ("#4E5A3A", "#3E4A34", "#2E3A2C")]
 # The hull's own timbers, darker: walls read as heavier than floors.
 TIMBER = [hex_color(c) for c in ("#8A6A56", "#6A5046", "#4E3A38", "#38282C", "#241A20", "#160F16")]
 BILGE = [hex_color(c) for c in ("#7EA890", "#5A8478", "#3E665E", "#2E4E4A", "#223C3C", "#182C30")]
@@ -33,31 +34,34 @@ def blank(color=CLEAR):
 
 def plank_tile(seed):
     """Deck planks running across the room: four boards per tile, each with
-    a seam under it, staggered butt joints, nails and a little grain."""
+    a dark seam under it. Rare butt joints and nails, a little grain, and
+    patches of green-black rot creeping out of the seams."""
     rnd = random.Random(500 + seed)
     px = blank(PLANK[2])
     for board in range(4):
         y0 = board * 4
-        tone = rnd.choice((1, 2, 2, 2))
+        tone = rnd.choice((2, 2, 3, 2))
         for y in range(y0, y0 + 3):
             for x in range(T):
                 px[y][x] = PLANK[tone]
-        # Lit top edge of each board, seam below it.
         for x in range(T):
-            px[y0][x] = PLANK[max(tone - 1, 0)]
-            px[y0 + 3][x] = PLANK[4]
-        # A butt joint somewhere along the board, with nails either side.
-        if rnd.random() < 0.7:
+            px[y0][x] = PLANK[tone - 1]
+            px[y0 + 3][x] = PLANK[5]
+        if rnd.random() < 0.35:
             jx = rnd.randrange(2, T - 2)
             for y in range(y0, y0 + 3):
                 px[y][jx] = PLANK[4]
-            px[y0 + 1][jx - 1] = PLANK[4]
-            px[y0 + 1][jx + 1] = PLANK[0]
-        # Grain: a short darker streak.
-        for _ in range(1):
-            gx, gy = rnd.randrange(T - 3), y0 + 1 + rnd.randrange(2)
-            for dx in range(rnd.randrange(2, 4)):
-                px[gy][gx + dx] = PLANK[min(tone + 1, 4)]
+            px[y0 + 1][jx + 1] = hex_color("#6A4A3A")
+        gx, gy = rnd.randrange(T - 4), y0 + 1 + rnd.randrange(2)
+        for dx in range(rnd.randrange(2, 5)):
+            px[gy][gx + dx] = PLANK[tone + 1]
+    # Rot: a soft patch bleeding out of a seam.
+    if rnd.random() < 0.3:
+        cx, cy = rnd.randrange(2, T - 2), rnd.choice((3, 7, 11))
+        for _ in range(4):
+            x = min(max(cx + rnd.randrange(-2, 3), 0), T - 1)
+            y = min(max(cy + rnd.randrange(-1, 2), 0), T - 1)
+            px[y][x] = rnd.choice(ROT)
     return px
 
 

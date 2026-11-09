@@ -8,6 +8,14 @@ const ITEM_SHOW_TIME := 1.0
 ## item id: [toast key, sprite]
 const ITEMS := {
 	"small_key": ["TOAST_GOT_KEY", Art.SMALL_KEY],
+	"tide_hook": ["TOAST_GOT_TIDE_HOOK", HullSprites.TIDE_HOOK],
+	"map": ["TOAST_GOT_MAP", HullSprites.MAP],
+	"compass": ["TOAST_GOT_COMPASS", HullSprites.COMPASS],
+	"big_key": ["TOAST_GOT_BIG_KEY", HullSprites.BIG_KEY],
+}
+## Finding one of these opens the dialogue box to explain it.
+const ITEM_TALK := {
+	"tide_hook": ["GOT_TIDE_HOOK_1", "GOT_TIDE_HOOK_2"],
 }
 
 var room_coord := Vector2i.ZERO
@@ -42,6 +50,10 @@ func interact() -> void:
 	match item:
 		"small_key":
 			GameState.add_key(dungeon)
+		"map", "compass", "big_key":
+			GameState.give_item("%s_%s" % [dungeon, item])
+		_:
+			GameState.give_item(item)
 	var spec: Array = ITEMS.get(item, ITEMS["small_key"])
 	Events.toast.emit(spec[0])
 	# Show the item lifting out of the chest.
@@ -53,3 +65,6 @@ func interact() -> void:
 	tween.tween_interval(ITEM_SHOW_TIME)
 	tween.tween_property(shown, "modulate:a", 0.0, 0.25)
 	tween.tween_callback(shown.queue_free)
+	if ITEM_TALK.has(item):
+		await get_tree().create_timer(0.6).timeout
+		Events.dialogue_requested.emit("", PackedStringArray(ITEM_TALK[item]))
