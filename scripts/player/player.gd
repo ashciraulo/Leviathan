@@ -221,6 +221,13 @@ func use_item(id: String) -> bool:
 			_enter(State.ITEM)
 			item_velocity = Vector2.ZERO
 			return true
+		"stonebreaker":
+			var mallet := Stonebreaker.new()
+			mallet.name = "Stonebreaker"
+			add_child(mallet)
+			_enter(State.ITEM)
+			item_velocity = Vector2.ZERO
+			return true
 	return false
 
 

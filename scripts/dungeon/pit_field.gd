@@ -1,20 +1,45 @@
 class_name PitField
 extends Node2D
-## Every gap (_) in a room's deck. Draws the holes, keeps enemies and crates
-## out of them, and drops Wren through when she walks in: she loses a bubble
-## and climbs back up where she last stood on solid deck.
+## Every gap (_) in a room's deck, and every pool of lava (^). Draws them,
+## keeps enemies and crates out of them, and drops Wren in when she walks
+## in: she loses a bubble and climbs back up where she last stood on solid
+## ground.
 ##
-## The Tide Hook carries Wren over gaps (Player.airborne).
+## A room with lava_rise set also has rising lava: once Wren is inside, it
+## creeps up the room from the bottom row. If it catches her she's thrown
+## back to where she came in and it sinks to start again; once she reaches
+## lava_safe_row it drains away for good.
+##
+## The Tide Hook carries Wren over both (Player.airborne).
 
 ## How often (seconds) Wren's footing is remembered, and how far back the
 ## safe spot is taken from, so she doesn't land on the lip and fall again.
 const SAFE_EVERY := 0.1
 const SAFE_HISTORY := 8
 const SAFE_BACK := 4
+## Letters Wren drops into.
+const DROPS := "_^"
+const LAVA_FRAME_TIME := 0.35
+## Seconds before rising lava starts to climb (and after it's reset).
+const RISE_GRACE := 1.2
+const DRAIN_SPEED := 6.0
 
 var _room: Room
 var _safe: Array[Vector2] = []
 var _safe_timer := 0.0
+var _lava_frame := 0
+var _lava_time := 0.0
+var _has_lava := false
+## Rising lava: the first row it covers (ROWS = none yet).
+var level := float(Room.ROWS)
+var rising := false
+var _rise_grace := RISE_GRACE
+var _rise_start := Vector2.INF
+var _draining := false
+
+
+static func rise_flag(coord: Vector2i) -> String:
+	return "lava_drained_%d_%d" % [coord.x, coord.y]
 
 
 func _ready() -> void:
@@ -28,11 +53,12 @@ func _ready() -> void:
 	for y in Room.ROWS:
 		var x := 0
 		while x < Room.COLS:
-			if _room.tile_at(x, y) != "_":
+			if not DROPS.contains(_room.tile_at(x, y)):
 				x += 1
 				continue
 			var start := x
-			while x < Room.COLS and _room.tile_at(x, y) == "_":
+			_has_lava = _has_lava or _room.tile_at(x, y) == "^"
+			while x < Room.COLS and DROPS.contains(_room.tile_at(x, y)):
 				x += 1
 			var size := Vector2((x - start) * Room.TILE - 4, Room.TILE - 4)
 			body.add_child(Layers.rect_shape(size, Vector2((start + x) * Room.TILE / 2.0, y * Room.TILE + Room.TILE / 2.0)))
@@ -40,11 +66,31 @@ func _ready() -> void:
 	for child in _room.get_children():
 		if child is Enemy or child is Crate:
 			(child as CollisionObject2D).collision_mask |= 1 << (Layers.PIT - 1)
+	rising = _room.lava_rise > 0.0 and not GameState.has_flag(rise_flag(_room.coord))
+	_has_lava = _has_lava or rising
 
 
-## True when a point (relative to the room) is over a gap.
+## True when a point (relative to the room) is over a gap or lava.
 func is_gap(local: Vector2) -> bool:
-	return _room.tile_at(floori(local.x / Room.TILE), floori(local.y / Room.TILE)) == "_"
+	var x := floori(local.x / Room.TILE)
+	var y := floori(local.y / Room.TILE)
+	var tile := _room.tile_at(x, y)
+	return DROPS.contains(tile) or (tile != "#" and y >= _first_lava_row())
+
+
+## The first row the rising lava covers (Room.ROWS when there's none).
+func _first_lava_row() -> int:
+	return ceili(level) if rising or _draining else Room.ROWS
+
+
+func _process(delta: float) -> void:
+	if not _has_lava:
+		return
+	_lava_time += delta
+	if _lava_time >= LAVA_FRAME_TIME:
+		_lava_time = 0.0
+		_lava_frame = 1 - _lava_frame
+		queue_redraw()
 
 
 func _physics_process(delta: float) -> void:
@@ -56,12 +102,21 @@ func _physics_process(delta: float) -> void:
 		return
 	# Wren's feet are a little above her origin.
 	var feet := local + Vector2(0, -3)
+	_update_rise(delta, local)
 	if player.airborne:
 		# She's crossing over: footing from the far side no longer counts.
 		_safe.clear()
 		_safe_timer = 0.0
 		return
 	if player.state in [Player.State.FALL, Player.State.DEAD]:
+		return
+	if rising and floori(feet.y / Room.TILE) >= _first_lava_row():
+		# Caught by the rising lava: back to the way in, and it starts again.
+		player.fall(_room.global_position + _rise_start)
+		level = float(Room.ROWS)
+		_rise_grace = RISE_GRACE + 0.6
+		_safe.clear()
+		queue_redraw()
 		return
 	if is_gap(feet):
 		player.fall(_room.global_position + _safe_spot(local))
@@ -72,6 +127,35 @@ func _physics_process(delta: float) -> void:
 		_safe.append(local)
 		if _safe.size() > SAFE_HISTORY:
 			_safe.pop_front()
+
+
+func _update_rise(delta: float, local: Vector2) -> void:
+	if _draining:
+		level = minf(level + DRAIN_SPEED * delta, float(Room.ROWS))
+		queue_redraw()
+		if level >= Room.ROWS:
+			_draining = false
+		return
+	if not rising:
+		return
+	if _rise_start == Vector2.INF:
+		_rise_start = local
+	if floori((local.y - 3.0) / Room.TILE) <= _room.lava_safe_row:
+		# Made it: the lava drains back into the floor.
+		rising = false
+		_draining = true
+		GameState.set_flag(rise_flag(_room.coord))
+		Events.toast.emit("TOAST_LAVA_DRAINS")
+		Feel.shake(2.0)
+		return
+	_rise_grace -= delta
+	if _rise_grace > 0.0:
+		return
+	var before := ceili(level)
+	level = maxf(level - _room.lava_rise * delta, float(_room.lava_safe_row + 1))
+	if ceili(level) != before:
+		Feel.shake(1.0)
+		queue_redraw()
 
 
 func _safe_spot(fallback: Vector2) -> Vector2:
@@ -94,20 +178,38 @@ func _near_gap(local: Vector2) -> bool:
 
 
 func _draw() -> void:
+	var first := _first_lava_row()
 	for y in Room.ROWS:
 		for x in Room.COLS:
-			if _room.tile_at(x, y) != "_":
-				continue
-			_tile("gap_%d" % ((x * 7 + y * 3) % 2), x, y)
-			# 3/4 view: the far side of the hole shows its broken planks.
-			if _room.tile_at(x, y - 1) != "_":
-				_tile("gap_lip", x, y)
-			if _room.tile_at(x - 1, y) != "_":
-				_tile("gap_left", x, y)
-			if _room.tile_at(x + 1, y) != "_":
-				_tile("gap_right", x, y)
-			if _room.tile_at(x, y + 1) != "_":
-				_tile("gap_bottom", x, y)
+			var letter := _room.tile_at(x, y)
+			if letter == "_":
+				_tile("gap_%d" % ((x * 7 + y * 3) % 2), x, y)
+				# 3/4 view: the far side of the hole shows its broken planks.
+				if _room.tile_at(x, y - 1) != "_":
+					_tile("gap_lip", x, y)
+				if _room.tile_at(x - 1, y) != "_":
+					_tile("gap_left", x, y)
+				if _room.tile_at(x + 1, y) != "_":
+					_tile("gap_right", x, y)
+				if _room.tile_at(x, y + 1) != "_":
+					_tile("gap_bottom", x, y)
+			elif letter == "^" or (letter != "#" and y >= first):
+				_tile("lava_%d" % ((_lava_frame + x + y) % 2), x, y)
+				if not _is_lava(x, y - 1, first):
+					_tile("lava_lip", x, y)
+				if not _is_lava(x - 1, y, first):
+					_tile("lava_left", x, y)
+				if not _is_lava(x + 1, y, first):
+					_tile("lava_right", x, y)
+				if not _is_lava(x, y + 1, first):
+					_tile("lava_bottom", x, y)
+
+
+func _is_lava(x: int, y: int, first: int) -> bool:
+	var letter := _room.tile_at(x, y)
+	if letter == "#":
+		return true  # Walls meet lava with no rim.
+	return letter == "^" or y >= first
 
 
 func _tile(tile_name: String, x: int, y: int) -> void:

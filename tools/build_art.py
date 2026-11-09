@@ -28,6 +28,7 @@ import brinewood_art
 import hull_art
 import npc_art
 import hull_dungeon_art
+import kiln_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -917,6 +918,7 @@ TILE_COLUMNS = 8
 TILE_LAYOUT += brinewood_art.TILES
 TILE_LAYOUT += hull_art.TILES
 TILE_LAYOUT += hull_dungeon_art.TILES
+TILE_LAYOUT += kiln_art.TILES
 RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
@@ -929,6 +931,11 @@ _clash = _taken & (set(hull_dungeon_art.RAMPS) | set(hull_dungeon_art.FLAT))
 assert not _clash, "hull_dungeon_art reuses material letters: %s" % sorted(_clash)
 RAMPS.update(hull_dungeon_art.RAMPS)
 FLAT.update(hull_dungeon_art.FLAT)
+_taken = set(RAMPS) | set(FLAT)
+_clash = _taken & (set(kiln_art.RAMPS) | set(kiln_art.FLAT))
+assert not _clash, "kiln_art reuses material letters: %s" % sorted(_clash)
+RAMPS.update(kiln_art.RAMPS)
+FLAT.update(kiln_art.FLAT)
 
 
 def build_tiles():
@@ -1082,6 +1089,8 @@ def main():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     for name, px in hull_dungeon_art.build(lit, sheet).items():
         write_png(os.path.join(OUT, "dungeon", name + ".png"), px)
+    for name, px in kiln_art.build(lit, sheet).items():
+        write_png(os.path.join(OUT, "kiln", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())
