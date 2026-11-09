@@ -1034,6 +1034,9 @@ def main():
     for name, px in shadows.items():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "saltmarrow.png"), build_tiles())
+    import title_art
+    write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())
+    write_png(os.path.join(OUT, "ui", "title_bg.png"), title_art.build_title_bg())
     font_px, font_fnt = build_font()
     write_png(os.path.join(OUT, "fonts", "tide.png"), font_px)
     write_text(os.path.join(OUT, "fonts", "tide.fnt"), font_fnt)
