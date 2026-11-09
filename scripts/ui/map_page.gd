@@ -19,6 +19,7 @@ const BIOME_COLORS := {
 	"kiln": [Color("#7a6264"), Color("#622a2a"), Color("#3e6476")],
 	"cinderreach": [Color("#86726f"), Color("#8a3428"), Color("#f2783a")],
 	"mire": [Color("#5a4e7c"), Color("#1e1834"), Color("#2a2a48")],
+	"gloamfen": [Color("#655a78"), Color("#2a5458"), Color("#2e2650")],
 }
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 
@@ -204,7 +205,7 @@ func _draw_view() -> void:
 				var flag := "chest_%d_%d_%d_%d" % [coord.x, coord.y, tile.x, tile.y]
 				if not GameState.flags.get(flag, false):
 					MenuKit.draw_marker(_view, MenuKit.Marker.CHEST, rect.position + Vector2(tile) * PX + Vector2(1, 1))
-	# Wren, blinking, where she stands now.
+	# Wren, blinking, where they stand now.
 	var here := _room_rect(GameState.room_coord)
 	if _rooms.has(GameState.room_coord) and blink:
 		var local := _player_local() / float(Room.TILE) * PX
@@ -228,7 +229,7 @@ func _draw_info() -> void:
 	var coord := _rooms[_cursor]
 	var info := RoomInfo.get_room(coord)
 	var title: String = info["name_key"] if GameState.has_seen(coord) else "MAP_UNKNOWN_ROOM"
-	MenuKit.draw_text(self, title, at, MenuKit.TEXT_GOLD)
+	MenuKit.draw_text(self, title, at, MenuKit.TEXT_GOLD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, INFO_PANEL.size.x - 20)
 	var line := ""
 	if not info["stones"].is_empty():
 		if not _stone_awake(coord):
@@ -242,4 +243,5 @@ func _draw_info() -> void:
 	elif coord == GameState.room_coord:
 		line = "MAP_YOU_ARE_HERE"
 	if line != "":
-		MenuKit.draw_text(self, line, at + Vector2(0, 12), MenuKit.TEXT)
+		MenuKit.draw_text(self, line, at + Vector2(0, 12), MenuKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+			INFO_PANEL.size.x - 20)

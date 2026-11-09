@@ -1,9 +1,9 @@
 class_name MantleSwoop
 extends Node2D
-## Mantle sweeping low over the play area to pick Wren up or set her down:
-## the ray flies in from the upper left, skims just above her, and climbs
+## Mantle sweeping low over the play area to pick Wren up or set them down:
+## the ray flies in from the upper left, skims just above them, and climbs
 ## away to the upper right. Its shadow slides along the ground beneath.
-## `passed` fires as Mantle is right over her; `finished` once it is gone.
+## `passed` fires as Mantle is right over them; `finished` once it is gone.
 
 signal passed
 signal finished

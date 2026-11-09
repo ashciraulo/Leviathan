@@ -1,0 +1,104 @@
+name: Build PC
+
+# Builds playable Windows and Linux versions. Run it from the Actions tab
+# (Build PC > Run workflow), or push a tag like v0.2.0. The builds are
+# attached to the run as downloadable artifacts.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  export:
+    name: Export Windows and Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GODOT_VERSION: 4.7.2
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      # Cached: GitHub's release downloads sometimes time out (504).
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
+          "$RUNNER_TEMP/godot" --version
+
+      - name: Cache export templates
+        id: templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-templates-${{ env.GODOT_VERSION }}-pc
+
+      - name: Download export templates
+        if: steps.templates.outputs.cache-hit != 'true'
+        run: |
+          dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$dir"
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          # Only the PC templates; the full set is over a gigabyte.
+          unzip -q -o -j templates.tpz templates/version.txt templates/linux_release.x86_64 \
+            templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe -d "$dir"
+          rm templates.tpz
+
+      - name: Import project
+        run: timeout 300 "$RUNNER_TEMP/godot" --headless --path . --import
+
+      - name: Export
+        run: |
+          mkdir -p export/windows export/linux
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Windows Desktop" export/windows/Leviathan.exe
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Linux" export/linux/Leviathan.x86_64
+          test -s export/windows/Leviathan.exe
+          test -s export/linux/Leviathan.x86_64
+          ls -la export/*
+
+      - name: Check the Linux build starts
+        run: |
+          set +e
+          timeout 10 export/linux/Leviathan.x86_64 --headless --audio-driver Dummy 2>&1 | tee run.log
+          rc=${PIPESTATUS[0]}
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load" run.log; then
+            echo "::error::The exported build reported errors"
+            exit 1
+          fi
+          # 124 = still running when the timeout stopped it, which is what we want.
+          if [ "$rc" != "124" ]; then
+            echo "::error::The exported build exited early (code $rc)"
+            exit 1
+          fi
+          exit 0
+
+      - name: Pack the Linux build
+        # Artifacts drop file permissions; a tarball keeps the executable bit.
+        run: tar -czf Leviathan-linux.tar.gz -C export/linux .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Leviathan-windows
+          path: export/windows/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Leviathan-linux
+          path: Leviathan-linux.tar.gz

@@ -108,7 +108,8 @@ func _draw() -> void:
 			MenuKit.draw_text(self, "CONTROLS_RESET", Vector2(28, y), MenuKit.TEXT_WARN if selected else color)
 			continue
 		var action: String = Settings.REMAPPABLE[i]
-		MenuKit.draw_text(self, "ACTION_" + action.to_upper(), Vector2(28, y), color)
+		MenuKit.draw_text(self, "ACTION_" + action.to_upper(), Vector2(28, y), color, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+			KEY_X - 40)
 		for col in 2:
 			var x := KEY_X if col == 0 else PAD_X
 			var text := MenuKit.key_name(action) if col == 0 else pad_text(action)
@@ -118,7 +119,8 @@ func _draw() -> void:
 			if active:
 				draw_rect(Rect2(x - 4, y - 1, 82, ROW_H), Color(MenuKit.FILL, 1.0))
 				MenuKit.draw_text(self, "~", Vector2(x - 10, y), MenuKit.TEXT_HEAD)
-			MenuKit.draw_text(self, text, Vector2(x, y), MenuKit.TEXT_GOLD if active else color)
+			MenuKit.draw_text(self, text, Vector2(x, y), MenuKit.TEXT_GOLD if active else color, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+				(PAD_X - KEY_X - 8) if col == 0 else (PANEL.end.x - PAD_X - 6))
 	if _scroll + VISIBLE_ROWS < _rows():
 		MenuKit.draw_text(self, "v", Vector2(PANEL.end.x - 18, PANEL.end.y - 16), MenuKit.TEXT_DIM)
 	if _scroll > 0:

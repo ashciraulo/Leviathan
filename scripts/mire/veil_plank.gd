@@ -2,7 +2,7 @@ class_name VeilPlank
 extends StaticBody2D
 ## A plank of the drowned boardwalk over black water (v). In the dark it's
 ## only bog; in the raised lantern's light it's there, and Wren can walk on
-## it. A plank she's standing on stays put until she steps off.
+## it. A plank Wren is standing on stays put until they step off.
 
 const FADE_SPEED := 4.0
 

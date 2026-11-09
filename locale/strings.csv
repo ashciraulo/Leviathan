@@ -1,7 +1,6 @@
 keys,en
 GAME_TITLE,LEVIATHAN
 TITLE_SUBTITLE,Prototype build
-TITLE_CONTROLS,WASD move   J sword   K talk   H hum   M map   Esc menu
 MENU_CONTINUE,Continue
 MENU_NEW_GAME,New game
 MENU_QUIT,Quit
@@ -361,6 +360,13 @@ BELL_MIRE_2,"The wisps drift down and settle like snow. Far away, something huge
 BELL_MIRE_3,You learned the third phrase of the lullaby. Your Resonance grows.
 CAPTION_FLAME,Flame catches
 CAPTION_HEARTBEAT,Heartbeat
+ROOM_FENMOUTH,Fenmouth
+ROOM_GLOWCAP_GROVE,Glowcap Grove
+ROOM_STILLWATER_REACH,Stillwater Reach
+ROOM_LUMEN_POOL,Lumen Pool
+ROOM_DROWNED_CAUSEWAY,Drowned Causeway
+ROOM_WITHERROOT_HOLLOW,Witherroot Hollow
+ROOM_MIRELIGHT_EDGE,Mirelight Edge
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast

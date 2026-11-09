@@ -4,8 +4,8 @@ extends Node
 ## Gates (Room.gate):
 ##   "plates"  every pressure plate held down at once
 ##   "clear"   every enemy beaten. The bars stand open until Wren is well
-##             inside, then slam shut behind her.
-##   "braziers" every brazier (e) lit with the Glowmoth Lantern
+##             inside, then slam shut behind them.
+##   "braziers" every brazier (j) lit with the Glowmoth Lantern
 ## A solved gate stays solved (saved as a flag).
 
 var _room: Room

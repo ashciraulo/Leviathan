@@ -110,13 +110,20 @@ func _draw() -> void:
 	MenuKit.draw_panel(self, GEAR_PANEL)
 	MenuKit.draw_panel(self, KEEPER_PANEL)
 	MenuKit.draw_panel(self, INFO_PANEL)
-	MenuKit.draw_text(self, "SATCHEL_TOOLS", Vector2(18, 28), MenuKit.TEXT_HEAD)
-	MenuKit.draw_text(self, "SATCHEL_JARS", Vector2(18, 111), MenuKit.TEXT_HEAD)
-	MenuKit.draw_text(self, "SATCHEL_GEAR", Vector2(146, 28), MenuKit.TEXT_HEAD)
-	MenuKit.draw_text(self, "SATCHEL_LAMP", Vector2(146, 111), MenuKit.TEXT_HEAD)
-	MenuKit.draw_text(self, "SATCHEL_SLOTS", Vector2(250, 28), MenuKit.TEXT_HEAD)
-	MenuKit.draw_text(self, "SATCHEL_BELLS", Vector2(250, 64), MenuKit.TEXT_HEAD)
-	MenuKit.draw_text(self, "SATCHEL_PEARLS", Vector2(250, 94), MenuKit.TEXT_HEAD)
+	MenuKit.draw_text(self, "SATCHEL_TOOLS", Vector2(18, 28), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		TOOLS_PANEL.end.x - 24)
+	MenuKit.draw_text(self, "SATCHEL_JARS", Vector2(18, 111), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		TOOLS_PANEL.end.x - 24)
+	MenuKit.draw_text(self, "SATCHEL_GEAR", Vector2(146, 28), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		GEAR_PANEL.end.x - 152)
+	MenuKit.draw_text(self, "SATCHEL_LAMP", Vector2(146, 111), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		GEAR_PANEL.end.x - 152)
+	MenuKit.draw_text(self, "SATCHEL_SLOTS", Vector2(250, 28), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		KEEPER_PANEL.end.x - 256)
+	MenuKit.draw_text(self, "SATCHEL_BELLS", Vector2(250, 64), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		KEEPER_PANEL.end.x - 256)
+	MenuKit.draw_text(self, "SATCHEL_PEARLS", Vector2(250, 94), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+		KEEPER_PANEL.end.x - 256)
 	for cell in _cells:
 		_draw_cell(cell)
 	MenuKit.draw_cursor(self, _cells[_cursor]["rect"])

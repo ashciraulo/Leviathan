@@ -1,6 +1,6 @@
 class_name Darkness
 extends CanvasModulate
-## Makes a dark room dark (Room.dark). Wren carries a faint glow of her own;
+## Makes a dark room dark (Room.dark). Wren carries a faint glow of their own;
 ## with the Glowmoth Lantern raised it opens out into a wide circle. Lit
 ## braziers and the mire's own glowing things add lights of their own.
 

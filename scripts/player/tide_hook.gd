@@ -18,7 +18,7 @@ const RANGE := 7.0 * 16.0
 const OUT_SPEED := 340.0
 const BACK_SPEED := 420.0
 const ZIP_SPEED := 260.0
-## Wren stops this far short of the post she zips to.
+## Wren stops this far short of the post they zip to.
 const ZIP_STOP := 12.0
 const DRAG_SPEED := 200.0
 const ENEMY_STUN := 0.6

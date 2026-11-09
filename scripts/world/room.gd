@@ -10,6 +10,7 @@ extends Node2D
 ##          m  Bogskipper (ambusher, hides in the mud)
 ##          w  Lanternmoth (flyer, circles then dives)
 ##          e  Slagbeetle (charger; flip it against a wall)   y  geyser
+##          q  Sporecap (bursts spores when Wren is close)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)
@@ -61,11 +62,11 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 @export var gate := ""
 ## When true, the chest (C) only appears once the gate is solved.
 @export var chest_hidden := false
-## A listing deck: Wren drifts this way (pixels per second) unless she walks
+## A listing deck: Wren drifts this way (pixels per second) unless they walk
 ## against it.
 @export var tilt := Vector2.ZERO
 ## Rising lava: rows per second it climbs from the bottom of the room once
-## Wren is inside (0 for none), and the row where she's safe from it.
+## Wren is inside (0 for none), and the row where they're safe from it.
 @export var lava_rise := 0.0
 @export var lava_safe_row := 2
 ## A dark room: only Wren's lantern and things that glow light it.
@@ -105,6 +106,12 @@ const BIOMES := {
 		"water": "lava_%d", "water_edge": "crust_%s_%d", "damp": "scorch_%s",
 		"wet_deco": "vent_%d", "dry_deco": "scrub_%d",
 		"floor_overlay": ["shimmer_%d", 7], "door": "exit_glow",
+	},
+	"gloamfen": {
+		"floor": "fen_%d", "wall_top": "canopy_top_%d", "wall_face": "root_face_%d",
+		"water": "gloom_%d", "water_edge": "reed_%s_%d", "damp": "mirk_%s",
+		"wet_deco": "glowcap_%d", "dry_deco": "frond_%d",
+		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s", "door": "exit_glow",
 	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
@@ -214,6 +221,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Slagbeetle.new()
 		"y":
 			node = Geyser.new()
+		"q":
+			node = Sporecap.new()
 		"b":
 			node = Shellback.new()
 		"C":

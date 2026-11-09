@@ -8,7 +8,7 @@ extends Enemy
 ##      and the sword can't get through them. Touching the calf hurts.
 ##   2. Raise the Glowmoth Lantern and the wisps leave the heart for its
 ##      light, and the heart is bare: strike it. But they circle Wren,
-##      closer and closer, and burn if they reach her.
+##      closer and closer, and burn if they reach Wren.
 ##   3. Lower it and they drift home, slowly; the heart stays bare until
 ##      half of them are back. Raised again, they pick up where they left
 ##      off: the circle only widens again while they're home.

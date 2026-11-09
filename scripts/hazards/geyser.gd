@@ -60,7 +60,8 @@ func _set_phase(next: Phase) -> void:
 		Phase.BLOW:
 			_timer = BLOW_TIME
 	_sprite.frame = int(next)
-	_steam.set_deferred("monitorable", next == Phase.BLOW)
+	# Stays monitorable: toggling that misses a hurtbox already inside, so
+	# whether it hurts is down to `active` alone.
 	_steam.active = next == Phase.BLOW
 
 
