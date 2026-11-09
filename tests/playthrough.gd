@@ -42,6 +42,8 @@ func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
 	SaveManager.set_aside(TEST_SLOT, "playthroughbackup")
 	SaveManager.delete_save()
+	# The ending stays in the game instead of changing to the credits scene.
+	DreamingHeart.roll_credits = false
 	_index_rooms()
 	if OS.get_environment("LEVIATHAN_TRACE") != "":
 		Events.room_entered.connect(func(c: Vector2i) -> void: print("  entered %s" % c))
@@ -143,6 +145,8 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		_check(bosses.size() == 1, "%s: one boss in %s" % [id, boss_room])
 		if bosses.size() == 1:
 			_check(Audio.music_cue == "boss", "%s: the boss theme plays (%s)" % [id, Audio.music_cue])
+			if bosses[0] is DreamingHeart:
+				return await _finale(bosses[0])
 			bosses[0]._die()
 			_check(GameState.flags.get(bosses[0].DEFEATED_FLAG, false), "%s: its boss falls" % id)
 			# The boss's last moments and the aftermath, up to 30 s.
@@ -172,6 +176,30 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		await _settle()
 		await _play_scene(30.0)
 		_check(GameState.dungeon == "" and _rooms.has(_game.current_room.coord) and _rooms[_game.current_room.coord][0] == "", "%s: it leads back out to the overworld (%s)" % [id, _game.current_room.coord])
+	return true
+
+
+## The Dreaming Heart: every bell already rung, Wren hums it to sleep. The
+## smoke test plays the rhythm itself; this checks the ending that follows:
+## the Old One hums back, the game says it's finished, and the credits roll.
+func _finale(heart: DreamingHeart) -> bool:
+	var finished := [false]
+	Events.game_finished.connect(func() -> void: finished[0] = true, CONNECT_ONE_SHOT)
+	_check(GameState.item_count("tidebell") == 7, "maw: Wren comes with all seven bells (%d)" % GameState.item_count("tidebell"))
+	heart._sleep()
+	var deadline := Time.get_ticks_msec() + 30000
+	while Time.get_ticks_msec() < deadline and not finished[0]:
+		await _play_scene(5.0)
+		await _wait(0.2)
+	_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG), "maw: the Old One sleeps")
+	_check(finished[0], "maw: the game ends")
+	_check(SaveManager.read_summary(TEST_SLOT).get("bells", 0) == 7, "maw: the ending is saved")
+	var credits: Control = (load(DreamingHeart.CREDITS_SCENE) as PackedScene).instantiate()
+	add_child(credits)
+	await _wait(0.5)
+	_check(credits._scroll > 0.0, "the credits roll")
+	credits._leaving = true
+	credits.queue_free()
 	return true
 
 
