@@ -12,13 +12,16 @@ var _radius := Lantern.GLOW
 
 
 func _ready() -> void:
-	color = DARK
+	# Starts clear and darkens once the room is live, so a room sliding in
+	# doesn't darken the one Wren is leaving.
+	color = Color.WHITE
 	_light = Lantern.make_light(Lantern.GLOW, LANTERN_COLOR)
 	_light.name = "WrenLight"
 	add_child(_light)
 
 
 func _process(delta: float) -> void:
+	color = color.lerp(DARK, minf(delta * 8.0, 1.0))
 	var wren := Lantern.player(get_tree())
 	if wren == null:
 		return

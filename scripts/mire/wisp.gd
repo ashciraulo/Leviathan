@@ -35,6 +35,13 @@ func _think(delta: float) -> void:
 		return
 	if int(_time * 0.7) != int((_time - delta) * 0.7):
 		_drift = Vector2.from_angle(randf() * TAU)
+	# They float over water, but never out of the room (a "clear" gate
+	# would wait for one forever).
+	var room := get_parent() as Node2D
+	var local := position if room == null else global_position - room.global_position
+	var inside := Rect2(Vector2(24, 24), Room.SIZE - Vector2(48, 40))
+	if not inside.has_point(local):
+		_drift = (inside.get_center() - local).normalized()
 	velocity = _drift * DRIFT_SPEED
 
 

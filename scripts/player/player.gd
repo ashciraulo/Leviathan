@@ -104,6 +104,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if frozen:
 		return
+	# Put away in the satchel, the lantern comes down.
+	if lantern_raised and not GameState.item_slots.has("glowmoth_lantern"):
+		lantern_raised = false
 	_state_time += delta
 	_invuln = maxf(_invuln - delta, 0.0)
 	_flash = maxf(_flash - delta, 0.0)

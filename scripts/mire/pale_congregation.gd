@@ -7,12 +7,14 @@ extends Enemy
 ##   1. Whole, the calf swims after Wren. Its wisps crowd round the heart,
 ##      and the sword can't get through them. Touching the calf hurts.
 ##   2. Raise the Glowmoth Lantern and the wisps leave the heart for its
-##      light: they circle Wren, closer and closer, and burn if they reach
-##      her.
-##   3. Lower it and they drift home, slowly. Until half of them are back
-##      the heart is bare: strike it.
+##      light, and the heart is bare: strike it. But they circle Wren,
+##      closer and closer, and burn if they reach her.
+##   3. Lower it and they drift home, slowly; the heart stays bare until
+##      half of them are back. Raised again, they pick up where they left
+##      off: the circle only widens again while they're home.
 ## Below half strength it gathers itself (the heart thuds and the calf
-## brightens) and lunges at Wren. Six strikes and the dreams scatter.
+## brightens) and lunges at Wren, whatever the wisps are doing. Six
+## strikes and the dreams scatter.
 
 enum Mode { INTRO, SWIM, TELL, LUNGE, DYING }
 
@@ -112,6 +114,7 @@ func _ready() -> void:
 		_swarm.add_child(area)
 		# They gather out of the dark, from all round the room.
 		var start := position + Vector2.from_angle(TAU * i / slots.size()) * 140.0
+		start = Vector2(clampf(start.x, 24.0, Room.SIZE.x - 24.0), clampf(start.y, 24.0, Room.SIZE.y - 24.0))
 		wisps.append({"at": start, "home": false, "area": area})
 	_sprite.modulate.a = 0.0
 	var tween := create_tween()
@@ -145,14 +148,16 @@ func is_exposed() -> bool:
 	return home_count() * 2 < wisps.size()
 
 
-func _think(delta: float) -> void:
+## The wisps move every frame, even while the heart is stunned or dying.
+func _process(delta: float) -> void:
 	_beat += delta
 	var wren := get_player()
 	var raised := wren != null and wren.lantern_raised and mode != Mode.DYING
 	_move_wisps(delta, wren, raised)
-	if mode == Mode.DYING:
-		velocity = Vector2.ZERO
-		return
+
+
+func _think(delta: float) -> void:
+	var wren := get_player()
 	_timer -= delta
 	var to_wren := Vector2.ZERO if wren == null else wren.global_position - global_position
 	match mode:
@@ -162,7 +167,7 @@ func _think(delta: float) -> void:
 				mode = Mode.SWIM
 		Mode.SWIM:
 			velocity = to_wren.normalized() * SWIM_SPEED if to_wren.length() > 24.0 else Vector2.ZERO
-			if hp * 2 <= max_hp and not is_exposed():
+			if hp * 2 <= max_hp:
 				_lunge_timer -= delta
 				if _lunge_timer <= 0.0:
 					mode = Mode.TELL
@@ -186,12 +191,14 @@ func _think(delta: float) -> void:
 
 func _move_wisps(delta: float, wren: Player, raised: bool) -> void:
 	if raised and not _was_raised:
-		_orbit = ORBIT_START
 		Audio.play_sfx("wisp_chime", global_position)
 	_was_raised = raised
 	if raised:
 		_orbit = maxf(_orbit - ORBIT_SHRINK * delta, 6.0)
 		_orbit_angle += ORBIT_SPIN * delta
+	elif not is_exposed():
+		# Gathered home again: next time they'll start out wide.
+		_orbit = ORBIT_START
 	var center := heart_point()
 	for i in wisps.size():
 		var wisp: Dictionary = wisps[i]
@@ -215,7 +222,8 @@ func _move_wisps(delta: float, wren: Player, raised: bool) -> void:
 		wisp["at"] = at
 		var area: DamageArea = wisp["area"]
 		area.position = at
-		area.active = mode != Mode.DYING
+		# Gathering out of the dark at the start, they don't burn yet.
+		area.active = mode != Mode.DYING and mode != Mode.INTRO
 	_swarm.queue_redraw()
 
 
