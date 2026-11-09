@@ -12,6 +12,7 @@ const ITEMS := {
 	"map": ["TOAST_GOT_MAP", HullSprites.MAP],
 	"compass": ["TOAST_GOT_COMPASS", HullSprites.COMPASS],
 	"big_key": ["TOAST_GOT_BIG_KEY", HullSprites.BIG_KEY],
+	"breath_pearl": ["TOAST_GOT_PEARL", null],
 }
 ## Finding one of these opens the dialogue box to explain it.
 const ITEM_TALK := {
@@ -37,6 +38,14 @@ func _ready() -> void:
 	_sprite.frame = 1 if opened else 0
 
 
+## An item's 16x16 satchel icon as a texture.
+static func icon_texture(id: String) -> Texture2D:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = MenuKit.ITEMS
+	atlas.region = Items.icon_rect(Items.icon(id))
+	return atlas
+
+
 func flag_key() -> String:
 	return "chest_%d_%d_%d_%d" % [room_coord.x, room_coord.y, tile.x, tile.y]
 
@@ -54,10 +63,12 @@ func interact() -> void:
 			GameState.give_item(Items.dungeon_item(dungeon, item))
 		_:
 			GameState.give_item(item)
-	var spec: Array = ITEMS.get(item, ITEMS["small_key"])
+	var spec: Array = ITEMS.get(item, [Items.name_key(item), null])
 	Events.toast.emit(spec[0])
-	# Show the item lifting out of the chest.
-	var shown := Art.sprite(spec[1], 1, 1, 12)
+	# Show the item lifting out of the chest (its satchel icon if it has no
+	# sprite of its own).
+	var texture: Texture2D = spec[1] if spec[1] != null else Chest.icon_texture(item)
+	var shown := Art.sprite(texture, 1, 1, 12)
 	shown.z_index = 5
 	add_child(shown)
 	var tween := create_tween()

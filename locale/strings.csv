@@ -57,7 +57,7 @@ TOAST_GATE_OPENS,Something unlocks with a clank.
 BOSS_MATRIARCH,The Barnacle Matriarch
 TOAST_BOSS_DOWN,The Matriarch sinks into the bilge.
 TOAST_BELL_QUIET,The Tidebell hums softly.
-BELL_HULL_1,"You ring the Tidebell. The note rolls down through the wreck and out across the bay."
+BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
 BELL_HULL_3,You learned the first phrase of the lullaby. Your Resonance grows.
 MENU_JOURNEYS,Journeys
@@ -308,3 +308,4 @@ DUNSTAN_2,Bell's quiet. Sea's quiet. Even the gulls are quiet. Whole coast's hol
 DUNSTAN_ROPE_1,Marga sent you? Was she asking nicely?
 DUNSTAN_ROPE_2,...Hm. Tell her she'll have it by supper.
 DUNSTAN_AGAIN,Rope's coming. Rope's always coming.
+TOAST_GOT_PEARL,You found a Breath Pearl! One more breath.

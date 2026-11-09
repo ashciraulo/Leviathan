@@ -16,6 +16,7 @@ extends Node2D
 ##             the art rises above)
 ##          h  Old Hessa      1 2 3 4  villagers (see Npc.LETTERS)
 ##          C  chest (holds chest_item)
+##          :  boardwalk over water (walkable; regions with "boardwalk" tiles)
 ##          X  locked hatch (all X in a room open with one small key)
 ##          D  doorway to door_to, arriving on door_spawn
 ##          Dungeon pieces (see DungeonTiles):
@@ -84,6 +85,7 @@ const BIOMES := {
 		"wet_deco": "reeds_%d", "dry_deco": "fern_%d",
 		# [tile, one in every n tiles]
 		"floor_overlay": ["dapple_%d", 5], "water_overlay": ["lily_%d", 4],
+		"boardwalk": "boardwalk_%s",
 	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
@@ -157,7 +159,7 @@ func _build() -> void:
 func _spawn(tile: String, pos: Vector2) -> void:
 	var node: Node2D = null
 	match tile:
-		".":
+		".", ":":
 			pass
 		"P":
 			player_spawn = pos
@@ -264,6 +266,12 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["wall_top"] % (h % 2), x, y)
 				else:
 					_draw_tile(tiles["wall_face"] % (h % 2), x, y)
+			elif tile == ":" and tiles.has("boardwalk"):
+				# Planks over the water: the water still shows round them.
+				_draw_tile(tiles["water"] % _water_frame, x, y)
+				var runs_vertical := (_tile_at(x, y - 1) == ":" or _tile_at(x, y + 1) == ":") \
+						and _tile_at(x - 1, y) != ":" and _tile_at(x + 1, y) != ":"
+				_draw_tile(tiles["boardwalk"] % ("v" if runs_vertical else "h"), x, y)
 			elif tile == "~":
 				_draw_tile(tiles["water"] % _water_frame, x, y)
 				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:

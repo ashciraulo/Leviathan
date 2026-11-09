@@ -31,6 +31,7 @@ func _ready() -> void:
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
 	await _test_villagers()
+	await _test_brinewood_pearl()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -867,3 +868,69 @@ func _pad_event(button: JoyButton) -> InputEventJoypadButton:
 	event.button_index = button
 	event.pressed = true
 	return event
+
+
+## Tiles reachable on foot from a tile, by flood fill over a room layout.
+static func _walkable_from(rows: PackedStringArray, start: Vector2i) -> Dictionary:
+	var seen := {start: true}
+	var queue: Array[Vector2i] = [start]
+	while not queue.is_empty():
+		var at: Vector2i = queue.pop_front()
+		for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next := at + step
+			if next.x < 0 or next.y < 0 or next.x >= Room.COLS or next.y >= Room.ROWS or seen.has(next):
+				continue
+			var tile := rows[next.y][next.x]
+			if Room.is_solid(tile) or Prop.is_prop(tile) or tile in ["O", "C", "T"]:
+				continue
+			seen[next] = true
+			queue.append(next)
+	return seen
+
+
+## Brinewood's Breath Pearl sits on an island in Heron Shallows that only
+## the Tide Hook reaches: a reason to come back after the Rotting Hull.
+func _test_brinewood_pearl() -> void:
+	var scene := load("res://rooms/room_5_-1.tscn") as PackedScene
+	var probe := scene.instantiate() as Room
+	var rows := Room.parse_layout(probe.layout)
+	_check(probe.chest_item == "breath_pearl", "Heron Shallows' chest holds a Breath Pearl")
+	probe.free()
+	var on_foot := _walkable_from(rows, Vector2i(0, 6))
+	_check(not on_foot.has(Vector2i(12, 3)), "the pearl island can't be reached on foot")
+	_check(on_foot.has(Vector2i(13, 7)), "the hook spot south of the island is reachable")
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(5, -1), Vector2(13 * Room.TILE + 8, 7 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var player: Player = game.player
+	var room: Room = game.current_room
+	GameState.give_item("tide_hook")
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	_check(player.use_item("tide_hook"), "Wren throws the hook at the island's post")
+	await _wait(1.6)
+	var local := player.global_position - room.global_position
+	_check(local.y < 5 * Room.TILE, "the hook carries Wren onto the island (at %s)" % local)
+	var chest: Chest = null
+	for child in room.get_children():
+		if child is Chest:
+			chest = child
+	_check(chest != null, "the island has a chest")
+	if chest:
+		var bubbles := GameState.max_bubbles
+		player.global_position = chest.global_position + Vector2(0, 14)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(player.try_interact(), "Wren opens the pearl chest")
+		_check(GameState.max_bubbles == bubbles + 1, "the Breath Pearl adds a bubble")
+		await _wait(2.0)
+		for child in game.get_children():
+			if child is DialogueBox and DialogueBox.is_open:
+				child.close()
+	game.queue_free()
+	await _wait(0.1)
