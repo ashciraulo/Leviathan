@@ -52,6 +52,8 @@ locale/fallback="en"
 2d_physics/layer_7="player_hurtbox"
 2d_physics/layer_8="water"
 2d_physics/layer_9="pit"
+2d_physics/layer_10="deep_water"
+2d_physics/layer_11="grate"
 
 [physics]
 

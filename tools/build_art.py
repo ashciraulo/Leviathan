@@ -36,6 +36,7 @@ import ossuary_art
 import gloamfen_art
 import gale_art
 import glacier_art
+import belfry_art
 import windmere_art
 import frostspine_art
 
@@ -1007,6 +1008,7 @@ TILE_LAYOUT += verge_art.TILES
 TILE_LAYOUT += ossuary_art.TILES
 TILE_LAYOUT += gale_art.TILES
 TILE_LAYOUT += glacier_art.TILES
+TILE_LAYOUT += belfry_art.TILES
 _names = [entry[0] for entry in TILE_LAYOUT if entry]
 assert len(_names) == len(set(_names)), "tile names used twice: %s" % sorted(n for n in set(_names) if _names.count(n) > 1)
 
@@ -1207,6 +1209,8 @@ def main():
         write_png(os.path.join(OUT, "gale", name + ".png"), px)
     for name, px in glacier_art.build(_lit_with(glacier_art), sheet).items():
         write_png(os.path.join(OUT, "glacier", name + ".png"), px)
+    for name, px in belfry_art.build(_lit_with(belfry_art), sheet).items():
+        write_png(os.path.join(OUT, "belfry", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())
