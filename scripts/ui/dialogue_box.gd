@@ -10,7 +10,7 @@ extends CanvasLayer
 ## The game pauses while it is open. Interact or Sword finishes the page,
 ## then turns to the next one.
 
-const CHARS_PER_SECOND := 45.0
+## Typing speed comes from Settings.text_chars_per_second() (Options > Text speed).
 const SCREEN := Vector2(384, 216)
 ## One fixed size for every conversation: two lines of text, about 15% of
 ## the screen. Longer speeches are split over more pages.
@@ -171,7 +171,7 @@ func _process(delta: float) -> void:
 		return
 	_blink += delta
 	if not page_done():
-		_shown += delta * CHARS_PER_SECOND
+		_shown += delta * Settings.text_chars_per_second()
 		_text.visible_characters = int(_shown)
 	_panel.queue_redraw()
 
