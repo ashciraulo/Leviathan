@@ -61,21 +61,43 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Sunken flagstones, sea-green and worn smooth, barnacles in the joins."""
+    """Sunken flagstones, sea-green and worn smooth. One even stone on every
+    variant; joins on only some tile edges, so slabs run across tiles; weed
+    and barnacles in the joins, silt settled in the hollows."""
     rnd = random.Random(5100 + seed)
-    px = blank(STONE[2] if seed != 2 else STONE[3])
-    for i in range(T):
-        px[0][i] = STONE[1]
-        px[8][i] = STONE[4]
-        px[9][i] = STONE[1]
+    base = STONE[2]
+    px = blank(base)
+    if seed in (0, 1):
+        for x in range(T):
+            px[T - 1][x] = STONE[4]
+    if seed in (1, 2):
+        split = rnd.randrange(4, 12)
+        for y in range(T):
+            if px[y][split] == base:
+                px[y][split] = STONE[4]
+    # Weed and barnacles caught in the joins.
     for y in range(T):
-        split = 6 if y < 8 else 11
-        px[y][(split + seed * 3) % T] = STONE[4]
-    for _ in range(6):
-        px[rnd.randrange(T)][rnd.randrange(T)] = rnd.choice((STONE[1], STONE[3], STONE[4]))
+        for x in range(T):
+            if px[y][x] == STONE[4] and rnd.random() < 0.18:
+                px[y][x] = rnd.choice((WEED[1], WEED[2], hex_color("#D8D0B8")))
+    # Worn patches and pits.
+    for _ in range(3):
+        cx, cy = rnd.randrange(2, T - 5), rnd.randrange(2, T - 3)
+        for dx in range(rnd.randrange(2, 4)):
+            if px[cy][cx + dx] == base:
+                px[cy][cx + dx] = STONE[1]
+    for _ in range(5):
+        x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
+        if px[y][x] == base:
+            px[y][x] = STONE[3]
+    # Silt settled in a hollow.
     if seed == 3:
-        for (x, y) in ((3, 4), (4, 4), (12, 12)):
-            px[y][x] = hex_color("#D8D0B8")
+        cx, cy = rnd.randrange(4, 11), rnd.randrange(4, 11)
+        for y in range(T):
+            for x in range(T):
+                d = ((x - cx) / 3.0) ** 2 + ((y - cy) / 1.7) ** 2
+                if d <= 1.0 and rnd.random() < 0.85:
+                    px[y][x] = SILT[1] if d < 0.5 else SILT[0]
     return px
 
 
