@@ -17,8 +17,8 @@ The way through:
   Off the main path: the Grave Lamps south of the Drowned Walk (planks;
   compass).
 
-The front door, and the way out after the boss, lead back to Gloamfen
-(OUTSIDE below).
+The front door, and the way out after the boss, lead to Mirelight Edge in
+Gloamfen (overworld room (5, 2)), arriving just below its doorway.
 """
 
 import os
@@ -34,10 +34,9 @@ HEADER = """[gd_scene load_steps=2 format=3]
 script = ExtResource("1_room")
 """
 
-# Gloamfen isn't built yet: the overworld thread places the dungeon's
-# doorway and this points at it (the room just south of the shrine's door,
-# arriving below it).
-OUTSIDE = {"door_to": "Vector2i(14, 4)", "door_spawn": "Vector2i(11, 5)"}
+# The shrine's doorway is in Mirelight Edge, Gloamfen (overworld room
+# (5, 2)); Wren comes out on the boardwalk just below it.
+OUTSIDE = {"door_to": "Vector2i(5, 2)", "door_spawn": "Vector2i(11, 2)"}
 DARK = {"dark": "true"}
 
 # coord: (name key, extra exports, layout)
