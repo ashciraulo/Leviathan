@@ -32,6 +32,7 @@ func _ready() -> void:
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
 	await _test_villagers()
+	await _test_fast_travel()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -894,3 +895,38 @@ func _test_audio() -> void:
 	Audio.play_music("region_saltmarrow")
 	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
 	Audio.stop_music(0.01)
+
+
+func _test_fast_travel() -> void:
+	GameState.reset_new_game()
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	Engine.time_scale = 3.0
+	var wren: Player = game.player
+	game._on_fast_travel(Vector2i.ZERO)
+	await _wait(0.1)
+	_check(game.busy and wren.frozen, "Wren waits while Mantle swoops in")
+	await _wait(0.3)
+	_check(not is_instance_valid(wren) or not wren.visible, "Mantle carries Wren off")
+	var flight: FlightScene = null
+	for i in 20:
+		await _wait(0.1)
+		for child in game.get_children():
+			if child is FlightScene:
+				flight = child
+		if flight:
+			break
+	_check(flight != null, "the flight over the sea plays")
+	await _wait(1.6)
+	var arrived := false
+	for i in 30:
+		await _wait(0.1)
+		if game.player and game.player.visible and not game.player.frozen and not game.busy:
+			arrived = true
+			break
+	_check(arrived, "Mantle sets Wren down and play resumes")
+	_check(GameState.room_coord == Vector2i.ZERO, "fast travel lands at the chosen Tidestone")
+	Engine.time_scale = 1.0
+	game.queue_free()
+	await _wait(0.1)

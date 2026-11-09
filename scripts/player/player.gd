@@ -147,7 +147,8 @@ func is_sword_active() -> bool:
 
 
 func take_damage(amount: int, from_position: Vector2) -> void:
-	if _invuln > 0.0 or state in [State.DEAD, State.FALL]:
+	# Frozen means a cutscene or a room slide: nothing can hurt Wren then.
+	if frozen or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
 	GameState.damage(amount)

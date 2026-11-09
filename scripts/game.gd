@@ -74,8 +74,9 @@ func _process(delta: float) -> void:
 	GameState.play_time += delta
 
 
-## Build the world at the checkpoint in GameState.
-func _start() -> void:
+## Build the world at the checkpoint in GameState. With by_mantle, Mantle
+## swoops in and sets Wren down there.
+func _start(by_mantle: bool = false) -> void:
 	world = Node2D.new()
 	world.name = "World"
 	world.y_sort_enabled = true
@@ -102,6 +103,22 @@ func _start() -> void:
 	Events.toast.emit(current_room.name_key)
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 0.0, FADE_TIME)
+	if by_mantle:
+		_arrive_by_mantle()
+
+
+func _arrive_by_mantle() -> void:
+	busy = true
+	player.frozen = true
+	player.visible = false
+	var swoop := MantleSwoop.make(player.global_position)
+	world.add_child(swoop)
+	await swoop.passed
+	player.visible = true
+	Feel.shake(1.0)
+	await swoop.finished
+	player.frozen = false
+	busy = false
 
 
 func _spawn_room(coord: Vector2i) -> Room:
@@ -208,8 +225,15 @@ func _on_fast_travel(coord: Vector2i) -> void:
 	player.frozen = true
 	Events.toast.emit("TOAST_MANTLE")
 	Audio.play_sfx("wayshell")
+	# Mantle swoops down and carries Wren off.
+	var swoop := MantleSwoop.make(player.global_position)
+	world.add_child(swoop)
+	await swoop.passed
+	if is_instance_valid(player):
+		player.visible = false
+	await swoop.finished
 	var tween := create_tween()
-	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME * 2.0)
+	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
 	await tween.finished
 	GameState.set_checkpoint(coord, landing)
 	GameState.wake_tidestone(coord, landing)
@@ -218,4 +242,14 @@ func _on_fast_travel(coord: Vector2i) -> void:
 	world = null
 	current_room = null
 	player = null
-	_start()
+	# The flight itself, over the sea.
+	var flight := FlightScene.make(str(RoomInfo.get_room(coord).get("name_key", "")))
+	add_child(flight)
+	tween = create_tween()
+	tween.tween_property(_fade, "color:a", 0.0, FADE_TIME)
+	await flight.finished
+	tween = create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
+	await tween.finished
+	flight.queue_free()
+	_start(true)

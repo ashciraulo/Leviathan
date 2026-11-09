@@ -87,6 +87,16 @@ func _ready() -> void:
 	await _capture("39_dungeon_map")
 	pause.close()
 
+	# Mantle answers the Wayshell: the swoop, the flight, the landing.
+	await _wait(0.3)
+	game._on_fast_travel(Vector2i.ZERO)
+	await _wait(0.65)
+	await _capture("40_mantle_swoop")
+	await _wait(2.4)
+	await _capture("41_mantle_flight")
+	await _wait(3.0)
+	await _capture("42_mantle_landing")
+
 	_restore_saves()
 	print("MENU SCREENSHOTS DONE: " + _out_dir)
 	get_tree().quit(0)
