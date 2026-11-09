@@ -42,6 +42,9 @@ def hex_color(h, a=255):
 # --------------------------------------------------------------------------
 RAMPS = {
     "y": ["#D9825A", "#B85E46", "#8C4A3C", "#5A2E46", "#2E1A33"],  # Wren's hair
+    "C": ["#8AA8E0", "#5A78C0", "#3A4E8E", "#26305E", "#141832"],  # keeper's cap
+    "D": ["#8AA8E0", "#5A78C0", "#3A4E8E", "#26305E", "#141832"],  # jumper navy
+    "Q": ["#FFF0A0", "#F2C85A", "#C8963A", "#8A5E2E", "#3E2622"],  # lantern brass
     "w": ["#FFE8CC", "#F6D2B0", "#E8B896", "#B97C7A", "#5A3348"],  # skin
     "t": ["#A8E6CF", "#5FBFB7", "#2E8F8C", "#1F5872", "#18324A"],  # sea-glass tunic
     "r": ["#FFB08A", "#F27A5E", "#E2574C", "#A8323F", "#5C1A33"],  # buoy-red scarf
@@ -75,7 +78,7 @@ FLAT = {
 # Materials that get a little speckle texture.
 TEXTURED = {"o": 0.10, "s": 0.08, "k": 0.10, "x": 0.25, "a": 0.05}
 # Materials that cast a one-pixel shadow on what is under them.
-CASTS_SHADOW = {"y", "r", "s", "x"}
+CASTS_SHADOW = {"y", "r", "s", "x", "C"}
 
 SHADOW = hex_color("#3E2C4A", 90)
 
@@ -146,12 +149,12 @@ def flip(px):
 # --------------------------------------------------------------------------
 HEAD_DOWN = [
     "................",
-    ".....yyyyyy.....",
-    "....yyyyyyyy....",
-    "...yyyyyyyyyy...",
-    "...yyyyyyyyyy...",
+    "................",
+    ".....CCCCCC.....",
+    "....CCCCCCCC....",
+    "...CCCCJCCCCC...",
+    "..CCCCCCCCCCCC..",
     "...yywwwwwwyy...",
-    "...ywwwwwwwwy...",
     "...ywewwwwewy...",
     "...ywewwwwewy...",
     "....wwwwwwww....",
@@ -159,60 +162,58 @@ HEAD_DOWN = [
 ]
 HEAD_UP = [
     "................",
-    ".....yyyyyy.....",
+    "................",
+    ".....CCCCCC.....",
+    "....CCCCCCCC....",
+    "...CCCCCCCCCC...",
+    "..CCCCCCCCCCCC..",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
     "....yyyyyyyy....",
-    "...yyyyyyyyyy...",
-    "...yyyyyyyyyy...",
-    "...yyyyyyyyyy...",
-    "...yyyyyyyyyy...",
-    "...yyyyyyyyyy...",
-    "....yyyyyyyy....",
-    "....wyyyyyyw....",
     ".....wwwwww.....",
 ]
 HEAD_SIDE = [
     "................",
-    ".....yyyyyy.....",
-    "....yyyyyyyy....",
-    "...yyyyyyyyyy...",
-    "...yyyyyyyyyy...",
+    "................",
+    ".....CCCCCC.....",
+    "....CCCCCCCC....",
+    "...CCCCCCCJCC...",
+    "...CCCCCCCCCCCC.",
     "...yyyyyywwww...",
-    "...yyyyywwwwww..",
     "...yyyyywwewww..",
     "...yyyyywwwwww..",
     "....yyyywwwww...",
     ".....yywwww.....",
 ]
+# The keeper's striped jumper: navy (D) and whitewash (q) bands.
 TORSO_DOWN = [
-    "....rrrrrrrr....",
-    "...rrrrrrrrrr...",
-    "..wttttttttttw..",
-    "..wttttttttttw..",
-    "..wttttttttttw..",
+    "...qqqqqqqqqq...",
+    "..wDDDDDDDDDDw..",
+    "..wqqqqqqqqqqw..",
+    "..wDDDDDDDDDDw..",
+    "...qqqqqqqqqq...",
     "...bbbbbbbbbb...",
-    "...tttttttttt...",
-    "....tttttttt....",
+    "....pppppppp....",
+    "....pppppppp....",
 ]
-TORSO_UP = [
-    "....rrrrrrrr....",
-    "...rrrrrrrrrr...",
-    "..wttttrrttttw..",
-    "..wttttrrttttw..",
-    "..wtttttrttttw..",
-    "...bbbbbbbbbb...",
-    "...tttttttttt...",
-    "....tttttttt....",
-]
+TORSO_UP = TORSO_DOWN
 TORSO_SIDE = [
-    ".....rrrrrr.....",
-    "...rrrrrrrr.....",
-    "..rr.tttttttt...",
-    "....tttttttt....",
-    "....tttttttt....",
-    "....bbbbbwbb....",
-    "....tttttttt....",
-    ".....tttttt.....",
+    "....qqqqqqqq....",
+    "....DDDDDDDD....",
+    "....qqqqqqqq....",
+    "....DDDDDDDD....",
+    "....qqqqqqqq....",
+    "....bbbbbbbb....",
+    "....pppppppp....",
+    ".....pppppp.....",
 ]
+# Wren's lantern, hanging from one hand: (row, column, text) overlays.
+LANTERN = {
+    "down": [(15, 13, "Q"), (16, 12, "QJQ"), (17, 12, "QJQ"), (18, 12, "QQQ")],
+    "up": [(15, 2, "Q"), (16, 1, "QJQ"), (17, 1, "QJQ"), (18, 1, "QQQ")],
+    "side": [(15, 11, "Q"), (16, 10, "QJQ"), (17, 10, "QJQ"), (18, 10, "QQQ")],
+}
 LEGS = {
     "down_idle": ["....ppp..ppp....", "....ppp..ppp....", "....bbb..bbb....", "....bbb..bbb....", "................"],
     "down_a":    ["....ppp..ppp....", "....ppp..bbb....", "....bbb..bbb....", "....bbb.........", "................"],
@@ -223,8 +224,11 @@ LEGS = {
 }
 
 
-def wren_frame(head, torso, legs, bob=0):
-    rows = head + torso + LEGS[legs]
+def wren_frame(head, torso, legs, bob=0, overlay=()):
+    rows = [list(r) for r in head + torso + LEGS[legs]]
+    for row, col, text in overlay:
+        rows[row][col:col + len(text)] = list(text)
+    rows = ["".join(r) for r in rows]
     assert len(rows) == 24, len(rows)
     if bob:
         rows = rows[bob:] + ["................"] * bob
@@ -248,14 +252,15 @@ def build_wren():
         ("up", HEAD_UP, TORSO_UP, "down"),
         ("side", HEAD_SIDE, TORSO_SIDE, "side"),
     ):
+        lamp = LANTERN[name]
         frames[name] = [
-            wren_frame(head, torso, legs + "_idle"),
-            wren_frame(head, torso, legs + "_a", bob=1),
-            wren_frame(head, torso, legs + "_idle"),
-            wren_frame(head, torso, legs + "_b", bob=1),
+            wren_frame(head, torso, legs + "_idle", overlay=lamp),
+            wren_frame(head, torso, legs + "_a", bob=1, overlay=lamp),
+            wren_frame(head, torso, legs + "_idle", overlay=lamp),
+            wren_frame(head, torso, legs + "_b", bob=1, overlay=lamp),
         ]
     # Attack poses: lean into the swing.
-    frames["down"].append(wren_frame(HEAD_DOWN, arm_forward(TORSO_DOWN, 6, [7, 8]), "down_idle"))
+    frames["down"].append(wren_frame(HEAD_DOWN, arm_forward(TORSO_DOWN, 5, [7, 8]), "down_idle"))
     frames["up"].append(wren_frame(HEAD_UP, TORSO_UP, "down_idle", bob=1))
     frames["side"].append(wren_frame(HEAD_SIDE, arm_forward(TORSO_SIDE, 3, [12, 13]), "side_a"))
     # Hum pose: eyes closed, hands together.
