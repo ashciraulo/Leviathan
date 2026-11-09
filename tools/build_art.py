@@ -984,6 +984,42 @@ def write_png(path, px):
         f.write(png)
 
 
+# --------------------------------------------------------------------------
+# Tide: the pixel font, with a baked-in dark outline. BMFont text format,
+# which Godot imports as a font.
+# --------------------------------------------------------------------------
+def build_font():
+    from font_glyphs import GLYPHS
+
+    body, edge = hex_color("#FFF4D6"), hex_color("#2A1E36")
+    cell_w, cell_h, per_row = 8, 11, 16
+    chars = sorted(GLYPHS, key=ord)
+    rows = (len(chars) + per_row - 1) // per_row
+    px = [[(0, 0, 0, 0)] * (cell_w * per_row) for _ in range(cell_h * rows)]
+    lines = []
+    for i, ch in enumerate(chars):
+        glyph = GLYPHS[ch]
+        gw = len(glyph[0])
+        ox, oy = (i % per_row) * cell_w, (i // per_row) * cell_h
+        on = {(x, y) for y, r in enumerate(glyph) for x, c in enumerate(r) if c == "#"}
+        for x, y in on:
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    if (x + dx, y + dy) not in on:
+                        px[oy + 1 + y + dy][ox + 1 + x + dx] = edge
+        for x, y in on:
+            px[oy + 1 + y][ox + 1 + x] = body
+        lines.append("char id=%d x=%d y=%d width=%d height=%d xoffset=-1 yoffset=0 xadvance=%d page=0 chnl=15"
+                     % (ord(ch), ox, oy, gw + 2, cell_h, gw + 2))
+    header = [
+        'info face="Tide" size=11 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=0 aa=1 padding=0,0,0,0 spacing=0,0',
+        "common lineHeight=11 base=8 scaleW=%d scaleH=%d pages=1 packed=0" % (cell_w * per_row, cell_h * rows),
+        'page id=0 file="tide.png"',
+        "chars count=%d" % len(chars),
+    ]
+    return px, "\n".join(header + lines) + "\n"
+
+
 def main():
     global CHECK_ONLY
     CHECK_ONLY = "--check" in sys.argv
@@ -998,6 +1034,9 @@ def main():
     for name, px in shadows.items():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "saltmarrow.png"), build_tiles())
+    font_px, font_fnt = build_font()
+    write_png(os.path.join(OUT, "fonts", "tide.png"), font_px)
+    write_text(os.path.join(OUT, "fonts", "tide.fnt"), font_fnt)
     write_tile_atlas_gd(os.path.join(ROOT, "scripts", "art", "tile_atlas.gd"))
     if CHECK_ONLY:
         if STALE:

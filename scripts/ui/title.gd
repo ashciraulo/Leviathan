@@ -12,15 +12,15 @@ func _ready() -> void:
 	add_child(background)
 
 	var column := UI.centered_column(self)
-	column.add_child(UI.label("GAME_TITLE", 24))
-	column.add_child(UI.label("TITLE_SUBTITLE", 8))
+	column.add_child(UI.label("GAME_TITLE", UI.FONT_SIZE * 2))
+	column.add_child(UI.label("TITLE_SUBTITLE"))
 	var continue_button := UI.button("MENU_CONTINUE", _on_continue)
 	continue_button.visible = SaveManager.has_save()
 	column.add_child(continue_button)
 	var new_game_button := UI.button("MENU_NEW_GAME", _on_new_game)
 	column.add_child(new_game_button)
 	column.add_child(UI.button("MENU_QUIT", func() -> void: get_tree().quit()))
-	column.add_child(UI.label("TITLE_CONTROLS", 8))
+	column.add_child(UI.label("TITLE_CONTROLS"))
 
 	var first := continue_button if continue_button.visible else new_game_button
 	first.grab_focus.call_deferred()

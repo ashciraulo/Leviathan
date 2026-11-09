@@ -20,13 +20,11 @@ func _ready() -> void:
 	_gauge.draw.connect(_draw_gauge)
 	add_child(_gauge)
 
-	_toast = UI.label("", 10)
+	_toast = UI.label("")
 	_toast.name = "Toast"
 	_toast.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	_toast.offset_top = -22
 	_toast.offset_bottom = -6
-	_toast.add_theme_color_override("font_outline_color", Palette.OUTLINE)
-	_toast.add_theme_constant_override("outline_size", 4)
 	_toast.modulate.a = 0.0
 	add_child(_toast)
 	Events.toast.connect(show_toast)

@@ -16,7 +16,7 @@ func _ready() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 	var column := UI.centered_column(self)
-	column.add_child(UI.label("PAUSE_TITLE", 16))
+	column.add_child(UI.label("PAUSE_TITLE", UI.FONT_SIZE * 2))
 	_resume = UI.button("MENU_RESUME", close)
 	column.add_child(_resume)
 	column.add_child(UI.button("MENU_QUIT_TO_TITLE", _quit_to_title))

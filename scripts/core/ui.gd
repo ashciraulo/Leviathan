@@ -3,8 +3,11 @@ extends Object
 ## Small helpers for building menus in code. Text is always a translation key;
 ## Godot translates Label and Button text automatically.
 
+## Native size of Tide, the pixel font. Use whole multiples so it stays crisp.
+const FONT_SIZE := 11
 
-static func label(key: String, font_size: int = 10) -> Label:
+
+static func label(key: String, font_size: int = UI.FONT_SIZE) -> Label:
 	var node := Label.new()
 	node.text = key
 	node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -15,7 +18,6 @@ static func label(key: String, font_size: int = 10) -> Label:
 static func button(key: String, on_pressed: Callable) -> Button:
 	var node := Button.new()
 	node.text = key
-	node.add_theme_font_size_override("font_size", 10)
 	node.pressed.connect(on_pressed)
 	return node
 
