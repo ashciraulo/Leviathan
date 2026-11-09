@@ -6,8 +6,10 @@
 script = ExtResource("1_room")
 name_key = "ROOM_GLACIER_FOOT"
 biome = "frostspine"
+door_to = Vector2i(32, 10)
+door_spawn = Vector2i(11, 10)
 layout = "########################
-########################
+###########D############
 ######..............####
 ####....................
 ###.....xxxxxxxx........

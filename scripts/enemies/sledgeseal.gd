@@ -15,6 +15,8 @@ const LINE_SLACK := 12.0
 const REAR_TIME := 0.6
 const SLIDE_MAX := 2.0
 const WINDED_TIME := 1.2
+## How close to the room's edge a slide may run before the seal pulls up.
+const EDGE := 12.0
 
 var mode := Mode.IDLE
 var _timer := 0.0
@@ -41,6 +43,8 @@ func _think(delta: float) -> void:
 				_timer = REAR_TIME
 				_direction = line
 				velocity = Vector2.ZERO
+				if line.x != 0.0:
+					_sprite.flip_h = line.x < 0.0
 				Audio.play_sfx("seal_bark", global_position)
 		Mode.REAR:
 			velocity = Vector2.ZERO
@@ -49,7 +53,10 @@ func _think(delta: float) -> void:
 				_timer = SLIDE_MAX
 		Mode.SLIDE:
 			velocity = _direction * SLIDE_SPEED
-			if get_slide_collision_count() > 0 or _timer <= 0.0:
+			# Room exits have no walls: pull up at the edge rather than
+			# sliding off the screen.
+			var ahead := position + _direction * (SLIDE_SPEED * delta + body_size.x / 2.0)
+			if get_slide_collision_count() > 0 or _timer <= 0.0 or not _inside(ahead):
 				mode = Mode.WINDED
 				_timer = WINDED_TIME
 				velocity = Vector2.ZERO
@@ -59,17 +66,40 @@ func _think(delta: float) -> void:
 				mode = Mode.IDLE
 
 
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	# Never leave its own screen, whatever shoves it.
+	var margin := Vector2(EDGE, EDGE)
+	position = position.clamp(margin, Room.SIZE - margin)
+
+
+func _inside(local: Vector2) -> bool:
+	return Rect2(Vector2(EDGE, EDGE), Room.SIZE - Vector2(EDGE, EDGE) * 2.0).has_point(local)
+
+
+## Which way to slide at Wren, if they're lined up with it in plain sight
+## on this screen (zero if not).
 func _lined_up(player: Node2D) -> Vector2:
-	if player == null:
+	var room := get_parent() as Room
+	if player == null or room == null:
 		return Vector2.ZERO
 	var to := player.global_position - global_position
-	if to.length() > SIGHT:
+	if to.length() > SIGHT or not _inside(player.global_position - room.global_position):
 		return Vector2.ZERO
+	var line := Vector2.ZERO
 	if absf(to.y) <= LINE_SLACK:
-		return Vector2(signf(to.x), 0.0)
-	if absf(to.x) <= LINE_SLACK:
-		return Vector2(0.0, signf(to.y))
-	return Vector2.ZERO
+		line = Vector2(signf(to.x), 0.0)
+	elif absf(to.x) <= LINE_SLACK:
+		line = Vector2(0.0, signf(to.y))
+	else:
+		return Vector2.ZERO
+	# Walls and water between them hide Wren (and would stop the slide).
+	var steps := int(to.length() / (Room.TILE / 2.0))
+	for i in range(1, steps):
+		var at := position + line * i * (Room.TILE / 2.0)
+		if Room.is_solid(room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE))):
+			return Vector2.ZERO
+	return line
 
 
 ## A blow straight on, into its face as it slides, glances off its blubber.

@@ -16,6 +16,8 @@ var _last := Vector2.INF
 
 func _ready() -> void:
 	_room = get_parent() as Room
+	# Run after Wren has moved this frame, whichever was added first.
+	process_physics_priority = 10
 
 
 ## Is this point (room-local) on ice?
@@ -28,11 +30,13 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 	var local := player.global_position - _room.global_position
-	var sliding := player.state == Player.State.MOVE and not player.frozen and not player.airborne \
+	# A swing or a charge doesn't stop a slide; a knock sends them sliding.
+	var sliding := player.state in [Player.State.MOVE, Player.State.ATTACK, Player.State.CHARGE] \
+		and not player.frozen and not player.airborne and not player.in_cutscene \
 		and Rect2(Vector2.ZERO, Room.SIZE).has_point(local) and is_ice(local)
 	if not sliding:
 		# Keep what they brought onto the ice, so they slide in from the edge.
-		momentum = player.velocity if player.state == Player.State.MOVE else Vector2.ZERO
+		momentum = player.velocity if player.state in [Player.State.MOVE, Player.State.HURT] else Vector2.ZERO
 		_last = Vector2.INF
 		return
 	# The player script has already set velocity from the stick this frame
