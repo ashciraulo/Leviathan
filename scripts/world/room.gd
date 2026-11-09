@@ -26,6 +26,7 @@ extends Node2D
 ##             (big props: put the letter where the base centre stands;
 ##             the art rises above)
 ##          h  Old Hessa      1 2 3 4  villagers (see Npc.LETTERS)
+##          7  Marlo Pike's market stall (MarketStall)
 ##          k  Pell's three-clawed crab (shows once Pell asks for it)
 ##          C  chest (holds chest_item)
 ##          :  boardwalk over water (walkable; regions with "boardwalk" tiles)
@@ -515,6 +516,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = door
 		"k":
 			node = QuestCrab.new()
+		"7":
+			node = MarketStall.new()
 		_ when Npc.LETTERS.has(tile):
 			node = Npc.new(Npc.LETTERS[tile])
 		_ when Prop.is_prop(tile):

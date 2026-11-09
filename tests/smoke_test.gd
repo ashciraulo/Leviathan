@@ -57,6 +57,7 @@ func _ready() -> void:
 		await _test_credits()
 		await _test_equipment()
 		await _test_side_quests()
+		await _test_shop()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -3726,3 +3727,68 @@ func _test_equipment() -> void:
 	game.queue_free()
 	await _wait(0.1)
 
+
+## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
+## bought with glints.
+func _test_shop() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var stall := get_tree().get_first_node_in_group("market_stall") as MarketStall
+	_check(stall != null and game.current_room.is_ancestor_of(stall), "Marlo Pike's stall stands in Saltmarrow")
+	if stall == null:
+		game.queue_free()
+		return
+	var feet: float = stall.marlo.get_global_transform_with_canvas().origin.y
+	_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "Marlo stays clear of the dialogue box (%d vs %d)" % [feet + Room.TILE, DialogueBox.HIGHEST_POINT])
+	for child in game.get_children():
+		if child is DialogueBox:
+			_check(child.lines_for("MARLO_THANKS", true) <= DialogueBox.MAX_LINES, "Marlo's thanks fit the box")
+	_check(ShopMenu.rows().all(func(r: Dictionary) -> bool: return r.get("id", "") != "puffer_bombs"), "no puffer bombs before the Hull")
+	# Wren steps up to the counter and talks.
+	game.player.global_position = stall.global_position + Vector2(0, 14)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	GameState.give_item("glint", 100, false)
+	_check(game.player.try_interact(), "Wren can talk across the counter")
+	_check(DialogueBox.is_open and GameState.has_flag("met_marlo"), "Marlo introduces himself")
+	_finish_talk(game)
+	await _wait(0.3)
+	var menu := get_tree().get_first_node_in_group("shop_menu") as ShopMenu
+	_check(menu != null and get_tree().paused, "then his wares come up, with the game paused")
+	if menu == null:
+		game.queue_free()
+		return
+	var oil := -1
+	var tonic := -1
+	var rows := ShopMenu.rows()
+	for i in rows.size():
+		if rows[i].get("id", "") == "lamp_oil":
+			oil = i
+		elif rows[i].has("jar"):
+			tonic = i
+	_check(menu.buy(oil) and GameState.item_count("lamp_oil") == 3 and GameState.item_count("glint") == 85, "lamp oil costs 15 glints")
+	_check(not "lamp_oil" in GameState.item_slots, "bought goods wait in the satchel, off the item slots")
+	_check(ShopMenu.blocked(rows[tonic]) == "SHOP_NO_JAR" and not menu.buy(tonic) and GameState.item_count("glint") == 85, "no tonic without an empty jar")
+	GameState.give_item("jar", 1, false)
+	_check(menu.buy(tonic) and GameState.jars[0] == Items.JAR_POTION and GameState.item_count("glint") == 55, "kelp tonic fills the jar for 30")
+	_check(ShopMenu.blocked(rows[tonic]) == "SHOP_NO_JAR", "a full jar takes no more")
+	GameState.take_item("glint", 50)
+	_check(not menu.buy(oil) and GameState.item_count("lamp_oil") == 3 and GameState.item_count("glint") == 5, "Marlo gives no credit")
+	GameState.give_item("lamp_oil", 5, false)
+	_check(GameState.item_count("lamp_oil") == 8 and ShopMenu.blocked(rows[oil]) == "SHOP_FULL", "no paying for three when only two more fit")
+	menu.close()
+	_check(ShopMenu.recently_closed(), "the press that closes the shop doesn't reach Wren")
+	await _wait(0.1)
+	_check(DialogueBox.is_open, "Marlo thanks Wren for the trade")
+	_finish_talk(game)
+	await _wait(0.1)
+	_check(not get_tree().paused and get_tree().get_first_node_in_group("shop_menu") == null, "the game carries on after the shop")
+	# After the Hull, puffers.
+	GameState.set_flag("tidebell_hull")
+	_check(ShopMenu.rows()[0]["id"] == "puffer_bombs", "puffer bombs are stocked after the Hull")
+	_check(Conversations.branch_for("marlo")["lines"][0] == "MARLO_PUFFERS_1", "and Marlo says so")
+	game.queue_free()
+	await _wait(0.1)

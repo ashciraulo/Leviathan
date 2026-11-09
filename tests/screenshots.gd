@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"hull":
 				await _hull_shots(game)
@@ -86,6 +86,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _ending_shots()
+			"shop":
+				game.queue_free()
+				await _wait(0.2)
+				await _shop_shots()
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -390,6 +394,7 @@ func _ready() -> void:
 	await _turn_shots()
 	await _mural_shots()
 	await _ending_shots()
+	await _shop_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -1191,6 +1196,46 @@ func _mural_shots() -> void:
 		await _wait(0.2)
 	await _skip_scene(barrow)
 	barrow.queue_free()
+	await _wait(0.2)
+
+
+## Marlo Pike's stall in Saltmarrow: Marlo across the counter, then his wares.
+func _shop_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	GameState.give_item("glint", 45, false)
+	GameState.give_item("jar", 2, false)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var village: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(village)
+	await _wait(0.5)
+	var stall := get_tree().get_first_node_in_group("market_stall") as MarketStall
+	village.player.global_position = stall.global_position + Vector2(-6, 14)
+	village.player.facing = Vector2.UP
+	await _wait(0.4)
+	await _capture("54_marlos_stall")
+	village.player.try_interact()
+	await _wait(1.2)
+	await _capture("55_marlo_pike")
+	var box := _dialogue_box(village)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.05)
+	await _wait(0.4)
+	var menu := get_tree().get_first_node_in_group("shop_menu") as ShopMenu
+	if menu:
+		menu.buy(1)
+		menu._cursor = 0
+		await _wait(0.15)
+		await _capture("56_pikes_wares")
+		menu.close()
+	await _wait(0.2)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.05)
+	village.queue_free()
 	await _wait(0.2)
 
 
