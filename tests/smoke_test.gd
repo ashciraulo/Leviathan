@@ -1340,6 +1340,28 @@ func _test_items() -> void:
 	_check(has_button, "rebinding Tab Next to a button works")
 	Settings.pad_overrides.erase("tab_next")
 	Settings.apply()
+	# Taking a key another action uses swaps the two.
+	var key_was := Settings.key_overrides.duplicate()
+	var pad_was := Settings.pad_overrides.duplicate()
+	var take_k := InputEventKey.new()
+	take_k.physical_keycode = KEY_K
+	Settings.rebind("attack", take_k)
+	_check(Settings.main_key("attack") == KEY_K and Settings.main_key("interact") == KEY_J,
+		"rebinding to a used key swaps the two actions")
+	Settings.rebind("item_1", _pad_event(JOY_BUTTON_Y))
+	_check(Settings.main_button("item_1") == JOY_BUTTON_Y and Settings.main_button("item_2") == JOY_BUTTON_X,
+		"rebinding to a used button swaps the two actions")
+	Settings.key_overrides = key_was
+	Settings.pad_overrides = pad_was
+	Settings.apply()
+	# Prompts follow the device in use.
+	var pad_was_used := Settings.using_pad
+	Settings.using_pad = true
+	var pad_prompt := MenuKit.key_name("interact")
+	Settings.using_pad = false
+	var key_prompt := MenuKit.key_name("interact")
+	Settings.using_pad = pad_was_used
+	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
 	for id: String in Items.DEFS:
 		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
 	SaveManager.delete_save()

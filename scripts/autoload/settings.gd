@@ -38,6 +38,9 @@ var fullscreen := false
 ## Only the first key and first button of an action can be changed; the
 ## arrows and the left stick always keep working for movement.
 var key_overrides: Dictionary = {}
+## True while the player is on a gamepad (the last input came from one), so
+## button prompts show pad buttons. Not saved.
+var using_pad := false
 var pad_overrides: Dictionary = {}
 
 const TEXT_SPEEDS := [25.0, 45.0, 90.0, 10000.0]
@@ -93,6 +96,15 @@ func apply() -> void:
 			DisplayServer.window_set_mode(mode)
 
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton and event.pressed:
+		using_pad = true
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
+		using_pad = true
+	elif (event is InputEventKey and event.pressed) or event is InputEventMouseButton:
+		using_pad = false
+
+
 func text_chars_per_second() -> float:
 	return TEXT_SPEEDS[clampi(text_speed, 0, TEXT_SPEEDS.size() - 1)]
 
@@ -103,13 +115,40 @@ func reset_controls() -> void:
 	_apply_bindings()
 
 
-## Rebinds an action's main key (or main gamepad button).
+## Rebinds an action's main key (or main gamepad button). If another
+## action already uses it, the two swap, so nothing ends up doubled.
 func rebind(action: String, event: InputEvent) -> void:
 	if event is InputEventKey:
-		key_overrides[action] = int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode)
+		var code := int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode)
+		var old := main_key(action)
+		for other: String in REMAPPABLE:
+			if other != action and main_key(other) == code and old != KEY_NONE:
+				key_overrides[other] = old
+		key_overrides[action] = code
 	elif event is InputEventJoypadButton:
-		pad_overrides[action] = int(event.button_index)
+		var button := int(event.button_index)
+		var old := main_button(action)
+		for other: String in REMAPPABLE:
+			if other != action and main_button(other) == button and old != JOY_BUTTON_INVALID:
+				pad_overrides[other] = old
+		pad_overrides[action] = button
 	_apply_bindings()
+
+
+## The physical keycode of an action's main key (KEY_NONE if it has none).
+func main_key(action: String) -> int:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventKey:
+			return int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode)
+	return KEY_NONE
+
+
+## An action's main gamepad button (JOY_BUTTON_INVALID if it has none).
+func main_button(action: String) -> int:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton:
+			return int(event.button_index)
+	return JOY_BUTTON_INVALID
 
 
 func _apply_bindings() -> void:

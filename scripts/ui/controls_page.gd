@@ -112,7 +112,7 @@ func _draw() -> void:
 			KEY_X - 40)
 		for col in 2:
 			var x := KEY_X if col == 0 else PAD_X
-			var text := MenuKit.key_name(action) if col == 0 else pad_text(action)
+			var text := MenuKit.keyboard_name(action) if col == 0 else pad_text(action)
 			var active := selected and col == _column
 			if active and _waiting:
 				text = "CONTROLS_PRESS" if int(Time.get_ticks_msec() / 300) % 2 == 0 else ""

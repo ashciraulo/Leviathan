@@ -195,11 +195,28 @@ static func cancel(event: InputEvent) -> bool:
 	return event.is_action_pressed("attack") or event.is_action_pressed("ui_cancel")
 
 
-## The first keyboard key bound to an action, as text ("U", "Space").
+## What to press for an action, as short text for prompts and badges:
+## the gamepad button when the player last used a pad ("A", "RB"),
+## otherwise the keyboard key ("U", "Space").
 static func key_name(action: String) -> String:
+	return pad_name(action) if Settings.using_pad else keyboard_name(action)
+
+
+## The first keyboard key bound to an action.
+static func keyboard_name(action: String) -> String:
 	for event in InputMap.action_get_events(action):
 		if event is InputEventKey:
 			return key_text(event)
+	return "-"
+
+
+## The first gamepad button (or trigger) bound to an action, short.
+static func pad_name(action: String) -> String:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton:
+			return TranslationServer.translate("PAD_SHORT_%d" % event.button_index)
+		if event is InputEventJoypadMotion:
+			return TranslationServer.translate("PAD_SHORT_AXIS_%d" % event.axis)
 	return "-"
 
 
