@@ -48,6 +48,7 @@ func _ready() -> void:
 	tip = _hand()
 	z_index = 1
 	_sprite_angle = direction.angle()
+	Audio.play_sfx("hook_fire", _player.global_position)
 
 
 func _hand() -> Vector2:
@@ -105,6 +106,7 @@ func _on_catch(collider: Object) -> void:
 		if target.hook_hit(direction):
 			_caught = target
 			phase = Phase.BACK
+			Audio.play_sfx("hook_latch", global_position)
 			Feel.hitstop(3)
 			Feel.shake(2.0)
 		else:
@@ -114,6 +116,7 @@ func _on_catch(collider: Object) -> void:
 		_caught = target
 		_zip_target = (target as Node2D).global_position - direction * ZIP_STOP
 		phase = Phase.ZIP
+		Audio.play_sfx("hook_latch", global_position)
 		_player.airborne = true
 		# Fly over water; walls still stop Wren.
 		_player.collision_mask = 1 << (Layers.WORLD - 1)
@@ -137,6 +140,7 @@ func _on_catch(collider: Object) -> void:
 func _clink() -> void:
 	if not _clinked:
 		_clinked = true
+		Audio.play_sfx("hit_shell", global_position)
 		Feel.shake(0.6)
 	phase = Phase.BACK
 

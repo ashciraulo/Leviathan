@@ -255,8 +255,12 @@ func _process(delta: float) -> void:
 		return
 	_blink += delta
 	if not page_done():
+		var before := _text.visible_characters
 		_shown += delta * Settings.text_chars_per_second()
 		_text.visible_characters = int(_shown)
+		# A soft blip every few letters while text types out.
+		if _text.visible_characters / 3 != before / 3:
+			Audio.play_sfx("text_blip")
 	_panel.queue_redraw()
 
 

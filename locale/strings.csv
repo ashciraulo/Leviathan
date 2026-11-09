@@ -171,7 +171,7 @@ OPT_NORMAL,Normal
 OPT_FAST,Fast
 OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
-OPT_LARGE_TEXT_DESC,Bigger letters for talk and messages.
+OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
 OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
 OPT_COLOR_FILTER,Colour filter
@@ -321,3 +321,18 @@ WAYSHELL_4,"The next bell is crying out from the Kiln, in Cinderreach. Go on. I'
 HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp stays lit."
 PELL_BELL_1,You got the bell back?! Can I hold it? Just for a second?
 PELL_BELL_2,...Fine. But I'm telling everyone I nearly did.
+CAPTION_HUM,Wren hums
+CAPTION_FUSE,Fuse hissing
+CAPTION_BLAST,Blast
+CAPTION_WAYSHELL,Wayshell call
+CAPTION_WINGS,Great wings beat
+CAPTION_BLOCK,Clang
+CAPTION_TELL,Enemy winds up
+CAPTION_ROAR,Roar
+CAPTION_UNLOCK,Lock clicks open
+CAPTION_SWITCH,Switch clicks
+CAPTION_TIDESTONE,Tidestone hums awake
+CAPTION_BELL,A bell rings
+CAPTION_SECRET,Secret chime
+CAPTION_DOOR,Stone grinds
+CAPTION_PUZZLE,Something opened

@@ -122,6 +122,7 @@ func _on_hurt() -> void:
 
 func _die() -> void:
 	dying = true
+	Audio.play_sfx("enemy_die", global_position)
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
