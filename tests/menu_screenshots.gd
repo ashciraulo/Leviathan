@@ -3,13 +3,30 @@ extends Node
 ## file select) with a mid-game file. Run like tests/screenshots.tscn:
 ##     xvfb-run godot --rendering-driver opengl3 res://tests/menu_screenshots.tscn
 ## Uses save slots 0-2 of a separate test folder, never real saves.
+##
+## With the environment variable LEVIATHAN_PSEUDO=1 every string is
+## stretched by 40% and bracketed (Godot's pseudolocalisation), and the
+## files are named pseudo_*.png: a quick check that longer translations
+## still fit their boxes.
 
 const SCALE := 4
 
 var _out_dir := ""
+var _pseudo := false
 
 
 func _ready() -> void:
+	if OS.get_environment("LEVIATHAN_PSEUDO") == "1":
+		_pseudo = true
+		ProjectSettings.set_setting("internationalization/pseudolocalization/replace_with_accents", false)
+		ProjectSettings.set_setting("internationalization/pseudolocalization/double_vowels", false)
+		ProjectSettings.set_setting("internationalization/pseudolocalization/fake_bidi", false)
+		ProjectSettings.set_setting("internationalization/pseudolocalization/override", false)
+		ProjectSettings.set_setting("internationalization/pseudolocalization/expansion_ratio", 0.4)
+		ProjectSettings.set_setting("internationalization/pseudolocalization/prefix", "[")
+		ProjectSettings.set_setting("internationalization/pseudolocalization/suffix", "]")
+		TranslationServer.pseudolocalization_enabled = true
+		TranslationServer.reload_pseudolocalization()
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	_backup_saves()
@@ -183,6 +200,6 @@ func _capture(file_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.resize(image.get_width() * SCALE, image.get_height() * SCALE, Image.INTERPOLATE_NEAREST)
-	var path := _out_dir.path_join(file_name + ".png")
+	var path := _out_dir.path_join(("pseudo_" if _pseudo else "") + file_name + ".png")
 	var err := image.save_png(path)
 	print("Saved %s (%s)" % [path, error_string(err)])

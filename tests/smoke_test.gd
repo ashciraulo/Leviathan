@@ -27,6 +27,7 @@ func _ready() -> void:
 	_test_keys()
 	_test_items()
 	_test_audio()
+	_test_text_fit()
 	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
@@ -1152,3 +1153,16 @@ func _test_credits() -> void:
 	credits._leaving = true
 	credits.queue_free()
 	await _wait(0.1)
+
+
+func _test_text_fit() -> void:
+	var canvas := Control.new()
+	add_child(canvas)
+	var long := "A very long line of text that cannot possibly fit in forty pixels"
+	var cut := MenuKit.fit(canvas, long, 40.0)
+	_check(cut.ends_with("..") and MenuKit.text_width(canvas, cut) <= 40.0, "long text is cut to fit its box")
+	_check(MenuKit.fit(canvas, "Hi", 40.0) == "Hi", "short text is left alone")
+	_check(Settings.languages()[0] == "en", "English is the first language")
+	for key: String in Settings.language_keys():
+		_check(tr(key) != key, "%s names its language" % key)
+	canvas.queue_free()

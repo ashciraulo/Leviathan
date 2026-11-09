@@ -94,11 +94,31 @@ static func draw_marker(canvas: CanvasItem, marker: Marker, center: Vector2) -> 
 		Rect2(int(marker) * 8, 0, 8, 8))
 
 
-## Text in Tide at its native size. Translates key first.
+## Text in Tide at its native size. Translates key first. Text wider than
+## max_width (or than width, when that's given) is cut short with "..",
+## so a long translation never spills out of its box.
 static func draw_text(canvas: CanvasItem, text: String, pos: Vector2, color: Color = TEXT,
-		align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
+		align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0,
+		max_width: float = -1.0) -> void:
 	var font := ThemeDB.fallback_font
-	canvas.draw_string(font, pos + Vector2(0, 8), canvas.tr(text), align, width, UI.FONT_SIZE, color)
+	var limit := max_width if max_width > 0.0 else width
+	var shown := fit(canvas, text, limit) if limit > 0.0 else canvas.tr(text)
+	canvas.draw_string(font, pos + Vector2(0, 8), shown, align, width, UI.FONT_SIZE, color)
+
+
+## The translated text, cut short with ".." if it is wider than max_width.
+static func fit(canvas: CanvasItem, text: String, max_width: float) -> String:
+	var font := ThemeDB.fallback_font
+	var full := canvas.tr(text)
+	if font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, UI.FONT_SIZE).x <= max_width:
+		return full
+	var cut := full
+	while cut.length() > 1:
+		cut = cut.left(-1)
+		var tried := cut.strip_edges() + ".."
+		if font.get_string_size(tried, HORIZONTAL_ALIGNMENT_LEFT, -1, UI.FONT_SIZE).x <= max_width:
+			return tried
+	return ".."
 
 
 static func text_width(canvas: CanvasItem, text: String) -> float:
@@ -109,9 +129,24 @@ static func text_width(canvas: CanvasItem, text: String) -> float:
 static func draw_wrapped(canvas: CanvasItem, text: String, pos: Vector2, width: float, color: Color = TEXT_DIM,
 		max_lines: int = 3) -> int:
 	var font := ThemeDB.fallback_font
-	canvas.draw_multiline_string(font, pos + Vector2(0, 8), canvas.tr(text), HORIZONTAL_ALIGNMENT_LEFT, width,
+	var shown := canvas.tr(text)
+	# Too long for max_lines: drop words from the end and finish with "..".
+	if _lines(shown, width) > max_lines:
+		var words := shown.split(" ")
+		while words.size() > 1:
+			words.resize(words.size() - 1)
+			shown = " ".join(words) + ".."
+			if _lines(shown, width) <= max_lines:
+				break
+	canvas.draw_multiline_string(font, pos + Vector2(0, 8), shown, HORIZONTAL_ALIGNMENT_LEFT, width,
 		UI.FONT_SIZE, max_lines, color)
-	return max_lines
+	return mini(_lines(shown, width), max_lines)
+
+
+static func _lines(text: String, width: float) -> int:
+	var font := ThemeDB.fallback_font
+	var height := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, width, UI.FONT_SIZE).y
+	return maxi(roundi(height / font.get_height(UI.FONT_SIZE)), 1)
 
 
 # --------------------------------------------------------------------------

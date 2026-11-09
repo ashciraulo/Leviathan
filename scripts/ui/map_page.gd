@@ -226,7 +226,7 @@ func _draw_info() -> void:
 	var coord := _rooms[_cursor]
 	var info := RoomInfo.get_room(coord)
 	var title: String = info["name_key"] if GameState.has_seen(coord) else "MAP_UNKNOWN_ROOM"
-	MenuKit.draw_text(self, title, at, MenuKit.TEXT_GOLD)
+	MenuKit.draw_text(self, title, at, MenuKit.TEXT_GOLD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, INFO_PANEL.size.x - 20)
 	var line := ""
 	if not info["stones"].is_empty():
 		if not _stone_awake(coord):
@@ -240,4 +240,5 @@ func _draw_info() -> void:
 	elif coord == GameState.room_coord:
 		line = "MAP_YOU_ARE_HERE"
 	if line != "":
-		MenuKit.draw_text(self, line, at + Vector2(0, 12), MenuKit.TEXT)
+		MenuKit.draw_text(self, line, at + Vector2(0, 12), MenuKit.TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
+			INFO_PANEL.size.x - 20)
