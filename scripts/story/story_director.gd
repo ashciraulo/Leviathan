@@ -6,6 +6,11 @@ extends Node
 ## next save plays it again from the start, flags and items together.
 
 const SALTMARROW := Vector2i(0, -1)
+const WRECK_STRAND := Vector2i(4, 0)
+## Where Mantle lies netted on the Wreck Strand (its feet), and where Wren
+## stands to cut it free.
+const MANTLE_AT := Vector2(20 * 16, 3 * 16 + 8)
+const CUT_FROM := Vector2(21 * 16 + 8, 5 * 16 + 4)
 ## Where the path to the village leaves the shore (room 0,0): Hessa's lamp
 ## shows there in the opening.
 const SHORE_PATH := Vector2(12 * 16, 10)
@@ -31,7 +36,9 @@ func _on_game_started() -> void:
 func _on_room_entered(coord: Vector2i) -> void:
 	if Cutscene.active:
 		return
-	if coord == SALTMARROW and GameState.has_flag("tidebell_hull") and not GameState.has_flag("seen_wayshell"):
+	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
+		freeing_mantle()
+	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		the_wayshell()
 
 
@@ -59,8 +66,33 @@ func opening() -> void:
 	scene.finish()
 
 
-## Cutscene 7, "The Wayshell": back in Saltmarrow with the Point Bell, Hessa
-## gives Wren the keepers' call and sends them on.
+## Cutscene 6, "Freeing Mantle": after the Hull, a sky-ray lies caught in
+## Choir nets on the Wreck Strand. Wren cuts it loose and it flies home
+## towards the lighthouse. Told in pictures: no text.
+func freeing_mantle() -> void:
+	GameState.set_flag("freed_mantle")
+	var room: Node2D = game.current_room
+	var mantle := MantleTangle.new()
+	mantle.position = MANTLE_AT
+	room.add_child(mantle)
+	var scene := _scene()
+	await scene.wait(0.8)
+	await scene.walk_route(room.global_position + CUT_FROM)
+	scene.face(Vector2.UP)
+	await scene.wait(0.6)
+	scene.slash()
+	await mantle.cut()
+	await scene.wait(0.8)
+	await mantle.rise()
+	await scene.wait(0.4)
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_HERE)
+	if is_instance_valid(mantle):
+		mantle.queue_free()
+	scene.finish()
+
+
+## Cutscene 7, "The Wayshell": back in Saltmarrow with the Point Bell, once
+## Mantle is free, Hessa gives Wren the keepers' call and sends them on.
 func the_wayshell() -> void:
 	GameState.set_flag("seen_wayshell")
 	GameState.set_flag("met_hessa")

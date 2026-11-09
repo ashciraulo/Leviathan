@@ -153,6 +153,76 @@ func walk_around_to(target: Vector2) -> void:
 		await walk_to(target)
 
 
+## Walk Wren to a point along open ground, round water, walls, props and
+## people: a breadth-first search over the room's tiles, walked corner to
+## corner. Falls back to walk_around_to when there is no route.
+func walk_route(target: Vector2) -> void:
+	var player := _player()
+	var room: Room = game.current_room if game else null
+	if player == null or room == null:
+		return
+	var origin := room.global_position
+	var from := _tile_of(player.global_position - origin)
+	var to := _tile_of(target - origin)
+	var path := _route(room, from, to)
+	if path.is_empty():
+		await walk_around_to(target)
+		return
+	for i in range(1, path.size()):
+		# Only stop at corners.
+		if i < path.size() - 1 and path[i] - path[i - 1] == path[i + 1] - path[i]:
+			continue
+		var cell: Vector2i = path[i]
+		var point := origin + Vector2(cell.x * Room.TILE + Room.TILE / 2.0, cell.y * Room.TILE + 10)
+		if i == path.size() - 1:
+			point = target
+		if not await walk_to(point):
+			break
+	await walk_to(target)
+
+
+static func _tile_of(local: Vector2) -> Vector2i:
+	return Vector2i(int(local.x) / Room.TILE, int(local.y) / Room.TILE)
+
+
+## Tiles Wren can cross in a scene. Big props spread wider than their tile.
+static func _open(room: Room, cell: Vector2i) -> bool:
+	if not ".Pk".contains(room.tile_at(cell.x, cell.y)):
+		return false
+	for dx in range(-2, 3):
+		if "HLMWR".contains(room.tile_at(cell.x + dx, cell.y)):
+			return false
+	return true
+
+
+static func _route(room: Room, from: Vector2i, to: Vector2i) -> Array:
+	var came := {from: from}
+	var queue: Array[Vector2i] = [from]
+	while not queue.is_empty():
+		var cell: Vector2i = queue.pop_front()
+		if cell == to:
+			var path: Array = [to]
+			while path[0] != from:
+				path.push_front(came[path[0]])
+			return path
+		for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next := cell + step
+			if came.has(next) or next.x < 0 or next.y < 0 or next.x >= Room.COLS or next.y >= Room.ROWS:
+				continue
+			if next != to and not _open(room, next):
+				continue
+			came[next] = cell
+			queue.append(next)
+	return []
+
+
+## Wren swings the sword once.
+func slash() -> void:
+	var player := _player()
+	if player:
+		player.start_attack()
+
+
 ## Turn Wren to face a direction (UP, DOWN, LEFT or RIGHT).
 func face(direction: Vector2) -> void:
 	var player := _player()

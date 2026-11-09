@@ -6,6 +6,7 @@ extends Object
 const WREN := preload("res://assets/sprites/wren.png")
 const SWORD := preload("res://assets/sprites/sword.png")
 const SCUTTLER := preload("res://assets/sprites/scuttler.png")
+const QUEST_CRAB := preload("res://assets/sprites/quest_crab.png")
 const SPITTER := preload("res://assets/sprites/spitter.png")
 const BOGSKIPPER := preload("res://assets/sprites/bogskipper.png")
 const LANTERNMOTH := preload("res://assets/sprites/lanternmoth.png")
