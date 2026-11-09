@@ -41,9 +41,12 @@ const ARENA := Rect2(2.5 * 16.0, 3.0 * 16.0, 19.0 * 16.0, 8.0 * 16.0)
 ## Sheet columns in assets/kiln/wyrm_head.png (32x28 frames).
 const FRAME_CLOSED := 0
 const FRAME_OPEN := 1
+## How long its jaw gapes before a spit of slag.
+const SPIT_TELL := 0.5
 const FRAME_STONE := 2
 
 ## True while it sleeps in the crucible through Lowe's scene.
+var _spit_tell := 0.0
 var asleep := false
 var mode := Mode.INTRO
 var heading := Vector2.DOWN
@@ -90,7 +93,7 @@ func _ready() -> void:
 	collision_mask = 1 << (Layers.WORLD - 1)
 	_burst = DamageArea.new()
 	_burst.name = "Burst"
-	_burst.damage = 2
+	_burst.damage = 1
 	_burst.active = false
 	Layers.assign(_burst, Layers.ENEMY_ATTACK, [])
 	_burst.monitoring = false
@@ -214,9 +217,15 @@ func _chase(delta: float, to_player: Vector2) -> void:
 	_place_segments()
 	if hp <= SEGMENTS / 2:
 		_spit_timer -= delta
-		if _spit_timer <= 0.0:
+		if _spit_tell > 0.0:
+			_spit_tell -= delta
+			if _spit_tell <= 0.0:
+				_spit(to_player)
+		elif _spit_timer <= 0.0:
+			# The tell: its jaw gapes and it shudders, with a gurgle.
 			_spit_timer = SPIT_EVERY
-			_spit(to_player)
+			_spit_tell = SPIT_TELL
+			Audio.play_sfx("enemy_tell", global_position, 0.7)
 
 
 ## Each plate sits a fixed distance back along the head's path. Plates the
@@ -410,7 +419,9 @@ func _process(delta: float) -> void:
 func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
-	_sprite.frame = FRAME_OPEN if mode in [Mode.ERUPT, Mode.INTRO] or int(Time.get_ticks_msec() / 300) % 4 == 0 else FRAME_CLOSED
+	if _spit_tell > 0.0:
+		_jitter(_spit_tell)
+	_sprite.frame = FRAME_OPEN if _spit_tell > 0.0 or mode in [Mode.ERUPT, Mode.INTRO] or int(Time.get_ticks_msec() / 300) % 4 == 0 else FRAME_CLOSED
 	_sprite.flip_h = heading.x < -0.3
 	if mode == Mode.DIVE:
 		_sprite.position.y += _sink * 14.0

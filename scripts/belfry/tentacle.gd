@@ -33,9 +33,12 @@ func _ready() -> void:
 	_slam.active = false
 	# The root, under the water: only a diver reaches it.
 	_root = _area(Area2D.new(), Layers.ENEMY_HURTBOX, Vector2(14, 12), Vector2(0, -2))
-	# Rising out of the water.
+	# Rising out of the water: harmless until it's up.
 	_sprite.scale.y = 0.1
-	create_tween().tween_property(_sprite, "scale:y", 1.0, 0.5)
+	_body.active = false
+	var rise := create_tween()
+	rise.tween_property(_sprite, "scale:y", 1.0, 0.5)
+	rise.tween_callback(func() -> void: _body.active = not severed)
 
 
 func _area(area: Area2D, layer: int, size: Vector2, at: Vector2) -> Area2D:
@@ -78,7 +81,7 @@ func _physics_process(delta: float) -> void:
 			_sprite.position.x = -8 + roundf(sin(_time * 2.0) * 1.5)
 			if _timer <= 0.0 and wren and not wren.diving and wren.global_position.distance_to(global_position) < REACH + 20.0:
 				_mode = "rear"
-				_timer = REAR_TIME * (0.7 if fast else 1.0)
+				_timer = REAR_TIME * (0.85 if fast else 1.0)
 				var to := wren.global_position - global_position
 				_target = to.limit_length(REACH)
 				Audio.play_sfx("enemy_tell", global_position, 0.8)

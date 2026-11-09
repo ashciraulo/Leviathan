@@ -228,7 +228,9 @@ func _die() -> void:
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
+	set_deferred("collision_layer", 0)
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	_sprite.position = _sprite_origin
 	_sprite.frame = 3
 	Audio.play_sfx("regent_roar", global_position, 0.5)
