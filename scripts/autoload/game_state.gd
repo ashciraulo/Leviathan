@@ -41,9 +41,9 @@ var play_time := 0.0
 ## always works then, whatever Wren's breath and Resonance (not saved).
 var final_line := false
 
-## What a new file starts with: the keeper's lamp, a driftwood sword and
-## the oilskin tunic.
-const START_ITEMS := {"keeper_lamp": 1, "driftwood_sword": 1, "oilskin": 1}
+## What a new file starts with: the keeper's lamp, a driftwood sword, a
+## cork buckler and the oilskin tunic.
+const START_ITEMS := {"keeper_lamp": 1, "driftwood_sword": 1, "cork_buckler": 1, "oilskin": 1}
 
 
 func _ready() -> void:
@@ -62,6 +62,7 @@ func reset_new_game() -> void:
 	flags = {}
 	inventory = {}
 	equipped = {}
+	_hurt_owed = 0.0
 	item_slots = ["", ""]
 	jars = []
 	tidestones = {}
@@ -73,6 +74,27 @@ func reset_new_game() -> void:
 ## Most hits pop one bubble, heavy hits pop two. There are no halves.
 func damage(amount: int) -> void:
 	bubbles = maxi(bubbles - amount, 0)
+
+
+## Share of each hit's damage the equipped tunic lets through, by tier
+## (oilskin, scaleweave, abyssal).
+const TUNIC_TAKES := [1.0, 1.0, 0.75, 0.5]
+## The part of a bubble that a tunic has let through but not yet popped.
+var _hurt_owed := 0.0
+
+
+## A hit on Wren, through the tunic: it lets a share of the damage through
+## and keeps the rest of a bubble owing, so bubbles only ever pop whole.
+## With the abyssal tunic every other one-bubble hit pops nothing. Returns
+## the bubbles popped. Falling into a gap isn't a hit: it costs a whole
+## bubble whatever Wren wears (Player.fall).
+func hurt(amount: int) -> int:
+	var tier := clampi(Items.tier(equipped_item(Items.TUNIC)), 1, 3)
+	_hurt_owed += amount * TUNIC_TAKES[tier]
+	var popped := floori(_hurt_owed + 0.5)
+	_hurt_owed -= popped
+	damage(popped)
+	return popped
 
 
 func heal(amount: int) -> void:
@@ -342,6 +364,10 @@ func from_dict(data: Dictionary) -> void:
 	if saved_equipped is Dictionary:
 		for kind in saved_equipped:
 			equip(str(saved_equipped[kind]))
+	# Files from before shields mattered never got the cork buckler.
+	if not inventory.keys().any(func(id: String) -> bool: return Items.kind(id) == Items.SHIELD):
+		inventory["cork_buckler"] = 1
+	_hurt_owed = 0.0
 	# Saves from before equipment: wear the best of each kind owned.
 	for kind: String in Items.EQUIPMENT_KINDS:
 		if equipped_item(kind) == "":

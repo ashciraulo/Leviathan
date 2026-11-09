@@ -3,6 +3,11 @@ extends Projectile
 ## A glob of ink Knell spits from the bell's mouth. It flies over water.
 
 
+## Ink soaks through cork.
+func _init() -> void:
+	shield_tier = 2
+
+
 func _ready() -> void:
 	super._ready()
 	_sprite.texture = BelfrySprites.INK_BLOB
