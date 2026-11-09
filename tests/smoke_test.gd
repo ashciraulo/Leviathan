@@ -461,6 +461,10 @@ func _test_hull_dungeon() -> void:
 	# crabs out first so none wanders into the chain's path.)
 	for enemy in _child_of(room, Enemy):
 		enemy.queue_free()
+	# ...and any shot still in the air: a hit mid-flight drops the hook.
+	for shot in _child_of(room, Projectile):
+		shot.queue_free()
+	await _wait(0.1)
 	_check(not player.use_item("tide_hook"), "no hook before it's found")
 	GameState.give_item("tide_hook")
 	_check(GameState.item_slots[0] == "tide_hook", "the hook goes in the first item slot")
