@@ -30,6 +30,7 @@ const SPEAKERS := {
 const TALKS := {
 	"hessa": [
 		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},
+		{"if": ["tidebell_hull"], "unless": ["freed_mantle"], "lines": ["HESSA_MANTLE_1", "HESSA_MANTLE_2"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_hessa_hull"], "set": ["heard_hessa_hull"], "lines": ["HESSA_HULL_1", "HESSA_HULL_2"]},
 		{"if": ["met_hessa"], "lines": ["HESSA_AGAIN"]},
 		{

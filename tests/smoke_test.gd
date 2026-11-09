@@ -462,9 +462,33 @@ func _test_story() -> void:
 	again.queue_free()
 	await _wait(0.1)
 
+	# After the Hull, Mantle lies netted on the Wreck Strand: Wren frees it.
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_MANTLE_1", "Hessa sends Wren to the Wreck Strand first")
+	GameState.set_checkpoint(Vector2i(4, 0), Vector2(1 * Room.TILE + 8, 6 * Room.TILE + 12))
+	var strand: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(strand)
+	await _wait(0.2)
+	_check(Cutscene.active, "the Wreck Strand after the Hull starts Freeing Mantle")
+	var tangle: MantleTangle = null
+	for child in strand.current_room.get_children():
+		if child is MantleTangle:
+			tangle = child
+	_check(tangle != null, "Mantle lies netted on the strand")
+	var strand_pages := await _play_scene(strand, 10.0)
+	_check(not Cutscene.active and not strand.player.in_cutscene, "Freeing Mantle hands Wren back")
+	_check(strand_pages == 0 and GameState.has_flag("freed_mantle"), "Mantle is freed, told without text")
+	_check(not is_instance_valid(tangle), "Mantle has flown")
+	var cut_from: Vector2 = strand.current_room.global_position + StoryDirector.CUT_FROM
+	_check(strand.player.global_position.distance_to(cut_from) < 6.0, "Wren walks round the pool to Mantle (%s)" % strand.player.global_position)
+	strand.queue_free()
+	await _wait(0.1)
+
 	# Back in Saltmarrow with the Point Bell: Hessa gives Wren the Wayshell.
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
+	GameState.set_flag("freed_mantle")
 	# Coming in from the shore path at the bottom of the village.
 	GameState.set_checkpoint(Vector2i(0, -1), Vector2(12 * Room.TILE, 11 * Room.TILE + 12))
 	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
