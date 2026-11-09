@@ -113,9 +113,11 @@ func handle_input(event: InputEvent) -> bool:
 			if _filled(slot):
 				_note = "FILES_COPY_NEED_EMPTY"
 				return true
-			SaveManager.copy_save(_source, slot)
-			_note = "FILES_COPIED"
-			_set_mode(Mode.PLAY, slot)
+			if SaveManager.copy_save(_source, slot):
+				_note = "FILES_COPIED"
+				_set_mode(Mode.PLAY, slot)
+			else:
+				_note = "FILES_DAMAGED"
 		Mode.ERASE:
 			if _filled(slot):
 				_source = slot

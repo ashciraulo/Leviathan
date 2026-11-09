@@ -6,7 +6,6 @@ extends Node
 ## a .tmp file first, the previous save is kept as .bak, and only then does
 ## the new file take its place. If the main file is ever damaged (a crash or
 ## power cut mid-write), loading falls back to the .bak.
-
 ##
 ## Every save records its FORMAT_VERSION. When the layout of "state" changes,
 ## bump FORMAT_VERSION and add a step to _migrate() that turns the old
@@ -31,6 +30,12 @@ func has_save(slot: int = -1) -> bool:
 
 
 func save_game(slot: int = -1) -> bool:
+	# Never write over a newer version's save (say, another copy of the game
+	# saved to this slot meanwhile).
+	var existing := _read_slot(slot)
+	if not existing.is_empty() and is_newer(existing):
+		push_error("Not saving over a newer save: %s" % slot_path(slot))
+		return false
 	var data := {
 		"format_version": FORMAT_VERSION,
 		"game_version": str(ProjectSettings.get_setting("application/config/version", "0.0.0")),
@@ -86,8 +91,11 @@ func is_newer(parsed: Dictionary) -> bool:
 
 func _version_of(parsed: Dictionary) -> int:
 	# Saves from before versioning count as version 0.
-	var version = parsed.get("format_version", 0)
-	return int(version) if (version is int or version is float) else 0
+	if not parsed.has("format_version"):
+		return 0
+	var version = parsed["format_version"]
+	# Anything but a number is a format this build doesn't know.
+	return int(version) if (version is int or version is float) else FORMAT_VERSION + 1
 
 
 ## Brings a parsed save up to FORMAT_VERSION, one step at a time. Each step

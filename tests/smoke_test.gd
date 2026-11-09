@@ -207,6 +207,9 @@ func _test_save_load() -> void:
 	_check(SaveManager.read_summary(SaveManager.current_slot).get("newer", false),
 		"the file select shows a newer save as such")
 	_check(SaveManager.latest_slot() != SaveManager.current_slot, "Continue skips a newer save")
+	_check(not SaveManager.save_game(), "saving never writes over a newer save")
+	_check(SaveManager.is_newer(JSON.parse_string(FileAccess.get_file_as_string(path))),
+		"the newer save is still there")
 	SaveManager.delete_save()
 
 
