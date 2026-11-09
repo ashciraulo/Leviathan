@@ -3,7 +3,8 @@
     python3 tools/check_strings.py [-v]
 
 Fails (exit 1) when a text key used in scripts or rooms has no English
-string, a key is listed twice, or a string is empty. Also lists keys
+string, a key is listed twice, a string is empty, or a string (in any
+language) has a letter the Tide font can't draw. Also lists keys
 that nothing seems to use (informational: some keys are built at runtime,
 e.g. "ITEM_" + id).
 """
@@ -39,6 +40,25 @@ def csv_keys():
     return keys, problems
 
 
+def missing_glyphs():
+    """Letters in any column of strings.csv that the Tide font lacks."""
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from font_glyphs import GLYPHS
+    problems = []
+    with open(os.path.join(ROOT, "locale", "strings.csv"), newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))
+    header = rows[0]
+    for n, row in enumerate(rows[1:], start=2):
+        for col, text in enumerate(row[1:], start=1):
+            # "\n" in a cell is Godot's line break, not text.
+            missing = sorted({ch for ch in text.replace("\\n", "") if ch not in GLYPHS and ch not in "\n\t"})
+            if missing:
+                lang = header[col] if col < len(header) else "column %d" % col
+                problems.append("line %d: %s (%s) uses letters the font lacks: %s"
+                                % (n, row[0], lang, " ".join("%s (U+%04X)" % (c, ord(c)) for c in missing)))
+    return problems
+
+
 def used_keys():
     used = {}
     for top in ("scripts", "rooms", "scenes"):
@@ -56,6 +76,7 @@ def used_keys():
 
 def main():
     keys, problems = csv_keys()
+    problems += missing_glyphs()
     used = used_keys()
     for key, where in sorted(used.items()):
         # "ITEM_JAR_" + contents and the like: a prefix, not a key.
