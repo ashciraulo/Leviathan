@@ -10,7 +10,7 @@ before the vertical slice.
 
 ## Running it
 
-1. Install [Godot 4.5](https://godotengine.org/download) (the standard build,
+1. Install [Godot 4.7.2](https://godotengine.org/download) (the standard build,
    not .NET). It's free.
 2. Open the Project Manager, choose **Import**, and pick this folder's
    `project.godot`.

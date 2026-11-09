@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      GODOT_VERSION: 4.5.1
+      GODOT_VERSION: 4.7.2
     steps:
       - uses: actions/checkout@v5
         with:
@@ -44,3 +44,20 @@ jobs:
             exit 1
           fi
           grep -q "SMOKE TEST PASSED" test.log || { echo "::error::Smoke test did not pass (exit $status)"; exit 1; }
+
+      - name: Capture screenshots
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 > /dev/null
+          timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
+            "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/screenshots.tscn 2>&1 | tee shots.log
+          ls -la screenshots
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/*.png
+          if-no-files-found: warn
