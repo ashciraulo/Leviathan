@@ -102,6 +102,13 @@ func _ready() -> void:
 		Vector2i(10, -2): ["44_kiln_mouth", Vector2i(11, 5)],
 		Vector2i(8, -1): ["45_geyser_basin", Vector2i(11, 1)],
 		Vector2i(9, -1): ["46_scorched_pass", Vector2i(2, 7)],
+		Vector2i(4, 1): ["47_fenmouth", Vector2i(11, 1)],
+		Vector2i(3, 1): ["48_glowcap_grove", Vector2i(3, 3)],
+		Vector2i(5, 1): ["49_stillwater_reach", Vector2i(5, 6)],
+		Vector2i(6, 1): ["50_lumen_pool", Vector2i(3, 5)],
+		Vector2i(4, 2): ["51_drowned_causeway", Vector2i(11, 1)],
+		Vector2i(3, 2): ["52_witherroot_hollow", Vector2i(5, 1)],
+		Vector2i(5, 2): ["53_mirelight_edge", Vector2i(3, 7)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
