@@ -55,6 +55,8 @@ jobs:
           sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 > /dev/null
           timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/screenshots.tscn 2>&1 | tee shots.log
+          timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
+            "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/menu_screenshots.tscn 2>&1 | tee -a shots.log
           ls -la screenshots
           # Also print the PNGs as base64 so they can be read from the job log.
           for f in screenshots/*.png; do

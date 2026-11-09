@@ -11,8 +11,9 @@ var _toast: Label
 var _toast_tween: Tween
 var _keys: Label
 
-## Top right: the small-key count, shown only inside a dungeon.
-const KEYS_AT := Vector2(346, 4)
+## Top right, under the item slots: the small-key count, shown only inside
+## a dungeon.
+const KEYS_AT := Vector2(346, 30)
 
 
 func _ready() -> void:

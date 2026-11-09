@@ -1,12 +1,18 @@
 extends Control
 ## Title screen: the sleeping leviathan at dusk, the logo, and a short menu
-## (Continue when a save exists, New game, Quit).
+## (Continue the latest save, Journeys for the file select, Options, Quit).
 
 const GAME_SCENE := "res://scenes/game.tscn"
 const LOGO_TOP := 18.0
 const LOGO_BOB := 2.0
 
 var _logo: TextureRect
+var _menu: VBoxContainer
+var _overlay: Control
+var _page: MenuPage
+var _files: FileSelect
+var _options: SettingsPage
+var _last_focus: Control
 
 
 func _ready() -> void:
@@ -31,11 +37,13 @@ func _ready() -> void:
 	menu.offset_bottom = -16
 	add_child(menu)
 
+	_menu = menu
 	var continue_button := UI.button("MENU_CONTINUE", _on_continue)
-	continue_button.visible = SaveManager.has_save()
+	continue_button.visible = SaveManager.latest_slot() >= 0
 	menu.add_child(continue_button)
-	var new_game_button := UI.button("MENU_NEW_GAME", _on_new_game)
+	var new_game_button := UI.button("MENU_JOURNEYS", func() -> void: _show_page(_files))
 	menu.add_child(new_game_button)
+	menu.add_child(UI.button("MENU_OPTIONS", func() -> void: _show_page(_options)))
 	menu.add_child(UI.button("MENU_QUIT", func() -> void: get_tree().quit()))
 
 	var controls := UI.label("TITLE_CONTROLS")
@@ -46,8 +54,50 @@ func _ready() -> void:
 	controls.modulate = Color(1, 1, 1, 0.6)
 	add_child(controls)
 
+	_overlay = ColorRect.new()
+	(_overlay as ColorRect).color = Color(0.03, 0.05, 0.1, 0.78)
+	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.visible = false
+	add_child(_overlay)
+	_files = FileSelect.new()
+	_files.file_chosen.connect(_on_file_chosen)
+	_options = SettingsPage.new()
+	for page: MenuPage in [_files, _options]:
+		page.set_anchors_preset(Control.PRESET_FULL_RECT)
+		page.visible = false
+		page.back_requested.connect(_hide_page)
+		_overlay.add_child(page)
+
 	var first := continue_button if continue_button.visible else new_game_button
 	first.grab_focus.call_deferred()
+
+
+func _show_page(page: MenuPage) -> void:
+	_last_focus = get_viewport().gui_get_focus_owner()
+	_page = page
+	_overlay.visible = true
+	_menu.visible = false
+	for child in _overlay.get_children():
+		child.visible = child == page
+	page.on_open()
+
+
+func _hide_page() -> void:
+	_overlay.visible = false
+	_menu.visible = true
+	_page = null
+	if _last_focus:
+		_last_focus.grab_focus()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _page == null:
+		return
+	get_viewport().set_input_as_handled()
+	if _page.handle_input(event):
+		return
+	if MenuKit.cancel(event) or event.is_action_pressed("pause"):
+		_hide_page()
 
 
 ## The logo rises and settles like a slow swell.
@@ -59,14 +109,14 @@ func _bob_logo() -> void:
 
 
 func _on_continue() -> void:
-	if not SaveManager.load_game():
+	_on_file_chosen(maxi(SaveManager.latest_slot(), 0), false)
+
+
+func _on_file_chosen(slot: int, new_game: bool) -> void:
+	SaveManager.current_slot = slot
+	if new_game or not SaveManager.load_game():
+		# A new file is saved at once, so dying before the first Tidestone
+		# brings Wren back to the start.
 		GameState.reset_new_game()
-	get_tree().change_scene_to_file(GAME_SCENE)
-
-
-func _on_new_game() -> void:
-	# The prototype has one slot: starting over replaces it, so dying before
-	# the first Tidestone brings Wren back to the start, not to an old save.
-	GameState.reset_new_game()
-	SaveManager.save_game()
+		SaveManager.save_game()
 	get_tree().change_scene_to_file(GAME_SCENE)

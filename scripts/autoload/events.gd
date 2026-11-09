@@ -15,3 +15,7 @@ signal dialogue_requested(speaker_key: String, lines: PackedStringArray)
 signal dialogue_finished
 ## Wren stepped into a doorway: go to another room (a dungeon, a house).
 signal door_entered(target_room: Vector2i, target_tile: Vector2i)
+## Wren got an item (GameState.give_item). count is how many were added.
+signal item_gained(id: String, count: int)
+## The map asked to fly to a woken Tidestone in that room.
+signal fast_travel_requested(coord: Vector2i)

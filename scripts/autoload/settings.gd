@@ -18,13 +18,148 @@ var flashes := true
 ## When true, tapping Hum starts and stops humming instead of holding it.
 var hum_toggle := false
 var locale := "en"
+## Dialogue text speed: 0 slow, 1 normal, 2 fast, 3 instant.
+var text_speed := 1
+## Bigger text for dialogue and toasts.
+var large_text := false
+## Show captions for important sounds.
+var captions := true
+## Colour filter: 0 off, 1 protanopia, 2 deuteranopia, 3 tritanopia.
+var color_filter := 0
+## Volumes, 0 to 10.
+var music_volume := 8
+var effects_volume := 8
+var ambience_volume := 8
+var fullscreen := false
+## Remapped controls: action -> physical keycode / joypad button index.
+## Only the first key and first button of an action can be changed; the
+## arrows and the left stick always keep working for movement.
+var key_overrides: Dictionary = {}
+var pad_overrides: Dictionary = {}
+
+const TEXT_SPEEDS := [25.0, 45.0, 90.0, 10000.0]
+const AUDIO_BUSES := ["Music", "Effects", "Ambience"]
+## Actions the controls screen lists, in order.
+const REMAPPABLE := ["move_up", "move_down", "move_left", "move_right", "attack", "interact",
+	"item_1", "item_2", "hum", "map", "pause", "tab_prev", "tab_next"]
+
+## Colour-blind filter: simulate the colour vision deficiency, then move
+## the colours that get lost into ones that stay visible (daltonising).
+const FILTER_SHADER := """
+shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
+uniform int mode = 0;
+void fragment() {
+	vec3 c = texture(screen_tex, SCREEN_UV).rgb;
+	mat3 to_lms = mat3(vec3(17.8824, 3.45565, 0.0299566), vec3(43.5161, 27.1554, 0.184309), vec3(4.11935, 3.86714, 1.46709));
+	mat3 to_rgb = mat3(vec3(0.0809444479, -0.0102485335, -0.000365296938), vec3(-0.130504409, 0.0540193266, -0.00412161469), vec3(0.116721066, -0.113614708, 0.693511405));
+	vec3 lms = to_lms * c;
+	vec3 sim = lms;
+	if (mode == 1) { sim.x = 2.02344 * lms.y - 2.52581 * lms.z; }
+	else if (mode == 2) { sim.y = 0.494207 * lms.x + 1.24827 * lms.z; }
+	else { sim.z = -0.395913 * lms.x + 0.801109 * lms.y; }
+	vec3 err = c - to_rgb * sim;
+	vec3 shift = vec3(0.0, 0.7 * err.r + err.g, 0.7 * err.r + err.b);
+	COLOR = vec4(clamp(c + shift, 0.0, 1.0), 1.0);
+}
+"""
+
+var _filter_layer: CanvasLayer
+var _filter_material: ShaderMaterial
+var _default_events: Dictionary = {}
 
 
 func _ready() -> void:
 	_register_default_actions()
 	_set_default_font()
+	_make_filter()
 	load_settings()
+	apply()
+
+
+## Applies everything that lives outside this script (audio, window,
+## filter, bindings, language).
+func apply() -> void:
 	TranslationServer.set_locale(locale)
+	_apply_audio()
+	_apply_filter()
+	_apply_bindings()
+	if not DisplayServer.get_name() == "headless":
+		var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+		if DisplayServer.window_get_mode() != mode:
+			DisplayServer.window_set_mode(mode)
+
+
+func text_chars_per_second() -> float:
+	return TEXT_SPEEDS[clampi(text_speed, 0, TEXT_SPEEDS.size() - 1)]
+
+
+func reset_controls() -> void:
+	key_overrides.clear()
+	pad_overrides.clear()
+	_apply_bindings()
+
+
+## Rebinds an action's main key (or main gamepad button).
+func rebind(action: String, event: InputEvent) -> void:
+	if event is InputEventKey:
+		key_overrides[action] = int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode)
+	elif event is InputEventJoypadButton:
+		pad_overrides[action] = int(event.button_index)
+	_apply_bindings()
+
+
+func _apply_bindings() -> void:
+	for action: String in _default_events:
+		InputMap.action_erase_events(action)
+		var key_done := false
+		var pad_done := false
+		for event: InputEvent in _default_events[action]:
+			var use := event
+			if event is InputEventKey and not key_done:
+				key_done = true
+				if key_overrides.has(action):
+					use = _key(int(key_overrides[action]))
+			elif event is InputEventJoypadButton and not pad_done:
+				pad_done = true
+				if pad_overrides.has(action):
+					use = _pad(int(pad_overrides[action]))
+			InputMap.action_add_event(action, use)
+
+
+func _apply_audio() -> void:
+	var volumes := [music_volume, effects_volume, ambience_volume]
+	for i in AUDIO_BUSES.size():
+		var bus := AudioServer.get_bus_index(AUDIO_BUSES[i])
+		if bus < 0:
+			AudioServer.add_bus()
+			bus = AudioServer.bus_count - 1
+			AudioServer.set_bus_name(bus, AUDIO_BUSES[i])
+			AudioServer.set_bus_send(bus, "Master")
+		var level := clampi(volumes[i], 0, 10) / 10.0
+		AudioServer.set_bus_mute(bus, level <= 0.0)
+		AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(level, 0.0001)))
+
+
+func _make_filter() -> void:
+	_filter_layer = CanvasLayer.new()
+	_filter_layer.layer = 128
+	_filter_layer.visible = false
+	add_child(_filter_layer)
+	var rect := ColorRect.new()
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var shader := Shader.new()
+	shader.code = FILTER_SHADER
+	_filter_material = ShaderMaterial.new()
+	_filter_material.shader = shader
+	rect.material = _filter_material
+	_filter_layer.add_child(rect)
+
+
+func _apply_filter() -> void:
+	_filter_layer.visible = color_filter > 0
+	_filter_material.set_shader_parameter("mode", color_filter)
 
 
 func load_settings() -> void:
@@ -36,6 +171,18 @@ func load_settings() -> void:
 	flashes = bool(cfg.get_value("feel", "flashes", flashes))
 	hum_toggle = bool(cfg.get_value("controls", "hum_toggle", hum_toggle))
 	locale = str(cfg.get_value("language", "locale", locale))
+	text_speed = clampi(int(cfg.get_value("text", "speed", text_speed)), 0, TEXT_SPEEDS.size() - 1)
+	large_text = bool(cfg.get_value("text", "large", large_text))
+	captions = bool(cfg.get_value("text", "captions", captions))
+	color_filter = clampi(int(cfg.get_value("feel", "color_filter", color_filter)), 0, 3)
+	music_volume = clampi(int(cfg.get_value("audio", "music", music_volume)), 0, 10)
+	effects_volume = clampi(int(cfg.get_value("audio", "effects", effects_volume)), 0, 10)
+	ambience_volume = clampi(int(cfg.get_value("audio", "ambience", ambience_volume)), 0, 10)
+	fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))
+	var keys = cfg.get_value("controls", "keys", {})
+	key_overrides = keys if keys is Dictionary else {}
+	var pads = cfg.get_value("controls", "pad", {})
+	pad_overrides = pads if pads is Dictionary else {}
 
 
 func save_settings() -> void:
@@ -45,6 +192,16 @@ func save_settings() -> void:
 	cfg.set_value("feel", "flashes", flashes)
 	cfg.set_value("controls", "hum_toggle", hum_toggle)
 	cfg.set_value("language", "locale", locale)
+	cfg.set_value("text", "speed", text_speed)
+	cfg.set_value("text", "large", large_text)
+	cfg.set_value("text", "captions", captions)
+	cfg.set_value("feel", "color_filter", color_filter)
+	cfg.set_value("audio", "music", music_volume)
+	cfg.set_value("audio", "effects", effects_volume)
+	cfg.set_value("audio", "ambience", ambience_volume)
+	cfg.set_value("display", "fullscreen", fullscreen)
+	cfg.set_value("controls", "keys", key_overrides)
+	cfg.set_value("controls", "pad", pad_overrides)
 	cfg.save(PATH)
 
 
@@ -61,7 +218,11 @@ func _register_default_actions() -> void:
 		"hum": [_key(KEY_H), _pad(JOY_BUTTON_RIGHT_SHOULDER)],
 		"map": [_key(KEY_M), _pad(JOY_BUTTON_BACK)],
 		"pause": [_key(KEY_ESCAPE), _pad(JOY_BUTTON_START)],
+		# Menus: switch tabs.
+		"tab_prev": [_key(KEY_Q), _pad(JOY_BUTTON_LEFT_SHOULDER)],
+		"tab_next": [_key(KEY_E), _axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)],
 	}
+	_default_events = bindings
 	for action: String in bindings:
 		if InputMap.has_action(action):
 			InputMap.erase_action(action)
