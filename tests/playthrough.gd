@@ -6,9 +6,11 @@ extends Node
 ##
 ## The smoke test checks each dungeon on its own, from a fresh GameState.
 ## This one checks that they fit together: the story scenes fire in order,
-## the doorways lead where tools/world_rooms.py says, every chest opens,
-## each dungeon's item is in one of its chests, each boss falls and its bell
-## rings, and the game saves and loads between dungeons with nothing lost.
+## each overworld doorway leads into its dungeon, every room builds, the
+## chests hold the big key and the dungeon's item, each boss falls (and the
+## music follows), its bell rings, the shaft it leaves leads back out, and
+## the game saves and loads between dungeons with nothing lost. It doesn't
+## walk between rooms inside a dungeon: tools/*_rooms.py --check covers that.
 ## Puzzles and fights are skipped: Wren is set down in each room, chests are
 ## opened by hand, and each boss is brought down with its own _die(), so the
 ## story and the aftermath that follow are the real ones.
@@ -50,18 +52,22 @@ func _ready() -> void:
 	await _wait(0.6)
 	await _play_scene(20.0)
 	_check(_game.current_room != null, "a new game starts in a room")
+	# Dungeons are built in order: every one up to the first missing entry
+	# room has to be cleared, and none may exist past a gap.
+	var built := 0
+	while built < DUNGEONS.size() and ResourceLoader.exists(_room_path(DUNGEONS[built][1])):
+		built += 1
+	for i in range(built, DUNGEONS.size()):
+		_check(not ResourceLoader.exists(_room_path(DUNGEONS[i][1])), "%s is built but %s before it isn't" % [DUNGEONS[i][0], DUNGEONS[built][0]])
 	var cleared := 0
-	for spec: Array in DUNGEONS:
-		if not ResourceLoader.exists(_room_path(spec[1])):
-			print("Playthrough stops before %s: not built yet." % spec[0])
-			break
+	for spec: Array in DUNGEONS.slice(0, built):
 		var ok: bool = await _dungeon(spec[0], spec[1], spec[2])
 		if not ok:
 			break
 		cleared += 1
 		await _save_and_reload(spec[0])
-	print("Playthrough cleared %d dungeons." % cleared)
-	_check(cleared >= 5, "the run gets through at least the first five dungeons (%d)" % cleared)
+	print("Playthrough cleared %d of %d built dungeons." % [cleared, built])
+	_check(cleared == built and built >= 6, "the run clears every built dungeon (%d of %d)" % [cleared, built])
 	_game.queue_free()
 	await _wait(0.1)
 	SaveManager.delete_save()
@@ -102,6 +108,8 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		return false
 	# Every room: it builds, its scenes play, its chests open.
 	var boss_room := Vector2i(-999, -999)
+	var chests := 0
+	var way_out := false
 	for coord: Vector2i in _rooms_of(id):
 		room = await _goto(coord)
 		await _play_scene(20.0)
@@ -109,10 +117,20 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 			_check(false, "%s: room %s loads (in %s, busy %s, cutscene %s)" % [id, coord, room.coord if room else null, _game.busy, Cutscene.active])
 			continue
 		for chest in _all(room, Chest):
+			chests += 1
 			chest.interact()
+			_check(chest.opened, "%s: the chest in %s opens" % [id, coord])
+			# Its item's line comes up a moment later: read it through.
+			await _wait(1.0)
 			await _play_scene(5.0)
+		if coord == entry:
+			for d: Doorway in _all(room, Doorway):
+				way_out = way_out or (_rooms.has(d.target_room) and _rooms[d.target_room][0] == "")
 		if not get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room.is_ancestor_of(b)).is_empty():
 			boss_room = coord
+	_check(way_out, "%s: its entry room has a doorway back out" % id)
+	_check(chests >= 3, "%s: it has chests (%d)" % [id, chests])
+	_check(GameState.has_dungeon_item(id, "big_key"), "%s: its big key is in a chest" % id)
 	if item != "":
 		_check(GameState.has_item(item), "%s: its item (%s) is in one of its chests" % [id, item])
 	# The boss: back to its room, through any scene, and down.
@@ -127,11 +145,11 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 			_check(Audio.music_cue == "boss", "%s: the boss theme plays (%s)" % [id, Audio.music_cue])
 			bosses[0]._die()
 			_check(GameState.flags.get(bosses[0].DEFEATED_FLAG, false), "%s: its boss falls" % id)
-			for i in 12:
+			# The boss's last moments and the aftermath, up to 30 s.
+			var deadline := Time.get_ticks_msec() + 30000
+			while Time.get_ticks_msec() < deadline and _all(room, Tidebell).is_empty():
 				await _play_scene(25.0)
 				await _wait(0.5)
-				if not _all(room, Tidebell).is_empty():
-					break
 			_check(Audio.music_cue == Audio.cue_for_room(room.biome, room.dungeon), "%s: its own music comes back (%s)" % [id, Audio.music_cue])
 			var bells := _all(room, Tidebell)
 			_check(bells.size() == 1, "%s: its bell rises" % id)
@@ -140,21 +158,20 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 				bells[0].interact()
 				await _play_scene(25.0)
 				_check(GameState.has_flag(Tidebell.flag_for(bells[0].bell)) and GameState.item_count("tidebell") == before + 1, "%s: ringing its bell counts" % id)
-	# Out the way Wren came in.
-	room = await _goto(entry)
-	await _play_scene(20.0)
+	# Out by the shaft of daylight that opens where the boss fell.
+	room = _game.current_room
 	var out: Doorway = null
 	for d: Doorway in _all(room, Doorway):
 		if _rooms.has(d.target_room) and _rooms[d.target_room][0] == "":
 			out = d
-	_check(out != null, "%s: its entry room has a way out" % id)
+	_check(out != null, "%s: a way out opens in the boss room" % id)
 	if out:
 		_keep_safe()
 		_game.player.global_position = out.global_position
 		await _wait(0.3)
 		await _settle()
 		await _play_scene(30.0)
-		_check(GameState.dungeon == "" and _game.current_room.coord == outside, "%s: Wren walks back out where they came in (%s)" % [id, _game.current_room.coord])
+		_check(GameState.dungeon == "" and _rooms.has(_game.current_room.coord) and _rooms[_game.current_room.coord][0] == "", "%s: it leads back out to the overworld (%s)" % [id, _game.current_room.coord])
 	return true
 
 

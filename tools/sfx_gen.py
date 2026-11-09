@@ -588,7 +588,10 @@ def main():
         import glob
         for path in sorted(glob.glob(os.path.join(ROOT, "scripts", "**", "*.gd"), recursive=True)):
             with open(path, encoding="utf-8") as f:
-                for name in re.findall(r'Audio\.play_(?:sfx|jingle)\("([a-z0-9_]+)"', f.read()):
+                # Every literal in the call's arguments (both sides of an
+                # `"a" if x else "b"`), up to its first nested call or its end.
+                calls = re.findall(r'\bplay_(?:sfx|jingle)\(([^()]*)', f.read())
+                for name in [n for args in calls for n in re.findall(r'"([a-z0-9_]+)"', args)]:
                     if name not in known:
                         stale.append("%s plays \"%s\", which isn't in Audio.SFX" % (os.path.relpath(path, ROOT), name))
         if stale:

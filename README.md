@@ -133,7 +133,8 @@ It plays one game from a new file through every dungeon built so far, in
 order, without resetting: in through each overworld doorway, every room and
 chest, the boss and its story scenes, the bell, back out, then a save and a
 reload. The smoke test covers each dungeon's puzzles and fights on their own;
-this one catches pieces that don't fit together. A new dungeon joins the run
+this one catches pieces that don't fit together (walking between rooms inside
+a dungeon is left to tools/*_rooms.py --check). A new dungeon joins the run
 once its entry room exists (`DUNGEONS` in tests/playthrough.gd).
 
 ## Art
