@@ -14,6 +14,10 @@ func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
 	# Slot 2 is File 3 on the file select: keep a real save safe.
 	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
+	# A run that crashed left the real save in the backup: never overwrite it.
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.remove_absolute(real_save)
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
 	if FileAccess.file_exists(real_save):
 		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
 	SaveManager.delete_save()

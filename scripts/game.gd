@@ -165,8 +165,6 @@ func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 
 
 func _on_player_died() -> void:
-	if busy and player == null:
-		return
 	busy = true
 	# Real-time waits: hitstop may still have the game frozen.
 	await get_tree().create_timer(0.6, false, false, true).timeout
