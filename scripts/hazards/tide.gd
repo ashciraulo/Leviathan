@@ -19,6 +19,10 @@ const CYCLE := LOW_TIME + RISING_TIME + HIGH_TIME + FALLING_TIME
 
 ## Added to the clock (tests set it to pick a moment in the cycle).
 static var offset := 0.0
+## Seconds of unpaused play the tide has run (advanced once per physics
+## frame by whichever Tide is processing, so a pause holds it still).
+static var elapsed := 0.0
+static var _stamp := -1
 
 var _room: Room
 var _body: StaticBody2D
@@ -35,7 +39,7 @@ var _frame := 0
 
 ## Seconds into the region's tide cycle.
 static func clock() -> float:
-	return fposmod(Engine.get_physics_frames() / float(Engine.physics_ticks_per_second) + offset, CYCLE)
+	return fposmod(elapsed + offset, CYCLE)
 
 
 ## Where the tide is: 0 fully out, 1 fully in.
@@ -67,7 +71,7 @@ static func phase() -> Phase:
 ## The clock offset that puts the tide at `when` seconds into `p`.
 static func offset_for(p: Phase, when: float = 0.5) -> float:
 	var start: float = [0.0, LOW_TIME, LOW_TIME + RISING_TIME, LOW_TIME + RISING_TIME + HIGH_TIME][p]
-	return fposmod(start + when - Engine.get_physics_frames() / float(Engine.physics_ticks_per_second), CYCLE)
+	return fposmod(start + when - elapsed, CYCLE)
 
 
 func _ready() -> void:
@@ -90,8 +94,11 @@ func _ready() -> void:
 			_body.add_child(shape)
 			_shapes[tile] = shape
 			_flooded[tile] = false
+			# The open sea floods first, and so do flats running off the
+			# screen's edge, so both sides of a room seam flood together.
+			var edge := x == 0 or y == 0 or x == Room.COLS - 1 or y == Room.ROWS - 1
 			for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
-				if _room.tile_at(x + step.x, y + step.y) == "~" and not _distance.has(tile):
+				if (edge or _room.tile_at(x + step.x, y + step.y) == "~") and not _distance.has(tile):
 					_distance[tile] = 0
 					queue.append(tile)
 	# Flats with no sea beside them all flood at once.
@@ -109,6 +116,14 @@ func _ready() -> void:
 	for tile: Vector2i in _shapes:
 		if not _distance.has(tile):
 			_distance[tile] = _deepest - 1
+	# Start as the tide is now, so a room entered at high tide (and its
+	# Siltrays) begin flooded.
+	_level = level()
+	_phase = phase()
+	for tile: Vector2i in _shapes:
+		_flooded[tile] = cover(tile) >= 1.0
+		(_shapes[tile] as CollisionShape2D).disabled = not _flooded[tile]
+	queue_redraw()
 
 
 ## Tide flats: r, and the d a Siltray lies on.
@@ -131,7 +146,10 @@ func cover(tile: Vector2i) -> float:
 	return clampf(_level * _deepest - _distance.get(tile, 0), 0.0, 1.0)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	if Engine.get_physics_frames() != _stamp:
+		_stamp = Engine.get_physics_frames()
+		elapsed += delta
 	var now := level()
 	var now_phase := phase()
 	if now_phase != _phase:
@@ -175,13 +193,26 @@ func _sweep() -> void:
 	wren.take_damage(1, from)
 
 
+## Somewhere Wren can be put down: firm, open ground, clear of props'
+## footprints, stones and doorways.
+func _is_dry_spot(at: Vector2i) -> bool:
+	var tile := _room.tile_at(at.x, at.y)
+	if is_flat(tile) or Room.is_solid(tile) or tile in ["T", "D", "C"] or Prop.is_prop(tile):
+		return false
+	for dx in [-1, 1]:
+		var side := _room.tile_at(at.x + dx, at.y)
+		if Prop.is_prop(side) and (Prop.KINDS[side][2] as Vector2).x > Room.TILE:
+			return false
+	return Rect2i(0, 0, Room.COLS, Room.ROWS).has_point(at)
+
+
 func _nearest_dry(start: Vector2i) -> Vector2i:
 	var seen := {start: true}
 	var queue: Array[Vector2i] = [start]
 	while not queue.is_empty():
 		var at: Vector2i = queue.pop_front()
 		var tile := _room.tile_at(at.x, at.y)
-		if not is_flat(tile) and not Room.is_solid(tile) and not Prop.is_prop(tile):
+		if _is_dry_spot(at):
 			return at
 		for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 			var next := at + step

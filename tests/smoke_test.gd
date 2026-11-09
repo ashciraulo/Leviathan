@@ -2052,6 +2052,7 @@ func _test_verge() -> void:
 	var tide := room.get_node_or_null("Tide") as Tide
 	_check(tide != null, "Cockle Flats has a tide")
 	if tide == null:
+		Tide.offset = 0.0
 		game.queue_free()
 		return
 	# Low tide: the flats are sand to walk on.
@@ -2061,7 +2062,13 @@ func _test_verge() -> void:
 	# It floods from the sea inward: the tell.
 	Tide.offset = Tide.offset_for(Tide.Phase.RISING, Tide.RISING_TIME * 0.3)
 	await _wait(0.1)
-	_check(tide.cover(Vector2i(2, 4)) > tide.cover(Vector2i(9, 8)), "the tide reaches the flats by the sea first")
+	_check(tide.cover(Vector2i(2, 4)) > tide.cover(Vector2i(9, 4)), "the tide reaches the flats by the sea first")
+	# Paused, the tide holds still.
+	var held := Tide.clock()
+	get_tree().paused = true
+	await get_tree().create_timer(0.3, true).timeout
+	get_tree().paused = false
+	_check(absf(Tide.clock() - held) < 0.1, "the tide doesn't run while the game is paused")
 	# High tide: whoever is still out there is swept back and loses a breath.
 	GameState.refill()
 	var breath := GameState.bubbles
@@ -2069,7 +2076,8 @@ func _test_verge() -> void:
 	await _wait(0.2)
 	var at := player.global_position - room.global_position
 	var tile := Vector2i(floori(at.x / Room.TILE), floori(at.y / Room.TILE))
-	_check(room.tile_at(tile.x, tile.y) != "r", "the flood sweeps Wren off the flats (to %s)" % tile)
+	var landed := room.tile_at(tile.x, tile.y)
+	_check(Rect2i(0, 0, Room.COLS, Room.ROWS).has_point(tile) and not Tide.is_flat(landed) and not Room.is_solid(landed) and not Prop.is_prop(landed), "the flood sweeps Wren off the flats onto open ground (to %s)" % tile)
 	_check(GameState.bubbles < breath, "being swept costs a breath")
 	# And the flooded flats block the way.
 	await _wait(1.2)
@@ -2084,6 +2092,7 @@ func _test_verge() -> void:
 	ray.position = Vector2(9 * Room.TILE + 8, 5 * Room.TILE + 12)
 	room.add_child(ray)
 	await _wait(0.05)
+	_check(ray.mode == Siltray.Mode.SWIM and not ray._contact.active, "a Siltray placed in the flood starts swimming, harmless")
 	_check(ray.take_hit(1, Vector2.UP) == Enemy.HitResult.IGNORED, "a swimming Siltray can't be cut")
 	player.global_position = _tile_pos(room, Vector2i(8, 6))
 	var reared := false
