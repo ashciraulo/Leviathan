@@ -414,7 +414,9 @@ class Revival extends Node2D:
 		for i in 8:
 			var angle := TAU * i / 8.0 + t * 3.0
 			var p := Vector2(cos(angle) * (10.0 - 4.0 * t), -6.0 - 22.0 * t + sin(angle) * 3.0)
-			draw_rect(Rect2(p, Vector2(2, 2)), Color(Palette.HUM, 1.0 - t))
+			draw_rect(Rect2(p - Vector2(0.5, 0.5), Vector2(3, 3)), Color(Palette.HUM, 1.0 - t))
+			if i % 2 == 0:
+				draw_rect(Rect2(p + Vector2(0.5, 0.5), Vector2(1, 1)), Color(1, 1, 1, 1.0 - t))
 
 
 ## What stops Wren on foot: walls, water and sunken grates, and deep water

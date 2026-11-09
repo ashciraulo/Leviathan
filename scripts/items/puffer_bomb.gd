@@ -102,6 +102,13 @@ func _draw() -> void:
 		var r := RADIUS * (0.4 + 0.6 * t)
 		draw_circle(Vector2(0, -4), r, Color(1.0, 0.95, 0.8, 0.5 * (1.0 - t)))
 		draw_arc(Vector2(0, -4), r, 0.0, TAU, 24, Color(1, 1, 1, 1.0 - t), 2.0)
+		# Puffs of salt smoke rolling out, and a hot core at first.
+		for i in 8:
+			var angle := TAU * i / 8.0 + 0.3
+			var puff := Vector2(cos(angle), sin(angle) * 0.7) * r * 0.75 + Vector2(0, -4 - 6.0 * t)
+			draw_circle(puff, 5.0 - 2.0 * t, Color(0.92, 0.88, 0.8, 0.8 * (1.0 - t)))
+		if t < 0.4:
+			draw_circle(Vector2(0, -4), 8.0 * (1.0 - t), Color(1.0, 0.85, 0.4, 1.0 - t * 2.0))
 		return
 	# The puffer swells as the fuse burns, and flushes faster near the end.
 	var k := _age / FUSE_TIME

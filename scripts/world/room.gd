@@ -581,10 +581,17 @@ func has_plant(x: int, y: int) -> bool:
 	var deco := str(tiles["dry_deco"])
 	if not PLANT_DECO.any(func(start: String) -> bool: return deco.begins_with(start)):
 		return false
-	var tile := _tile_at(x, y)
-	if tile in ["#", "~", "v", "Q", "D", "I", ":"] or _cut.has(Vector2i(x, y)):
+	# Open floor only: not under a hut, a fence, a pot or anything else.
+	if not _tile_at(x, y) in [".", "P"] or _cut.has(Vector2i(x, y)):
 		return false
-	return _hash(x, y) % 13 == 0 and not _near_water(x, y)
+	if _hash(x, y) % 13 != 0 or _near_water(x, y):
+		return false
+	if not is_inside_tree():
+		return true
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = global_position + Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
+	query.collision_mask = 1 << (Layers.WORLD - 1)
+	return get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
 
 
 ## Cuts every tuft under `area` (global): clippings fly, now and then a glint
