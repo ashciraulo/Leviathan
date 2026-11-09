@@ -90,12 +90,12 @@ ROOMS = {
 ..............___......#
 #.............___......#
 #.......q.....___......#
-#..j..........___...j..#
+#..j..........___....j.#
 #.............___......#
 ###################..###"""),
-    # Optional: below the Dim Gallery, a flooded hollow crossed between
+    # Optional: below the Dim Gallery, the Tidewell: a flooding floor crossed between
     # breaths (or by hook to the post), with the Tidecaller.
-    (45, 10): ("ROOM_MAW_HOLLOW", {"chest_item": '"tidecaller_sword"'}, """
+    (45, 10): ("ROOM_MAW_TIDEWELL", {"chest_item": '"tidecaller_sword"'}, """
 ###################..###
 #...,,,,,,,,,,,,,,,....#
 #...,,,,,,,,,,,,,,,....#

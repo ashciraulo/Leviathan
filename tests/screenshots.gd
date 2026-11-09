@@ -1208,8 +1208,8 @@ func _extras_shots(game: Node) -> void:
 		game.player._invuln = 0.0
 		await _wait(0.05)
 		await _capture(shot[1])
-	# The Marrow Tomb's map, with its map and compass: every room, the
-	# chests, and the Regent.
+	# The Marrow Tomb's map, with its map and compass: every room, and the
+	# chests and boss not yet found (earlier shots may have opened some).
 	await _jump(game, Vector2i(40, 10), Vector2i(11, 6))
 	GameState.give_item(Items.dungeon_item("tomb", "map"))
 	GameState.give_item(Items.dungeon_item("tomb", "compass"))

@@ -4,7 +4,7 @@
 
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
-name_key = "ROOM_MAW_HOLLOW"
+name_key = "ROOM_MAW_TIDEWELL"
 biome = "maw"
 dungeon = "maw"
 chest_item = "tidecaller_sword"

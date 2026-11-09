@@ -213,7 +213,7 @@ func _draw_view() -> void:
 				var marker := MenuKit.Marker.STONE_AWAKE if _stone_awake(coord) else MenuKit.Marker.STONE_ASLEEP
 				MenuKit.draw_marker(_view, marker, rect.position + Vector2(tile) * PX + Vector2(1, 0))
 		if _area != "" and GameState.has_dungeon_item(_area, "compass"):
-			# The compass points to the bell's keeper, until it is calmed.
+			# The compass marks the dungeon's boss until it is calmed.
 			if info.get("boss", Vector2i(-1, -1)) != Vector2i(-1, -1) and not _boss_calmed(coord):
 				MenuKit.draw_marker(_view, MenuKit.Marker.BOSS, rect.position + Vector2(info["boss"]) * PX + Vector2(1, 0))
 			for tile: Vector2i in info["chests"]:
