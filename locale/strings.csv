@@ -49,7 +49,6 @@ TOAST_GOT_BIG_KEY,You found the big key!
 BOSS_MATRIARCH,The Barnacle Matriarch
 BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
-BELL_HULL_3,You learned the first phrase of the lullaby. Your Resonance grows.
 MENU_JOURNEYS,Journeys
 MENU_OPTIONS,Options
 TAB_SATCHEL,Satchel
@@ -339,7 +338,6 @@ GOT_STONEBREAKER_2,"Press its item key (U or I) to bring it down in front of you
 BOSS_SLAGWYRM,The Slagwyrm
 BELL_KILN_1,"You ring the Ember Bell. A low, warm note fills the foundry, and the furnaces settle."
 BELL_KILN_2,"Somewhere under the bay, the great breathing slows. The fire is banked and low."
-BELL_KILN_3,You learned the second phrase of the lullaby. Your Resonance grows.
 OPENING_1,"For a thousand years, seven bells have kept the Old One asleep beneath the bay."
 OPENING_2,"At every turn of the tide a keeper rang them. Lately, only one keeper was left."
 OPENING_3,"Last night, out on the point at Saltmarrow, the oldest bell went quiet."
@@ -375,7 +373,6 @@ GOT_GLOWMOTH_LANTERN_2,"Press its item key (U or I) to raise it, and again to lo
 BOSS_PALE_CONGREGATION,The Pale Congregation
 BELL_MIRE_1,"You ring the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
 BELL_MIRE_2,"The wisps drift down and settle like snow. Far away, something huge turns over in its sleep, and lies still."
-BELL_MIRE_3,You learned the third phrase of the lullaby. Your Resonance grows.
 CAPTION_FLAME,Flame catches
 CAPTION_HEARTBEAT,Heartbeat
 ROOM_FENMOUTH,Fenmouth
@@ -400,8 +397,7 @@ GOT_KITE_CLOAK_1,"The Kite Cloak! Old sailcloth stitched over a frame of cane, w
 GOT_KITE_CLOAK_2,"Press its item key (U or I) to throw it open and glide. A fan's wind will carry you further. Press the key again to come down."
 BOSS_STORMHERON,The Stormheron
 BELL_GALE_1,"You ring the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
-BELL_GALE_2,"The clouds part over the bay. Down in the deep, the great sleeper's breathing evens out, slow and steady."
-BELL_GALE_3,You learned the fourth phrase of the lullaby. Your Resonance grows.
+BELL_GALE_2,"Clouds part over the bay. Deep below, the great sleeper stirs."
 CAPTION_THUNDER,Thunder
 CAPTION_STORM,Storm gathering
 CAPTION_HERON,Heron screeches
@@ -420,7 +416,6 @@ GOT_FROSTFANG_BOW_2,"Press its item key (U or I) to loose an arrow of frost. It 
 BOSS_RIMEBACK,Rimeback
 BELL_GLACIER_1,"You ring the Frost Bell. Its note rings clear under the ice, and the old glacier creaks and settles."
 BELL_GLACIER_2,"Far out in the bay, the frost on the water melts away. Down in the deep, the great sleeper stops shivering."
-BELL_GLACIER_3,You learned the fifth phrase of the lullaby. Your Resonance grows.
 CAPTION_FREEZE,Water freezes
 CAPTION_ICE_GROAN,Ice groans
 CAPTION_WALRUS,Walrus bellows
@@ -440,7 +435,6 @@ GOT_DIVERS_HELM_2,"Now you can swim deep water. Press its item key (U or I) whil
 BOSS_KNELL,Knell
 BELL_BELFRY_1,"You ring the Drowned Bell. Its note goes down and down through the green water, further than any bell should."
 BELL_BELFRY_2,"Far below, something vast turns over in its sleep, and settles. The tide along the Verge runs gentle again."
-BELL_BELFRY_3,You learned the sixth phrase of the lullaby. Your Resonance grows.
 CAPTION_VALVE,Valve turns
 CAPTION_WATER_RUSH,Water rushes
 CAPTION_GREAT_BELL,Great bell tolls
@@ -578,7 +572,6 @@ GOT_ECHO_HORN_2,"Press its item key (U or I) to blow one long note. Bone that he
 BOSS_REGENT,The Hollow Regent
 BELL_TOMB_1,"You ring the Marrow Bell. Its note is soft, and it goes out over the dunes, over every bone lying in the sand."
 BELL_TOMB_2,"Your kin are sleeping too. Far away under the bay, the great sleeper breathes out, slow and easy, the way the tide goes out."
-BELL_TOMB_3,You learned the seventh phrase of the lullaby. Your Resonance grows.
 CAPTION_HORN,Horn sounds
 CAPTION_BONE_CRUMBLE,Bones crumble
 CAPTION_SKULL_SING,Skull sings
@@ -600,3 +593,29 @@ HESSA_CONFESS_3,"I couldn't hear it. My ears were already going. So I told him h
 HESSA_CONFESS_4,"And then I stopped listening to him at all. That's on me, not him."
 HESSA_CONFESS_5,"Don't hate him, little lamp. He's wrong, but he isn't cruel."
 HESSA_AFTER_TURN,"Ottilie keeps the keepers' old training cave up in Frostspine. Go and see her."
+ROOM_MAW_THROAT,The Maw
+ROOM_MAW_PALATE,The Maw: the Palate
+ROOM_MAW_HOLLOWS,The Maw: the Hollows
+ROOM_MAW_LANTERNS,The Maw: Dim Gallery
+ROOM_MAW_GALLERY,The Maw: the Veins
+ROOM_MAW_VAEL,The Maw: the Choir Loft
+ROOM_MAW_HEART,The Maw: the Dreaming Heart
+DUNGEON_MAW,The Maw
+BOSS_VAEL,Cantor Vael
+BOSS_HEART,The Dreaming Heart
+VAEL_MAW_1,"Seven bells, and Hessa's lamp. You came all this way to sing it back under."
+VAEL_MAW_2,"Listen to it, keeper. Then let the Choir finish its song."
+VAEL_MAW_END_1,"...Wait. Your notes. All seven, in order. I never heard them like that."
+VAEL_MAW_END_2,"It isn't weeping. It's dreaming badly, and nobody has sat with it."
+VAEL_MAW_END_3,"I was right that it suffers. I was wrong about the cure. Go on. Its heart is waking."
+MAW_HUMS_BACK_1,"Wren hums the last line: ""Sleep, old heart, sleep."""
+MAW_HUMS_BACK_2,"Deep below, the Old One hums back. For the first time, it sleeps in peace."
+CAPTION_MAW_BREATH_IN,The Old One breathes in
+CAPTION_MAW_BREATH_OUT,The Old One breathes out
+CAPTION_VAEL_SING,Vael sings
+CAPTION_VAEL_FALTER,Vael's song falters
+CAPTION_CHANT,The Choir chants
+CAPTION_HEART_ROAR,The Heart roars
+CAPTION_ECHO_RISE,An echo rises
+CAPTION_ECHO_CALM,An echo sighs
+CAPTION_OLD_ONE_HUM,The Old One hums

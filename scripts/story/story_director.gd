@@ -47,6 +47,8 @@ const VAEL_AT := Vector2(10 * 16 + 8, 2 * 16 + 12)
 ## Ringing the Gale Bell (the Turning Verse) wakes the Old One enough to
 ## roll over; Hessa owns up about Vael the next time Wren is home.
 const GALE_BELL_FLAG := "tidebell_" + "gale"
+## The ring of light around Wren at the end of a bell's phrase.
+const PHRASE_PULSE := BellPhrase.PULSE
 const TURNED_FLAG := "old_one_turned"
 const CONFESSION_FLAG := "seen_hessa_confession"
 ## Where Wren stops to watch, in any of these chambers.
@@ -357,14 +359,16 @@ func vael_at_the_spire() -> void:
 ## Verse. Out on the bay, Vael's Choir answers with the Waking Song, sung by
 ## voice alone, and far below the Old One rolls over. Told in sound, shaking
 ## and one vast shape under the sea: no text.
-func the_old_one_turns() -> void:
+func the_old_one_turns(carried: Cutscene = null) -> void:
 	GameState.set_flag(TURNED_FLAG)
-	# The bell sets its flag before it opens its own words, so give it a
-	# frame, then let those words finish first.
-	await get_tree().process_frame
-	if DialogueBox.is_open:
-		await Events.dialogue_finished
-	var scene := _scene()
+	# Straight on from the bell's own scene, Wren never gets control back in
+	# between. Otherwise give the bell a frame to open its words, and let
+	# those finish first.
+	if carried == null:
+		await get_tree().process_frame
+		if DialogueBox.is_open:
+			await Events.dialogue_finished
+	var scene := carried if carried else _scene()
 	await scene.wait(1.2)
 	Audio.play_sfx("choir_waking")
 	await scene.wait(2.6)
@@ -405,6 +409,45 @@ func hessas_confession() -> void:
 	# Wren answers: one flash, yes.
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
 	scene.finish()
+
+
+## Cutscene 5, "Bell rung": the phrase leaves the bell as a stream of notes
+## and settles into Wren, then the bell's ringing is told. The stream
+## grows with every phrase Wren knows. After the Storm Bell, the Old One turns.
+func bell_rung(bell: Tidebell) -> void:
+	var words := bell.words()
+	var which := bell.bell
+	var from := bell.position
+	var parent := bell.get_parent()
+	# Never two scenes at once: let one already running finish first.
+	while Cutscene.active:
+		await get_tree().process_frame
+	if not is_instance_valid(parent) or not is_instance_valid(game.player):
+		return
+	var scene := _scene()
+	var phrase := BellPhrase.new()
+	phrase.notes = 3 + 2 * maxi(GameState.item_count("tidebell"), 1)
+	phrase.target = game.player
+	phrase.position = from
+	parent.add_child(phrase)
+	# Face the bell, along one of the four ways Wren can face.
+	var to_bell: Vector2 = phrase.global_position - game.player.global_position
+	if absf(to_bell.x) > absf(to_bell.y):
+		scene.face(Vector2(signf(to_bell.x), 0))
+	else:
+		scene.face(Vector2.DOWN if to_bell.y > 0.0 else Vector2.UP)
+	await get_tree().create_timer(phrase.duration() - Cutscene.scaled(PHRASE_PULSE), true, false, true).timeout
+	# The bell itself may be gone by now (a test, or the room unloading).
+	GameState.refill()
+	GameState.add_resonance(GameState.resonance_max)
+	if is_instance_valid(game) and is_instance_valid(game.player):
+		Audio.play_sfx("hum_heal", game.player.global_position)
+	await scene.wait(1.0)
+	await scene.narrate(words)
+	if which == "gale" and not GameState.has_flag(TURNED_FLAG):
+		the_old_one_turns(scene)
+	else:
+		scene.finish()
 
 
 func _find_npc(kind: String) -> Npc:

@@ -37,6 +37,7 @@ func _ready() -> void:
 		await _test_glacier_dungeon()
 		await _test_belfry_dungeon()
 		await _test_tomb_dungeon()
+		await _test_maw_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -507,6 +508,12 @@ func _play_scene(game: Node, seconds: float) -> int:
 	return pages
 
 
+## Wait for any running scene (and its talk) to end, the way a player
+## would before ringing a bell.
+func _scene_over(game: Node) -> void:
+	await _play_scene(game, 20.0)
+
+
 ## Story scenes: the opening on a new file, and the Wayshell after the Hull.
 func _test_story() -> void:
 	Cutscene.fast = true
@@ -647,8 +654,10 @@ func _test_story() -> void:
 	var moth_bell: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is Tidebell)
 	_check(moth_bell.size() == 1 and _child_of(mire.current_room, Doorway).size() == 1, "the Moth Bell and the way out are there after the scene")
 	if moth_bell.size() == 1:
+		await _scene_over(mire)
 		moth_bell[0].interact()
-		_finish_talk(mire)
+		var moth_pages := await _play_scene(mire, 10.0)
+		_check(moth_pages == 2, "the Moth Bell's scene tells its ringing (%d pages)" % moth_pages)
 		_check(GameState.has_flag(Tidebell.flag_for("mire")), "the Moth Bell rings after the scene")
 	mire.queue_free()
 	await _wait(0.1)
@@ -691,9 +700,13 @@ func _test_story() -> void:
 	_check(storm_bell != null, "the Storm Bell is there to ring after Vael goes")
 	# Ringing it: far below, the Old One turns over in its sleep.
 	if storm_bell:
+		GameState.resonance = 0.0
 		storm_bell.interact()
+		_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is BellPhrase), "the phrase leaves the bell as notes")
+		_check(GameState.resonance == 0.0, "Resonance fills only when the notes reach Wren")
 		await _wait(0.2)
-		_check(DialogueBox.is_open and not Cutscene.active, "the turn waits for the bell's own words")
+		_check(GameState.resonance == GameState.resonance_max, "the notes land and Resonance fills")
+		_check(Cutscene.active and not GameState.has_flag(StoryDirector.TURNED_FLAG), "the bell's own scene plays before the turn")
 		var turn_pages := await _play_scene(crown, 20.0)
 		_check(GameState.has_flag(StoryDirector.TURNED_FLAG), "ringing the Storm Bell makes the Old One turn")
 		_check(not Cutscene.active and not crown.player.in_cutscene, "the turn hands Wren back")
@@ -1078,13 +1091,10 @@ func _test_mire_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "mire", "the Moth Bell rises in the Still Pool")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("mire")), "ringing the Moth Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 	if player.lantern_raised:
 		player.use_item("glowmoth_lantern")
@@ -1208,13 +1218,10 @@ func _test_gale_dungeon() -> void:
 		_check(bell != null and bell.bell == "gale", "the Storm Bell rises on the Crown")
 		if bell:
 			GameState.set_flag(StoryDirector.TURNED_FLAG)
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("gale")), "ringing the Storm Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1389,13 +1396,10 @@ func _test_glacier_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "glacier", "the Frost Bell rises in the Breathing Hall")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("glacier")), "ringing the Frost Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1554,13 +1558,10 @@ func _test_belfry_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "belfry", "the Drowned Bell rises in the hall")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("belfry")), "ringing the Drowned Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1732,13 +1733,174 @@ func _test_tomb_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "tomb", "the Marrow Bell rises in the barrow")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("tomb")), "ringing the Marrow Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Closes whatever dialogue is open (paging through to the end).
+func _close_dialogue(game: Node) -> void:
+	for child in game.get_children():
+		if child is DialogueBox:
+			var guard := 0
+			while DialogueBox.is_open and guard < 40:
+				child.advance()
+				child.advance()
+				guard += 1
+				await _wait(0.05)
+
+
+## The Maw: the Old One's breathing floor, every tool, Cantor Vael and the
+## Dreaming Heart.
+func _test_maw_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_44_10.tscn"), "the Maw has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(44, 10), GameState.NO_POSITION)
+	DreamingHeart.roll_credits = false
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	var room: Room = game.current_room
+	_check(GameState.dungeon == "maw" and room.biome == "maw", "Wren starts inside the Maw")
+
+	# The Throat: its palate floor floods as the Old One breathes in.
+	_check(room.has_node("Breath"), "the Old One's breath reaches the Throat")
+	MawBreath.elapsed = 0.0
+	await _wait(0.1)
+	_check(room.tile_at(5, 5) == "." and not room.flooded(), "breathing out, the palate floor is dry")
+	MawBreath.elapsed = MawBreath.OUT_TIME + MawBreath.IN_TELL_TIME + 0.5
+	await _wait(0.1)
+	_check(room.tile_at(5, 5) == "Q" and room.flooded(), "breathing in, it floods")
+	MawBreath.elapsed = 0.0
+	await _wait(0.1)
+
+	# The Palate: the map, and a hatch north.
+	room = await _goto(game, Vector2i(44, 9), Vector2i(11, 11))
+	await _calm(room)
+	_check(_child_of(room, Chest).size() == 1, "the Palate keeps the map")
+	# The Hollows: hook posts on both sides of the gap.
+	room = await _goto(game, Vector2i(43, 9), Vector2i(22, 6))
+	_check(room.has_node("PitField") and room.tile_at(8, 6) == "_", "the Hollows are split by a gap")
+	_check(room.tile_at(4, 5) == "O" and room.tile_at(11, 7) == "O", "a hook post stands either side")
+	await _calm(room)
+	GameState.give_item("tide_hook")
+	player.global_position = _tile_pos(room, Vector2i(10, 5))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	var local := player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 5 and player.state == Player.State.MOVE, "the hook carries Wren west over the gap (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(5, 7))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 10 and player.state == Player.State.MOVE, "and back east (at %s)" % local)
+	# The Dim Gallery: four braziers, a hidden chest, veiled planks.
+	room = await _goto(game, Vector2i(45, 9), Vector2i(1, 6))
+	await _calm(room)
+	var braziers := _child_of(room, Brazier)
+	var chest: Chest = _child_of(room, Chest)[0]
+	_check(braziers.size() == 4 and not chest.visible, "the Dim Gallery's chest waits on four braziers")
+	for b: Brazier in braziers:
+		b.light()
+	await _wait(0.2)
+	_check(chest.visible, "with every brazier lit, the chest appears")
+
+	# The Choir Loft: Cantor Vael.
+	room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))
+	await _wait(0.3)
+	await _close_dialogue(game)
+	var vaels := _child_of(room, CantorVael)
+	_check(vaels.size() == 1, "Cantor Vael waits in the Choir Loft")
+	if vaels.size() == 1:
+		var vael: CantorVael = vaels[0]
+		player.global_position = _tile_pos(room, Vector2i(11, 8))
+		await _wait(0.3)
+		_check(vael.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "his song turns the sword")
+		vael.ai_enabled = false
+		var note := SungNote.new()
+		note.singer = vael
+		note.velocity = Vector2.DOWN * SungNote.SPEED
+		room.add_child(note)
+		note.global_position = _tile_pos(room, Vector2i(11, 7))
+		await _wait(0.1)
+		_check(note.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and note.returning, "the sword sends a note back")
+		var hp := vael.hp
+		await _wait(1.2)
+		_check(vael.hp == hp - 1, "a note sung back at him breaks his song (hp %d)" % vael.hp)
+		var wave := ChantWave.new()
+		room.add_child(wave)
+		wave.global_position = player.global_position
+		await _wait(0.1)
+		wave.horn_hit(player.global_position)
+		await _wait(0.4)
+		_check(not is_instance_valid(wave), "the Echo Horn scatters the chant")
+		while vael.hp > 0:
+			vael.note_hit(null)
+		_check(GameState.has_flag(CantorVael.DEFEATED_FLAG), "his song broken, Vael stops and listens")
+		await _wait(1.5)
+		await _close_dialogue(game)
+		await _wait(0.3)
+		_check(is_instance_valid(vael), "he doesn't fall: he stays")
+		var bars := _child_of(room, Bars)
+		_check(not bars.is_empty() and GameState.has_flag(RoomPuzzle.flag_for(room.coord)), "the way to the Heart opens")
+
+	# The Dreaming Heart: seven bells on the beat, then the eighth line.
+	room = await _goto(game, Vector2i(44, 6), Vector2i(11, 11))
+	var hearts := _child_of(room, DreamingHeart)
+	_check(hearts.size() == 1, "the Dreaming Heart storms up")
+	if hearts.size() == 1:
+		var heart: DreamingHeart = hearts[0]
+		await _wait(DreamingHeart.WAKE_TIME + 0.3)
+		for i in DreamingHeart.STAGES.size():
+			var bells := _child_of(room, HeartBell).filter(func(b: HeartBell) -> bool: return not b.rung)
+			_check(bells.size() == 1 and bells[0].bell == DreamingHeart.STAGES[i][0], "stage %d: its bell rises" % i)
+			_check(_child_of(room, HeartEcho).filter(func(e: HeartEcho) -> bool: return not e.calmed).size() == 1, "stage %d: an echo rises" % i)
+			if bells.size() != 1:
+				break
+			var bell: HeartBell = bells[0]
+			if i == 0:
+				while heart.off_beat() < DreamingHeart.BEAT_WINDOW + 0.1:
+					await get_tree().physics_frame
+				bell.take_hit(1, Vector2.UP)
+				_check(not bell.rung, "off the beat, the bell only clanks")
+				while heart.off_beat() > 0.05:
+					await get_tree().physics_frame
+				bell.take_hit(1, Vector2.UP)
+				_check(not bell.rung, "and it rings dead through the next beat (no mashing)")
+				while bell._dead > 0.0:
+					await get_tree().physics_frame
+			while heart.off_beat() > 0.05:
+				await get_tree().physics_frame
+			bell.take_hit(1, Vector2.UP)
+			_check(bell.rung and heart.stage == i, "on the beat, the bell sings")
+			await _wait(DreamingHeart.CALM_TIME + 0.3)
+		_check(heart.mode == DreamingHeart.Mode.EIGHTH and GameState.final_line, "every bell rung, the Heart still races")
+		await _calm(room)
+		var finished := [false]
+		Events.game_finished.connect(func() -> void: finished[0] = true, CONNECT_ONE_SHOT)
+		player.global_position = _tile_pos(room, Vector2i(11, 8))
+		Input.action_press("hum")
+		await _wait(1.5)
+		_check(player.state == Player.State.HUM and heart.beat_length() > DreamingHeart.BEAT_FAST, "Wren hums, and the Heart slows")
+		await _wait(DreamingHeart.HUM_NEEDED)
+		Input.action_release("hum")
+		_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG), "the eighth line: the Old One sleeps")
+		_check(SaveManager.load_game() and GameState.has_flag(DreamingHeart.DEFEATED_FLAG), "the ending is saved")
+		await _wait(3.0)
+		await _close_dialogue(game)
+		await _wait(2.0)
+		_check(finished[0], "and the game is won")
+		_check(not GameState.final_line, "Hum goes back to normal")
+	DreamingHeart.roll_credits = true
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1933,13 +2095,10 @@ func _test_hull_dungeon() -> void:
 			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
 			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Tidebell or Wren ringing it")
 			var resonance_before := GameState.resonance_max
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.resonance_max > resonance_before and GameState.flags.get(Tidebell.BELL_FLAG, false), "ringing the bell grows the Resonance meter")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 	game.queue_free()
 	await _wait(0.1)
@@ -2147,13 +2306,10 @@ func _test_kiln_dungeon() -> void:
 			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
 			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Ember Bell or Wren ringing it")
 			var bells_before := GameState.item_count("tidebell")
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("kiln")) and GameState.item_count("tidebell") == bells_before + 1, "ringing the Ember Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 
 	# The Bellows Room shuts Wren in; clearing it shows the mallet's chest.

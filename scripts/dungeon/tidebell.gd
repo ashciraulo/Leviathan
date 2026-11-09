@@ -9,13 +9,13 @@ const RESONANCE_GAIN := 10.0
 const BELL_FLAG := "tidebell_hull"
 ## Which bell, by the dungeon it hangs in: [sprite sheet, what it says].
 const BELLS := {
-	"hull": [HullSprites.TIDEBELL, ["BELL_HULL_1", "BELL_HULL_2", "BELL_HULL_3"]],
-	"kiln": [KilnSprites.EMBER_BELL, ["BELL_KILN_1", "BELL_KILN_2", "BELL_KILN_3"]],
-	"mire": [MireSprites.MOTH_BELL, ["BELL_MIRE_1", "BELL_MIRE_2", "BELL_MIRE_3"]],
-	"gale": [GaleSprites.STORM_BELL, ["BELL_GALE_1", "BELL_GALE_2", "BELL_GALE_3"]],
-	"glacier": [GlacierSprites.FROST_BELL, ["BELL_GLACIER_1", "BELL_GLACIER_2", "BELL_GLACIER_3"]],
-	"belfry": [BelfrySprites.DROWNED_BELL, ["BELL_BELFRY_1", "BELL_BELFRY_2", "BELL_BELFRY_3"]],
-	"tomb": [TombSprites.MARROW_BELL, ["BELL_TOMB_1", "BELL_TOMB_2", "BELL_TOMB_3"]],
+	"hull": [HullSprites.TIDEBELL, ["BELL_HULL_1", "BELL_HULL_2"]],
+	"kiln": [KilnSprites.EMBER_BELL, ["BELL_KILN_1", "BELL_KILN_2"]],
+	"mire": [MireSprites.MOTH_BELL, ["BELL_MIRE_1", "BELL_MIRE_2"]],
+	"gale": [GaleSprites.STORM_BELL, ["BELL_GALE_1", "BELL_GALE_2"]],
+	"glacier": [GlacierSprites.FROST_BELL, ["BELL_GLACIER_1", "BELL_GLACIER_2"]],
+	"belfry": [BelfrySprites.DROWNED_BELL, ["BELL_BELFRY_1", "BELL_BELFRY_2"]],
+	"tomb": [TombSprites.MARROW_BELL, ["BELL_TOMB_1", "BELL_TOMB_2"]],
 }
 
 ## The dungeon this bell belongs to (a key of BELLS).
@@ -66,16 +66,32 @@ func interact() -> void:
 	_rung = true
 	_sprite.frame = 1
 	_glow = 2.0
-	# Through set_flag, so the story can answer (StoryDirector).
-	GameState.set_flag(flag())
 	GameState.give_item("tidebell", 1, false)
 	GameState.resonance_max += RESONANCE_GAIN
-	GameState.refill()
-	GameState.add_resonance(GameState.resonance_max)
 	Feel.shake(2.0)
 	Audio.play_sfx("bell_ring", global_position)
 	Audio.play_bell_phrase(bell)
-	Events.dialogue_requested.emit("", PackedStringArray(BELLS[bell][1]))
+	# With the story running, the phrase is seen flowing into Wren (cutscene
+	# 5); the scene starts before the flag so it can follow on from it.
+	var director := get_tree().get_first_node_in_group("story_director")
+	if director:
+		director.bell_rung(self)
+	else:
+		fill()
+		Events.dialogue_requested.emit("", PackedStringArray(BELLS[bell][1]))
+	# Through set_flag, so the story can answer (StoryDirector).
+	GameState.set_flag(flag())
+
+
+## The phrase reaches Wren: breath and Resonance fill.
+func fill() -> void:
+	GameState.refill()
+	GameState.add_resonance(GameState.resonance_max)
+
+
+## What the bell's ringing is told as.
+func words() -> Array:
+	return Array(BELLS[bell][1])
 
 
 func _draw() -> void:
