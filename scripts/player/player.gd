@@ -12,7 +12,17 @@ const ATTACK_TIME := 0.24
 ## The sword only hurts during this window of the swing (seconds).
 const SWORD_ACTIVE_FROM := 0.03
 const SWORD_ACTIVE_TO := 0.15
+## A driftwood sword's slash. Better swords hit harder (sword_damage).
 const SWORD_DAMAGE := 1
+## A slash's damage by the equipped sword's tier (driftwood, brinesteel,
+## tidecaller); the spin does twice that.
+const SWORD_DAMAGE_BY_TIER := [1, 1, 2, 3]
+## Bosses take at most this from one blow, so a strong sword can't skip
+## a fight's phases.
+const BOSS_HIT_CAP := 2
+## A shot is turned aside when it comes at Wren from within this of the way
+## they face (a dot product: 0.5 is 60 degrees either side).
+const SHIELD_ARC := 0.5
 ## Keep holding Sword after a slash to charge; release when charged to spin.
 const CHARGE_TIME := 0.8
 const CHARGE_SPEED_SCALE := 0.5
@@ -177,7 +187,14 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	if frozen or in_cutscene or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
-	GameState.damage(amount)
+	# A better tunic soaks up some hits: no bubble pops, only a dull thud.
+	if GameState.hurt(amount) == 0:
+		_knockback = (global_position - from_position).normalized() * HURT_KNOCKBACK * 0.5
+		_invuln = INVULN_TIME
+		_flash = FLASH_TIME
+		Feel.shake(1.5)
+		Audio.play_sfx("hit_shell", global_position, 0.8)
+		return
 	_place_sword()
 	var away := global_position - from_position
 	_knockback = (away.normalized() if away.length() > 0.1 else -facing) * HURT_KNOCKBACK
@@ -448,9 +465,18 @@ func _attack_state(delta: float) -> void:
 			if enemy == null or _hit_ids.has(enemy.get_instance_id()):
 				continue
 			_hit_ids[enemy.get_instance_id()] = true
-			_on_sword_contact(enemy.take_hit(SWORD_DAMAGE, facing))
+			_on_sword_contact(enemy.take_hit(sword_damage(enemy), facing))
 	if _state_time >= ATTACK_TIME:
 		_enter(State.CHARGE if Input.is_action_pressed("attack") else State.MOVE)
+
+
+## What a blow from the equipped sword does to `target` (spin: twice).
+static func sword_damage(target: Node = null, spin: bool = false) -> int:
+	var tier := clampi(Items.tier(GameState.equipped_item(Items.SWORD)), 1, 3)
+	var amount: int = SWORD_DAMAGE_BY_TIER[tier] * (2 if spin else 1)
+	if target and target.is_in_group("boss"):
+		amount = mini(amount, BOSS_HIT_CAP)
+	return amount
 
 
 func is_charged() -> bool:
@@ -492,7 +518,7 @@ func _spin_state(delta: float) -> void:
 			continue
 		_hit_ids[enemy.get_instance_id()] = true
 		var away := (enemy.global_position - global_position).normalized()
-		if enemy.take_hit(SPIN_DAMAGE, away) == Enemy.HitResult.HIT:
+		if enemy.take_hit(sword_damage(enemy, true), away) == Enemy.HitResult.HIT:
 			GameState.add_resonance(GameState.RESONANCE_PER_HIT)
 			Feel.hitstop(2)
 			Feel.shake(2.0)
@@ -544,9 +570,34 @@ func _check_damage() -> void:
 		var hazard := area as DamageArea
 		if hazard == null or not hazard.active:
 			continue
+		if shield_blocks(hazard):
+			_deflect(hazard)
+			continue
 		take_damage(hazard.damage, hazard.global_position)
 		hazard.notify_hit()
 		return
+
+
+## True when the equipped shield turns this shot aside: Wren faces it,
+## isn't swinging or busy, and the shield is strong enough for it.
+func shield_blocks(hazard: DamageArea) -> bool:
+	var needed = hazard.get("shield_tier")
+	if needed == null or int(needed) <= 0:
+		return false
+	if state not in [State.MOVE, State.CHARGE] or diving:
+		return false
+	if Items.tier(GameState.equipped_item(Items.SHIELD)) < int(needed):
+		return false
+	var to_shot := hazard.global_position - (global_position + Vector2(0, -6))
+	return to_shot.length() < 0.1 or facing.dot(to_shot.normalized()) >= SHIELD_ARC
+
+
+## The shield's clack and spark; the shot is gone.
+func _deflect(hazard: DamageArea) -> void:
+	Audio.play_sfx("block", global_position, 1.3)
+	_flash = FLASH_TIME * 0.5
+	_knockback = -facing * RECOIL_SPEED
+	hazard.notify_hit()
 
 
 func _enter(new_state: State) -> void:

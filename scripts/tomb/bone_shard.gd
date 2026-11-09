@@ -3,6 +3,11 @@ extends Projectile
 ## A shard of bone the Hollow Regent hurls. Walls stop it.
 
 
+## Bone splits cork.
+func _init() -> void:
+	shield_tier = 2
+
+
 func _ready() -> void:
 	super._ready()
 	_sprite.texture = TombSprites.BONE_SHARD

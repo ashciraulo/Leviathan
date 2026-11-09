@@ -15,10 +15,11 @@ func _ready() -> void:
 	# Slot 2 is File 3 on the file select: keep a real save safe.
 	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
-	# SMOKE_ONLY=tomb runs just _test_tomb_dungeon (for quick local runs).
+	# SMOKE_ONLY=tomb runs just _test_tomb_dungeon, SMOKE_ONLY=equipment just
+	# _test_equipment (for quick local runs).
 	var only := OS.get_environment("SMOKE_ONLY")
 	if only != "":
-		await call("_test_%s_dungeon" % only)
+		await call(("_test_" + only) if has_method("_test_" + only) else ("_test_%s_dungeon" % only))
 	else:
 		_test_room_layouts()
 		_test_game_state()
@@ -52,6 +53,7 @@ func _ready() -> void:
 		await _test_tide_turning()
 		await _test_fast_travel()
 		await _test_credits()
+		await _test_equipment()
 		await _test_side_quests()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -926,6 +928,8 @@ func _test_play() -> void:
 	spitter.position = Vector2(200, row_y)
 	room.add_child(spitter)
 	player.global_position = room.global_position + Vector2(120, row_y)
+	# Back to it: facing it, the cork buckler would turn the shot aside.
+	player.facing = Vector2.LEFT
 	await _wait(3.0)
 	_check(GameState.bubbles < 3 or _count_projectiles(room) > 0, "Spitter shoots at Wren")
 	spitter.queue_free()
@@ -3403,3 +3407,83 @@ func _test_maw_approach() -> void:
 	_check(_walkable_from(rows, Vector2i(2, 9)).has(Vector2i(11, 5)) and _walkable_from(rows, Vector2i(2, 9)).has(Vector2i(10, 5)), "its back makes a path out to the mouth")
 	risen.free()
 	GameState.clear_flag(flag)
+
+
+## Equipment does something: swords hit harder by tier (bosses capped),
+## shields turn shots aside when Wren faces them, tunics soak up hits.
+func _test_equipment() -> void:
+	GameState.reset_new_game()
+	_check(GameState.equipped_item(Items.SHIELD) == "cork_buckler", "a new file starts with the cork buckler")
+	_check(Player.sword_damage() == 1 and Player.sword_damage(null, true) == 2, "the driftwood sword: 1 a slash, 2 a spin")
+	GameState.give_item("brinesteel_sword", 1, false)
+	_check(GameState.equipped_item(Items.SWORD) == "brinesteel_sword" and Player.sword_damage() == 2, "brinesteel hits for 2")
+	GameState.give_item("tidecaller_sword", 1, false)
+	_check(Player.sword_damage() == 3 and Player.sword_damage(null, true) == 6, "the tidecaller hits for 3, a spin for 6")
+	var boss := Node.new()
+	boss.add_to_group("boss")
+	_check(Player.sword_damage(boss, true) == Player.BOSS_HIT_CAP, "a boss takes at most %d from one blow" % Player.BOSS_HIT_CAP)
+	boss.free()
+
+	# Tunics: of four one-bubble hits, oilskin pops 4, scaleweave 3, abyssal 2.
+	for tunic: Array in [["oilskin", 4], ["scaleweave", 3], ["abyssal", 2]]:
+		GameState.give_item(tunic[0], 1, false)
+		GameState.equip(tunic[0])
+		GameState.refill()
+		GameState._hurt_owed = 0.0
+		var popped := 0
+		for i in 4:
+			popped += GameState.hurt(1)
+		_check(popped == tunic[1] and GameState.bubbles == GameState.max_bubbles - tunic[1], "%s: four hits pop %d bubbles (%d)" % [tunic[0], tunic[1], popped])
+	GameState.equip("abyssal")
+	GameState._hurt_owed = 0.0
+	_check(GameState.hurt(2) == 1, "the abyssal tunic halves a heavy hit")
+
+	# Shields, in play.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i.ZERO, Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	await _calm(room)
+	var player: Player = game.player
+	player.facing = Vector2.UP
+	var bubbles := GameState.bubbles
+	var shot := Projectile.new()
+	room.add_child(shot)
+	shot.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(not is_instance_valid(shot) and GameState.bubbles == bubbles, "the cork buckler turns aside a bubble shot from the front")
+	var behind := Projectile.new()
+	room.add_child(behind)
+	behind.global_position = player.global_position + Vector2(0, -1)
+	await _wait(0.15)
+	_check(GameState.bubbles == bubbles - 1, "a shot from behind still hurts")
+	player._invuln = 0.0
+	await _wait(0.4)
+	GameState.refill()
+	bubbles = GameState.bubbles
+	var ice := IceChunk.new()
+	room.add_child(ice)
+	ice.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(GameState.bubbles == bubbles - 1, "cork can't stop a chunk of ice")
+	player._invuln = 0.0
+	await _wait(0.4)
+	GameState.give_item("coral_buckler", 1, false)
+	GameState.refill()
+	bubbles = GameState.bubbles
+	player.facing = Vector2.UP
+	var ice2 := IceChunk.new()
+	room.add_child(ice2)
+	ice2.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(GameState.equipped_item(Items.SHIELD) == "coral_buckler" and GameState.bubbles == bubbles, "the coral buckler does")
+	var slag := SlagGlob.new()
+	room.add_child(slag)
+	slag.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(GameState.bubbles == bubbles - 1, "molten slag gets through coral")
+	game.queue_free()
+	await _wait(0.1)
+

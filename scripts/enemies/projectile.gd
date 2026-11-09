@@ -5,6 +5,9 @@ extends DamageArea
 const LIFETIME := 4.0
 
 var velocity := Vector2.ZERO
+## The weakest shield that turns this shot aside when Wren faces it
+## (Items tier: 1 cork, 2 coral, 3 nacre). 0: no shield stops it.
+var shield_tier := 1
 var _life := LIFETIME
 var _sprite: Sprite2D
 
