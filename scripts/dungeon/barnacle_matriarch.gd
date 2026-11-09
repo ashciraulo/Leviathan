@@ -88,7 +88,7 @@ func _ready() -> void:
 	# The first time, Sister Lowe's singers are prying at her while she
 	# sleeps (StoryDirector.lowe_at_the_hull), and she wakes when they're done.
 	if _room and get_tree().get_first_node_in_group("story_director") and StoryDirector.lowe_waits(_room.coord):
-		_sprite.modulate = SLEEPING
+		modulate = SLEEPING
 		return
 	# Rise out of the bilge.
 	_sprite.modulate.a = 0.0
@@ -102,7 +102,7 @@ func _ready() -> void:
 ## The fight starts once the scene ends.
 func wake() -> void:
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.4)
+	tween.tween_property(self, "modulate", Color.WHITE, 0.4)
 	_flash = 0.2
 	Events.toast.emit("BOSS_MATRIARCH")
 	Feel.shake(4.0)

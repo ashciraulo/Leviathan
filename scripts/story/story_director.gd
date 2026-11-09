@@ -157,7 +157,6 @@ func lowe_at_the_hull() -> void:
 	lowe.talking = true
 	await scene.speak("lowe", ["LOWE_HULL_1"])
 	lowe.talking = false
-	lowe.face(false)
 	await scene.wait(0.5)
 	lowe.talking = true
 	await scene.speak("lowe", ["LOWE_HULL_2"])

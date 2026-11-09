@@ -519,7 +519,7 @@ func _test_story() -> void:
 	for child in hold.current_room.get_children():
 		if child is BarnacleMatriarch:
 			sleeper = child
-	_check(sleeper != null and sleeper.mode == BarnacleMatriarch.Mode.INTRO, "the Matriarch sleeps through the start")
+	_check(sleeper != null and sleeper.mode == BarnacleMatriarch.Mode.INTRO and sleeper.modulate == BarnacleMatriarch.SLEEPING, "the Matriarch sleeps through the start")
 	var lowe_pages := await _play_scene(hold, 12.0)
 	_check(not Cutscene.active and not hold.player.in_cutscene, "Lowe's scene hands Wren back")
 	_check(lowe_pages == 3 and GameState.has_flag(StoryDirector.LOWE_HULL_FLAG), "Sister Lowe speaks three times (%d)" % lowe_pages)
@@ -532,8 +532,18 @@ func _test_story() -> void:
 		var y: float = (sleeper.position.y if sleeper else 0.0) + feet.y
 		_check(y < 9 * Room.TILE, "the Choir stands clear of the dialogue box")
 	await _wait(1.6)
-	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO, "the Matriarch wakes and fights")
+	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO and sleeper.modulate == Color.WHITE, "the Matriarch wakes and fights")
 	hold.queue_free()
+	await _wait(0.1)
+	# Coming back (the scene has played): she rises at once, wide awake.
+	var back: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(back)
+	await _wait(0.2)
+	_check(not Cutscene.active, "Lowe's scene only plays once")
+	for child in back.current_room.get_children():
+		if child is BarnacleMatriarch:
+			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
+	back.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
 
