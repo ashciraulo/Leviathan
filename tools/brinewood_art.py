@@ -244,6 +244,38 @@ def dapple(seed):
     return px
 
 
+def boardwalk(vertical):
+    """Weathered planks laid over the bog. A walkway running east-west has
+    its boards across it (seams every 4 px), dark edges and a shadow on the
+    water below; the north-south one is the same turned."""
+    rnd = random.Random(1300 + vertical)
+    wood = [hex_color(c) for c in ("#C8B08A", "#A8906E", "#8A7258", "#6A5446", "#3E3030")]
+    px = [[CLEAR] * T for _ in range(T)]
+    for a in range(T):          # along the walkway
+        for b in range(2, 14):  # across it
+            board = a // 4
+            c = wood[1] if board % 2 == 0 else wood[2]
+            if a % 4 == 3:
+                c = wood[3]
+            if b == 2:
+                c = wood[0]
+            if b == 13:
+                c = wood[4]
+            if b in (4, 11) and a % 4 == 1:
+                c = wood[3]     # nail heads
+            x, y = (b, a) if vertical else (a, b)
+            px[y][x] = c
+        if rnd.random() < 0.15:
+            b = rnd.randrange(5, 10)
+            x, y = (b, a) if vertical else (a, b)
+            px[y][x] = wood[3]
+    # Shadow cast on the water under the walkway's lower or right edge.
+    for a in range(T):
+        x, y = (14, a) if vertical else (a, 14)
+        px[y][x] = (20, 34, 40, 120)
+    return px
+
+
 TILES = [
     ("lily_0", lambda: lily(0)), ("lily_1", lambda: lily(1)),
     ("dapple_0", lambda: dapple(0)), ("dapple_1", lambda: dapple(1)),
@@ -260,6 +292,7 @@ TILES = [
     ("bank_left_1", lambda: bank_edge("left", 1)), ("bank_right_1", lambda: bank_edge("right", 1)),
     ("mire_top", lambda: mire_edge("top", 1)), ("mire_bottom", lambda: mire_edge("bottom", 2)),
     ("mire_left", lambda: mire_edge("left", 3)), ("mire_right", lambda: mire_edge("right", 4)),
+    ("boardwalk_h", lambda: boardwalk(0)), ("boardwalk_v", lambda: boardwalk(1)),
 ]
 
 # --------------------------------------------------------------------------

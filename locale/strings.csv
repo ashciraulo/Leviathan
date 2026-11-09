@@ -57,7 +57,7 @@ TOAST_GATE_OPENS,Something unlocks with a clank.
 BOSS_MATRIARCH,The Barnacle Matriarch
 TOAST_BOSS_DOWN,The Matriarch sinks into the bilge.
 TOAST_BELL_QUIET,The Tidebell hums softly.
-BELL_HULL_1,"You ring the Tidebell. The note rolls down through the wreck and out across the bay."
+BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
 BELL_HULL_3,You learned the first phrase of the lullaby. Your Resonance grows.
 MENU_JOURNEYS,Journeys
@@ -319,6 +319,14 @@ WAYSHELL_4,"The next bell is crying out from the Kiln, in Cinderreach. Go on. I'
 HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp stays lit."
 PELL_BELL_1,You got the bell back?! Can I hold it? Just for a second?
 PELL_BELL_2,...Fine. But I'm telling everyone I nearly did.
+TOAST_GOT_PEARL,You found a Breath Pearl!
+ROOM_ASHFALL_GATE,Ashfall Gate
+ROOM_CINDER_FLATS,Cinder Flats
+ROOM_EMBER_RIDGE,Ember Ridge
+ROOM_SLAG_FIELDS,Slag Fields
+ROOM_KILN_MOUTH,The Kiln's Mouth
+ROOM_GEYSER_BASIN,Geyser Basin
+ROOM_SCORCHED_PASS,Scorched Pass
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast

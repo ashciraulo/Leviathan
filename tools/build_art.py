@@ -28,6 +28,7 @@ import brinewood_art
 import hull_art
 import npc_art
 import hull_dungeon_art
+import cinderreach_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -457,6 +458,8 @@ def build_enemies():
     awake = [r.replace("n", "N") for r in TIDESTONE]
     out["tidestone"] = sheet([[lit(TIDESTONE, 6), lit(awake, 6)]], 16, 22)
     out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
+    out["slagbeetle"] = sheet([[lit(cinderreach_art.SLAGBEETLE[k], 26) for k in ("walk_a", "walk_b", "crack", "flipped")]], 16, 14)
+    out["geyser"] = sheet([[lit(cinderreach_art.geyser(f), 27) for f in range(3)]], 16, 32)
     out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
@@ -929,6 +932,12 @@ _clash = _taken & (set(hull_dungeon_art.RAMPS) | set(hull_dungeon_art.FLAT))
 assert not _clash, "hull_dungeon_art reuses material letters: %s" % sorted(_clash)
 RAMPS.update(hull_dungeon_art.RAMPS)
 FLAT.update(hull_dungeon_art.FLAT)
+_taken = set(RAMPS) | set(FLAT)
+_clash = _taken & (set(cinderreach_art.RAMPS) | set(cinderreach_art.FLAT))
+assert not _clash, "cinderreach_art reuses material letters: %s" % sorted(_clash)
+RAMPS.update(cinderreach_art.RAMPS)
+FLAT.update(cinderreach_art.FLAT)
+TILE_LAYOUT += cinderreach_art.TILES
 
 
 def build_tiles():
