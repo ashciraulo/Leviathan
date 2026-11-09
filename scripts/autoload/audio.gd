@@ -81,6 +81,13 @@ const SFX := {
 	"door_locked": {"wave": "square", "f0": 180.0, "f1": 170.0, "dur": 0.12, "vol": 0.35, "caption": "CAPTION_LOCKED"},
 	"switch": {"wave": "square", "f0": 660.0, "f1": 440.0, "dur": 0.06, "vol": 0.35, "caption": "CAPTION_SWITCH"},
 	"pot_break": {"wave": "noise", "f0": 3000.0, "f1": 800.0, "dur": 0.15, "vol": 0.4},
+	# Overworld hazards
+	"gust": {"wave": "noise", "f0": 300.0, "f1": 900.0, "dur": 0.9, "vol": 0.3, "caption": "CAPTION_GUST"},
+	"geyser_hiss": {"wave": "noise", "f0": 5000.0, "f1": 4000.0, "dur": 0.5, "vol": 0.2, "caption": "CAPTION_HISS"},
+	"geyser_blow": {"wave": "noise", "f0": 1200.0, "f1": 300.0, "dur": 0.8, "vol": 0.4},
+	"beetle_crack": {"wave": "square", "f0": 240.0, "f1": 120.0, "dur": 0.2, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"spore_swell": {"wave": "triangle", "f0": 300.0, "f1": 600.0, "dur": 0.5, "vol": 0.25, "caption": "CAPTION_TELL"},
+	"spore_burst": {"wave": "noise", "f0": 2200.0, "f1": 600.0, "dur": 0.3, "vol": 0.35},
 	"tidestone_wake": {"wave": "triangle", "f0": 196.0, "f1": 196.0, "dur": 0.9, "vol": 0.5, "steps": 4, "caption": "CAPTION_TIDESTONE"},
 	"bell_ring": {"wave": "triangle", "f0": 784.0, "f1": 780.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_BELL"},
 	"secret": {"wave": "square", "f0": 523.0, "f1": 523.0, "dur": 0.5, "vol": 0.3, "steps": 4, "caption": "CAPTION_SECRET"},

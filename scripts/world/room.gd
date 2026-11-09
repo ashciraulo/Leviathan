@@ -11,6 +11,7 @@ extends Node2D
 ##          w  Lanternmoth (flyer, circles then dives)
 ##          e  Slagbeetle (charger; flip it against a wall)   y  geyser
 ##          q  Sporecap (bursts spores when Wren is close)
+##          t  Tumbleburr (rolls with the wind)   J  windmill
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)
@@ -74,6 +75,9 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 @export var dark := false
 ## What signposts (n) in this room say: a translation key.
 @export var sign_key := ""
+## Windmere: the direction and strength (px/s) of the gusts that sweep
+## this room. Zero means calm.
+@export var wind := Vector2.ZERO
 
 ## Set by the game before the room enters the tree.
 var coord := Vector2i.ZERO
@@ -113,6 +117,12 @@ const BIOMES := {
 		"water": "gloom_%d", "water_edge": "reed_%s_%d", "damp": "mirk_%s",
 		"wet_deco": "glowcap_%d", "dry_deco": "frond_%d",
 		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s", "door": "exit_glow",
+	},
+	"windmere": {
+		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
+		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
+		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d",
+		"floor_overlay": ["gust_%d", 9],
 	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
@@ -197,6 +207,11 @@ func _build() -> void:
 			_spawn(tile, Vector2(x * TILE + TILE / 2.0, y * TILE + TILE - 4))
 			x += 1
 	DungeonTiles.finish(self)
+	if wind != Vector2.ZERO:
+		var gust := Gust.new()
+		gust.name = "Gust"
+		gust.wind = wind
+		add_child(gust)
 
 
 func _spawn(tile: String, pos: Vector2) -> void:
@@ -224,6 +239,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Geyser.new()
 		"q":
 			node = Sporecap.new()
+		"t":
+			node = Tumbleburr.new()
 		"b":
 			node = Shellback.new()
 		"C":

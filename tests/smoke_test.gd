@@ -39,6 +39,7 @@ func _ready() -> void:
 	await _test_brinewood_pearl()
 	await _test_cinderreach()
 	await _test_gloamfen()
+	await _test_windmere()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -1841,3 +1842,74 @@ func _test_text_fit() -> void:
 	for key: String in Settings.language_keys():
 		_check(tr(key) != key, "%s names its language" % key)
 	canvas.queue_free()
+
+
+## Windmere Heights: gusts pulse (a rising tell, then a shove), carry Wren
+## and the Tumbleburrs downwind, and the chasm at Gullwatch Steps can't be
+## walked across.
+func _test_windmere() -> void:
+	var steps := Room.parse_layout(((load("res://rooms/room_3_-3.tscn") as PackedScene).instantiate() as Room).layout)
+	# In the dark its veiled planks are only water; the Glowmoth Lantern
+	# shows them, a way across.
+	var dark := PackedStringArray()
+	var lit := PackedStringArray()
+	for row in steps:
+		dark.append(row.replace("v", "~"))
+		lit.append(row.replace("v", "."))
+	_check(not _walkable_from(dark, Vector2i(8, 12)).has(Vector2i(8, 3)), "the Gullwatch chasm can't be crossed on foot")
+	_check(steps[5].contains("v") and _walkable_from(lit, Vector2i(8, 12)).has(Vector2i(8, 3)), "lantern planks bridge the Gullwatch chasm")
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(4, -3), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var room: Room = game.current_room
+	var player: Player = game.player
+	var gust := room.get_node_or_null("Gust") as Gust
+	_check(gust != null and gust.wind.x > 0.0, "Mill Row has an eastward wind")
+	if gust == null:
+		game.queue_free()
+		return
+	var burr := Tumbleburr.new()
+	burr.position = Vector2(8 * Room.TILE, 3 * Room.TILE + 12)
+	room.add_child(burr)
+	player.global_position = room.global_position + Vector2(4 * Room.TILE, 6 * Room.TILE + 12)
+	var rose_first := false
+	var seen_rise := false
+	for i in 120:
+		await _wait(0.05)
+		seen_rise = seen_rise or gust.phase == Gust.Phase.RISING
+		if gust.is_blowing():
+			rose_first = seen_rise
+			break
+	_check(rose_first, "the wind rises (the tell) before it gusts")
+	var wren_x := player.global_position.x
+	var burr_x := burr.global_position.x
+	await _wait(0.8)
+	_check(player.global_position.x > wren_x + 10.0, "a gust shoves Wren downwind")
+	_check(burr.global_position.x > burr_x + 10.0, "a gust bowls a Tumbleburr downwind")
+	_check(burr.take_hit(1, Vector2.LEFT) == Enemy.HitResult.HIT, "one cut scatters a Tumbleburr")
+	var mill: Prop = null
+	for child in room.get_children():
+		if child is Prop and child.kind == "J":
+			mill = child
+	var turned := false
+	if mill != null:
+		var first := mill._sprite.frame
+		for i in 10:
+			await _wait(0.05)
+			turned = turned or mill._sprite.frame != first
+	_check(turned, "Mill Row's windmills turn")
+	# A gust can't bowl a burr out through an exit and off the map.
+	var stray := Tumbleburr.new()
+	stray.position = Vector2(22 * Room.TILE, 6 * Room.TILE + 12)
+	room.add_child(stray)
+	for i in 60:
+		await _wait(0.05)
+	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(stray.position), "a Tumbleburr stays in its own room (at %s)" % stray.position)
+	stray.queue_free()
+	game.queue_free()
+	await _wait(0.1)

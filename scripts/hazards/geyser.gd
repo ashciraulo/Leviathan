@@ -60,6 +60,10 @@ func _set_phase(next: Phase) -> void:
 		Phase.BLOW:
 			_timer = BLOW_TIME
 	_sprite.frame = int(next)
+	if next == Phase.HISS:
+		Audio.play_sfx("geyser_hiss", global_position)
+	elif next == Phase.BLOW:
+		Audio.play_sfx("geyser_blow", global_position)
 	# Stays monitorable: toggling that misses a hurtbox already inside, so
 	# whether it hurts is down to `active` alone.
 	_steam.active = next == Phase.BLOW

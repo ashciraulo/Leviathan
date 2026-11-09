@@ -4,7 +4,8 @@ extends StaticBody2D
 ## Rooms place props by letter (see Room). Big props are anchored at the
 ## bottom-centre of their tile, and their art can rise over the tiles above.
 
-## letter: [texture, foot row in the sprite, footprint size, large shadow]
+## letter: [texture, foot row in the sprite, footprint size, large shadow,
+## optional: animation frames across the sheet]
 const KINDS := {
 	"o": [Art.POT, 12, Vector2(12, 8), false],
 	"u": [Art.BARREL, 11, Vector2(12, 8), false],
@@ -16,9 +17,12 @@ const KINDS := {
 	"W": [Art.WRECK, 27, Vector2(40, 14), true],
 	"l": [Art.LANTERN_POST, 29, Vector2(6, 4), false],
 	"R": [Art.HULL, 69, Vector2(84, 18), true],
+	"J": [Art.WINDMILL, 46, Vector2(14, 8), true, 4],
 }
 
 var kind := ""
+var _sprite: Sprite2D
+var _frames := 1
 ## Signposts: what this one says (a translation key). Empty = can't be read.
 var text_key := ""
 
@@ -40,9 +44,17 @@ func _ready() -> void:
 		var shade := Art.shadow(true)
 		shade.scale = Vector2(footprint.x / 14.0, 1.5)
 		add_child(shade)
-	add_child(Art.sprite(spec[0], 1, 1, spec[1]))
+	_frames = spec[4] if spec.size() > 4 else 1
+	_sprite = Art.sprite(spec[0], _frames, 1, spec[1])
+	add_child(_sprite)
+	set_process(_frames > 1)
 	if text_key != "":
 		add_to_group("interactable")
+
+
+## Animated props (windmill sails) turn slowly.
+func _process(_delta: float) -> void:
+	_sprite.frame = int(Time.get_ticks_msec() / 160) % _frames
 
 
 ## Reading a sign: narration, no speaker.
