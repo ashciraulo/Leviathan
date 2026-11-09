@@ -307,6 +307,13 @@ func use_item(id: String) -> bool:
 			_enter(State.ITEM)
 			item_velocity = velocity
 			return true
+		"echo_horn":
+			var horn := EchoHorn.new()
+			horn.name = "EchoHorn"
+			add_child(horn)
+			_enter(State.ITEM)
+			item_velocity = Vector2.ZERO
+			return true
 		"glowmoth_lantern":
 			# Up or down; Wren keeps walking either way.
 			lantern_raised = not lantern_raised

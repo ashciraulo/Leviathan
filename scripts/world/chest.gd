@@ -14,6 +14,7 @@ const ITEMS := {
 	"kite_cloak": ["TOAST_GOT_KITE_CLOAK", GaleSprites.KITE_CLOAK],
 	"frostfang_bow": ["TOAST_GOT_FROSTFANG_BOW", GlacierSprites.FROSTFANG_BOW],
 	"divers_helm": ["TOAST_GOT_DIVERS_HELM", BelfrySprites.DIVERS_HELM],
+	"echo_horn": ["TOAST_GOT_ECHO_HORN", TombSprites.ECHO_HORN],
 	"map": ["TOAST_GOT_MAP", HullSprites.MAP],
 	"compass": ["TOAST_GOT_COMPASS", HullSprites.COMPASS],
 	"big_key": ["TOAST_GOT_BIG_KEY", HullSprites.BIG_KEY],
@@ -27,6 +28,7 @@ const ITEM_TALK := {
 	"kite_cloak": ["GOT_KITE_CLOAK_1", "GOT_KITE_CLOAK_2"],
 	"frostfang_bow": ["GOT_FROSTFANG_BOW_1", "GOT_FROSTFANG_BOW_2"],
 	"divers_helm": ["GOT_DIVERS_HELM_1", "GOT_DIVERS_HELM_2"],
+	"echo_horn": ["GOT_ECHO_HORN_1", "GOT_ECHO_HORN_2"],
 }
 
 var room_coord := Vector2i.ZERO
