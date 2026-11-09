@@ -70,7 +70,7 @@ def floor_tile(seed):
     # A long, gently curving wind ripple: shadow under a bright crest,
     # running off both sides of the tile.
     if seed in (0, 1):
-        y0 = rnd.randrange(5, 11)
+        y0 = rnd.randrange(3, 13)
         phase = rnd.random() * 6.28
         for x in range(T):
             y = y0 + int(round(1.4 * math.sin(phase + x * 0.35)))
