@@ -30,6 +30,7 @@ func _ready() -> void:
 	await _test_mire_dungeon()
 	await _test_gale_dungeon()
 	await _test_glacier_dungeon()
+	await _test_belfry_dungeon()
 	await _test_villagers()
 	await _test_story()
 	await _test_brinewood_pearl()
@@ -1275,6 +1276,171 @@ func _test_glacier_dungeon() -> void:
 		if bell:
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("glacier")), "ringing the Frost Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## The Drowned Belfry: swimming and diving with the Diver's Helm, grates,
+## the valve's water level, and Knell.
+func _test_belfry_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_36_10.tscn"), "the Drowned Belfry has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(36, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	_check(GameState.dungeon == "belfry" and game.current_room.biome == "belfry", "Wren starts inside the Drowned Belfry")
+
+	# The Bell Court: without the helm, deep water stops Wren.
+	var room := await _goto(game, Vector2i(36, 9), Vector2i(11, 11))
+	await _calm(room)
+	_check(room.flooded() and room.tile_at(10, 5) == "Q", "the Court's middle floor is under deep water")
+	player.global_position = _tile_pos(room, Vector2i(10, 10))
+	Input.action_press("move_up")
+	await _wait(0.8)
+	Input.action_release("move_up")
+	var local := player.global_position - room.global_position
+	_check(local.y > 9 * Room.TILE, "without the helm, deep water stops Wren (at %s)" % local)
+	_check(not player.use_item("divers_helm"), "no helm before it's found")
+
+	# With it, Wren swims (slowly) and can dive.
+	GameState.give_item("divers_helm")
+	_check(GameState.item_slots.has("divers_helm"), "the helm goes in an item slot")
+	Input.action_press("move_up")
+	await _wait(1.2)
+	Input.action_release("move_up")
+	local = player.global_position - room.global_position
+	_check(local.y < 8 * Room.TILE and player.swimming(), "with the helm, Wren swims out into it (at %s)" % local)
+	player.velocity = Vector2.ZERO
+	_check(player.use_item("divers_helm") and player.diving, "the helm takes Wren under the surface")
+	await _wait(DiversHelm.DIVE_TIME + 0.3)
+	_check(not player.diving and player.state == Player.State.MOVE, "they come up when their breath runs out")
+
+	# The Cistern: a ring of grates; swimming stops at them, diving goes under.
+	room = await _goto(game, Vector2i(37, 9), Vector2i(1, 6))
+	await _calm(room)
+	_check(_child_of(room, SunkenGrate).size() == 16, "the Cistern's island is ringed with grates")
+	# The grates stop a glide too: no floating over them onto the island.
+	GameState.give_item("kite_cloak")
+	player.global_position = _tile_pos(room, Vector2i(15, 1))
+	player.facing = Vector2.DOWN
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(1.6)
+	var glide_at := player.global_position - room.global_position
+	_check(glide_at.y < 4 * Room.TILE, "a glide stops at the grates round the island (at %s)" % glide_at)
+	await _wait(0.5)
+	player.global_position = _tile_pos(room, Vector2i(11, 5))
+	player.facing = Vector2.RIGHT
+	Input.action_press("move_right")
+	await _wait(1.0)
+	Input.action_release("move_right")
+	local = player.global_position - room.global_position
+	_check(local.x < 13 * Room.TILE, "swimming, a grate stops Wren (at %s)" % local)
+	player.use_item("divers_helm")
+	Input.action_press("move_right")
+	await _wait(1.2)
+	Input.action_release("move_right")
+	await _wait(DiversHelm.DIVE_TIME)
+	local = player.global_position - room.global_position
+	_check(local.x > 14 * Room.TILE and not player.diving, "diving, Wren goes under it and comes up on the island (at %s)" % local)
+	player.facing = Vector2.LEFT
+	player.global_position = _tile_pos(room, Vector2i(14, 5))
+	await _wait(0.1)
+	_check(player.use_item("divers_helm"), "from the island, Wren can dive back in off the edge")
+	await _wait(DiversHelm.DIVE_TIME + 0.4)
+
+	# The Valve Chamber: the valve lets the water down through the Belfry.
+	room = await _goto(game, Vector2i(36, 8), Vector2i(11, 11))
+	await _calm(room)
+	var valves := _child_of(room, Valve)
+	_check(valves.size() == 1, "the Valve Chamber has its valve")
+	(valves[0] as Valve).interact()
+	await _wait(Valve.TURN_TIME + 0.3)
+	_check(GameState.has_flag(Room.low_water_flag("belfry")) and not room.flooded(), "turning it lets the water down")
+
+	# The Sunken Choir, drained: the crate crosses the floor to the plate.
+	room = await _goto(game, Vector2i(35, 8), Vector2i(22, 6))
+	await _calm(room)
+	_check(room.tile_at(10, 5) == "K" or room.tile_at(12, 5) == ".", "the Choir's floor is dry silt")
+	var crate: Crate = _child_of(room, Crate)[0]
+	for i in 5:
+		crate._slide(Vector2.RIGHT)
+		await _wait(0.3)
+	crate._slide(Vector2.DOWN)
+	await _wait(0.3)
+	crate._slide(Vector2.DOWN)
+	await _wait(0.4)
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "on the dry floor the crate reaches the plate (at %s)" % crate.position)
+
+	# Back up again, the Choir floods and its crate is stuck.
+	room = await _goto(game, Vector2i(36, 8), Vector2i(11, 11))
+	(_child_of(room, Valve)[0] as Valve).interact()
+	await _wait(Valve.TURN_TIME + 0.3)
+	_check(room.flooded(), "the valve turns the water back up")
+
+	# Knell.
+	GameState.give_item("stonebreaker")
+	GameState.refill()
+	room = await _goto(game, Vector2i(36, 7), Vector2i(11, 11))
+	var bosses := _child_of(room, Knell)
+	_check(bosses.size() == 1, "Knell waits in its bell")
+	if bosses.size() == 1:
+		var knell: Knell = bosses[0]
+		player._invuln = 60.0
+		await _wait(1.6)
+		_check(knell.bell != null and knell.arms.size() == 3, "three tentacles rise round the great bell")
+		for arm in knell.arms:
+			_check(room.tile_at(floori(arm.position.x / Room.TILE), floori((arm.position.y - 4.0) / Room.TILE)) == "Q", "each tentacle rises from deep water")
+		_check(knell.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "the sword can't reach it in its bell")
+		knell.bell.mallet_hit(Vector2.UP)
+		_check(knell.mode == Knell.Mode.ARMS, "ringing the bell while its arms are up does nothing")
+		# Dive and cut the first arm the way Wren would.
+		var arm: Tentacle = knell.arms[2]
+		player.global_position = arm.global_position + Vector2(0, 14)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		player.use_item("divers_helm")
+		await _wait(0.1)
+		Input.action_press("attack")
+		await _wait(0.05)
+		Input.action_release("attack")
+		await _wait(0.4)
+		_check(arm.severed, "diving under, a slash cuts a tentacle off at the root")
+		for a: Tentacle in knell.arms:
+			a.dive_hit(Vector2.UP)
+		await _wait(0.1)
+		_check(knell.mode == Knell.Mode.HIDDEN, "with all three cut it hides in the bell")
+		knell.bell.mallet_hit(Vector2.UP)
+		_check(knell.mode == Knell.Mode.DAZED, "the Stonebreaker rings the bell and shakes it out, dazed")
+		_check(knell.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and knell.hp == 5, "dazed, the sword finds it")
+		knell._stun = 0.0
+		knell.take_hit(1, Vector2.UP)
+		await _wait(Knell.RETREAT_TIME + 0.4)
+		_check(knell.mode == Knell.Mode.ARMS and knell.arms.size() == 3 and not knell.arms[0].severed, "after two hits it drags itself back and grows new arms")
+		knell.mode = Knell.Mode.DAZED
+		knell._timer = 10.0
+		while knell.hp > 0:
+			knell._stun = 0.0
+			knell._hits_this_daze = 0
+			knell.take_hit(1, Vector2.UP)
+		_check(GameState.flags.get(Knell.DEFEATED_FLAG, false), "enough hits bring Knell down")
+		await _wait(3.0)
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "belfry", "the Drowned Bell rises in the hall")
+		if bell:
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("belfry")), "ringing the Drowned Bell counts as a Tidebell")
 			for child in game.get_children():
 				if child is DialogueBox:
 					while DialogueBox.is_open:

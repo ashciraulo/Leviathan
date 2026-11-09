@@ -80,6 +80,11 @@ const SFX := {
 	"ice_groan": {"wave": "noise", "f0": 180.0, "f1": 90.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_ICE_GROAN"},
 	"walrus_bellow": {"wave": "square", "f0": 140.0, "f1": 90.0, "dur": 0.6, "vol": 0.45, "caption": "CAPTION_WALRUS"},
 	"splash": {"wave": "noise", "f0": 1200.0, "f1": 300.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_SPLASH"},
+	"valve_turn": {"wave": "square", "f0": 160.0, "f1": 200.0, "dur": 0.5, "vol": 0.25, "caption": "CAPTION_VALVE"},
+	"water_rush": {"wave": "noise", "f0": 600.0, "f1": 200.0, "dur": 1.4, "vol": 0.45, "caption": "CAPTION_WATER_RUSH"},
+	"great_bell": {"wave": "sine", "f0": 196.0, "f1": 190.0, "dur": 1.6, "vol": 0.6, "caption": "CAPTION_GREAT_BELL"},
+	"tentacle_cut": {"wave": "noise", "f0": 2200.0, "f1": 600.0, "dur": 0.2, "vol": 0.35},
+	"knell_moan": {"wave": "square", "f0": 110.0, "f1": 70.0, "dur": 0.8, "vol": 0.4, "caption": "CAPTION_KNELL"},
 	"mantle_wings": {"wave": "noise", "f0": 300.0, "f1": 150.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_WINGS"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},

@@ -40,8 +40,11 @@ extends Node2D
 ##          r  lightning rod
 ##          I  ice (Wren slides on it)   E  ice eye (shoot it)
 ##          a  Rimeling (skates across the room)
-##          Q  deep water (blocks like ~; with the Diver's Helm, Wren dives
-##             under and swims through)
+##          Q  deep water (blocks like ~; with the Diver's Helm, Wren swims
+##             it, and can dive under)
+##          L  sunken grate (dive under it)   R  valve (raises or lowers the water)
+##          ,  floor the water rises over: deep water while the dungeon's
+##             water is high (see flooded())
 ##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
@@ -105,6 +108,7 @@ var _frozen: Dictionary = {}
 ## Whether the layout has any I tiles (so ice checks can skip other rooms).
 var _has_ice_tiles := false
 var _water_body: StaticBody2D
+var _deep_body: StaticBody2D
 var _water_time := 0.0
 
 const WATER_FRAME_TIME := 0.6
@@ -179,6 +183,12 @@ const BIOMES := {
 		"wet_deco": "frostcrack_%d", "dry_deco": "snowdrift_%d",
 		"floor_overlay": ["snowdrift_%d", 19], "door": "exit_glow", "gap": "crevasse",
 	},
+	"belfry": {
+		"floor": "belfry_floor_%d", "wall_top": "belfry_top_%d", "wall_face": "belfry_face_%d",
+		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
+		"wet_deco": "seaweed_%d", "dry_deco": "seashell_%d",
+		"floor_overlay": ["seashell_%d", 23], "door": "exit_glow",
+	},
 }
 
 
@@ -228,6 +238,7 @@ static func is_solid(tile: String) -> bool:
 func _build() -> void:
 	var walls := _make_static(Layers.WORLD, "Walls")
 	_water_body = _make_static(Layers.WATER, "Water")
+	_deep_body = _make_static(Layers.DEEP, "DeepWater")
 	for y in _rows.size():
 		var row := _rows[y]
 		var x := 0
@@ -242,7 +253,7 @@ func _build() -> void:
 				var center := Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)
 				walls.add_child(Layers.rect_shape(size, center))
 				continue
-			if tile == "~" or tile == "Q":
+			if tile == "~" or tile == "Q" or tile == ",":
 				x += 1
 				continue
 			_spawn(tile, Vector2(x * TILE + TILE / 2.0, y * TILE + TILE - 4))
@@ -261,11 +272,13 @@ func _build() -> void:
 		add_child(gust)
 
 
-## Water's collision, one box per run of water that isn't frozen.
+## Water's collision, one box per run of water that isn't frozen. Deep
+## water (Q, and flooded floor) goes on its own layer.
 func _build_water() -> void:
-	for shape in _water_body.get_children():
-		_water_body.remove_child(shape)
-		shape.queue_free()
+	for body in [_water_body, _deep_body]:
+		for shape in body.get_children():
+			body.remove_child(shape)
+			shape.queue_free()
 	for y in _rows.size():
 		var x := 0
 		while x < COLS:
@@ -277,7 +290,8 @@ func _build_water() -> void:
 			while x < COLS and _tile_at(x, y) == wet:
 				x += 1
 			var size := Vector2((x - start) * TILE, TILE)
-			_water_body.add_child(Layers.rect_shape(size, Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)))
+			var body := _deep_body if wet == "Q" else _water_body
+			body.add_child(Layers.rect_shape(size, Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)))
 
 
 ## True when the tile is water a frost arrow froze.
@@ -335,6 +349,23 @@ func water_pool(tile: Vector2i) -> Array[Vector2i]:
 				seen[n] = true
 				todo.append(n)
 	return pool
+
+
+## True while this dungeon's water is high (its "," floor is under water).
+## The Drowned Belfry's valves raise and lower it, for the whole dungeon.
+func flooded() -> bool:
+	return not GameState.has_flag(low_water_flag(dungeon))
+
+
+static func low_water_flag(for_dungeon: String) -> String:
+	return "low_water_" + for_dungeon
+
+
+## Rebuilds the water after the level changes, and sees to what was in it:
+## anything that can't swim, caught on flooding floor, is swept away.
+func refresh_water() -> void:
+	_build_water()
+	_ground.queue_redraw()
 
 
 ## The room under a point (global), or null.
@@ -446,7 +477,13 @@ func _tile_at(x: int, y: int) -> String:
 		return "#"
 	if not _frozen.is_empty() and _frozen.has(Vector2i(x, y)):
 		return "I"
-	return _rows[y][x]
+	var letter := _rows[y][x]
+	if letter == "L" and dungeon != "":
+		return "Q"  # A sunken grate stands in deep water.
+	if letter == ",":
+		# Floor the water rises over: deep while the dungeon's water is high.
+		return "Q" if flooded() else "."
+	return letter
 
 
 ## A stable pseudo-random number per tile, so variants don't flicker.
@@ -487,7 +524,9 @@ func _draw_ground() -> void:
 			elif tile == "I" and _frozen.has(Vector2i(x, y)):
 				_draw_tile("floe_%d" % (h % 2), x, y)
 			elif tile == "~" or tile == "v" or tile == "Q":
-				_draw_tile(tiles["water"] % _water_frame, x, y)
+				# Deep water is the same deep green wherever it is (Wren's
+				# waterline is drawn to match it).
+				_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
 				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
@@ -510,6 +549,9 @@ func _draw_ground() -> void:
 					_draw_tile("shade_left", x, y)
 				if tile == "I":
 					_draw_tile("glacier_ice_%d" % (h % 2), x, y)
+				elif _rows[y][x] == ",":
+					# The water's gone down: silt and puddles where it stood.
+					_draw_tile("silt_%d" % (h % 2), x, y)
 				if tile == "D" and tiles.has("door"):
 					_draw_tile(tiles["door"], x, y)
 				elif tile != "I" and tiles.has("floor_overlay") and h % int(tiles["floor_overlay"][1]) == 1:

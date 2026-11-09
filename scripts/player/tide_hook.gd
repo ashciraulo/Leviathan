@@ -119,7 +119,7 @@ func _on_catch(collider: Object) -> void:
 		Audio.play_sfx("hook_latch", global_position)
 		_player.airborne = true
 		# Fly over water; walls still stop Wren.
-		_player.collision_mask = 1 << (Layers.WORLD - 1)
+		_player.collision_mask = Player.AIR_MASK
 		Feel.shake(1.0)
 		return
 	if target is Crate:
@@ -149,7 +149,7 @@ func _zip(delta: float) -> void:
 	_zip_time += delta
 	var to_target := _zip_target - _player.global_position
 	if to_target.length() < 3.0 or _player.get_slide_collision_count() > 0 or _zip_time > ZIP_TIMEOUT:
-		_player.collision_mask = (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1))
+		_player.collision_mask = _player.ground_mask()
 		_finish()
 		return
 	_player.item_velocity = to_target.normalized() * ZIP_SPEED
@@ -171,7 +171,7 @@ func _drag(delta: float) -> void:
 
 
 func _finish() -> void:
-	_player.collision_mask = (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1))
+	_player.collision_mask = _player.ground_mask()
 	_player.end_item()
 	queue_free()
 
@@ -181,7 +181,7 @@ func _exit_tree() -> void:
 		(_caught as Crate).stop_pull()
 	if is_instance_valid(_player):
 		_player.airborne = false
-		_player.collision_mask = (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1))
+		_player.collision_mask = _player.ground_mask()
 
 
 func _draw() -> void:
