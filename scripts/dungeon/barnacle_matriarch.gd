@@ -41,6 +41,8 @@ const FRAME_SLAM := 3
 const FRAME_EXPOSED := 4
 const FRAME_SPIT := 5
 const FRAME_DEAD := 6
+## Dimmed while she sleeps, before Sister Lowe's scene wakes her.
+const SLEEPING := Color(0.62, 0.6, 0.72)
 ## Where each plank sits on her shell, relative to her feet.
 const PLATE_SPOTS := [Vector2(0, -38), Vector2(11, -37), Vector2(19, -30)]
 
@@ -83,12 +85,28 @@ func _ready() -> void:
 		plate.material = Art.flash_material()
 		add_child(plate)
 		_plates.append(plate)
+	# The first time, Sister Lowe's singers are prying at her while she
+	# sleeps (StoryDirector.lowe_at_the_hull), and she wakes when they're done.
+	if _room and get_tree().get_first_node_in_group("story_director") and StoryDirector.lowe_waits(_room.coord):
+		_sprite.modulate = SLEEPING
+		return
 	# Rise out of the bilge.
 	_sprite.modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(_sprite, "modulate:a", 1.0, 0.8)
 	Events.toast.emit("BOSS_MATRIARCH")
 	Feel.shake(3.0)
+
+
+## She stirs under the singers' bars, flashes and shakes the deck awake.
+## The fight starts once the scene ends.
+func wake() -> void:
+	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(_sprite, "modulate", Color.WHITE, 0.4)
+	_flash = 0.2
+	Events.toast.emit("BOSS_MATRIARCH")
+	Feel.shake(4.0)
+	Audio.play_sfx("boss_roar", global_position)
 
 
 func plates_left() -> int:

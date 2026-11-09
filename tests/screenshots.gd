@@ -30,13 +30,16 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle", "lowe"]:
 		if OS.get_environment("SHOTS_ONLY") == "kiln":
 			await _kiln_shots(game)
-		elif OS.get_environment("SHOTS_ONLY") == "mantle":
+		elif OS.get_environment("SHOTS_ONLY") in ["mantle", "lowe"]:
 			game.queue_free()
 			await _wait(0.2)
-			await _mantle_shots()
+			if OS.get_environment("SHOTS_ONLY") == "mantle":
+				await _mantle_shots()
+			else:
+				await _lowe_shots()
 		else:
 			await _mire_shots(game)
 		SaveManager.delete_save()
@@ -260,6 +263,7 @@ func _ready() -> void:
 	story.queue_free()
 	await _wait(0.2)
 	await _mantle_shots()
+	await _lowe_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -361,6 +365,7 @@ func _hull_shots(game: Node) -> void:
 	await _wait(1.0)
 
 	# The Barnacle Matriarch: rearing up, then her soft body exposed.
+	GameState.set_flag(StoryDirector.LOWE_HULL_FLAG)
 	room = await _jump(game, Vector2i(10, 7), Vector2i(11, 9))
 	await _wait(1.0)
 	var boss: BarnacleMatriarch = null
@@ -612,4 +617,29 @@ func _mantle_shots() -> void:
 	await _capture("36_mantle_rises")
 	await _skip_scene(strand)
 	strand.queue_free()
+	await _wait(0.2)
+
+
+## Sister Lowe at the Hull: her singers pry at the sleeping Matriarch, she
+## warns Wren off, then the Choir scatters as the Matriarch wakes.
+func _lowe_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.HULL_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var hold: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hold)
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.2)
+		if page == 1:
+			await _capture("39_lowe_at_the_hull")
+		var box := _dialogue_box(hold)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _wait(0.5)
+	await _capture("40_choir_scatters")
+	await _skip_scene(hold)
+	hold.queue_free()
 	await _wait(0.2)
