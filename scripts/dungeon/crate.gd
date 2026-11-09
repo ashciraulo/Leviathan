@@ -52,6 +52,7 @@ func _slide(dir: Vector2) -> void:
 		return
 	_sliding = true
 	var on_ice := _on_ice()
+	Audio.play_sfx("ice_slide" if on_ice else "block_push", global_position)
 	var tween := create_tween()
 	# On ice it glides on, quicker, until something stops it.
 	tween.tween_property(self, "position", position + step, SLIDE_TIME * (0.5 if on_ice else 1.0))

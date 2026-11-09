@@ -117,6 +117,7 @@ func _on_catch(collider: Object) -> void:
 		_zip_target = (target as Node2D).global_position - direction * ZIP_STOP
 		phase = Phase.ZIP
 		Audio.play_sfx("hook_latch", global_position)
+		Audio.play_sfx("hook_reel", _player.global_position)
 		_player.airborne = true
 		# Fly over water; walls still stop Wren.
 		_player.collision_mask = 1 << (Layers.WORLD - 1)

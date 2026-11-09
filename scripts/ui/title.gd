@@ -47,6 +47,7 @@ func _ready() -> void:
 	add_child(_logo)
 	_bob_logo()
 	Audio.play_music("title")
+	Audio.play_ambience("saltmarrow")
 
 	var menu := VBoxContainer.new()
 	menu.add_theme_constant_override("separation", 0)

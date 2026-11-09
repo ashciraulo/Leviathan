@@ -53,6 +53,7 @@ func _think(delta: float) -> void:
 				mode = Mode.CIRCLE
 				_timer = CIRCLE_TIME
 				_angle = (-to_player).angle()
+				Audio.play_sfx("moth_flutter", global_position)
 		Mode.CIRCLE:
 			if player == null:
 				mode = Mode.DRIFT
@@ -63,6 +64,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0:
 				mode = Mode.FLARE
 				_timer = FLARE_TIME
+				Audio.play_sfx("moth_flare", global_position)
 		Mode.FLARE:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:

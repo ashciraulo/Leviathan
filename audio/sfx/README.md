@@ -1,47 +1,10 @@
 # Sound effects
 
-Drop real sounds here as `<id>.ogg` or `<id>.wav` to replace the built-in chiptune placeholders (scripts/autoload/audio.gd, `SFX`). Ids the game plays now:
+The `.wav` files here are made by `tools/sfx_gen.py` (layered synth voices
+in pure Python): run `python3 tools/sfx_gen.py` after changing a sound there,
+and `tools/check.sh` fails if a file is out of date. Every id also needs an
+entry in `Audio.SFX` (scripts/autoload/audio.gd), which holds its caption
+and a tiny fallback synth.
 
-- `sword_swing`
-- `sword_spin`
-- `spin_charged`
-- `player_hurt`
-- `bubble_pop`
-- `hum`
-- `hum_heal`
-- `player_fall`
-- `hook_fire`
-- `hook_latch`
-- `bomb_fuse`
-- `bomb_blast`
-- `wayshell`
-- `mantle_wings`
-- `hit_flesh`
-- `hit_shell`
-- `block`
-- `enemy_die`
-- `enemy_tell`
-- `enemy_shot`
-- `boss_roar`
-- `chest_open`
-- `key_get`
-- `door_unlock`
-- `door_locked`
-- `switch`
-- `pot_break`
-- `tidestone_wake`
-- `bell_ring`
-- `secret`
-- `door_slide`
-- `ui_move`
-- `ui_select`
-- `ui_back`
-- `ui_open`
-- `text_blip`
-- `pickup`
-- `save`
-- `jingle_item`
-- `jingle_bell`
-- `jingle_puzzle`
-- `jingle_game_over`
-- `jingle_clear`
+To replace a sound with a hand-made one, drop `<id>.ogg` here (an `.ogg`
+wins over the `.wav`) and remove that id from `SOUNDS` in the generator.

@@ -459,6 +459,14 @@ CAPTION_PUZZLE,Something opened
 CAPTION_CHARGED,Sword charged
 CAPTION_LOCKED,Locked
 CAPTION_SHOT,Shot fired
+CAPTION_SLAM,Mallet slams
+CAPTION_SCRAPE,Stone scrapes
+CAPTION_SNAP,Claws snap
+CAPTION_CLACK,Shell clacks
+CAPTION_CROAK,Croak from the mud
+CAPTION_GULP,Gulping breath
+CAPTION_RUMBLE,Rumble below
+CAPTION_BOSS_FALL,A great cry fades
 GAMEOVER_TITLE_TEXT,Out of breath
 GAMEOVER_WAKE,Wake at the Tidestone
 GAMEOVER_TITLE,Return to the title
