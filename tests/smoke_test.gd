@@ -442,7 +442,7 @@ func _test_story() -> void:
 	_check(Cutscene.active and game.player.in_cutscene, "a new file opens with the opening scene")
 	var pages := await _play_scene(game, 8.0)
 	_check(not Cutscene.active and not game.player.in_cutscene, "the opening ends and hands Wren back")
-	_check(GameState.has_flag("seen_opening") and pages >= 2, "the opening played (%d pages)" % pages)
+	_check(GameState.has_flag("seen_opening") and pages == 0, "the opening plays without dialogue pages (%d)" % pages)
 	_check(not GameState.play_opening, "the opening only plays once")
 	game.queue_free()
 	await _wait(0.1)

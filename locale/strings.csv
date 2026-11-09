@@ -277,7 +277,7 @@ NAME_PELL,Pell
 NAME_MARGA,Marga
 NAME_DUNSTAN,Dunstan
 NARRATE_WREN_NODS,Wren nods.
-NARRATE_WREN_LAMP_YES,Wren lifts the lamp and flashes it once: I'll go.
+NARRATE_WREN_LAMP_YES,Wren flashes the lamp once.
 NARRATE_DUNSTAN_ROPE,"Dunstan shoulders a coil of rope and wanders off towards the smokehouse, very slowly."
 SIGN_SALTMARROW,"Saltmarrow. Mind the lamp, mind the tide."
 HESSA_HULL_1,You've been inside that old hull. I can smell the bilge on you from here.
@@ -311,12 +311,10 @@ DUNSTAN_AGAIN,Rope's coming. Rope's always coming.
 OPENING_1,"For a thousand years, seven bells have kept the Old One asleep beneath the bay."
 OPENING_2,"At every turn of the tide a keeper rang them. Lately, only one keeper was left."
 OPENING_3,"Last night, out on the point at Saltmarrow, the oldest bell went quiet."
-NARRATE_HESSA_CALLS,A long glow from the village path. Hessa's lamp: I'm here. Come.
-NARRATE_WREN_ANSWERS,Wren raises the lantern and flashes it once: yes.
 WAYSHELL_1,"You found it. I felt the Point Bell ring through the floorboards, clear as morning."
 WAYSHELL_2,"One bell home. Six more out there, and the Choir after every one of them."
 WAYSHELL_3,Take this. The old keepers' Wayshell. Blow it at a woken Tidestone and the sky-rays will carry you.
-NARRATE_GOT_WAYSHELL,Wren got the Wayshell. Fast travel opens on the map.
+NARRATE_GOT_WAYSHELL,Wren got the Wayshell.
 WAYSHELL_4,"The next bell is crying out from the Kiln, in Cinderreach. Go on. I'll keep the lamp lit."
 HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp stays lit."
 PELL_BELL_1,You got the bell back?! Can I hold it? Just for a second?

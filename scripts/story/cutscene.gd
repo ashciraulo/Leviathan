@@ -61,6 +61,10 @@ func begin() -> void:
 	if player:
 		player.in_cutscene = true
 		player.script_move = Vector2.ZERO
+		# A charge or hum held into the scene would still read the keys.
+		if player.state == Player.State.CHARGE or player.state == Player.State.HUM:
+			player._enter(Player.State.MOVE)
+		player._hum_latched = false
 
 
 func finish() -> void:
@@ -112,6 +116,9 @@ func walk_to(target: Vector2) -> bool:
 	var player := _player()
 	if player == null:
 		return false
+	# Wait out a door fade before walking.
+	while player.frozen and is_instance_valid(player):
+		await get_tree().physics_frame
 	var time := 0.0
 	var last := player.global_position
 	var still := 0.0

@@ -15,6 +15,7 @@ const RADIUS := 22.0
 
 var kind := "yes"
 var _level := 0.0
+var _finished := false
 
 
 func _init(signal_kind: String = "yes") -> void:
@@ -30,9 +31,22 @@ func _ready() -> void:
 		tween.tween_interval(Cutscene.scaled(step[0]))
 		tween.tween_method(_set_level, 1.0, 0.0, Cutscene.scaled(0.12))
 		tween.tween_interval(Cutscene.scaled(step[1]))
-	tween.finished.connect(func() -> void:
+	tween.finished.connect(_finish)
+
+
+## Always signal the end, even when the room is torn down mid-glow (a death
+## or fast travel), so a waiting scene never hangs.
+func _exit_tree() -> void:
+	if not _finished:
+		_finished = true
 		done.emit()
-		queue_free())
+
+
+func _finish() -> void:
+	queue_free()
+	if not _finished:
+		_finished = true
+		done.emit()
 
 
 func _set_level(value: float) -> void:

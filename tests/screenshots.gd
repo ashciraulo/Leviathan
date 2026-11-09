@@ -204,9 +204,8 @@ func _ready() -> void:
 	add_child(story)
 	await _wait(1.6)
 	await _capture("30_opening")
-	while Cutscene.active and not DialogueBox.is_open:
-		await _wait(0.1)
-	await _wait(1.8)
+	# The veil lifts after the three lines; then Hessa's lamp glows.
+	await _wait(12.4)
 	await _capture("31_hessa_calls")
 	await _skip_scene(story)
 	story.queue_free()

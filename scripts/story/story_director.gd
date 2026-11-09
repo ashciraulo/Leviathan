@@ -2,7 +2,8 @@ class_name StoryDirector
 extends Node
 ## Watches the game and plays story scenes when their moment comes (see the
 ## cutscene list in the story bible). Each scene plays once: it sets a flag
-## when it starts, so dying or reloading mid-scene never replays it.
+## when it starts. Nothing saves mid-scene, so quitting or dying before the
+## next save plays it again from the start, flags and items together.
 
 const SALTMARROW := Vector2i(0, -1)
 ## Where the path to the village leaves the shore (room 0,0): Hessa's lamp
@@ -42,7 +43,8 @@ func _scene() -> Cutscene:
 
 
 ## Cutscene 1, "The Point Bell is gone": a new game opens on black, then on
-## the shore, where Hessa's lamp calls Wren home.
+## the shore, where Hessa's lamp calls Wren home. No narration: the lamps
+## say it (Ash: keep explanatory text off the screen).
 func opening() -> void:
 	GameState.set_flag("seen_opening")
 	var scene := _scene()
@@ -52,10 +54,8 @@ func opening() -> void:
 	await scene.wait(0.6)
 	var path: Vector2 = game.current_room.global_position + SHORE_PATH
 	await scene.lamp(path, Cutscene.LAMP_HERE)
-	await scene.narrate(["NARRATE_HESSA_CALLS"])
 	scene.face(Vector2.UP)
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
-	await scene.narrate(["NARRATE_WREN_ANSWERS"])
 	scene.finish()
 
 

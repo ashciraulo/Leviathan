@@ -48,7 +48,7 @@ func _process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
-		if DialogueBox.is_open:
+		if DialogueBox.is_open or Cutscene.active:
 			return
 		if event.is_action_pressed("pause"):
 			open(Tab.SATCHEL)
