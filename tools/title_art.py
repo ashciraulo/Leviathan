@@ -211,7 +211,8 @@ def build_logo():
 # --------------------------------------------------------------------------
 SKY = [hex_color(c) for c in ("#1A1430", "#241A3E", "#2E2050", "#3E2C5E", "#5E3E6E", "#8A4F6E", "#C26A6A", "#E8946A")]
 DEEP = [hex_color(c) for c in ("#2A5A7A", "#1F4A6A", "#183C5A", "#13304C", "#0F263E", "#0C1E32", "#091628", "#070F1E")]
-HIDE = [hex_color(c) for c in ("#2C4A66", "#1C3048", "#142438", "#0E1A2A", "#0A1220", "#070C18")]
+PALE = [hex_color(c) for c in ("#D8E0DA", "#AEBEC0", "#7E94A0", "#4E6478", "#2A3C54", "#121C30")]
+PALE_RIM = hex_color("#F0F4EC")
 GLOW = hex_color("#8FFFF0")
 GLOW_MID = hex_color("#4FD8D0")
 GLOW_DIM = hex_color("#2A8A96")
@@ -221,42 +222,74 @@ HORIZON = 112
 SURFACE = HORIZON + 2
 
 
-def _back_top(x):
-    """Top of the leviathan's back: in from the left, deep, rising over the
-    shoulders, then the great head on the right with a brow over the eye."""
-    body = 196 - 50 * math.exp(-((x - 170) / 120.0) ** 2)
-    head = 150 + 22 * ((x - 315) / 80.0) ** 2 if x > 200 else 400
-    # A smooth minimum, so the neck dips softly instead of creasing.
-    k = 5.0
-    return -k * math.log(math.exp(-body / k) + math.exp(-head / k))
+def _whale_top(x):
+    """Top edge of the whale: the back rising from beyond the left edge to
+    the hump, then the long, near-flat crown of the great square head."""
+    if x < 236:
+        return 141 + 34 * max(0.0, (176 - x) / 176.0) ** 1.6 + 3 * max(0.0, (x - 176) / 60.0)
+    if x < HEAD_FRONT - 14:
+        t = (x - 236) / (HEAD_FRONT - 250.0)
+        return 144 - 2 * math.sin(t * math.pi) - 4 * max(0.0, (t - 0.45) / 0.55) ** 1.5
+    # The blunt front of the head curves down.
+    d = x - (HEAD_FRONT - 14)
+    return 140 + 14 - math.sqrt(max(0.0, 14 ** 2 - d ** 2))
 
 
-def _eye():
-    return 316, 178
+HEAD_FRONT = 372
+MOUTH_Y = 196
+JAW = (258, 352)
 
 
-def _glow_spots():
-    """Bright points: the lateral line along the flank and a lower row,
-    each (x, y, size)."""
-    spots = []
-    for x in range(-4, 252, 8):
-        y = round(_back_top(x)) + 22 + round(3 * math.sin(x / 23.0))
-        spots.append((x, y, 2 if (x // 8) % 3 == 0 else 1))
-    for x in range(20, 236, 11):
-        y = round(_back_top(x)) + 40 + round(2 * math.sin(x / 17.0 + 1))
-        spots.append((x, y, 1))
-    # None behind the title menu, so its words stay easy to read.
-    return [(x, y, r) for (x, y, r) in spots if 0 <= x < W and SURFACE + 4 < y < H
-            and not (148 <= x <= 240 and 150 <= y <= 206)]
+def _whale_mask():
+    """Every pixel of the whale, and which part it belongs to:
+    'body' (back and head) or 'jaw' (the narrow lower jaw)."""
+    parts = {}
+    for x in range(W):
+        top = round(_whale_top(x))
+        if x > HEAD_FRONT:
+            continue
+        bottom = H
+        # The head's underside, above the mouth, from the jaw corner forward.
+        if x >= JAW[0]:
+            bottom = MOUTH_Y
+            if x > HEAD_FRONT - 12:
+                d = x - (HEAD_FRONT - 12)
+                bottom = MOUTH_Y - 12 + round(math.sqrt(max(0.0, 12 ** 2 - d ** 2)))
+        for y in range(max(top, SURFACE), min(bottom, H)):
+            parts[(x, y)] = "body"
+    # The lower jaw: long and narrow, set back from the head's front.
+    for x in range(JAW[0] - 10, JAW[1] + 1):
+        t = (x - JAW[0] + 10) / float(JAW[1] - JAW[0] + 10)
+        depth = round(9 - 5 * t)
+        if x > JAW[1] - 3:
+            depth -= x - (JAW[1] - 3)
+        lift = round(2 * t * t)
+        for y in range(MOUTH_Y + 2 - lift, min(MOUTH_Y + 2 - lift + depth, H)):
+            parts[(x, y)] = "jaw"
+    # Under the jaw corner the throat runs back into the body.
+    for x in range(0, JAW[0] + 4):
+        for y in range(MOUTH_Y, H):
+            parts.setdefault((x, y), "body")
+    for x in range(JAW[0], JAW[1] - 20):
+        for y in range(MOUTH_Y + 9 + (x - JAW[0]) // 6, H):
+            parts.setdefault((x, y), "body")
+    return parts
 
 
-def _eye_seam():
-    """The closed eye: a long curved seam with light seeping out of it."""
-    ex, ey = _eye()
-    pts = []
-    for dx in range(-17, 18):
-        pts.append((ex + dx, ey + round(3.0 * (1 - (dx / 17.5) ** 2))))
-    return pts
+def _whale_eye():
+    return 284, 186
+
+
+def _plankton():
+    """Specks of living light drifting around the whale, (x, y)."""
+    rnd = random.Random(5)
+    specks = []
+    for _ in range(70):
+        x = rnd.randrange(W)
+        y = rnd.randrange(SURFACE + 6, H)
+        if abs(y - _whale_top(min(x, HEAD_FRONT))) < 18 and not (148 <= x <= 240 and 150 <= y <= 206):
+            specks.append((x, y))
+    return specks
 
 
 def build_title_bg():
@@ -323,87 +356,131 @@ def build_title_bg():
                     c = px[y][x]
                     px[y][x] = (min(255, c[0] + 14), min(255, c[1] + 22), min(255, c[2] + 26), 255)
 
-    # The leviathan, under everything else in the deep.
-    ex, ey = _eye()
-    for x in range(W):
-        top = round(_back_top(x))
-        for y in range(max(top, SURFACE), H):
-            depth = y - top
-            i = 0 if depth < 1 else 1 if depth < 3 else 2 if depth < 10 else 3 if depth < 26 else 4
-            # The far deep swallows its belly.
-            if y > 200 or (y > 192 and (x + y) % 2 == 0):
-                i = 5
-            px[y][x] = HIDE[i]
-    # Barnacle knobs and old scars along the back.
-    for x in range(6, W, 13):
-        top = round(_back_top(x))
-        if top + 4 < H:
-            k = rnd.randrange(2, 4)
-            for dx in range(-(k // 2), k // 2 + 1):
-                if 0 <= x + dx < W:
-                    px[top + 2][x + dx] = HIDE[0]
-            px[top + 1][x] = HIDE[0]
-    # Ridges of hide: long faint folds following the back.
-    for off in (8, 15):
-        for x in range(0, 240):
-            y = round(_back_top(x)) + off + round(1.5 * math.sin(x / 9.0 + off))
-            if y < H and (x // 3) % 4 != 0:
-                px[y][x] = HIDE[2]
-    # The eye sits in a raised socket, a little lighter than the hide.
-    for y in range(ey - 12, ey + 13):
-        for x in range(ex - 30, ex + 31):
-            d = ((x - ex) / 30.0) ** 2 + ((y - ey) / 12.0) ** 2
-            if d <= 1.0 and px[y][x] in (HIDE[3], HIDE[4]):
-                px[y][x] = HIDE[2] if d < 0.75 or (x + y) % 2 else px[y][x]
-    # A great pectoral fin, folded back along the flank.
-    fin = []
-    for i in range(70):
-        t = i / 69.0
-        cx = 236 - 70 * t
-        cy = 186 + 16 * t + 6 * math.sin(t * math.pi)
-        r = 9 * (1 - t) ** 0.7 + 1
-        fin.append((cx, cy, r))
-    for (cx, cy, r) in fin:
-        for y in range(int(cy - r), int(cy + r) + 1):
-            for x in range(int(cx - r), int(cx + r) + 1):
-                if 0 <= x < W and 0 <= y < H and math.hypot(x - cx, y - cy) <= r:
-                    edge = cy - y > r - 1.5
-                    px[y][x] = HIDE[1] if edge else HIDE[3]
-    for k in range(4):
-        for i in range(10, 64, 2):
-            t = i / 69.0
-            x = round(236 - 70 * t)
-            y = round(186 + 16 * t + 6 * math.sin(t * math.pi) + (k - 1.5) * 9 * (1 - t) ** 0.7 * 0.5)
-            if 0 <= y < H:
-                px[y][x] = HIDE[4]
-    # The great head: brow ridge over the eye, folds around it, and the
-    # long seam of a mouth running out to the right edge.
-    for dx in range(-22, 23):
-        y = ey - 10 + round(4 * (dx / 22.0) ** 2)
-        px[y][ex + dx] = HIDE[1]
-        px[y + 1][ex + dx] = HIDE[3]
-    for r in (21, 25):
-        for a in range(200, 340, 3):
+    # The leviathan: an old, pale giant, scarred from ages of battles,
+    # lit by the moon along its back and fading into the deep below.
+    parts = _whale_mask()
+    for (x, y), part in parts.items():
+        top = round(_whale_top(x)) if part == "body" else MOUTH_Y + 2
+        depth = y - top
+        # Moonlight from above: bright along the top, quickly into shadow.
+        head = 0 if x > 240 else 2
+        f = depth / (3.0 + head * 0.5)
+        f = f if f < 3 else 3 + (depth - 9 - head) / 9.0
+        if part == "body" and x > 244 and y < MOUTH_Y:
+            # The great head is one solid, rounded block, lit from above.
+            blend = min(1.0, (x - 244) / 30.0)
+            f = f * (1 - blend) + blend * (0.6 + depth / 13.0)
+        if part == "body" and x > HEAD_FRONT - 18 and y < MOUTH_Y:
+            # The blunt front faces the moon.
+            f = min(f, (HEAD_FRONT - x) / 5.0 + (y - 150) / 30.0)
+        if part == "jaw":
+            f = 1.5 + depth * 0.5
+        f = max(0.0, f)
+        i = min(5, int(f + (0.5 if (x + y) % 2 and f % 1 > 0.5 else 0)))
+        if y > 202 and (x + y) % 2 == 0:
+            i = min(i + 1, 5)
+        if y > 208:
+            i = 5
+        px[y][x] = PALE[i]
+    # Rim of moonlight along the very top.
+    for x in range(0, HEAD_FRONT + 1):
+        top = round(_whale_top(x))
+        if SURFACE < top < H:
+            px[top][x] = PALE_RIM
+    # Wrinkles: long creases along the body and head.
+    crease_rnd = random.Random(31)
+    for _ in range(46):
+        x0 = crease_rnd.randrange(0, 350)
+        off = crease_rnd.choice((4, 6, 8, 10, 13, 16, 20))
+        ln = crease_rnd.randrange(8, 30)
+        phase = crease_rnd.random() * 6
+        for x in range(x0, min(x0 + ln, HEAD_FRONT - 4)):
+            y = round(_whale_top(x)) + off + round(1.5 * math.sin(x / 6.0 + phase))
+            if (x, y) in parts and (x, y - 1) in parts and parts[(x, y)] == "body":
+                px[y][x] = PALE[min(5, 3 + off // 12)]
+                if off < 14:
+                    px[y - 1][x] = PALE[max(0, 1 + off // 10)]
+    # Deep vertical folds on the head's front.
+    for fx in (HEAD_FRONT - 8, HEAD_FRONT - 15):
+        for y in range(156, MOUTH_Y - 3):
+            x = fx + round(1.5 * math.sin(y / 5.0 + fx))
+            if (x, y) in parts:
+                px[y][x] = PALE[2]
+    # Old scars: rings left by giant suckers, and long raking scratches.
+    rnd2 = random.Random(23)
+    for (cx, cy, r) in ((300, 158, 3), (318, 166, 2), (332, 156, 3), (290, 172, 2), (346, 172, 2), (204, 152, 2), (150, 158, 2)):
+        for a in range(rnd2.randrange(0, 90), 300, 30):
             t = math.radians(a)
-            x, y = ex + round(r * 1.3 * math.cos(t)), ey + 6 + round(r * 0.55 * math.sin(-t) * -1)
-            if 0 <= x < W and y < H:
-                px[y][x] = HIDE[2]
-    for x in range(ex + 8, W):
-        y = ey + 18 + round((x - ex) * 0.08)
-        if y < H:
-            px[y][x] = HIDE[5]
-            px[y - 1][x] = HIDE[2]
-    # Eyelid: the seam, with a lighter lid above it.
-    for (x, y) in _eye_seam():
-        px[y - 1][x] = HIDE[1]
-        px[y][x] = GLOW_DIM
-        px[y + 1][x] = HIDE[4]
-    # Dim glow spots (the overlay brightens them).
-    for (x, y, r) in _glow_spots():
-        for dy in range(r):
-            for dx in range(r):
-                if 0 <= x + dx < W and y + dy < H:
-                    px[y + dy][x + dx] = GLOW_DIM
+            x, y = cx + round(r * math.cos(t)), cy + round(r * math.sin(t))
+            if (x, y) in parts:
+                px[y][x] = PALE[0]
+    for (x0, y0, ln) in ((248, 150, 18), (262, 154, 14), (120, 156, 12), (176, 148, 16)):
+        for d in range(ln):
+            x, y = x0 + d, y0 + d // 3
+            if (x, y) in parts:
+                px[y][x] = PALE[0]
+                if (x, y + 1) in parts:
+                    px[y + 1][x] = PALE[3]
+    # Barnacle crusts on the crown and back.
+    for (cx, cy, n) in ((286, 147, 7), (230, 146, 5), (96, 152, 6), (352, 150, 4)):
+        for _ in range(n):
+            x = cx + rnd2.randrange(-6, 7)
+            y = round(_whale_top(x)) + rnd2.randrange(0, 3)
+            if (x, y) in parts:
+                px[y][x] = hex_color("#E8E0D0")
+                if (x + 1, y) in parts:
+                    px[y][x + 1] = PALE[3]
+    # The mouth: a dark seam, with teeth along the narrow lower jaw.
+    for x in range(JAW[0], HEAD_FRONT - 10):
+        for y in (MOUTH_Y, MOUTH_Y + 1):
+            if 0 <= y < H:
+                px[y][x] = hex_color("#0A0E1A")
+    for x in range(JAW[0] + 4, JAW[1] - 4, 6):
+        x += rnd2.randrange(0, 2)
+        lift = round(2 * ((x - JAW[0] + 10) / float(JAW[1] - JAW[0] + 10)) ** 2)
+        px[MOUTH_Y + 1 - lift][x] = hex_color("#E8E0D0")
+        if rnd2.random() < 0.7:
+            px[MOUTH_Y - lift][x] = hex_color("#C8C0B0")
+    # The eye, small for so vast a head, shut, low by the jaw's corner.
+    ex, ey = _whale_eye()
+    for dx in range(-4, 5):
+        y = ey + round(1.2 * (1 - (dx / 4.5) ** 2))
+        px[y][ex + dx] = hex_color("#0A0E1A")
+        px[y - 1][ex + dx] = PALE[2]
+    for dx in range(-6, 6):
+        px[ey - 3 + round(1.5 * (dx / 6.0) ** 2)][ex + dx] = PALE[4]
+    for dx in range(-3, 4):
+        px[ey + 3][ex + dx + 1] = PALE[4]
+    # Old harpoons in its back, their ropes trailing up into the water.
+    for (hx, length, lean, rope) in ((148, 16, -0.55, True), (214, 13, -0.4, False), (306, 11, -0.7, True)):
+        top = round(_whale_top(hx))
+        for d in range(length):
+            x = hx + round(lean * d)
+            y = top - d
+            if SURFACE < y:
+                px[y][x] = hex_color("#7E5E44")
+                px[y][x + 1] = hex_color("#4A3428")
+        # The iron head shows where it went in, rusted.
+        px[top][hx] = hex_color("#8A3E2A")
+        px[top][hx + 1] = hex_color("#5A2A20")
+        if rope:
+            x, y = hx + lean * length, top - length
+            for i in range(40):
+                x -= 0.8 + 0.3 * math.sin(i / 4.0)
+                y -= 0.55
+                yi, xi = round(y), round(x)
+                if not (SURFACE < yi < H and 0 <= xi < W):
+                    break
+                if (xi, yi) not in parts:
+                    px[yi][xi] = hex_color("#9A8462") if i % 3 else hex_color("#6E5E46")
+    # Curling currents around it, like the swirls of old sea charts.
+    for (cx, cy, turns, size) in ((70, 136, 1.4, 9), (138, 128, 1.2, 7), (360, 128, 1.3, 8), (30, 196, 1.2, 7)):
+        for i in range(120):
+            t = i / 119.0 * turns * 2 * math.pi
+            r = size * (1 - i / 140.0)
+            x, y = cx + round(r * math.cos(t)), cy + round(r * 0.6 * math.sin(t))
+            if 0 <= x < W and SURFACE < y < H and (x, y) not in parts and i % 9 != 8:
+                px[y][x] = hex_color("#3E7E96")
 
     # Saltmarrow's headland, and the rock it stands on running down into
     # the water, small against the creature.
@@ -470,8 +547,8 @@ def build_title_bg():
 
     # Breath: bubbles rising from the blowhole on the crown of the head to
     # the surface, which froths where they break.
-    hx = 268
-    htop = round(_back_top(hx))
+    hx = 356
+    htop = round(_whale_top(hx))
     y = htop - 3
     i = 0
     while y > SURFACE + 2:
@@ -495,23 +572,13 @@ def build_title_bg():
 
 
 def build_title_glow():
-    """The creature's light on its own, transparent elsewhere: bright spots
-    with a soft halo, and the light leaking from the closed eye."""
+    """Living light around the whale on its own, transparent elsewhere, so
+    the title can swell and dim it as the leviathan breathes."""
     px = [[CLEAR] * W for _ in range(H)]
-
-    def put(x, y, c):
-        if 0 <= x < W and 0 <= y < H and px[y][x][3] < c[3]:
-            px[y][x] = c
-
-    halo = (GLOW_MID[0], GLOW_MID[1], GLOW_MID[2], 110)
-    for (x, y, r) in _glow_spots():
-        for dx, dy in ((-1, 0), (r, 0), (0, -1), (0, r)):
-            for k in range(r):
-                put(x + dx + (k if dy else 0), y + dy + (k if dx else 0), halo)
-        for dy in range(r):
-            for dx in range(r):
-                put(x + dx, y + dy, GLOW)
-    for (x, y) in _eye_seam():
-        put(x, y, GLOW)
-        put(x, y + 1, halo)
+    halo = (GLOW_MID[0], GLOW_MID[1], GLOW_MID[2], 90)
+    for (x, y) in _plankton():
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            if 0 <= x + dx < W and 0 <= y + dy < H:
+                px[y + dy][x + dx] = halo
+        px[y][x] = GLOW
     return px

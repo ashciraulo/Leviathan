@@ -54,6 +54,11 @@ func _ready() -> void:
 	menu.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	menu.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	menu.offset_bottom = -10
+	# A dark outline keeps the words readable over the pale whale.
+	var outline := Theme.new()
+	outline.set_constant("outline_size", "Button", 4)
+	outline.set_color("font_outline_color", "Button", Color(MenuKit.INK, 0.9))
+	menu.theme = outline
 	# The menu surfaces a moment after the scene fades in.
 	# It takes no input until it has fully appeared.
 	menu.modulate.a = 0.0
