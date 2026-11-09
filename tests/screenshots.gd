@@ -83,6 +83,12 @@ func _ready() -> void:
 		Vector2i(10, 10): ["17_hull_entry", Vector2i(11, 10)],
 		Vector2i(10, 9): ["18_hull_bilge", Vector2i(12, 6)],
 		Vector2i(11, 9): ["20_hull_cargo", Vector2i(3, 6)],
+		Vector2i(4, -2): ["24_mothlight_glade", Vector2i(11, 11)],
+		Vector2i(3, -2): ["25_hollow_bole", Vector2i(21, 6)],
+		Vector2i(5, -2): ["26_old_stilts", Vector2i(2, 6)],
+		Vector2i(6, -2): ["27_brine_spring", Vector2i(18, 7)],
+		Vector2i(6, -1): ["28_rootmaze", Vector2i(11, 1)],
+		Vector2i(6, 0): ["29_tangle_shore", Vector2i(11, 2)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:

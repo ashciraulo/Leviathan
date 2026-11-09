@@ -456,6 +456,7 @@ def build_enemies():
     awake = [r.replace("n", "N") for r in TIDESTONE]
     out["tidestone"] = sheet([[lit(TIDESTONE, 6), lit(awake, 6)]], 16, 22)
     out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
+    out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
 
@@ -919,6 +920,9 @@ RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
 FLAT.update(hull_art.FLAT)
+_taken = set(RAMPS) | set(FLAT)
+_clash = _taken & (set(hull_dungeon_art.RAMPS) | set(hull_dungeon_art.FLAT))
+assert not _clash, "hull_dungeon_art reuses material letters: %s" % sorted(_clash)
 RAMPS.update(hull_dungeon_art.RAMPS)
 FLAT.update(hull_dungeon_art.FLAT)
 

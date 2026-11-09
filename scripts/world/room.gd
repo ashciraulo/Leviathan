@@ -8,6 +8,7 @@ extends Node2D
 ##          T  Tidestone      c  Scuttler (chaser)
 ##          s  Spitter (shooter)    b  Shellback (blocker)
 ##          m  Bogskipper (ambusher, hides in the mud)
+##          w  Lanternmoth (flyer, circles then dives)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)
@@ -166,6 +167,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Spitter.new()
 		"m":
 			node = Bogskipper.new()
+		"w":
+			node = Lanternmoth.new()
 		"b":
 			node = Shellback.new()
 		"h":

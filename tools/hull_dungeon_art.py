@@ -26,10 +26,10 @@ RAMPS = {
     "A": ["#F2A08A", "#D2665A", "#A2424A", "#6E2C46", "#341832"],   # crab shell, coral red
     "F": ["#FFF8E8", "#EADCC4", "#C8B49C", "#8E7A78", "#40303E"],   # figurehead paint
     "M": ["#FFE8A0", "#E8B85A", "#B8843E", "#7A5032", "#3A2226"],   # gilt
-    "O": ["#FFD4D8", "#F2A4B4", "#D07892", "#9A5274", "#4A2440"],   # soft body
+    "Y": ["#FFD4D8", "#F2A4B4", "#D07892", "#9A5274", "#4A2440"],   # soft body
     "P": ["#8E6E58", "#6E5446", "#54403A", "#3C2C2E", "#1E1418"],   # old hull plank
     "R": ["#E89A5A", "#B86A3E", "#8A4A34", "#5A3030", "#2A1820"],   # rust
-    "U": ["#B8D88A", "#86B06A", "#5A8A56", "#3A6048", "#1E3430"],   # weed and slime
+    "X": ["#B8D88A", "#86B06A", "#5A8A56", "#3A6048", "#1E3430"],   # weed and slime
     "V": ["#C8F0D8", "#86CCB4", "#4E9C8E", "#2E6A6A", "#163638"],   # verdigris bronze
     "Z": ["#FFFFFF", "#F6EEDC", "#D8CCD6", "#A898B0", "#4E405E"],   # barnacle white
 }
@@ -164,8 +164,8 @@ HOOK_POST = [
     ".....PPPPPP.....",
     "....PPPPPPPP....",
     "...PPPPPPPPPP...",
-    "...UPPPPPPPPU...",
-    "...UUPPPPPPUU...",
+    "...XPPPPPPPPX...",
+    "...XXPPPPPPXX...",
     "................",
 ]
 
@@ -376,7 +376,7 @@ MATRIARCH_PLATE = [
     ".PPZPPPPPPP.",
     ".SSSSSSSSSS.",
     ".PPPPPPPZPP.",
-    "..PPPUPPPP..",
+    "..PPPXPPPP..",
     "............",
     "............",
 ]
@@ -431,7 +431,7 @@ def tidebell(rung):
     # Weed hanging off the frame and lip.
     for (x, y, n) in ((4, 7, 4), (27, 7, 6), (8, 33, 2), (22, 32, 3)):
         for i in range(n):
-            put(c, x, y + i, "U")
+            put(c, x, y + i, "X")
     if rung:
         for x in range(32):
             if c[33][x] == "V":
@@ -477,7 +477,7 @@ def _figurehead(c, lift=0, tilt=0):
         put(c, x + 1 + tilt, cy + 10, "Z")
     for x in (cx + 18, cx + 20):
         for i in range(4):
-            put(c, x, cy + 3 + i, "U")
+            put(c, x, cy + 3 + i, "X")
 
 
 def _crab(c, step=0, claw="rest", mouth=False, out=False):
@@ -489,8 +489,8 @@ def _crab(c, step=0, claw="rest", mouth=False, out=False):
         put(c, x, y, "Z")
     if out:
         # Lurched half out: the soft pink abdomen curls up behind.
-        fill_ellipse(c, 50, base - 8, 10, 9, "O")
-        fill_ellipse(c, 55, base - 15, 5, 5, "O")
+        fill_ellipse(c, 50, base - 8, 10, 9, "Y")
+        fill_ellipse(c, 55, base - 15, 5, 5, "Y")
         for x in range(44, 58, 4):
             line(c, x, base - 15, x + 1, base - 2, "A")
     # Eye stalks, standing up in front of the shell rim.
@@ -500,7 +500,7 @@ def _crab(c, step=0, claw="rest", mouth=False, out=False):
         fill_rect(c, ex + lean, base - 11, 2, 2, "1")
         put(c, ex + lean, base - 11, "2")
     if mouth:
-        fill_rect(c, 30, base + 1, 7, 3, "O")
+        fill_rect(c, 30, base + 1, 7, 3, "Y")
         fill_rect(c, 31, base + 2, 5, 1, "3")
     # Legs: three a side, jointed, stepping.
     for i in range(3):
