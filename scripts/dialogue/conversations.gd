@@ -89,13 +89,17 @@ static func pages(speaker: String, branch: Dictionary) -> Array:
 
 
 ## Start `speaker`'s current conversation: sets the branch's flags and opens
-## the dialogue box. Returns the pages shown (empty if there was nothing).
-static func talk(speaker: String) -> Array:
+## the dialogue box (kept clear of `node`, the one talking). Returns the
+## pages shown (empty if there was nothing).
+static func talk(speaker: String, node: Node2D = null) -> Array:
 	var branch := branch_for(speaker)
 	if branch.is_empty():
 		return []
 	for flag: String in branch.get("set", []):
 		GameState.set_flag(flag)
 	var shown := pages(speaker, branch)
+	if node:
+		for page: Dictionary in shown:
+			page["node"] = node
 	Events.conversation_requested.emit(shown)
 	return shown

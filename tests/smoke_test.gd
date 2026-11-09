@@ -285,6 +285,17 @@ func _test_villagers() -> void:
 	if not people.has("marga") or not people.has("dunstan"):
 		game.queue_free()
 		return
+	# Every line fits in the box, with or without a portrait.
+	var fit_box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			fit_box = child
+	for who in Conversations.TALKS:
+		for branch: Dictionary in Conversations.TALKS[who]:
+			for page: Dictionary in Conversations.pages(who, branch):
+				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
+				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
+	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
 	var player: Player = game.player
 
 	# Dunstan grunts until Marga sends Wren over.
@@ -302,6 +313,7 @@ func _test_villagers() -> void:
 	_check(box != null and box.current_page()["name"] == "NAME_MARGA", "the tab names Marga")
 	_finish_talk(game)
 	_check(GameState.has_flag("asked_for_rope"), "Marga's errand is remembered")
+	_check(not box.is_at_top(), "with Marga mid-screen, the box stays at the bottom")
 	await _wait(0.4)
 	player.global_position = people["dunstan"].global_position + Vector2(0, 14)
 	await _wait(0.1)
@@ -325,6 +337,19 @@ func _test_villagers() -> void:
 		var from_x: float = people["pell"].position.x
 		await _wait(4.0)
 		_check(absf(people["pell"].position.x - from_x) > 2.0, "Pell runs about the village")
+
+	# Someone low on the screen: the box moves up so it doesn't cover them.
+	people["dunstan"].position.y = 11 * Room.TILE + 12
+	player.global_position = people["dunstan"].global_position + Vector2(0, -14)
+	player.facing = Vector2.DOWN
+	await _wait(0.1)
+	_check(player.try_interact(), "Wren can talk to Dunstan from above")
+	await _wait(0.05)
+	_check(box.is_at_top(), "the box moves to the top when the speaker is low on screen")
+	var body := DialogueBox.body_on_screen(people["dunstan"])
+	_check(not body.intersects(DialogueBox.TOP_BOX), "the top box keeps clear of Dunstan")
+	_finish_talk(game)
+	await _wait(0.4)
 
 	# The village sign reads out.
 	_check(sign != null and sign.is_in_group("interactable"), "the village sign can be read")

@@ -47,4 +47,4 @@ func _ready() -> void:
 
 ## Reading a sign: narration, no speaker.
 func interact() -> void:
-	Events.conversation_requested.emit([{"name": "", "portrait": null, "text": text_key}])
+	Events.conversation_requested.emit([{"name": "", "portrait": null, "text": text_key, "node": self}])

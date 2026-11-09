@@ -117,7 +117,7 @@ func current_pages() -> Array:
 
 
 func interact() -> void:
-	if Conversations.talk(kind).is_empty():
+	if Conversations.talk(kind, self).is_empty():
 		return
 	_talking = true
 	_sprite.frame = _spec["talk"]
