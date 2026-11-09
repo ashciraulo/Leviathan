@@ -225,6 +225,12 @@ const BIOMES := {
 		"wet_deco": "bonechips_%d", "dry_deco": "bonechips_%d",
 		"floor_overlay": ["ribs_%d", 37], "door": "exit_glow",
 	},
+	"maw": {
+		"floor": "maw_floor_%d", "wall_top": "maw_top_%d", "wall_face": "maw_face_%d",
+		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
+		"wet_deco": "vein_%d", "dry_deco": "dreammote_%d",
+		"floor_overlay": ["vein_%d", 41], "door": "exit_glow", "drained": "maw_wet_%d",
+	},
 }
 
 
@@ -303,6 +309,11 @@ func _build() -> void:
 			x += 1
 	_build_water()
 	DungeonTiles.finish(self)
+	# Inside the Old One, its breath floods the palate floor.
+	if dungeon == "maw" and layout.contains(","):
+		var breath := MawBreath.new()
+		breath.name = "Breath"
+		add_child(breath)
 	# In a dungeon, x is a wisp, not ice.
 	if dungeon == "" and layout.contains("x"):
 		var ice := IceField.new()
@@ -410,8 +421,11 @@ func water_pool(tile: Vector2i) -> Array[Vector2i]:
 
 
 ## True while this dungeon's water is high (its "," floor is under water).
-## The Drowned Belfry's valves raise and lower it, for the whole dungeon.
+## The Drowned Belfry's valves raise and lower it, for the whole dungeon;
+## in the Maw it rises and falls with the Old One's breathing.
 func flooded() -> bool:
+	if dungeon == "maw":
+		return MawBreath.high()
 	return not GameState.has_flag(low_water_flag(dungeon))
 
 
@@ -530,6 +544,14 @@ func _process(delta: float) -> void:
 		_ground.queue_redraw()
 
 
+## The letter as written in the layout, before water, ice or broken walls
+## change what it means ("#" outside the room).
+func raw_tile(x: int, y: int) -> String:
+	if y < 0 or y >= _rows.size() or x < 0 or x >= _rows[y].length():
+		return "#"
+	return _rows[y][x]
+
+
 ## The layout letter at a tile (walls outside the room).
 func tile_at(x: int, y: int) -> String:
 	return _tile_at(x, y)
@@ -621,7 +643,7 @@ func _draw_ground() -> void:
 					_draw_tile("glacier_ice_%d" % (h % 2), x, y)
 				elif _rows[y][x] == ",":
 					# The water's gone down: silt and puddles where it stood.
-					_draw_tile("lowwater_silt_%d" % (h % 2), x, y)
+					_draw_tile(tiles.get("drained", "lowwater_silt_%d") % (h % 2), x, y)
 				if tile == "D" and tiles.has("door"):
 					_draw_tile(tiles["door"], x, y)
 				elif tile != "I" and tiles.has("floor_overlay") and h % int(tiles["floor_overlay"][1]) == 1:

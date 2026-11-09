@@ -37,6 +37,9 @@ var jars: Array = []
 var tidestones: Dictionary = {}
 ## Seconds played on this file (counted by the game scene while unpaused).
 var play_time := 0.0
+## True while the Dreaming Heart waits for the lullaby's eighth line: Hum
+## always works then, whatever Wren's breath and Resonance (not saved).
+var final_line := false
 
 ## What a new file starts with: the keeper's lamp, a driftwood sword and
 ## the oilskin tunic.
@@ -95,10 +98,15 @@ func hum_cost() -> float:
 
 
 func can_hum() -> bool:
+	if final_line:
+		return true
 	return bubbles < max_bubbles and resonance + 0.001 >= hum_cost()
 
 
 func hum_heal() -> void:
+	if final_line:
+		heal(1)
+		return
 	resonance = maxf(resonance - hum_cost(), 0.0)
 	heal(1)
 

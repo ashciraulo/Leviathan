@@ -99,6 +99,11 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 					return Knell.spawn_in(room, pos)
 				"tomb":
 					return HollowRegent.spawn_in(room, pos)
+				"maw":
+					# Two fights in the Maw: Vael, then the Dreaming Heart.
+					if room.name_key == DreamingHeart.ROOM_KEY:
+						return DreamingHeart.spawn_in(room, pos)
+					return CantorVael.spawn_in(room, pos)
 			return BarnacleMatriarch.spawn_in(room, pos)
 	return null
 

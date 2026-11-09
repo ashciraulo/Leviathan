@@ -18,6 +18,8 @@ signal dialogue_requested(speaker_key: String, lines: PackedStringArray)
 signal conversation_requested(pages: Array)
 ## The dialogue box closed.
 signal dialogue_finished
+## The Old One sleeps: the Dreaming Heart is calmed and the game is won.
+signal game_finished
 ## A story flag changed (see GameState.set_flag).
 signal flag_changed(flag: String, value: Variant)
 ## Wren stepped into a doorway: go to another room (a dungeon, a house).
