@@ -76,6 +76,7 @@ func _ready() -> void:
 		for kind in [Items.SWORD, Items.SHIELD, Items.TUNIC]:
 			var worn := GameState.equipped_item(kind)
 			_check(Items.tier(worn) == 3, "the run ends with the best %s worn (%s)" % [kind, worn])
+	await _items_and_glints()
 	await _sweep_overworld()
 	_game.queue_free()
 	await _wait(0.1)
@@ -230,6 +231,13 @@ func _finale(heart: DreamingHeart) -> bool:
 		await _wait(0.2)
 	_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG), "maw: the Old One sleeps")
 	_check(finished[0], "maw: the game ends")
+	# The ending scenes (the Choir's keeper, dawn, home) play through.
+	deadline = Time.get_ticks_msec() + 120000
+	await _wait(0.5)
+	while Time.get_ticks_msec() < deadline and Cutscene.active:
+		await _play_scene(5.0)
+		await _wait(0.2)
+	_check(not Cutscene.active, "maw: the ending scenes finish")
 	_check(SaveManager.read_summary(TEST_SLOT).get("bells", 0) == 7, "maw: the ending is saved")
 	var credits: Control = (load(DreamingHeart.CREDITS_SCENE) as PackedScene).instantiate()
 	add_child(credits)
@@ -237,9 +245,10 @@ func _finale(heart: DreamingHeart) -> bool:
 	_check(credits._scroll > 0.0, "the credits roll")
 	credits._leaving = true
 	credits.queue_free()
-	# Continue after the credits: the file wakes Wren in the Heart's chamber,
+	# Continue after the credits: the file wakes Wren at home in Saltmarrow,
 	# free to walk, with the Old One still asleep.
-	var heart_room: Vector2i = GameState.checkpoint_room
+	var home: Vector2i = StoryDirector.SALTMARROW
+	_check(GameState.checkpoint_room == home, "after the ending: the file is saved at home (%s)" % GameState.checkpoint_room)
 	_game.queue_free()
 	await _wait(0.2)
 	GameState.reset_new_game()
@@ -248,7 +257,7 @@ func _finale(heart: DreamingHeart) -> bool:
 	await _wait(0.6)
 	await _play_scene(20.0)
 	var room: Room = _game.current_room
-	_check(room != null and room.coord == heart_room, "after the ending: Continue starts in the Heart's chamber")
+	_check(room != null and room.coord == home, "after the ending: Continue starts at home (%s)" % (room.coord if room else null))
 	_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and Audio.music_cue != "boss", "after the ending: the Old One stays asleep (%s)" % Audio.music_cue)
 	_check(_can_step(), "after the ending: Wren isn't stuck in a wall")
 	return true
@@ -314,6 +323,114 @@ func _new_game() -> Node:
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	return game
+
+
+## Bombs, Lamp Oil, jars and glints, in Saltmarrow's pot-strewn room above
+## the start: everything the shop sells does something, and glints can be
+## earned from enemies, pots and grass.
+func _items_and_glints() -> void:
+	print("Playthrough: items and glints")
+	seed(7)
+	var room := await _goto(Vector2i(0, -1))
+	await _play_scene(20.0)
+	_keep_safe()
+	var wren: Player = _game.player
+	var start := GameState.item_count("glint")
+	# Enemies: ten Scuttlers fall, and glints are left.
+	for i in 10:
+		var crab := Scuttler.new()
+		crab.position = Vector2(60 + 24 * (i % 5), 60 + 24 * (i / 5))
+		room.add_child(crab)
+	await _wait(0.2)
+	for crab in _all(room, Scuttler):
+		crab.take_hit(99, Vector2.RIGHT)
+	await _wait(0.5)
+	var dropped := _all(room, Glint)
+	_check(dropped.size() > 0, "fallen enemies leave glints (%d)" % dropped.size())
+	# Walking over them picks them up.
+	var worth := 0
+	for glint: Glint in dropped:
+		worth += glint.value
+	for glint: Glint in dropped:
+		if is_instance_valid(glint):
+			wren.global_position = glint.global_position
+			await _wait(0.15)
+	_check(GameState.item_count("glint") == start + worth, "Wren picks up the glints (%d of %d)" % [GameState.item_count("glint") - start, worth])
+	# Pots break under the sword.
+	var pots := _all(room, Prop).filter(func(p: Prop) -> bool: return p.kind == "o")
+	_check(pots.size() >= 1, "the room has pots")
+	for pot: Prop in pots:
+		# From whichever side Wren can stand on.
+		for way in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+			if not is_instance_valid(pot):
+				break
+			_keep_safe()
+			wren.global_position = pot.global_position + Vector2(0, -4) - way * 14.0 + Vector2(0, 4)
+			wren.facing = way
+			await _wait(0.1)
+			Input.action_press("attack")
+			await _wait(0.12)
+			Input.action_release("attack")
+			await _wait(0.4)
+	var left := _all(room, Prop).filter(func(p: Prop) -> bool: return p.kind == "o")
+	_check(left.is_empty(), "the sword breaks every pot (%d left)" % left.size())
+	# Grass is cut.
+	var tufts := 0
+	for y in Room.ROWS:
+		for x in Room.COLS:
+			tufts += 1 if room.has_plant(x, y) else 0
+	var cut := room.cut_plants(Rect2(room.global_position, Room.SIZE))
+	_check(tufts > 0 and cut == tufts, "grass can be cut (%d of %d)" % [cut, tufts])
+	await _wait(0.5)
+	# A puffer bomb: a crab beside it falls, a pot breaks, and Wren, who
+	# stepped back, is fine.
+	GameState.give_item("puffer_bombs", 3, false)
+	_keep_safe()
+	wren._invuln = 0.0
+	wren.global_position = room.global_position + Vector2(200, 150)
+	wren.facing = Vector2.LEFT
+	await _wait(0.1)
+	var crab := Scuttler.new()
+	crab.position = Vector2(200 - PufferBomb.PLACE_AHEAD - 12, 150)
+	room.add_child(crab)
+	var pot := Prop.new("o")
+	pot.position = Vector2(200 - PufferBomb.PLACE_AHEAD, 150 + 14)
+	room.add_child(pot)
+	await _wait(0.1)
+	var crab_hp := crab.hp
+	_check(wren.use_item("puffer_bombs") and GameState.item_count("puffer_bombs") == 2, "a puffer bomb is set down")
+	wren.global_position = room.global_position + Vector2(260, 150)
+	var bubbles := GameState.bubbles
+	await _wait(PufferBomb.FUSE_TIME + 0.5)
+	_check(not is_instance_valid(crab) or crab.dying or crab.hp < crab_hp, "the bomb hurts an enemy beside it")
+	_check(not is_instance_valid(pot), "the bomb breaks a pot")
+	_check(GameState.bubbles == bubbles, "Wren, stepped back, isn't hurt by their own bomb")
+	# Lamp Oil: the lantern goes up burning farther.
+	GameState.assign_slot(0, "glowmoth_lantern")
+	GameState.give_item("lamp_oil", 2, false)
+	wren.lantern_raised = false
+	_check(wren.use_item("lamp_oil") and wren.lantern_raised and GameState.item_count("lamp_oil") == 1, "Lamp Oil raises the lantern")
+	_check(Lantern.reach(wren) > Lantern.RADIUS, "with oil the lantern lights farther")
+	wren.lantern_oil = 0.0
+	wren.lantern_raised = false
+	# Jars: a tonic refills every bubble; a sea sprite breathes Wren back.
+	while GameState.jars.size() < 2:
+		GameState.give_item("jar", 1, false)
+	GameState.jars[0] = Items.JAR_POTION
+	GameState.jars[1] = Items.JAR_SPRITE
+	GameState.bubbles = 1
+	_check(wren.drink_potion() and GameState.bubbles == GameState.max_bubbles and GameState.jars[0] == Items.JAR_EMPTY, "a kelp tonic refills Wren's breath")
+	var died := [false]
+	var on_died := func() -> void: died[0] = true
+	Events.player_died.connect(on_died)
+	GameState.bubbles = 1
+	wren._invuln = 0.0
+	wren.take_damage(2, wren.global_position + Vector2(20, 0))
+	await _wait(0.6)
+	Events.player_died.disconnect(on_died)
+	_check(not died[0] and GameState.bubbles == GameState.max_bubbles and GameState.jars[1] == Items.JAR_EMPTY, "a sea sprite breathes Wren back to life")
+	_keep_safe()
+	randomize()
 
 
 ## A locked hatch that sits just over a screen edge (the Hull's, met walking

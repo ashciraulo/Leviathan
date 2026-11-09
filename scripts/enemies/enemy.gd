@@ -121,9 +121,15 @@ func _on_hurt() -> void:
 	pass
 
 
+## Chance that a fallen enemy leaves a glint or more.
+const GLINT_ODDS := 0.6
+
+
 func _die() -> void:
 	dying = true
 	Audio.play_sfx("enemy_die", global_position)
+	if not is_in_group("boss") and get_parent():
+		Glint.drop.call_deferred(get_parent(), position, Glint.roll(GLINT_ODDS))
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)

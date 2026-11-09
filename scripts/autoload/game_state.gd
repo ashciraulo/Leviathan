@@ -276,6 +276,16 @@ func equipped_item(kind: String) -> String:
 	return str(equipped.get(kind, ""))
 
 
+## Empties the first jar holding `contents` (a tonic drunk, a sprite let
+## out). Returns false if no jar holds it.
+func use_jar(contents: String) -> bool:
+	var i := jars.find(contents)
+	if i < 0:
+		return false
+	jars[i] = Items.JAR_EMPTY
+	return true
+
+
 ## Fills the first empty jar. Returns false if every jar is full.
 func fill_jar(contents: String) -> bool:
 	var i := jars.find(Items.JAR_EMPTY)

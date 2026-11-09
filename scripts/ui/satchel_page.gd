@@ -73,6 +73,11 @@ func handle_input(event: InputEvent) -> bool:
 					GameState.equip(id)
 			"slot":
 				GameState.item_slots[cell["index"]] = ""
+			"jar":
+				if _jar(cell) == Items.JAR_POTION:
+					var wren := get_tree().get_first_node_in_group("player") as Player
+					if wren:
+						wren.drink_potion()
 		return true
 	return false
 
@@ -84,9 +89,17 @@ func hint() -> String:
 		return tr("HINT_SATCHEL_TOOL") % [MenuKit.key_name("item_1"), MenuKit.key_name("item_2")]
 	if cell["role"] == "gear" and id != "":
 		return tr("HINT_SATCHEL_GEAR") % MenuKit.key_name("interact")
+	if cell["role"] == "jar" and _jar(cell) == Items.JAR_POTION:
+		return tr("HINT_SATCHEL_DRINK") % MenuKit.key_name("interact")
 	if cell["role"] == "slot" and GameState.item_slots[cell["index"]] != "":
 		return tr("HINT_SATCHEL_CLEAR") % MenuKit.key_name("interact")
 	return ""
+
+
+## What the jar in a jar cell holds, or "" past the jars Wren owns.
+func _jar(cell: Dictionary) -> String:
+	var i: int = cell["index"]
+	return str(GameState.jars[i]) if i < GameState.jars.size() else ""
 
 
 ## The item id a cell shows, or "" when Wren doesn't have it.

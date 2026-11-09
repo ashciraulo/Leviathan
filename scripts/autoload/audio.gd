@@ -147,6 +147,9 @@ const SFX := {
 	"door_locked": {"wave": "square", "f0": 180.0, "f1": 170.0, "dur": 0.12, "vol": 0.35, "caption": "CAPTION_LOCKED"},
 	"switch": {"wave": "square", "f0": 660.0, "f1": 440.0, "dur": 0.06, "vol": 0.35, "caption": "CAPTION_SWITCH"},
 	"pot_break": {"wave": "noise", "f0": 3000.0, "f1": 800.0, "dur": 0.15, "vol": 0.4},
+	"grass_cut": {"wave": "noise", "f0": 5000.0, "f1": 3000.0, "dur": 0.1, "vol": 0.25},
+	"potion_drink": {"wave": "sine", "f0": 420.0, "f1": 990.0, "dur": 0.5, "vol": 0.3, "steps": 3},
+	"oil_pour": {"wave": "noise", "f0": 600.0, "f1": 2000.0, "dur": 0.6, "vol": 0.25},
 	# Overworld hazards
 	"gust": {"wave": "noise", "f0": 300.0, "f1": 900.0, "dur": 0.9, "vol": 0.3, "caption": "CAPTION_GUST"},
 	"geyser_hiss": {"wave": "noise", "f0": 5000.0, "f1": 4000.0, "dur": 0.5, "vol": 0.2, "caption": "CAPTION_HISS"},
