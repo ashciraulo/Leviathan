@@ -259,11 +259,22 @@ func load_settings() -> void:
 	music_volume = clampi(int(cfg.get_value("audio", "music", music_volume)), 0, 10)
 	effects_volume = clampi(int(cfg.get_value("audio", "effects", effects_volume)), 0, 10)
 	ambience_volume = clampi(int(cfg.get_value("audio", "ambience", ambience_volume)), 0, 10)
-	fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))
+	# A browser only goes fullscreen from a key press or click, never on
+	# load, so the web version always starts windowed.
+	if not OS.has_feature("web"):
+		fullscreen = bool(cfg.get_value("display", "fullscreen", fullscreen))
 	var keys = cfg.get_value("controls", "keys", {})
 	key_overrides = keys if keys is Dictionary else {}
 	var pads = cfg.get_value("controls", "pad", {})
 	pad_overrides = pads if pads is Dictionary else {}
+
+
+## In a browser the player can leave fullscreen with the browser's own Esc;
+## this brings the setting back in line with the window.
+func sync_fullscreen() -> void:
+	if DisplayServer.get_name() != "headless":
+		var mode := DisplayServer.window_get_mode()
+		fullscreen = mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
 
 
 func save_settings() -> void:
