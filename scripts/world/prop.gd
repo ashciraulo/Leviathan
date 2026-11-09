@@ -19,6 +19,8 @@ const KINDS := {
 }
 
 var kind := ""
+## Signposts: what this one says (a translation key). Empty = can't be read.
+var text_key := ""
 
 
 static func is_prop(letter: String) -> bool:
@@ -39,3 +41,10 @@ func _ready() -> void:
 		shade.scale = Vector2(footprint.x / 14.0, 1.5)
 		add_child(shade)
 	add_child(Art.sprite(spec[0], 1, 1, spec[1]))
+	if text_key != "":
+		add_to_group("interactable")
+
+
+## Reading a sign: narration, no speaker.
+func interact() -> void:
+	Events.conversation_requested.emit([{"name": "", "portrait": null, "text": text_key}])
