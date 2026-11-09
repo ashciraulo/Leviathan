@@ -19,6 +19,7 @@ Settings="*res://scripts/autoload/settings.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 Feel="*res://scripts/autoload/feel.gd"
+Audio="*res://scripts/autoload/audio.gd"
 
 [display]
 

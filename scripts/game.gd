@@ -24,6 +24,7 @@ func _ready() -> void:
 	camera.make_current()
 	add_child(Hud.new())
 	add_child(ItemSlotsHud.new())
+	add_child(CaptionsHud.new())
 	add_child(PauseMenu.new())
 	add_child(DialogueBox.new())
 	var fade_layer := CanvasLayer.new()
@@ -60,6 +61,12 @@ func _physics_process(_delta: float) -> void:
 
 func _on_room_entered(coord: Vector2i) -> void:
 	GameState.mark_seen(coord)
+	_play_room_music()
+
+
+func _play_room_music() -> void:
+	if current_room:
+		Audio.play_music(Audio.cue_for_room(current_room.biome, current_room.dungeon))
 
 
 func _process(delta: float) -> void:
@@ -81,6 +88,7 @@ func _start() -> void:
 	GameState.room_coord = current_room.coord
 	GameState.dungeon = current_room.dungeon
 	GameState.mark_seen(current_room.coord)
+	_play_room_music()
 
 	player = Player.new()
 	player.name = "Wren"
@@ -166,6 +174,7 @@ func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 
 func _on_player_died() -> void:
 	busy = true
+	Audio.play_jingle("jingle_game_over")
 	# Real-time waits: hitstop may still have the game frozen.
 	await get_tree().create_timer(0.6, false, false, true).timeout
 	var tween := create_tween()
@@ -198,6 +207,7 @@ func _on_fast_travel(coord: Vector2i) -> void:
 	busy = true
 	player.frozen = true
 	Events.toast.emit("TOAST_MANTLE")
+	Audio.play_sfx("wayshell")
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME * 2.0)
 	await tween.finished

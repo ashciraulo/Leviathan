@@ -171,7 +171,7 @@ OPT_NORMAL,Normal
 OPT_FAST,Fast
 OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
-OPT_LARGE_TEXT_DESC,Bigger letters for talk and messages.
+OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
 OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
 OPT_COLOR_FILTER,Colour filter
@@ -316,3 +316,18 @@ ROOM_SLAG_FIELDS,Slag Fields
 ROOM_KILN_MOUTH,The Kiln's Mouth
 ROOM_GEYSER_BASIN,Geyser Basin
 ROOM_SCORCHED_PASS,Scorched Pass
+CAPTION_HUM,Wren hums
+CAPTION_FUSE,Fuse hissing
+CAPTION_BLAST,Blast
+CAPTION_WAYSHELL,Wayshell call
+CAPTION_WINGS,Great wings beat
+CAPTION_BLOCK,Clang
+CAPTION_TELL,Enemy winds up
+CAPTION_ROAR,Roar
+CAPTION_UNLOCK,Lock clicks open
+CAPTION_SWITCH,Switch clicks
+CAPTION_TIDESTONE,Tidestone hums awake
+CAPTION_BELL,A bell rings
+CAPTION_SECRET,Secret chime
+CAPTION_DOOR,Stone grinds
+CAPTION_PUZZLE,Something opened
