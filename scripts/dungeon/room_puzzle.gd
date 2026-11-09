@@ -5,6 +5,7 @@ extends Node
 ##   "plates"  every pressure plate held down at once
 ##   "clear"   every enemy beaten. The bars stand open until Wren is well
 ##             inside, then slam shut behind them.
+##   "braziers" every brazier (j) lit with the Glowmoth Lantern
 ## A solved gate stays solved (saved as a flag).
 
 var _room: Room
@@ -22,6 +23,8 @@ func _ready() -> void:
 	if solved:
 		for bars in _bars():
 			bars.open(true)
+		for brazier in _braziers():
+			brazier.light(true)
 		return
 	if _room.chest_hidden:
 		for chest in _chests():
@@ -33,6 +36,8 @@ func _ready() -> void:
 	for plate in _room.get_children():
 		if plate is PressurePlate:
 			plate.changed.connect(_check_plates)
+	for brazier in _braziers():
+		brazier.changed.connect(_check_braziers)
 
 
 func _physics_process(_delta: float) -> void:
@@ -64,6 +69,19 @@ func _check_plates() -> void:
 	solve()
 
 
+func _check_braziers() -> void:
+	if solved or _room.gate != "braziers":
+		return
+	for brazier in _braziers():
+		if not brazier.lit:
+			return
+	solve()
+
+
+func _braziers() -> Array:
+	return _room.get_children().filter(func(n: Node) -> bool: return n is Brazier)
+
+
 func solve() -> void:
 	if solved:
 		return
@@ -71,12 +89,11 @@ func solve() -> void:
 	GameState.flags[flag_for(_room.coord)] = true
 	for bars in _bars():
 		bars.open()
-	var revealed := false
 	for chest in _chests():
 		if not chest.visible:
 			_reveal(chest)
-			revealed = true
-	Events.toast.emit("TOAST_CHEST_APPEARS" if revealed else "TOAST_GATE_OPENS")
+	# The jingle (and the bars sliding, or the chest popping up) says it.
+	Audio.play_jingle("jingle_puzzle")
 
 
 func _bars() -> Array:

@@ -204,7 +204,76 @@ def dunstan_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# Nettle, about nine, who wants to be a keeper too. A keeper's cap far too
+# big for them, a red-striped jumper (Wren's is navy), and a paper lantern. Holds the
+# lantern up when they talk.
+# --------------------------------------------------------------------------
+NETTLE = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "......CCCC......",
+    "....CCCCCCCC....",
+    "...CCCCJCCCCC...",
+    "..CCCCCCCCCCCCC.",
+    "...MVVVVVVVVM...",
+    "...MVeVVVVeVM...",
+    "...MVeVVVVeVM...",
+    "....V%VVVV%V....",
+    ".....VVVVVV.....",
+    "....rrrrrrrr....",
+    "...qqqqqqqqqq...",
+    "..VrrrrrrrrrrV..",
+    "...qqqqqqqqqq.Q.",
+    "...rrrrrrrrrrQQQ",
+    "....pppppppp.QJQ",
+    "....pp....pp.QQQ",
+    "....VV....VV....",
+    "....VV....VV....",
+    "....bb....bb....",
+    "................",
+]
+
+
+NETTLE_TALK = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "......CCCC......",
+    "....CCCCCCCC....",
+    "...CCCCJCCCCC.Q.",
+    "..CCCCCCCCCCCQQQ",
+    "...MVVVVVVVVMQJQ",
+    "...MVeVVVVeVMQQQ",
+    "...MVeVVVVeVM.V.",
+    "....V%VVVV%V..V.",
+    ".....VVVVVV...r.",
+    "....rrrrrrrr.r..",
+    "...qqqqqqqqqqq..",
+    "..Vrrrrrrrrrr...",
+    "...qqqqqqqqqq...",
+    "...rrrrrrrrrr...",
+    "....pppppppp....",
+    "....pp....pp....",
+    "....VV....VV....",
+    "....VV....VV....",
+    "....bb....bb....",
+    "................",
+]
+
+
+def nettle_frames():
+    idle = NETTLE
+    breathe = settle(idle, 15)
+    # Talking: the lantern comes up beside the cap, held high.
+    return [idle, breathe, NETTLE_TALK]
+
+
 SPRITES = {
+    "nettle": nettle_frames,
     "corrin": corrin_frames,
     "pell": pell_frames,
     "marga": marga_frames,
@@ -336,7 +405,27 @@ def portrait_dunstan():
     return _rows(c)
 
 
+def portrait_nettle():
+    c = _canvas()
+    # Striped jumper, red and white, after Wren's.
+    _ellipse(c, 16, 32, 13, 8, "r")
+    for y in (26, 29):
+        _box(c, 0, y, P, 1, "q")
+    for y in range(24, 32):
+        for x in range(P):
+            if c[y][x] == "q" and ((x + 0.5 - 16) / 13) ** 2 + ((y + 0.5 - 32) / 8) ** 2 > 1.0:
+                c[y][x] = "."
+    _face(c, "V", eye_row=17, cy=18, rx=7, ry=7)
+    _dots(c, [(8, 15), (8, 16), (9, 17), (23, 15), (23, 16), (22, 17), (8, 18), (23, 18)], "M")  # curls
+    # The cap, much too big, slipping down to the eyebrows.
+    _ellipse(c, 16, 9, 12, 7, "C")
+    _box(c, 3, 12, 26, 3, "C")
+    _box(c, 15, 7, 3, 3, "J")                          # the lamp badge, home-made
+    return _rows(c)
+
+
 PORTRAITS = {
+    "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),
     "corrin": portrait_corrin(),
     "pell": portrait_pell(),

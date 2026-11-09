@@ -33,6 +33,7 @@ func _ready() -> void:
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
 	await _test_kiln_dungeon()
+	await _test_mire_dungeon()
 	await _test_villagers()
 	await _test_story()
 	await _test_brinewood_pearl()
@@ -316,7 +317,7 @@ func _test_villagers() -> void:
 			people[child.kind] = child
 		elif child is Prop and child.kind == "n":
 			sign = child
-	for who in ["hessa", "pell", "marga", "dunstan"]:
+	for who in ["hessa", "pell", "marga", "dunstan", "nettle"]:
 		_check(people.has(who), "%s lives in Saltmarrow" % who)
 	# On screen, each of them, and Wren standing just below to talk, stays
 	# above the tallest the dialogue box (and its name tab) ever gets.
@@ -713,6 +714,131 @@ func _count_projectiles(room: Room) -> int:
 			count += 1
 	return count
 
+
+
+## Lantern Mire: the Glowmoth Lantern, dark rooms, veiled planks, Shades,
+## braziers and the Pale Congregation.
+func _test_mire_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_25_10.tscn"), "Lantern Mire has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(25, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	_check(GameState.dungeon == "mire" and game.current_room.biome == "mire", "Wren starts inside Lantern Mire")
+	_check(not game.current_room.has_node("Darkness"), "the entry isn't dark")
+	_check(not player.use_item("glowmoth_lantern"), "no lantern before it's found")
+	GameState.give_item("glowmoth_lantern")
+	_check(GameState.item_slots.has("glowmoth_lantern"), "the lantern goes in an item slot")
+
+	# The Drowned Walk: dark, and its planks only there in the light.
+	var room := await _goto(game, Vector2i(26, 9), Vector2i(2, 6))
+	await _calm(room)
+	_check(room.has_node("Darkness"), "the Drowned Walk is dark")
+	var planks := _child_of(room, VeilPlank)
+	_check(planks.size() > 10 and planks.all(func(p: VeilPlank) -> bool: return not p.is_real()), "its planks aren't there in the dark")
+	player.global_position = _tile_pos(room, Vector2i(3, 6))
+	Input.action_press("move_right")
+	await _wait(0.8)
+	Input.action_release("move_right")
+	var local := player.global_position - room.global_position
+	_check(local.x < 5 * Room.TILE, "Wren can't walk out over the dark water (at %s)" % local)
+	_check(player.use_item("glowmoth_lantern") and player.lantern_raised, "Wren raises the lantern")
+	await _wait(0.2)
+	_check(planks.filter(func(p: VeilPlank) -> bool: return p.is_real()).size() > 0, "planks near the raised lantern become real")
+	Input.action_press("move_right")
+	await _wait(0.9)
+	Input.action_release("move_right")
+	local = player.global_position - room.global_position
+	_check(local.x > 9 * Room.TILE, "in the lantern's light Wren walks the planks to the island (at %s)" % local)
+
+	# A Shade: out of the light the sword finds nothing; in it, it's hurt.
+	player.use_item("glowmoth_lantern")
+	_check(not player.lantern_raised, "and lowers it again")
+	var shade := Shade.new()
+	shade.position = player.position - room.position + Vector2(0, 20)
+	room.add_child(shade)
+	await _wait(0.1)
+	_check(shade.take_hit(1, Vector2.DOWN) == Enemy.HitResult.BLOCKED, "a Shade in the dark can't be hurt")
+	player.use_item("glowmoth_lantern")
+	await _wait(0.05)
+	_check(shade.exposed and shade.take_hit(1, Vector2.DOWN) == Enemy.HitResult.HIT, "caught in the lantern's light, it can")
+	shade.queue_free()
+
+	# The Hall of Braziers: light all four and the bars open on a key.
+	room = await _goto(game, Vector2i(26, 8), Vector2i(11, 11))
+	await _calm(room)
+	if not player.lantern_raised:
+		player.use_item("glowmoth_lantern")
+	var braziers := _child_of(room, Brazier)
+	_check(braziers.size() == 4, "four braziers stand in the Hall")
+	var bars: Bars = _child_of(room, Bars)[0]
+	for brazier: Brazier in braziers:
+		_check(not bars.is_open, "the bars stay shut until every brazier burns")
+		player.global_position = brazier.global_position + Vector2(0, 16)
+		await _wait(0.1)
+		_check(brazier.lit, "the raised lantern lights a brazier")
+	await _wait(0.4)
+	_check(bars.is_open, "all four lit, the bars open")
+	player.use_item("glowmoth_lantern")
+	player.global_position = _tile_pos(room, Vector2i(11, 3))
+	player.facing = Vector2.UP
+	await _wait(0.4)
+	player.try_interact()
+	_check(GameState.keys("mire") == 1, "the Hall's chest holds a small key")
+	await _wait(0.6)
+
+	# The Pale Congregation.
+	GameState.refill()
+	room = await _goto(game, Vector2i(25, 7), Vector2i(11, 10))
+	var bosses := _child_of(room, PaleCongregation)
+	_check(bosses.size() == 1, "the Pale Congregation waits in the Still Pool")
+	if bosses.size() == 1:
+		var boss: PaleCongregation = bosses[0]
+		player._invuln = 60.0
+		_check(boss.wisps.size() == 22, "its calf is made of 22 wisps")
+		await _wait(3.0)
+		_check(not boss.is_exposed(), "gathered round the heart, the wisps shield it")
+		_check(boss.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED and boss.hp == 6, "the sword can't reach the heart through them")
+		player.use_item("glowmoth_lantern")
+		await _wait(1.2)
+		_check(boss.is_exposed(), "raising the lantern draws the wisps away to Wren")
+		var near := 0
+		for wisp: Dictionary in boss.wisps:
+			if (wisp["at"] as Vector2).distance_to(player.global_position - room.global_position) < PaleCongregation.ORBIT_START + 20.0:
+				near += 1
+		_check(near > 11, "and they circle Wren, closing in (%d near)" % near)
+		player.use_item("glowmoth_lantern")
+		await _wait(0.2)
+		_check(boss.is_exposed() and boss.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "lowered, the heart stays bare while they drift home")
+		await _wait(4.0)
+		_check(not boss.is_exposed(), "until they gather round it again")
+		while boss.hp > 0:
+			boss._stun = 0.0
+			for wisp: Dictionary in boss.wisps:
+				wisp["home"] = false
+			boss.take_hit(1, Vector2.UP)
+		_check(GameState.flags.get(PaleCongregation.DEFEATED_FLAG, false), "striking the bare heart lays the Congregation to rest")
+		await _wait(5.0)
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "mire", "the Moth Bell rises in the Still Pool")
+		if bell:
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("mire")), "ringing the Moth Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
+	if player.lantern_raised:
+		player.use_item("glowmoth_lantern")
+	game.queue_free()
+	await _wait(0.1)
 
 func _tile_pos(room: Room, tile: Vector2i) -> Vector2:
 	return room.global_position + Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
@@ -1452,7 +1578,7 @@ func _test_audio() -> void:
 	_check(Audio.cue_for_room("brinewood", "") == "region_brinewood", "rooms play their region's music")
 	_check(Audio.cue_for_room("hull", "hull") == "dungeon_hull", "dungeon rooms play the dungeon's music")
 	var heard: Array[String] = []
-	var listen := func(key: String) -> void: heard.append(key)
+	var listen := func(key: String, _side: int) -> void: heard.append(key)
 	Events.caption.connect(listen)
 	var was := Settings.captions
 	Settings.captions = true
@@ -1463,6 +1589,29 @@ func _test_audio() -> void:
 	Settings.captions = was
 	Events.caption.disconnect(listen)
 	_check(heard == ["CAPTION_BELL"], "captions show only when the option is on")
+	var sides: Array[int] = []
+	var listen_side := func(_key: String, side: int) -> void: sides.append(side)
+	Events.caption.connect(listen_side)
+	Settings.captions = true
+	for at: Variant in [Vector2(-1000, 0), Vector2(100000, 0), null]:
+		Audio._last_played.clear()
+		Audio.play_sfx("bell_ring", at)
+	Settings.captions = was
+	Events.caption.disconnect(listen_side)
+	_check(sides == [-1, 1, 0], "captions say which side a sound came from (%s)" % [sides])
+	# High contrast outlines sprites that ask for one, only while it's on.
+	var outlined := Art.sprite(Art.WREN, 6, 3, 22)
+	outlined.set_meta("contrast", Palette.CONTRAST_WREN)
+	var contrast_was := Settings.high_contrast
+	Settings.high_contrast = true
+	Art.set_flash(outlined, 0.0)
+	var on: Color = (outlined.material as ShaderMaterial).get_shader_parameter("outline_color")
+	Settings.high_contrast = false
+	Art.set_flash(outlined, 0.0)
+	var off: Color = (outlined.material as ShaderMaterial).get_shader_parameter("outline_color")
+	Settings.high_contrast = contrast_was
+	outlined.free()
+	_check(on == Palette.CONTRAST_WREN and off.a == 0.0, "high contrast outlines Wren only when it's on")
 	Audio.play_music("region_saltmarrow")
 	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
 	Audio.stop_music(0.01)
@@ -1639,6 +1788,15 @@ func _test_side_quests() -> void:
 	Conversations.talk("marga")
 	_finish_talk(game)
 	_check(GameState.item_count("jar") == 1, "Marga only gives one jar")
+
+	# Nettle learns the lamp signals once Wren has met Hessa.
+	GameState.reset_new_game()
+	_check(Conversations.branch_for("nettle")["lines"][0] == "NETTLE_1", "Nettle wants to come along at first")
+	GameState.set_flag("met_hessa")
+	Conversations.talk("nettle")
+	_finish_talk(game)
+	_check(GameState.has_flag("nettle_learned"), "Wren teaches Nettle the long glow")
+	_check(Conversations.branch_for("nettle")["lines"][0] == "NETTLE_AGAIN", "Nettle practises afterwards")
 	game.queue_free()
 	await _wait(0.1)
 

@@ -46,13 +46,11 @@ ROOM_HULL_BOSS,The Rotting Hull: Figurehead Hold
 TOAST_GOT_TIDE_HOOK,You found the Tide Hook!
 GOT_TIDE_HOOK_1,"The Tide Hook! A barbed iron hook on a long chain, still cold from the sea."
 GOT_TIDE_HOOK_2,"Press U to throw it. It bites into iron rings and carries you across, and it drags crates and small creatures back to you."
-TOAST_GOT_MAP,You found the Hull's map.
+TOAST_GOT_MAP,You found the map.
 TOAST_GOT_COMPASS,You found the compass.
 TOAST_GOT_BIG_KEY,You found the big key!
 TOAST_BIG_DOOR_LOCKED,The great door won't move. It needs the big key.
 TOAST_BIG_DOOR_OPEN,The big key turns. The great door groans open.
-TOAST_CHEST_APPEARS,A chest appears!
-TOAST_GATE_OPENS,Something unlocks with a clank.
 BOSS_MATRIARCH,The Barnacle Matriarch
 TOAST_BELL_QUIET,The Tidebell hums softly.
 BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
@@ -87,7 +85,7 @@ ITEM_TIDE_HOOK_DESC,A barbed hook on a long line. Pulls small things in and Wren
 ITEM_STONEBREAKER,Stonebreaker Mallet
 ITEM_STONEBREAKER_DESC,Heavy enough to crack boulders and flip armoured shells.
 ITEM_GLOWMOTH_LANTERN,Glowmoth Lantern
-ITEM_GLOWMOTH_LANTERN_DESC,Moths that glow in the dark. Shows what hides from light and burns oil.
+ITEM_GLOWMOTH_LANTERN_DESC,Moths that glow in the dark. Raise it to show what hides from light.
 ITEM_KITE_CLOAK,Kite Cloak
 ITEM_KITE_CLOAK_DESC,Catch the wind and glide from high places.
 ITEM_FROSTFANG_BOW,Frostfang Bow
@@ -170,7 +168,7 @@ OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
 OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
-OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
+OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up. An arrow points to sounds from one side."
 OPT_COLOR_FILTER,Colour filter
 OPT_COLOR_FILTER_DESC,"Shifts colours so they stay apart for red, green or blue colour blindness."
 OPT_PROTAN,Protan
@@ -180,6 +178,8 @@ OPT_SCREEN_SHAKE,Screen shake
 OPT_SCREEN_SHAKE_DESC,How hard the screen shakes on big hits.
 OPT_HITSTOP,Hit pause
 OPT_HITSTOP_DESC,The tiny freeze when a hit lands.
+OPT_HIGH_CONTRAST,High contrast
+OPT_HIGH_CONTRAST_DESC,"Outline Wren and enemies, and put solid backings behind the HUD and captions."
 OPT_FLASHES,Flashes
 OPT_FLASHES_DESC,"Full white flashes, or soft ones that are gentler on the eyes."
 OPT_FLASH_SOFT,Soft
@@ -343,6 +343,25 @@ ROOM_SLAG_FIELDS,Slag Fields
 ROOM_KILN_MOUTH,The Kiln's Mouth
 ROOM_GEYSER_BASIN,Geyser Basin
 ROOM_SCORCHED_PASS,Scorched Pass
+ROOM_MIRE_ENTRY,Lantern Mire
+ROOM_MIRE_HUB,Lantern Mire: Mourners' Walk
+ROOM_MIRE_CANDLES,Lantern Mire: Candle Store
+ROOM_MIRE_CHAPEL,Lantern Mire: Moth Chapel
+ROOM_MIRE_DROWNED,Lantern Mire: Drowned Walk
+ROOM_MIRE_BRAZIERS,Lantern Mire: Hall of Braziers
+ROOM_MIRE_GRAVES,Lantern Mire: Grave Lamps
+ROOM_MIRE_OSSUARY,Lantern Mire: Ossuary
+ROOM_MIRE_BOSS,Lantern Mire: the Still Pool
+DUNGEON_MIRE,Lantern Mire
+TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!
+GOT_GLOWMOTH_LANTERN_1,"The Glowmoth Lantern! Pale moths stir inside the glass, and the dark around you thins."
+GOT_GLOWMOTH_LANTERN_2,"Press its item key (U or I) to raise it, and again to lower it. Things that hide from the light can't hide from it."
+BOSS_PALE_CONGREGATION,The Pale Congregation
+BELL_MIRE_1,"You ring the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
+BELL_MIRE_2,"The wisps drift down and settle like snow. Far away, something huge turns over in its sleep, and lies still."
+BELL_MIRE_3,You learned the third phrase of the lullaby. Your Resonance grows.
+CAPTION_FLAME,Flame catches
+CAPTION_HEARTBEAT,Heartbeat
 ROOM_FENMOUTH,Fenmouth
 ROOM_GLOWCAP_GROVE,Glowcap Grove
 ROOM_STILLWATER_REACH,Stillwater Reach
@@ -374,6 +393,9 @@ CAPTION_BELL,A bell rings
 CAPTION_SECRET,Secret chime
 CAPTION_DOOR,Stone grinds
 CAPTION_PUZZLE,Something opened
+CAPTION_CHARGED,Sword charged
+CAPTION_LOCKED,Locked
+CAPTION_SHOT,Shot fired
 GAMEOVER_TITLE_TEXT,Out of breath
 GAMEOVER_WAKE,Wake at the Tidestone
 GAMEOVER_TITLE,Return to the title
@@ -399,3 +421,16 @@ NARRATE_GOT_JAR,Wren got an empty jar.
 MARGA_AFTER,"Rack's holding. Dunstan even helped tie it, if you can believe it."
 HESSA_MANTLE_1,"The bell! Good. But from the gallery I saw something huge thrashing on the Wreck Strand."
 HESSA_MANTLE_2,"Choir nets, I'd wager. On the strand, just this side of the Hull. Go and see, then come back to me."
+NAME_NETTLE,Nettle
+NETTLE_1,"Are you going up to see Hessa? Can I come? ...She'll say no. She always says no."
+NETTLE_2,"One day I'll have a lamp like yours. A real one, not paper."
+NETTLE_LEARN_1,Will you teach me the signals? I know some. One flash is yes. Two is no.
+NETTLE_LEARN_2,"And the long one is... I always forget the long one."
+NARRATE_WREN_LONG_GLOW,"Wren holds up the lamp in a long, steady glow."
+NETTLE_LEARN_3,"I'm here! The long one means I'm here. I won't forget again."
+NETTLE_AGAIN,"Yes, no, I'm here. Yes, no, I'm here. I'm practising."
+NETTLE_BELL_1,I saw you coming home with the bell! I flashed my lantern at you. Did you see?
+NARRATE_WREN_FLASH_ONCE,Wren flashes the lamp once.
+NETTLE_BELL_2,Yes! I knew you saw.
+NETTLE_WAYSHELL_1,"Hessa gave you the old keepers' shell? Then you're a proper keeper now."
+NETTLE_WAYSHELL_2,"When you're old, I'll take over. That's the plan."

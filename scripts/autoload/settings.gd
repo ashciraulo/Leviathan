@@ -24,6 +24,9 @@ var text_speed := 1
 var large_text := false
 ## Show captions for important sounds (accessibility; off by default).
 var captions := false
+## High contrast: outlines Wren and enemies, and gives the HUD and captions
+## solid backings.
+var high_contrast := false
 ## Colour filter: 0 off, 1 protanopia, 2 deuteranopia, 3 tritanopia.
 var color_filter := 0
 ## Volumes, 0 to 10.
@@ -177,6 +180,7 @@ func load_settings() -> void:
 	text_speed = clampi(int(cfg.get_value("text", "speed", text_speed)), 0, TEXT_SPEEDS.size() - 1)
 	large_text = bool(cfg.get_value("text", "large", large_text))
 	captions = bool(cfg.get_value("text", "captions", captions))
+	high_contrast = bool(cfg.get_value("feel", "high_contrast", high_contrast))
 	color_filter = clampi(int(cfg.get_value("feel", "color_filter", color_filter)), 0, 3)
 	music_volume = clampi(int(cfg.get_value("audio", "music", music_volume)), 0, 10)
 	effects_volume = clampi(int(cfg.get_value("audio", "effects", effects_volume)), 0, 10)
@@ -198,6 +202,7 @@ func save_settings() -> void:
 	cfg.set_value("text", "speed", text_speed)
 	cfg.set_value("text", "large", large_text)
 	cfg.set_value("text", "captions", captions)
+	cfg.set_value("feel", "high_contrast", high_contrast)
 	cfg.set_value("feel", "color_filter", color_filter)
 	cfg.set_value("audio", "music", music_volume)
 	cfg.set_value("audio", "effects", effects_volume)

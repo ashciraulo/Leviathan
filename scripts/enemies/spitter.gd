@@ -49,6 +49,7 @@ func _fire_at(target: Vector2) -> void:
 	# Direct add: this runs in _physics_process, and a deferred add could land
 	# after the room was freed.
 	get_parent().add_child(shot)
+	Audio.play_sfx("enemy_shot", global_position)
 
 
 func _make_sprite() -> Sprite2D:

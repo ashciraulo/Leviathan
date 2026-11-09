@@ -31,6 +31,9 @@ extends Node2D
 ##          ^  lava (like a gap, but it burns)   Y  cracked boulder (mallet)
 ##          i  peg (mallet drives it down)   z  drop hammer
 ##          k  Clinker (slag-shelled beetle: flip it with the mallet)
+##          j  brazier (the raised lantern lights it)
+##          v  veiled plank (walkable only in lantern light)
+##          q  Shade (only hurt in lantern light)   x  wisp
 ##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
@@ -68,6 +71,8 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Wren is inside (0 for none), and the row where they're safe from it.
 @export var lava_rise := 0.0
 @export var lava_safe_row := 2
+## A dark room: only Wren's lantern and things that glow light it.
+@export var dark := false
 ## What signposts (n) in this room say: a translation key.
 @export var sign_key := ""
 ## Windmere: the direction and strength (px/s) of the gusts that sweep
@@ -131,6 +136,12 @@ const BIOMES := {
 		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
 		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
 	},
+	"mire": {
+		"floor": "mire_floor_%d", "wall_top": "mire_top_%d", "wall_face": "mire_face_%d",
+		"water": "murk_%d", "water_edge": "murkbank_%s_%d", "damp": "mirewet_%s",
+		"wet_deco": "shrooms_%d", "dry_deco": "spores_%d",
+		"floor_overlay": ["grave_lamp_%d", 29], "door": "exit_glow",
+	},
 }
 
 
@@ -146,6 +157,10 @@ func _ready() -> void:
 	_ground.draw.connect(_draw_ground)
 	add_child(_ground)
 	_build()
+	if dark:
+		var darkness := Darkness.new()
+		darkness.name = "Darkness"
+		add_child(darkness)
 
 
 static func parse_layout(text: String) -> PackedStringArray:
@@ -298,7 +313,7 @@ func _hash(x: int, y: int) -> int:
 func _near_water(x: int, y: int) -> bool:
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
-			if _tile_at(x + dx, y + dy) == "~":
+			if _tile_at(x + dx, y + dy) in ["~", "v"]:
 				return true
 	return false
 
@@ -325,20 +340,20 @@ func _draw_ground() -> void:
 				var runs_vertical := (_tile_at(x, y - 1) == ":" or _tile_at(x, y + 1) == ":") \
 						and _tile_at(x - 1, y) != ":" and _tile_at(x + 1, y) != ":"
 				_draw_tile(tiles["boardwalk"] % ("v" if runs_vertical else "h"), x, y)
-			elif tile == "~":
+			elif tile == "~" or tile == "v":
 				_draw_tile(tiles["water"] % _water_frame, x, y)
 				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					# Boardwalks sit on the water, so no bank line against them.
-					if not _tile_at(x + side[1], y + side[2]) in ["~", ":"]:
+					if not _tile_at(x + side[1], y + side[2]) in ["~", ":", "v"]:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
 				_draw_tile(tiles["floor"] % (h % 4), x, y)
 				# Damp ground fades out from any water alongside.
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
-					if _tile_at(x + side[1], y + side[2]) == "~":
+					if _tile_at(x + side[1], y + side[2]) in ["~", "v"]:
 						_draw_tile(tiles["damp"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)

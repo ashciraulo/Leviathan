@@ -48,7 +48,7 @@ const SFX := {
 	# Player
 	"sword_swing": {"wave": "noise", "f0": 1800.0, "f1": 600.0, "dur": 0.09, "vol": 0.35},
 	"sword_spin": {"wave": "noise", "f0": 800.0, "f1": 2400.0, "dur": 0.25, "vol": 0.4},
-	"spin_charged": {"wave": "square", "f0": 880.0, "f1": 1320.0, "dur": 0.12, "vol": 0.25, "steps": 2},
+	"spin_charged": {"wave": "square", "f0": 880.0, "f1": 1320.0, "dur": 0.12, "vol": 0.25, "steps": 2, "caption": "CAPTION_CHARGED"},
 	"player_hurt": {"wave": "square", "f0": 420.0, "f1": 140.0, "dur": 0.18, "vol": 0.45},
 	"bubble_pop": {"wave": "triangle", "f0": 900.0, "f1": 1800.0, "dur": 0.07, "vol": 0.45},
 	"hum": {"wave": "triangle", "f0": 330.0, "f1": 330.0, "dur": 0.35, "vol": 0.3, "caption": "CAPTION_HUM"},
@@ -60,6 +60,11 @@ const SFX := {
 	"bomb_fuse": {"wave": "noise", "f0": 5000.0, "f1": 5000.0, "dur": 0.3, "vol": 0.15, "caption": "CAPTION_FUSE"},
 	"bomb_blast": {"wave": "noise", "f0": 400.0, "f1": 60.0, "dur": 0.5, "vol": 0.7, "caption": "CAPTION_BLAST"},
 	"wayshell": {"wave": "triangle", "f0": 392.0, "f1": 392.0, "dur": 0.8, "vol": 0.45, "steps": 3, "caption": "CAPTION_WAYSHELL"},
+	"lantern_up": {"wave": "triangle", "f0": 660.0, "f1": 990.0, "dur": 0.18, "vol": 0.3, "steps": 2},
+	"lantern_down": {"wave": "triangle", "f0": 660.0, "f1": 440.0, "dur": 0.14, "vol": 0.25},
+	"brazier_catch": {"wave": "noise", "f0": 900.0, "f1": 2400.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_FLAME"},
+	"wisp_chime": {"wave": "triangle", "f0": 1568.0, "f1": 1568.0, "dur": 0.25, "vol": 0.2, "steps": 2},
+	"heart_beat": {"wave": "triangle", "f0": 110.0, "f1": 70.0, "dur": 0.22, "vol": 0.5, "caption": "CAPTION_HEARTBEAT"},
 	"mantle_wings": {"wave": "noise", "f0": 300.0, "f1": 150.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_WINGS"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},
@@ -67,13 +72,13 @@ const SFX := {
 	"block": {"wave": "square", "f0": 2200.0, "f1": 1800.0, "dur": 0.05, "vol": 0.35, "caption": "CAPTION_BLOCK"},
 	"enemy_die": {"wave": "noise", "f0": 1200.0, "f1": 120.0, "dur": 0.25, "vol": 0.45},
 	"enemy_tell": {"wave": "square", "f0": 300.0, "f1": 600.0, "dur": 0.2, "vol": 0.3, "caption": "CAPTION_TELL"},
-	"enemy_shot": {"wave": "square", "f0": 700.0, "f1": 350.0, "dur": 0.1, "vol": 0.3},
+	"enemy_shot": {"wave": "square", "f0": 700.0, "f1": 350.0, "dur": 0.1, "vol": 0.3, "caption": "CAPTION_SHOT"},
 	"boss_roar": {"wave": "noise", "f0": 220.0, "f1": 80.0, "dur": 0.9, "vol": 0.6, "caption": "CAPTION_ROAR"},
 	# World
 	"chest_open": {"wave": "square", "f0": 392.0, "f1": 392.0, "dur": 0.35, "vol": 0.35, "steps": 4},
 	"key_get": {"wave": "square", "f0": 988.0, "f1": 988.0, "dur": 0.2, "vol": 0.3, "steps": 2},
 	"door_unlock": {"wave": "square", "f0": 500.0, "f1": 250.0, "dur": 0.15, "vol": 0.4, "caption": "CAPTION_UNLOCK"},
-	"door_locked": {"wave": "square", "f0": 180.0, "f1": 170.0, "dur": 0.12, "vol": 0.35},
+	"door_locked": {"wave": "square", "f0": 180.0, "f1": 170.0, "dur": 0.12, "vol": 0.35, "caption": "CAPTION_LOCKED"},
 	"switch": {"wave": "square", "f0": 660.0, "f1": 440.0, "dur": 0.06, "vol": 0.35, "caption": "CAPTION_SWITCH"},
 	"pot_break": {"wave": "noise", "f0": 3000.0, "f1": 800.0, "dur": 0.15, "vol": 0.4},
 	# Overworld hazards
@@ -271,7 +276,22 @@ func play_sfx(id: String, at: Variant = null, pitch: float = 1.0) -> void:
 		flat.play()
 	var caption := str(SFX.get(id, {}).get("caption", ""))
 	if caption != "" and Settings.captions:
-		Events.caption.emit(caption)
+		Events.caption.emit(caption, _side_of(at))
+
+
+## Where a world position is on screen, for captions: -1 on the left third
+## (or off the left edge), 1 on the right third, 0 in the middle or flat.
+func _side_of(at: Variant) -> int:
+	if not at is Vector2:
+		return 0
+	var view := get_viewport()
+	var x: float = (view.get_canvas_transform() * (at as Vector2)).x
+	var width: float = view.get_visible_rect().size.x
+	if x < width / 3.0:
+		return -1
+	if x > width * 2.0 / 3.0:
+		return 1
+	return 0
 
 
 func has_sfx(id: String) -> bool:
