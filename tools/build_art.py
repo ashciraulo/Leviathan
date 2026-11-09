@@ -1120,6 +1120,8 @@ def main():
     write_png(os.path.join(OUT, "ui", "title_bg.png"), title_art.build_title_bg())
     import ui_art
     ui_art.build(sys.modules[__name__])
+    import mantle_art
+    mantle_art.build(sys.modules[__name__])
     font_px, font_fnt = build_font()
     write_png(os.path.join(OUT, "fonts", "tide.png"), font_px)
     write_text(os.path.join(OUT, "fonts", "tide.fnt"), font_fnt)
