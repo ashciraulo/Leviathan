@@ -41,27 +41,35 @@ func _ready() -> void:
 	add_to_group("lighthouse_beam")
 	# Over the village (and the tower itself), under the HUD.
 	z_index = 20
-	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Light adds to what's under it.
 	var add := CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	material = add
 	_dusk = CanvasModulate.new()
-	_dusk.color = Color.WHITE.lerp(DUSK, strength)
+	# Dusk eases in (see _process), so it never snaps on.
+	_dusk.color = Color.WHITE
 	get_parent().add_child.call_deferred(_dusk)
 
 
 func _process(delta: float) -> void:
 	_time += delta
 	if is_instance_valid(_dusk):
-		_dusk.color = Color.WHITE.lerp(DUSK, strength)
+		var target := Color.WHITE.lerp(DUSK, strength)
+		_dusk.color = _dusk.color.lerp(target, minf(delta * 2.5, 1.0))
 	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	# Sliding out of the village: the room stops processing, but its dusk
+	# would tint the next room too, so let the light come back up.
+	if what == NOTIFICATION_DISABLED and is_instance_valid(_dusk):
+		get_tree().create_tween().tween_property(_dusk, "color", Color.WHITE, 0.4)
 
 
 ## Swing round from `from` to point seaward. Await it.
 func turn(from: float, seconds: float) -> void:
 	angle = from
-	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(self, "angle", SEAWARD, seconds)
 	await tween.finished

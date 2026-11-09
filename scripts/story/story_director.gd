@@ -107,8 +107,10 @@ func _on_room_entered(coord: Vector2i) -> void:
 		the_ending()
 		return
 	if GameState.has_flag(ENDING_FLAG):
-		if _heart_here():
+		if _heart_here() and not GameState.has_flag(HEART_VISIT_FLAG):
 			GameState.set_flag(HEART_VISIT_FLAG)
+			# Kept even if Wren falls before the next save.
+			SaveManager.save_game()
 		elif coord == SALTMARROW and not GameState.has_flag(HEART_VISIT_FLAG):
 			if not GameState.has_flag(DREAM_FLAG):
 				the_old_one_dreams()
@@ -586,7 +588,7 @@ func the_old_one_dreams() -> void:
 	var beam := LighthouseBeam.at_lighthouse(room)
 	if beam:
 		beam.strength = 0.0
-		var glow := beam.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		var glow := beam.create_tween()
 		glow.tween_property(beam, "strength", 1.0, Cutscene.scaled(0.8))
 		await beam.turn(LighthouseBeam.START, Cutscene.scaled(3.0))
 	await scene.wait(1.0)
