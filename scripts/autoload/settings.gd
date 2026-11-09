@@ -76,6 +76,8 @@ var _default_events: Dictionary = {}
 
 
 func _ready() -> void:
+	# Keeps noticing the device in use while menus pause the game.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_register_default_actions()
 	_set_default_font()
 	_make_filter()
@@ -116,23 +118,56 @@ func reset_controls() -> void:
 
 
 ## Rebinds an action's main key (or main gamepad button). If another
-## action already uses it, the two swap, so nothing ends up doubled.
-func rebind(action: String, event: InputEvent) -> void:
+## action's main key already uses it, the two swap, so nothing is bound
+## twice. Returns false (and changes nothing) when the key can't be taken:
+## it is one of another action's fixed keys (the arrows), the action has
+## nothing to give in exchange, or the swap would move Escape or Start off
+## Pause.
+func rebind(action: String, event: InputEvent) -> bool:
 	if event is InputEventKey:
 		var code := int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode)
 		var old := main_key(action)
+		if code == old:
+			return true
 		for other: String in REMAPPABLE:
-			if other != action and main_key(other) == code and old != KEY_NONE:
-				key_overrides[other] = old
+			if other == action or not code in _keys_of(other):
+				continue
+			if main_key(other) != code or old == KEY_NONE or (old == KEY_ESCAPE and other != "pause"):
+				return false
+			key_overrides[other] = old
 		key_overrides[action] = code
 	elif event is InputEventJoypadButton:
 		var button := int(event.button_index)
 		var old := main_button(action)
+		if button == old:
+			return true
 		for other: String in REMAPPABLE:
-			if other != action and main_button(other) == button and old != JOY_BUTTON_INVALID:
-				pad_overrides[other] = old
+			if other == action or not button in _buttons_of(other):
+				continue
+			if main_button(other) != button or old == JOY_BUTTON_INVALID or (old == JOY_BUTTON_START and other != "pause"):
+				return false
+			pad_overrides[other] = old
 		pad_overrides[action] = button
+	else:
+		return false
 	_apply_bindings()
+	return true
+
+
+func _keys_of(action: String) -> Array:
+	var out := []
+	for event in InputMap.action_get_events(action):
+		if event is InputEventKey:
+			out.append(int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode))
+	return out
+
+
+func _buttons_of(action: String) -> Array:
+	var out := []
+	for event in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton:
+			out.append(int(event.button_index))
+	return out
 
 
 ## The physical keycode of an action's main key (KEY_NONE if it has none).

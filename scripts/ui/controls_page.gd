@@ -68,9 +68,12 @@ func _capture(event: InputEvent) -> bool:
 		return true
 	var wanted := (_column == 0 and event is InputEventKey) or (_column == 1 and event is InputEventJoypadButton)
 	if wanted:
-		Settings.rebind(Settings.REMAPPABLE[_row], event)
-		Settings.save_settings()
-		_waiting = false
+		if Settings.rebind(Settings.REMAPPABLE[_row], event):
+			Settings.save_settings()
+			_waiting = false
+		else:
+			# Taken by something that can't give it up: keep waiting.
+			Audio.play_sfx("door_locked")
 	return true
 
 

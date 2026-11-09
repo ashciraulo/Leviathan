@@ -1333,11 +1333,13 @@ func _test_items() -> void:
 	var old := SaveManager.read_summary(TEST_SLOT)
 	_check(int(old.get("bubbles", 0)) == 8 and str(old.get("place", "")) != "", "old saves get a summary")
 	# A gamepad button for Tab Next, which has no default button.
-	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	# It has no button to give back, so it can't take one in use.
+	_check(not Settings.rebind("tab_next", _pad_event(JOY_BUTTON_A)), "Tab Next can't take a button in use")
+	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_STICK))
 	var has_button := false
 	for event in InputMap.action_get_events("tab_next"):
-		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER)
-	_check(has_button, "rebinding Tab Next to a button works")
+		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_STICK)
+	_check(has_button, "rebinding Tab Next to a free button works")
 	Settings.pad_overrides.erase("tab_next")
 	Settings.apply()
 	# Taking a key another action uses swaps the two.
@@ -1351,6 +1353,14 @@ func _test_items() -> void:
 	Settings.rebind("item_1", _pad_event(JOY_BUTTON_Y))
 	_check(Settings.main_button("item_1") == JOY_BUTTON_Y and Settings.main_button("item_2") == JOY_BUTTON_X,
 		"rebinding to a used button swaps the two actions")
+	var up_arrow := InputEventKey.new()
+	up_arrow.physical_keycode = KEY_UP
+	_check(not Settings.rebind("attack", up_arrow) and Settings.main_key("attack") == KEY_K,
+		"an arrow key (always movement) can't be taken")
+	var pause_k := InputEventKey.new()
+	pause_k.physical_keycode = KEY_K
+	_check(not Settings.rebind("pause", pause_k) and Settings.main_key("attack") == KEY_K,
+		"a swap never moves Escape off Pause")
 	Settings.key_overrides = key_was
 	Settings.pad_overrides = pad_was
 	Settings.apply()

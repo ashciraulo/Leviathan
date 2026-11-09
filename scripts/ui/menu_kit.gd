@@ -213,10 +213,16 @@ static func keyboard_name(action: String) -> String:
 ## The first gamepad button (or trigger) bound to an action, short.
 static func pad_name(action: String) -> String:
 	for event in InputMap.action_get_events(action):
+		var key := ""
 		if event is InputEventJoypadButton:
-			return TranslationServer.translate("PAD_SHORT_%d" % event.button_index)
-		if event is InputEventJoypadMotion:
-			return TranslationServer.translate("PAD_SHORT_AXIS_%d" % event.axis)
+			key = "PAD_SHORT_%d" % event.button_index
+		elif event is InputEventJoypadMotion:
+			key = "PAD_SHORT_AXIS_%d" % event.axis
+		else:
+			continue
+		var text := TranslationServer.translate(key)
+		# Unusual buttons (paddles, touchpad) have no name: show the number.
+		return text if text != key else "B%s" % key.get_slice("_", key.get_slice_count("_") - 1)
 	return "-"
 
 
