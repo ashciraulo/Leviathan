@@ -455,6 +455,7 @@ def build_enemies():
     awake = [r.replace("n", "N") for r in TIDESTONE]
     out["tidestone"] = sheet([[lit(TIDESTONE, 6), lit(awake, 6)]], 16, 22)
     out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
+    out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
 

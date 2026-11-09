@@ -6,7 +6,7 @@
 script = ExtResource("1_room")
 name_key = "ROOM_LANTERN_WALK"
 biome = "brinewood"
-layout = "########################
+layout = "###########..###########
 ####..................##
 ###...M.....l.....M...##
 ##......~~~~...........#
