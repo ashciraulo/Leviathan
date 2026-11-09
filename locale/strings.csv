@@ -535,6 +535,18 @@ NARRATE_WREN_FLASH_ONCE,Wren flashes the lamp once.
 NETTLE_BELL_2,Yes! I knew you saw.
 NETTLE_WAYSHELL_1,"Hessa gave you the old keepers' shell? Then you're a proper keeper now."
 NETTLE_WAYSHELL_2,"When you're old, I'll take over. That's the plan."
+NAME_MARLO,Marlo Pike
+MARLO_1,"Pike's the name, Marlo Pike. If it's worth having in Saltmarrow, it crosses this counter first."
+MARLO_2,"Glints only, mind. Shells and promises I can pick up off the beach for nothing."
+MARLO_AGAIN,"Back again, young keeper? Go on, have a look."
+MARLO_PUFFERS_1,"You cracked that old hull open! The puffers are back in the shallows, fat as you like."
+MARLO_PUFFERS_2,"Dried, and stuffed with blast-salt. Keep them well away from that lamp of yours."
+MARLO_THANKS,"Pleasure doing business. Mind how you go."
+MARLO_END,"Quiet tides now. Good for trade. Good for sleeping, too, I find."
+SHOP_TITLE,Pike's Wares
+SHOP_LEAVE,Leave
+SHOP_FULL,Full
+SHOP_NO_JAR,No empty jar
 NAME_AGNA,Agna Holt
 AGNA_1,"A keeper's cap. Haven't seen one of those up the pass in years."
 AGNA_2,"This is the Kiln. All seven bells were cast in there, from bronze and the Old One's shed scale."

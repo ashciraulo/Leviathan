@@ -232,7 +232,7 @@ func _move_state() -> void:
 		velocity = direction * SPEED
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
-	if in_cutscene or DialogueBox.recently_closed():
+	if in_cutscene or DialogueBox.recently_closed() or ShopMenu.recently_closed():
 		return
 	if Input.is_action_just_pressed("interact") and try_interact():
 		velocity = Vector2.ZERO
