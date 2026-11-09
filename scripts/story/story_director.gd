@@ -96,6 +96,11 @@ func _on_room_entered(coord: Vector2i) -> void:
 		GameState.set_flag(TURNED_FLAG)
 	if coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG):
 		_put_up_mural()
+	# The game closed partway through the ending: the Heart sleeps, so pick
+	# the ending up again.
+	if GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and not GameState.has_flag(ENDING_FLAG) and _heart_here():
+		the_ending()
+		return
 	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
@@ -480,9 +485,17 @@ func the_last_mural() -> void:
 ## feels the Point Bell ring through the lighthouse floor. Then the credits,
 ## and Continue picks up at home.
 func the_ending() -> void:
-	if Cutscene.active or GameState.has_flag(ENDING_FLAG):
+	while Cutscene.active:
+		await get_tree().process_frame
+	if GameState.has_flag(ENDING_FLAG):
+		# Already told: the credits still roll.
+		if DreamingHeart.roll_credits:
+			get_tree().change_scene_to_file.call_deferred(DreamingHeart.CREDITS_SCENE)
 		return
 	GameState.set_flag(ENDING_FLAG)
+	# Scenes still owed at home would play after the credits, out of turn.
+	GameState.set_flag(CONFESSION_FLAG)
+	GameState.set_flag("seen_wayshell")
 	var room: Node2D = game.current_room
 	var scene := _scene()
 	await scene.wait(1.0)
@@ -540,6 +553,10 @@ func the_ending() -> void:
 	scene.finish()
 	if DreamingHeart.roll_credits:
 		get_tree().change_scene_to_file.call_deferred(DreamingHeart.CREDITS_SCENE)
+
+
+func _heart_here() -> bool:
+	return game.current_room != null and game.current_room.get_children().any(func(c: Node) -> bool: return c is DreamingHeart)
 
 
 ## Swap the room behind a veil, without the door fade.
