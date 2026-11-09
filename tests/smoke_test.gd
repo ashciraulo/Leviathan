@@ -33,6 +33,7 @@ func _ready() -> void:
 	await _test_hull_dungeon()
 	await _test_villagers()
 	await _test_fast_travel()
+	await _test_credits()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -549,10 +550,34 @@ func _test_play() -> void:
 	# Let any invulnerability from a Spitter hit run out first.
 	await _wait(Player.INVULN_TIME + 0.2)
 
-	# Dying returns Wren to the last Tidestone with full breath.
+	# Dying shows the game over screen; waking returns Wren to the last
+	# Tidestone with full breath.
 	GameState.bubbles = 1
 	game.player.take_damage(1, game.player.global_position + Vector2(10, 0))
-	await _wait(2.0)
+	var over: GameOverScreen = null
+	for i in 40:
+		await _wait(0.1)
+		for child in game.get_children():
+			if child is GameOverScreen:
+				over = child
+		if over:
+			break
+	_check(over != null, "running out of breath shows the game over screen")
+	if over:
+		while over._time < GameOverScreen.INPUT_DELAY + 0.05:
+			await _wait(0.05)
+	var press := InputEventAction.new()
+	press.action = "interact"
+	press.pressed = true
+	Input.parse_input_event(press)
+	await _wait(0.05)
+	var release := InputEventAction.new()
+	release.action = "interact"
+	Input.parse_input_event(release)
+	for i in 40:
+		await _wait(0.1)
+		if game.player != null and not game.busy:
+			break
 	_check(GameState.bubbles == GameState.max_bubbles, "respawn refills breath")
 	_check(game.current_room != null and game.current_room.coord == Vector2i.ZERO, "respawn at the Tidestone's room")
 	_check(game.player != null and game.player.state != Player.State.DEAD, "Wren is back on their feet")
@@ -929,4 +954,18 @@ func _test_fast_travel() -> void:
 	_check(GameState.room_coord == Vector2i.ZERO, "fast travel lands at the chosen Tidestone")
 	Engine.time_scale = 1.0
 	game.queue_free()
+	await _wait(0.1)
+
+
+func _test_credits() -> void:
+	var credits: Control = (load("res://scenes/credits.tscn") as PackedScene).instantiate()
+	add_child(credits)
+	await _wait(0.3)
+	_check(credits._scroll > 0.0, "the credits roll")
+	_check(credits._height > 216.0, "the credits have something to roll")
+	for key in ["CREDITS_DIRECTION", "CREDITS_END", "MENU_CREDITS", "GAMEOVER_WAKE"]:
+		_check(tr(key) != key, "%s is translated" % key)
+	# Leaving would change scene and end the test: don't let it.
+	credits._leaving = true
+	credits.queue_free()
 	await _wait(0.1)

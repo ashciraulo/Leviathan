@@ -158,7 +158,6 @@ MAP_STONE_ASLEEP,A Tidestone sleeps here. Touch it to wake it.
 MAP_STONE_NO_FLY_INSIDE,Tidestone. Mantle can't reach you in here.
 MAP_STONE_NEED_WAYSHELL,Woken Tidestone. Find the Wayshell to fly between them.
 MAP_STONE_FLY,Woken Tidestone. Mantle can fly you here.
-TOAST_MANTLE,Mantle answers the Wayshell.
 OPT_SECTION_TEXT,Text
 OPT_SECTION_ACCESS,Accessibility
 OPT_SECTION_SOUND,Sound
@@ -323,3 +322,17 @@ CAPTION_BELL,A bell rings
 CAPTION_SECRET,Secret chime
 CAPTION_DOOR,Stone grinds
 CAPTION_PUZZLE,Something opened
+GAMEOVER_TITLE_TEXT,Out of breath
+GAMEOVER_WAKE,Wake at the Tidestone
+GAMEOVER_TITLE,Return to the title
+MENU_CREDITS,Credits
+CREDITS_DIRECTION,Directed by
+CREDITS_MAKING,"Design, art and code"
+CREDITS_MUSIC,Music
+CREDITS_FONT,Lettering
+CREDITS_FONT_NAME,"Tide, drawn for Leviathan"
+CREDITS_ENGINE,Made with
+CREDITS_GODOT_LICENSE,"MIT license, (c) the Godot Engine contributors"
+CREDITS_THANKS,With thanks to
+CREDITS_THANKS_NAME,"You, for playing"
+CREDITS_END,The sea sleeps on.

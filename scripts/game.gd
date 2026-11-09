@@ -7,6 +7,7 @@ const SLIDE_TIME := 0.45
 ## How far Wren walks into the new room during the slide.
 const ENTRY_STEP := 20.0
 const FADE_TIME := 0.35
+const TITLE_SCENE := "res://scenes/title.tscn"
 
 var world: Node2D
 var player: Player
@@ -198,6 +199,29 @@ func _on_player_died() -> void:
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
 	await tween.finished
 	Engine.time_scale = 1.0
+	Audio.stop_music(0.5)
+	var screen := GameOverScreen.new()
+	add_child(screen)
+	tween = create_tween()
+	tween.tween_property(_fade, "color:a", 0.0, FADE_TIME)
+	var wake: bool = await screen.chosen
+	tween = create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
+	await tween.finished
+	screen.queue_free()
+	if wake:
+		respawn()
+	else:
+		get_tree().change_scene_to_file(TITLE_SCENE)
+
+
+## Bring Wren back at the last save (her Tidestone), with full breath.
+func respawn() -> void:
+	busy = true
+	if _fade.color.a < 1.0:
+		var tween := create_tween()
+		tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
+		await tween.finished
 	# Time played keeps counting across deaths.
 	var played := GameState.play_time
 	if not SaveManager.load_game():
@@ -214,7 +238,8 @@ func _on_player_died() -> void:
 ## The Wayshell: Mantle swoops down, carries Wren over the sea to a woken
 ## Tidestone and sets her down there.
 func _on_fast_travel(coord: Vector2i) -> void:
-	if busy or player == null:
+	# Not mid-fall or mid-death: those sequences end in their own respawn.
+	if busy or player == null or player.state in [Player.State.FALL, Player.State.DEAD]:
 		return
 	var landing := GameState.tidestone_position(coord)
 	if landing == GameState.NO_POSITION:
@@ -223,7 +248,6 @@ func _on_fast_travel(coord: Vector2i) -> void:
 		return
 	busy = true
 	player.frozen = true
-	Events.toast.emit("TOAST_MANTLE")
 	Audio.play_sfx("wayshell")
 	# Mantle swoops down and carries Wren off.
 	var swoop := MantleSwoop.make(player.global_position)

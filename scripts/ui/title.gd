@@ -1,8 +1,10 @@
 extends Control
 ## Title screen: the sleeping leviathan at dusk, the logo, and a short menu
-## (Continue the latest save, Journeys for the file select, Options, Quit).
+## (Continue the latest save, Journeys for the file select, Options,
+## Credits, Quit).
 
 const GAME_SCENE := "res://scenes/game.tscn"
+const CREDITS_SCENE := "res://scenes/credits.tscn"
 const LOGO_TOP := 18.0
 const LOGO_BOB := 2.0
 
@@ -47,6 +49,8 @@ func _ready() -> void:
 	var new_game_button := UI.button("MENU_JOURNEYS", func() -> void: _show_page(_files))
 	menu.add_child(new_game_button)
 	menu.add_child(UI.button("MENU_OPTIONS", func() -> void: _show_page(_options)))
+	menu.add_child(UI.button("MENU_CREDITS", func() -> void:
+		get_tree().change_scene_to_file.call_deferred(CREDITS_SCENE)))
 	menu.add_child(UI.button("MENU_QUIT", func() -> void: get_tree().quit()))
 
 	var controls := UI.label("TITLE_CONTROLS")
