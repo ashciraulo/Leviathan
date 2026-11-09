@@ -22,7 +22,6 @@ var room_coord := Vector2i.ZERO
 ## The dungeon that room belongs to ("" on the overworld). Not saved.
 var dungeon := ""
 var flags: Dictionary = {}
-
 ## What Wren carries: item id -> count. See scripts/items/items.gd.
 var inventory: Dictionary = {}
 ## Equipment in use, by kind (sword, shield, tunic): item id or "".

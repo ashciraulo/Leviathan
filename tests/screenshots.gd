@@ -169,6 +169,9 @@ func _ready() -> void:
 			await _wait(0.5)
 			await _capture("23_chest_key")
 
+	# 8b. The rest of the Rotting Hull, and the fight at its heart.
+	await _hull_shots(game)
+
 	# 9. Pause menu.
 	var pause: PauseMenu = null
 	for child in game.get_children():
@@ -183,6 +186,83 @@ func _ready() -> void:
 	SaveManager.delete_save()
 	print("SCREENSHOTS DONE: " + _out_dir)
 	get_tree().quit(0)
+
+
+func _jump(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
+	GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+	SaveManager.save_game()
+	game._on_player_died()
+	await _wait(2.2)
+	return game.current_room
+
+
+func _hull_shots(game: Node) -> void:
+	# coord: [file name, spawn tile]
+	var rooms := {
+		Vector2i(11, 9): ["30_hull_cargo_crate", Vector2i(8, 6)],
+		Vector2i(12, 9): ["31_hull_rope_locker", Vector2i(3, 6)],
+		Vector2i(10, 8): ["33_hull_listing_deck", Vector2i(21, 6)],
+		Vector2i(9, 8): ["34_hull_captains_cabin", Vector2i(12, 7)],
+		Vector2i(9, 10): ["35_hull_flooded_hold", Vector2i(12, 2)],
+		Vector2i(11, 10): ["36_hull_brig", Vector2i(3, 6)],
+	}
+	for coord: Vector2i in rooms:
+		await _jump(game, coord, rooms[coord][1])
+		await _capture(rooms[coord][0])
+
+	# The Tide Hook mid-flight across the Orlop's broken deck.
+	GameState.give_item("tide_hook")
+	var room := await _jump(game, Vector2i(11, 8), Vector2i(11, 11))
+	for enemy in room.get_children():
+		if enemy is Enemy:
+			enemy.queue_free()
+	game.player.facing = Vector2.UP
+	await _wait(0.2)
+	game.player.use_item("tide_hook")
+	await _wait(0.22)
+	await _capture("32_hull_orlop_hook")
+	await _wait(0.2)
+	await _capture("32b_hull_orlop_zip")
+	await _wait(1.0)
+
+	# The Barnacle Matriarch: rearing up, then her soft body exposed.
+	room = await _jump(game, Vector2i(10, 7), Vector2i(11, 9))
+	await _wait(1.0)
+	var boss: BarnacleMatriarch = null
+	for child in room.get_children():
+		if child is BarnacleMatriarch:
+			boss = child
+	if boss:
+		boss.ai_enabled = false
+		await _capture("37_matriarch")
+		boss.mode = BarnacleMatriarch.Mode.WINDUP
+		boss._timer = 0.5
+		await _wait(0.05)
+		await _capture("38_matriarch_windup")
+		boss.mode = BarnacleMatriarch.Mode.RECOVER
+		boss.hook_hit(Vector2.UP)
+		game.player.global_position = boss.global_position + Vector2(0, 22)
+		game.player.facing = Vector2.UP
+		await _wait(0.35)
+		await _capture("39_matriarch_exposed")
+		boss.mode = BarnacleMatriarch.Mode.EXPOSED
+		boss.take_hit(99, Vector2.UP)
+		await _wait(3.2)
+		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
+		await _wait(0.3)
+		await _capture("40_tidebell")
+		# Ringing it: the talk box stays at the bottom, clear of Wren and the bell.
+		for child in room.get_children():
+			if child is Tidebell:
+				game.player.global_position = child.global_position + Vector2(0, 16)
+				game.player.facing = Vector2.UP
+				await _wait(0.2)
+				game.player.try_interact()
+				await _wait(2.0)
+				await _capture("41_tidebell_rung")
+				for box in game.get_children():
+					if box is DialogueBox:
+						box.close()
 
 
 func _dialogue_box(game: Node) -> DialogueBox:

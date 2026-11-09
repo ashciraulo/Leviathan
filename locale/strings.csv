@@ -38,6 +38,28 @@ ROOM_HULL_BILGE,The Rotting Hull: Bilge
 ROOM_HULL_GALLEY,The Rotting Hull: Galley
 ROOM_HULL_CARGO,The Rotting Hull: Cargo Hold
 ROOM_HULL_ORLOP,The Rotting Hull: Orlop
+ROOM_HULL_ROPE_LOCKER,The Rotting Hull: Rope Locker
+ROOM_HULL_LISTING,The Rotting Hull: Listing Deck
+ROOM_HULL_CABIN,The Rotting Hull: Captain's Cabin
+ROOM_HULL_FLOODED,The Rotting Hull: Flooded Hold
+ROOM_HULL_BRIG,The Rotting Hull: Brig
+ROOM_HULL_BOSS,The Rotting Hull: Figurehead Hold
+TOAST_GOT_TIDE_HOOK,You found the Tide Hook!
+GOT_TIDE_HOOK_1,"The Tide Hook! A barbed iron hook on a long chain, still cold from the sea."
+GOT_TIDE_HOOK_2,"Press U to throw it. It bites into iron rings and carries you across, and it drags crates and small creatures back to you."
+TOAST_GOT_MAP,You found the Hull's map.
+TOAST_GOT_COMPASS,You found the compass.
+TOAST_GOT_BIG_KEY,You found the big key!
+TOAST_BIG_DOOR_LOCKED,The great door won't move. It needs the big key.
+TOAST_BIG_DOOR_OPEN,The big key turns. The great door groans open.
+TOAST_CHEST_APPEARS,A chest appears!
+TOAST_GATE_OPENS,Something unlocks with a clank.
+BOSS_MATRIARCH,The Barnacle Matriarch
+TOAST_BOSS_DOWN,The Matriarch sinks into the bilge.
+TOAST_BELL_QUIET,The Tidebell hums softly.
+BELL_HULL_1,"You ring the Tidebell. The note rolls down through the wreck and out across the bay."
+BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
+BELL_HULL_3,You learned the first phrase of the lullaby. Your Resonance grows.
 MENU_JOURNEYS,Journeys
 MENU_OPTIONS,Options
 TAB_SATCHEL,Satchel

@@ -11,6 +11,8 @@ const ENEMY_HURTBOX := 5
 const ENEMY_ATTACK := 6
 const PLAYER_HURTBOX := 7
 const WATER := 8
+## Holes in a deck: they stop enemies and crates, but Wren can fall in.
+const PIT := 9
 
 
 ## Put a body or area on exactly one layer (0 for none) and the given masks.

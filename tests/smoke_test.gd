@@ -29,6 +29,7 @@ func _ready() -> void:
 	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
+	await _test_hull_dungeon()
 	await _test_villagers()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
@@ -563,6 +564,194 @@ func _count_projectiles(room: Room) -> int:
 		if child is Projectile:
 			count += 1
 	return count
+
+
+func _tile_pos(room: Room, tile: Vector2i) -> Vector2:
+	return room.global_position + Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
+
+
+func _goto(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
+	Events.door_entered.emit(coord, tile)
+	await _wait(0.9)
+	return game.current_room
+
+
+func _child_of(room: Room, type: Variant) -> Array:
+	return room.get_children().filter(func(n: Node) -> bool: return is_instance_of(n, type))
+
+
+## The Rotting Hull: gaps, the Tide Hook, crates and plates, a shut-in room,
+## the big-key door and the Barnacle Matriarch.
+func _test_hull_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(10, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+
+	# The Orlop's broken deck: walking into a gap costs a bubble.
+	var room := await _goto(game, Vector2i(11, 8), Vector2i(11, 11))
+	_check(room.coord == Vector2i(11, 8) and room.has_node("PitField"), "the Orlop has gaps in its deck")
+	var before := GameState.bubbles
+	Input.action_press("move_up")
+	await _wait(0.6)
+	Input.action_release("move_up")
+	await _wait(0.8)
+	_check(GameState.bubbles == before - 1, "falling through a gap pops a bubble (%d -> %d)" % [before, GameState.bubbles])
+	var local := player.global_position - room.global_position
+	_check(local.y > 10 * Room.TILE and player.state == Player.State.MOVE, "Wren climbs back onto the deck (at %s)" % local)
+	await _wait(1.1)
+
+	# The Tide Hook carries Wren over the gap to the hook post. (Clear the
+	# crabs out first so none wanders into the chain's path.)
+	for enemy in _child_of(room, Enemy):
+		enemy.queue_free()
+	# ...and any shot still in the air (Spitters add theirs a frame late):
+	# a hit mid-flight drops the hook.
+	await _wait(0.2)
+	for shot in _child_of(room, Projectile):
+		shot.queue_free()
+	await _wait(1.1)
+	_check(not player.use_item("tide_hook"), "no hook before it's found")
+	GameState.give_item("tide_hook")
+	_check(GameState.item_slots[0] == "tide_hook", "the hook goes in the first item slot")
+	player.global_position = _tile_pos(room, Vector2i(11, 11))
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	before = GameState.bubbles
+	_check(player.use_item("tide_hook"), "Wren throws the Tide Hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(local.y < 8 * Room.TILE and GameState.bubbles == before, "the hook carries Wren across the gap (at %s)" % local)
+	_check(player.state == Player.State.MOVE and not player.airborne, "Wren lands and can move again")
+
+	# The Flooded Hold: a sideways throw from the middle of a row still bites
+	# the post, and carries Wren over the water to the big key's island.
+	room = await _goto(game, Vector2i(9, 10), Vector2i(12, 11))
+	player.global_position = _tile_pos(room, Vector2i(12, 11))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 17 and player.state == Player.State.MOVE, "a sideways hook crosses the Flooded Hold (at %s)" % local)
+
+	# The Cargo Hold: shove the crate onto the plate to open the bars.
+	room = await _goto(game, Vector2i(11, 9), Vector2i(8, 6))
+	var crate: Crate = _child_of(room, Crate)[0]
+	var start := crate.position
+	player.global_position = crate.global_position + Vector2(-15, 0)
+	Input.action_press("move_right")
+	await _wait(0.9)
+	Input.action_release("move_right")
+	_check(crate.position.x >= start.x + Room.TILE, "leaning on a crate shoves it (%s -> %s)" % [start, crate.position])
+	var plate: PressurePlate = _child_of(room, PressurePlate)[0]
+	await _wait(0.3)
+	player.global_position = _tile_pos(room, plate.tile)
+	await _wait(0.3)
+	_check(not plate.pressed, "Wren alone is too light for a plate")
+	player.global_position = _tile_pos(room, plate.tile + Vector2i(-2, 2))
+	crate.position = Vector2(plate.tile.x * Room.TILE + 8, plate.tile.y * Room.TILE + 12)
+	await _wait(0.3)
+	_check(plate.pressed, "a crate weighs down the plate")
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "the plate solves the room")
+	var bars: Array = _child_of(room, Bars)
+	_check(bars.size() == 3 and bars.all(func(b: Bars) -> bool: return b.is_open), "the Cargo Hold's bars open")
+
+	# The Captain's Cabin: the hook drags a crate out of its nook.
+	room = await _goto(game, Vector2i(9, 8), Vector2i(12, 3))
+	var nook: Crate = null
+	for c in _child_of(room, Crate):
+		if c.position.x < Room.SIZE.x / 2.0:
+			nook = c
+	start = nook.position
+	player.global_position = _tile_pos(room, Vector2i(12, 3))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.5)
+	_check(nook.position.x > start.x + Room.TILE, "the hook drags a crate (%s -> %s)" % [start, nook.position])
+	_check(player.state == Player.State.MOVE, "the hook comes home after a drag")
+
+	# The Rope Locker shuts Wren in until it's cleared, then shows its chest.
+	GameState.inventory.erase("tide_hook")
+	GameState.item_slots = ["", ""]
+	room = await _goto(game, Vector2i(12, 9), Vector2i(6, 6))
+	await _wait(0.3)
+	bars = _child_of(room, Bars)
+	_check(bars.all(func(b: Bars) -> bool: return not b.is_open), "the Rope Locker's bars slam shut")
+	var chest: Chest = _child_of(room, Chest)[0]
+	_check(not chest.visible, "its chest is hidden until the room is clear")
+	for enemy in _child_of(room, Enemy):
+		enemy.take_hit(99, Vector2.RIGHT)
+	await _wait(0.6)
+	_check(chest.visible and bars.all(func(b: Bars) -> bool: return b.is_open), "clearing the room opens the bars and shows the chest")
+	player.global_position = chest.global_position + Vector2(0, 14)
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.try_interact()
+	_check(GameState.has_item("tide_hook"), "the chest holds the Tide Hook")
+	await _wait(1.0)
+	for child in game.get_children():
+		if child is DialogueBox:
+			while DialogueBox.is_open:
+				child.advance()
+				child.advance()
+	await _wait(0.4)
+
+	# The great door needs the big key.
+	room = await _goto(game, Vector2i(10, 8), Vector2i(11, 2))
+	var doors: Array = _child_of(room, BigDoor)
+	_check(doors.size() == 2, "the Listing Deck has the great door")
+	player.global_position = (doors[0] as Node2D).global_position + Vector2(0, 8)
+	await _wait(0.3)
+	_check(not GameState.flags.get(BigDoor.flag_for(room.coord), false), "the great door stays shut without the big key")
+	GameState.give_item("hull_big_key")
+	player.global_position = _tile_pos(room, Vector2i(11, 3))
+	await _wait(0.2)
+	player.global_position = (doors[0] as Node2D).global_position + Vector2(0, 8)
+	await _wait(0.4)
+	_check(GameState.flags.get(BigDoor.flag_for(room.coord), false), "the big key opens the great door")
+
+	# The Barnacle Matriarch.
+	room = await _goto(game, Vector2i(10, 7), Vector2i(11, 10))
+	var boss: BarnacleMatriarch = _child_of(room, BarnacleMatriarch)[0] if _child_of(room, BarnacleMatriarch).size() > 0 else null
+	_check(boss != null, "the Matriarch waits in the Figurehead Hold")
+	if boss:
+		boss.ai_enabled = false
+		_check(boss.plates_left() == 3, "she starts with three planks")
+		_check(boss.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "the sword glances off her planks")
+		_check(not boss.hook_hit(Vector2.UP), "the hook can't catch her while she's on guard")
+		boss.mode = BarnacleMatriarch.Mode.RECOVER
+		_check(boss.hook_hit(Vector2.UP) and boss.mode == BarnacleMatriarch.Mode.EXPOSED, "hooking a plank while her claw is stuck exposes her")
+		_check(boss.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and boss.hp == BarnacleMatriarch.MAX_HP - 1, "her soft body takes the sword")
+		boss.mode = BarnacleMatriarch.Mode.EXPOSED
+		boss.take_hit(99, Vector2.UP)
+		await _wait(2.6)
+		_check(GameState.flags.get(BarnacleMatriarch.DEFEATED_FLAG, false), "beating her is remembered")
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null, "the Tidebell rises where she fell")
+		if bell:
+			# The talk box sits at the bottom of the screen: the bell, and Wren
+			# standing below it to ring it, must stay clear of it.
+			var view_top: float = game.camera.position.y - 216.0 / 2.0
+			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
+			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Tidebell or Wren ringing it")
+			var resonance_before := GameState.resonance_max
+			bell.interact()
+			_check(GameState.resonance_max > resonance_before and GameState.flags.get(Tidebell.BELL_FLAG, false), "ringing the bell grows the Resonance meter")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
+	game.queue_free()
+	await _wait(0.1)
 
 
 ## The item model: giving, slots, equipment, jars, pearls, saving.
