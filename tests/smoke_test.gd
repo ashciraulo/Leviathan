@@ -680,9 +680,13 @@ func _test_story() -> void:
 	_check(storm_bell != null, "the Storm Bell is there to ring after Vael goes")
 	# Ringing it: far below, the Old One turns over in its sleep.
 	if storm_bell:
+		GameState.resonance = 0.0
 		storm_bell.interact()
+		_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is BellPhrase), "the phrase leaves the bell as notes")
+		_check(GameState.resonance == 0.0, "Resonance fills only when the notes reach Wren")
 		await _wait(0.2)
-		_check(DialogueBox.is_open and not Cutscene.active, "the turn waits for the bell's own words")
+		_check(GameState.resonance == GameState.resonance_max, "the notes land and Resonance fills")
+		_check(Cutscene.active and not GameState.has_flag(StoryDirector.TURNED_FLAG), "the bell's own scene plays before the turn")
 		var turn_pages := await _play_scene(crown, 20.0)
 		_check(GameState.has_flag(StoryDirector.TURNED_FLAG), "ringing the Storm Bell makes the Old One turn")
 		_check(not Cutscene.active and not crown.player.in_cutscene, "the turn hands Wren back")

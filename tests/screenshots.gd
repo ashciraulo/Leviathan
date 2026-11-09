@@ -921,7 +921,13 @@ func _turn_shots() -> void:
 	await _wait(3.5)
 	for child in crown.current_room.get_children():
 		if child is Tidebell:
+			crown.player.global_position = child.global_position + Vector2(0, 22)
+			await _wait(0.1)
 			child.interact()
+	await _wait(0.6)
+	await _capture("47_bell_phrase")
+	await _wait(0.65)
+	await _capture("47b_phrase_reaches_wren")
 	var waited := 0.0
 	while waited < 20.0 and not crown.current_room.get_children().any(func(c: Node) -> bool: return c is OldOneShadow):
 		var box := _dialogue_box(crown)
