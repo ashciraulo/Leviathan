@@ -10,3 +10,4 @@ export_presets.cfg
 Thumbs.db
 .vscode/
 screenshots/
+__pycache__/
