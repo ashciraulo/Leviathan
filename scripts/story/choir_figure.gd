@@ -5,10 +5,11 @@ extends Node2D
 ## leave (see StoryDirector.lowe_at_the_hull).
 
 ## kind: sheet texture and frame count. Sheet columns: idle, breathe, then
-## talk (Lowe) or two prying frames (singers).
+## talk (Lowe, Murmur) or two prying frames (singers).
 const KINDS := {
 	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3},
 	"singer": {"texture": Art.VILLAGER_SINGER, "frames": 4},
+	"murmur": {"texture": Art.VILLAGER_MURMUR, "frames": 3},
 }
 const FRAME_IDLE := 0
 const FRAME_BREATHE := 1
@@ -20,7 +21,7 @@ const PRY_TIME := 0.32
 var kind := "singer"
 ## Singers lean on their bars under the Matriarch until they are told to run.
 var prying := false
-## Lowe throws out an arm while she gives orders.
+## Lowe throws out an arm while she gives orders; Murmur lifts the lantern.
 var talking := false
 var _sprite: Sprite2D
 var _time := 0.0
@@ -49,7 +50,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	if prying:
 		_sprite.frame = FRAME_PRY[int(_time / PRY_TIME) % 2]
-	elif talking and kind == "lowe":
+	elif talking and kind != "singer":
 		_sprite.frame = FRAME_TALK
 	else:
 		_sprite.frame = FRAME_BREATHE if int(_time / BREATHE_TIME) % 2 == 1 else FRAME_IDLE
@@ -82,3 +83,15 @@ func flee_along(points: Array, seconds_per_leg: float) -> void:
 	tween.tween_property(self, "modulate:a", 0.0, Cutscene.scaled(0.2))
 	await tween.finished
 	visible = false
+
+
+## Walk along a path of points at an easy pace (no fading out).
+func walk_along(points: Array, speed: float = 30.0) -> void:
+	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	var from := position
+	for point: Vector2 in points:
+		if absf(point.x - from.x) > 1.0:
+			tween.tween_callback(face.bind(point.x < from.x))
+		tween.tween_property(self, "position", point, Cutscene.scaled(from.distance_to(point) / speed))
+		from = point
+	await tween.finished

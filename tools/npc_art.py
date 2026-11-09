@@ -396,7 +396,50 @@ def singer_frames():
     return [idle, breathe, pry_a, pry_b]
 
 
+# --------------------------------------------------------------------------
+# Murmur, the Choir's wisp-tender in Gloamfen. Grey robe with the hood down,
+# long pale hair, a small lantern with a wisp in it held close. Lifts the
+# lantern to the face when speaking.
+# --------------------------------------------------------------------------
+MURMUR = [
+    "................",
+    "......HHHH......",
+    ".....HHHHHH.....",
+    "....HHHHHHHH....",
+    "....HAAAAAAH....",
+    "....HAeAAeAH....",
+    "....HAAAAAAH....",
+    "....HHAAAAHH....",
+    "....HHHAAHHH....",
+    "...SHHSSSSHHS...",
+    "..SSHHSSSSHHSS..",
+    "..SSSHSSSSHSSS..",
+    ".ASSSSSSSSSSSSA.",
+    ".ASSSSSSSSSSSQQQ",
+    "..SSSUUUUUUSSQNQ",
+    "..SSSSSSSSSSSQQQ",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "...SSSSSSSSSS...",
+    "...SSSSSSSSSS...",
+    "....vv....vv....",
+    "................",
+]
+
+
+def murmur_frames():
+    idle = MURMUR
+    breathe = settle(idle, 9)
+    # Talking: the lantern comes up under the chin, lighting the face.
+    talk = paint(idle, [(13, 13, "SA."), (14, 13, "S.."), (15, 13, "S.."),
+                        (9, 13, "QQQ"), (10, 13, "QNQ"), (11, 13, "QQQ"), (12, 14, "A")])
+    return [idle, breathe, talk]
+
+
 SPRITES = {
+    "murmur": murmur_frames,
     "lowe": lowe_frames,
     "singer": singer_frames,
     "agna": agna_frames,
@@ -579,7 +622,22 @@ def portrait_lowe():
     return _rows(c)
 
 
+def portrait_murmur():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
+    _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, down
+    _ellipse(c, 16, 16, 12, 12, "H")                   # long pale hair
+    _box(c, 4, 16, 24, 12, "H")
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, mouth=False)
+    _box(c, 15, 22, 2, 1, "-")                         # a small, sad mouth
+    # The lantern held close, a wisp glowing in it.
+    _box(c, 22, 25, 7, 7, "Q")
+    _box(c, 24, 27, 3, 3, "N")
+    return _rows(c)
+
+
 PORTRAITS = {
+    "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),

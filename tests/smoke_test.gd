@@ -566,6 +566,35 @@ func _test_story() -> void:
 	back.queue_free()
 	await _wait(0.1)
 
+	# Lantern Mire: the Pale Congregation laid to rest, its wisps make a
+	# calf of light one last time, and Murmur leaves the Choir.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.MIRE_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var mire: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(mire)
+	await _wait(0.3)
+	_check(not Cutscene.active, "nothing plays in the Still Pool before the fight")
+	mire.player._invuln = 60.0
+	for child in mire.current_room.get_children():
+		if child is PaleCongregation:
+			for blow in 20:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child.mode = PaleCongregation.Mode.SWIM
+				child._stun = 0.0
+				for wisp: Dictionary in child.wisps:
+					wisp["home"] = false
+				child.take_hit(1, Vector2.UP)
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.CALF_FLAG), "laying the Congregation to rest starts the calf scene")
+	var calf_pages := await _play_scene(mire, 15.0)
+	_check(not Cutscene.active and not mire.player.in_cutscene, "the calf scene hands Wren back")
+	_check(calf_pages == 3, "Murmur speaks three times (%d)" % calf_pages)
+	var calf_left: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is CalfOfLights or c is ChoirFigure)
+	_check(calf_left.is_empty(), "the lights scatter and Murmur leaves (%d left)" % calf_left.size())
+	mire.queue_free()
+	await _wait(0.1)
+
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
@@ -886,8 +915,9 @@ func _test_mire_dungeon() -> void:
 	_check(GameState.keys("mire") == 1, "the Hall's chest holds a small key")
 	await _wait(0.6)
 
-	# The Pale Congregation.
+	# The Pale Congregation (the calf scene after it is tested in _test_story).
 	GameState.refill()
+	GameState.set_flag(StoryDirector.CALF_FLAG)
 	room = await _goto(game, Vector2i(25, 7), Vector2i(11, 10))
 	var bosses := _child_of(room, PaleCongregation)
 	_check(bosses.size() == 1, "the Pale Congregation waits in the Still Pool")

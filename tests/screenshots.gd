@@ -573,7 +573,13 @@ func _mire_shots(game: Node) -> void:
 			boss.take_hit(1, Vector2.UP)
 	await _wait(1.2)
 	await _capture("83_congregation_released")
-	await _wait(4.0)
+	# The calf in the lights, with Murmur.
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(1.6)
+	await _capture("43_calf_in_the_lights")
+	await _skip_scene(game)
+	await _wait(0.5)
 	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 8 * Room.TILE + 12)
 	await _wait(0.3)
 	await _capture("84_moth_bell")
