@@ -75,17 +75,20 @@ varying vec4 tint;
 void vertex() {
 	tint = COLOR;
 }
-float alpha_at(sampler2D tex, vec2 uv) {
-	if (uv.x < frame.x || uv.y < frame.y || uv.x > frame.z || uv.y > frame.w) {
-		return 0.0;
-	}
-	return texture(tex, uv).a;
+// 1.0 when uv is inside this frame. (Built-in textures can't be passed to
+// a function, so the lookups stay in fragment().)
+float inside(vec2 uv) {
+	return step(frame.x, uv.x) * step(frame.y, uv.y) * step(uv.x, frame.z) * step(uv.y, frame.w);
 }
 void fragment() {
 	if (outline_color.a > 0.0 && texture(TEXTURE, UV).a < 0.5) {
 		vec2 px = TEXTURE_PIXEL_SIZE;
-		float near = max(max(alpha_at(TEXTURE, UV + vec2(px.x, 0.0)), alpha_at(TEXTURE, UV - vec2(px.x, 0.0))),
-			max(alpha_at(TEXTURE, UV + vec2(0.0, px.y)), alpha_at(TEXTURE, UV - vec2(0.0, px.y))));
+		vec2 r = UV + vec2(px.x, 0.0);
+		vec2 l = UV - vec2(px.x, 0.0);
+		vec2 d = UV + vec2(0.0, px.y);
+		vec2 u = UV - vec2(0.0, px.y);
+		float near = max(max(texture(TEXTURE, r).a * inside(r), texture(TEXTURE, l).a * inside(l)),
+			max(texture(TEXTURE, d).a * inside(d), texture(TEXTURE, u).a * inside(u)));
 		if (near > 0.5) {
 			COLOR = vec4(outline_color.rgb, outline_color.a * tint.a);
 		}
