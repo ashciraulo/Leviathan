@@ -36,7 +36,7 @@ script = ExtResource("1_room")
 
 # Windmere Heights isn't on main yet: the overworld thread places the
 # tower's doorway and this points at it.
-OUTSIDE = {"door_to": "Vector2i(8, -6)", "door_spawn": "Vector2i(11, 5)"}
+OUTSIDE = {"door_to": "Vector2i(5, -4)", "door_spawn": "Vector2i(11, 2)"}
 
 
 def drops_to(coord, tile):
