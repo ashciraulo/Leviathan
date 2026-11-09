@@ -33,6 +33,10 @@ const POSITIONS := {
 	"foam_bottom_1": Vector2i(1, 3),
 	"foam_left_1": Vector2i(2, 3),
 	"foam_right_1": Vector2i(3, 3),
+	"damp_top": Vector2i(4, 3),
+	"damp_bottom": Vector2i(5, 3),
+	"damp_left": Vector2i(6, 3),
+	"damp_right": Vector2i(7, 3),
 }
 
 

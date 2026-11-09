@@ -174,7 +174,11 @@ func _draw_ground() -> void:
 						_draw_tile("foam_%s_%d" % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
-				_draw_tile(("wet_%d" if wet else "sand_%d") % (h % 4), x, y)
+				_draw_tile("sand_%d" % (h % 4), x, y)
+				# Damp sand fades out from any water alongside.
+				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
+					if _tile_at(x + side[1], y + side[2]) == "~":
+						_draw_tile("damp_%s" % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
 				if _tile_at(x - 1, y) == "#":

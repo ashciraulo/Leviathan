@@ -606,20 +606,27 @@ def cliff_face(seed):
         px[1][x] = GRASS[3] if rnd.random() < 0.6 else GRASS[2]
         px[2][x] = ROCK[1]
         px[3][x] = ROCK[2]
-    # Horizontal strata with lit tops.
-    for y in (6, 10):
-        for x in range(T):
-            px[y][x] = ROCK[4]
-            px[y + 1][x] = ROCK[2]
-    for _ in range(10):
-        x, y = rnd.randrange(T), rnd.randrange(4, T - 2)
-        px[y][x] = rnd.choice([ROCK[2], ROCK[4]])
-    # Vertical cracks.
-    for _ in range(2):
-        x = rnd.randrange(1, T - 1)
-        for y in range(rnd.randrange(4, 8), rnd.randrange(9, 14)):
-            px[y][x] = ROCK[5]
-            px[y][x + 1] = ROCK[2]
+    # Irregular boulders: each a lit top-left rim and a dark bottom-right seam.
+    y = 4
+    while y < T - 3:
+        x = -rnd.randrange(0, 5)
+        height = rnd.randrange(4, 6)
+        while x < T:
+            width = rnd.randrange(4, 8)
+            for xx in range(max(0, x), min(T, x + width)):
+                for yy in range(y, min(T - 2, y + height)):
+                    px[yy][xx] = ROCK[2] if (xx + yy) % 5 else ROCK[3]
+                if y + height - 1 < T - 2:
+                    px[y + height - 1][xx] = ROCK[4]
+                px[y][xx] = ROCK[1]
+            if 0 <= x + width - 1 < T:
+                for yy in range(y, min(T - 2, y + height)):
+                    px[yy][x + width - 1] = ROCK[4]
+            if 0 <= x < T:
+                for yy in range(y + 1, min(T - 2, y + height - 1)):
+                    px[yy][x] = ROCK[1]
+            x += width
+        y += height
     for x in range(T):
         px[T - 1][x] = ROCK[5]
         px[T - 2][x] = ROCK[4]
@@ -669,6 +676,26 @@ def foam_edge(side, frame):
     return px
 
 
+def damp_edge(side, seed):
+    """Darker, damp sand fading away from a water edge."""
+    rnd = random.Random(seed)
+    px = blank()
+    for i in range(T):
+        depth = 3 + rnd.randrange(0, 3)
+        for d in range(depth):
+            alpha = 120 if d < depth - 2 else 60
+            col = (WET[3][0], WET[3][1], WET[3][2], alpha)
+            if side == "top":
+                px[d][i] = col
+            elif side == "bottom":
+                px[T - 1 - d][i] = col
+            elif side == "left":
+                px[i][d] = col
+            else:
+                px[i][T - 1 - d] = col
+    return px
+
+
 def shade_overlay(side):
     px = blank()
     col = hex_color("#6B4E71", 70)
@@ -697,6 +724,8 @@ TILE_LAYOUT = [
     ("shade_top", lambda: shade_overlay("top")), ("shade_left", lambda: shade_overlay("left")),
     ("foam_top_1", lambda: foam_edge("top", 1)), ("foam_bottom_1", lambda: foam_edge("bottom", 1)),
     ("foam_left_1", lambda: foam_edge("left", 1)), ("foam_right_1", lambda: foam_edge("right", 1)),
+    ("damp_top", lambda: damp_edge("top", 1)), ("damp_bottom", lambda: damp_edge("bottom", 2)),
+    ("damp_left", lambda: damp_edge("left", 3)), ("damp_right", lambda: damp_edge("right", 4)),
 ]
 TILE_COLUMNS = 8
 
