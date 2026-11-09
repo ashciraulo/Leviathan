@@ -89,6 +89,14 @@ func _blocks_hit(_direction_of_hit: Vector2) -> bool:
 	return mode != Mode.FLIPPED
 
 
+func take_hit(damage: int, direction: Vector2) -> HitResult:
+	# A harmless tug (the Tide Hook) doesn't knock a belly-up beetle back
+	# onto its feet and waste the opening.
+	if damage <= 0 and mode == Mode.FLIPPED:
+		return HitResult.IGNORED
+	return super(damage, direction)
+
+
 func _on_hurt() -> void:
 	# A hit while belly up knocks it the rest of the way round.
 	_rest()

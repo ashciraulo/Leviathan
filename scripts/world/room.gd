@@ -92,7 +92,7 @@ const BIOMES := {
 		"floor": "ash_%d", "wall_top": "mesa_top_%d", "wall_face": "mesa_face_%d",
 		"water": "lava_%d", "water_edge": "crust_%s_%d", "damp": "scorch_%s",
 		"wet_deco": "vent_%d", "dry_deco": "scrub_%d",
-		"floor_overlay": ["shimmer_%d", 7],
+		"floor_overlay": ["shimmer_%d", 7], "door": "exit_glow",
 	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",

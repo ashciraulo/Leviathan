@@ -31,9 +31,10 @@ func _ready() -> void:
 	_steam.monitoring = false
 	_steam.add_child(Layers.rect_shape(COLUMN, Vector2(0, -COLUMN.y / 2.0 - 4)))
 	add_child(_steam)
-	# Stagger by position so neighbouring vents are out of step.
-	_timer = fposmod(position.x * 0.013 + position.y * 0.007, IDLE_TIME)
 	_set_phase(Phase.IDLE)
+	# Stagger by position so neighbouring vents are out of step (after
+	# _set_phase, which would reset the timer).
+	_timer = fposmod(position.x * 0.013 + position.y * 0.007, IDLE_TIME)
 
 
 func _physics_process(delta: float) -> void:

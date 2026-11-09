@@ -957,7 +957,10 @@ func _test_cinderreach() -> void:
 	var on_foot := _walkable_from(rows, Vector2i(0, 6))
 	_check(not on_foot.has(Vector2i(15, 6)), "Cinderreach is cut off by lava until the Tide Hook")
 	var mouth := (load("res://rooms/room_10_-2.tscn") as PackedScene).instantiate() as Room
-	_check(mouth.door_to == Vector2i(21, 10), "the Kiln's Mouth leads into the Kiln")
+	_check(mouth.door_to == Vector2i(21, 10), "the Kiln's Mouth door points at the Kiln's entry room")
+	if ResourceLoader.exists("res://rooms/room_21_10.tscn"):
+		var kiln := Room.parse_layout(((load("res://rooms/room_21_10.tscn") as PackedScene).instantiate() as Room).layout)
+		_check(not Room.is_solid(kiln[mouth.door_spawn.y][mouth.door_spawn.x]), "the Kiln's Mouth arrives on open floor")
 	mouth.free()
 
 	GameState.reset_new_game()
@@ -1013,13 +1016,27 @@ func _test_cinderreach() -> void:
 	room.add_child(vent)
 	var seen_hiss := false
 	var seen_blow := false
+	var steam_safe := true
 	for i in 80:
 		await _wait(0.05)
 		seen_hiss = seen_hiss or vent.phase == Geyser.Phase.HISS
+		if not vent.is_blowing():
+			steam_safe = steam_safe and not vent._steam.active
 		if vent.is_blowing():
 			seen_blow = seen_hiss
 			break
 	_check(seen_blow, "a geyser hisses before it blows")
+	_check(steam_safe, "a geyser's steam is harmless until it blows")
+	_check(vent._steam.active, "the blowing column hurts")
+	var beetle_flip := Slagbeetle.new()
+	beetle_flip.position = Vector2(4 * Room.TILE, 9 * Room.TILE)
+	room.add_child(beetle_flip)
+	await _wait(0.05)
+	beetle_flip.mode = Slagbeetle.Mode.FLIPPED
+	beetle_flip._timer = 5.0
+	beetle_flip.take_hit(0, Vector2.LEFT)
+	_check(beetle_flip.is_flipped(), "the Tide Hook doesn't right a flipped Slagbeetle")
+	beetle_flip.queue_free()
 	game.queue_free()
 	await _wait(0.1)
 
