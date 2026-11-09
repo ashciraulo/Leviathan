@@ -2731,8 +2731,6 @@ func _test_ossuary() -> void:
 	await _wait(0.1)
 
 
-## Lullaby Point: open sea until the seventh bell; then the Old One's back
-## and lip rise from the bay and its mouth leads into the Maw.
 ## Overworld secrets: chests hold what their room says, a cache holds a
 ## count, and the Ember Ridge jar sits behind a cracked boulder.
 func _test_overworld_secrets() -> void:
@@ -2747,10 +2745,10 @@ func _test_overworld_secrets() -> void:
 			var rows := Room.parse_layout(room.layout)
 			var sealed := rows.duplicate()
 			sealed[2] = sealed[2].replace("Y", "#")
-			_check(rows[2][4] == "Y" and not _walkable_from(sealed, Vector2i(10, 5)).has(Vector2i(2, 2)), "the Ember Ridge nook is sealed by a cracked boulder")
+			_check(rows[2][4] == "Y" and not _walkable_from(sealed, Vector2i(10, 7)).has(Vector2i(2, 2)), "the Ember Ridge nook is sealed by a cracked boulder")
 			var broken := rows.duplicate()
 			broken[2] = broken[2].substr(0, 4) + "." + broken[2].substr(5)
-			_check(_walkable_from(broken, Vector2i(10, 5)).has(Vector2i(2, 2)), "breaking the boulder opens the nook")
+			_check(_walkable_from(broken, Vector2i(10, 7)).has(Vector2i(2, 2)), "breaking the boulder opens the nook")
 		if coord == Vector2i(6, -4):
 			_check(room.chest_count == 30, "the Windmere sea stack holds 30 glints")
 		room.free()
@@ -2770,6 +2768,8 @@ func _test_overworld_secrets() -> void:
 	GameState.reset_new_game()
 
 
+## Lullaby Point: open sea until the seventh bell; then the Old One's back
+## and lip rise from the bay and its mouth leads into the Maw.
 func _test_maw_approach() -> void:
 	var flag := Tidebell.flag_for("tomb")
 	GameState.reset_new_game()

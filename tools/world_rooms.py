@@ -60,15 +60,17 @@ ORDER = ["Rotting Hull", "Kiln", "Lantern Mire", "Gale Spire", "Hollow Glacier",
          "Drowned Belfry", "Marrow Tomb", "The Maw"]
 START = ((0, 0), None)
 # Overworld secrets: the room whose chest (C) is one, and the tools that
-# reach it. The chest must be out of reach with everything but those.
+# reach it. Even once Wren is in the room (on any edge tile they can reach
+# with everything), the chest must be out of reach without one of those.
 SECRETS = {
     (8, -3): ("stonebreaker",),               # Ember Ridge: a jar behind a cracked boulder
     (4, 2): ("kite_cloak", "frostfang_bow"),  # Gloamfen: the Coral Buckler on a lake islet
     (6, -4): ("kite_cloak", "frostfang_bow"), # Windmere: glints on a sea stack
     (1, -3): ("kite_cloak", "frostfang_bow"), # Frostspine: glints on an islet
-    (0, 3): ("frostfang_bow",),               # the Verge's sunken cottage: Scaleweave
-    (7, 1): ("divers_helm",),                 # the Ossuary: a jar in the sinking sand
+    (0, 3): ("kite_cloak", "frostfang_bow"),  # the Verge: Scaleweave on a skerry
 }
+# The Ossuary's jar (7, 1) needs no tool: it sits inside a ring of sinking
+# sand, and the challenge is walking in without being swallowed.
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
 PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
 # Solid things that aren't scenery: stones, chests, hook posts, NPCs, and
@@ -220,6 +222,27 @@ def route(rooms):
             items.add(item)
 
 
+def inside(rooms, coord, seen, items):
+    """Tiles of one room Wren reaches with `items`, starting from every edge
+    tile of it they reach with everything."""
+    rows = rows_for(rooms[coord], items)
+    start = {(coord, t) for c, t in seen if c == coord and
+             (t[0] in (0, COLS - 1) or t[1] in (0, ROWS - 1) or rows[t[1]][t[0]] == "D")
+             and walkable(rows[t[1]][t[0]], items)}
+    reached = set(start)
+    queue = deque(start)
+    while queue:
+        _, (x, y) = queue.popleft()
+        steps = [(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+        steps += hook_hops(rows, x, y, items) + glide_hops(rows, x, y, items)
+        for nx, ny in steps:
+            if 0 <= nx < COLS and 0 <= ny < ROWS and (coord, (nx, ny)) not in reached \
+                    and walkable(rows[ny][nx], items):
+                reached.add((coord, (nx, ny)))
+                queue.append((coord, (nx, ny)))
+    return reached
+
+
 def chest_tiles(room, items):
     rows = rows_for(room, items)
     return [(x, y) for y in range(ROWS) for x in range(COLS) if rows[y][x] == "C"]
@@ -274,8 +297,7 @@ def main():
                 print("Chest at %s %s (%s): stage %d" % (coord, spot, rooms[coord]["chest"], stage))
             need = SECRETS.get(coord)
             if need:
-                without, _ = explore(rooms, final_items - set(need))
-                if opens(without, coord, spot):
+                if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
     for coord in SECRETS:
         if coord not in rooms or not chest_tiles(rooms[coord], final_items):
