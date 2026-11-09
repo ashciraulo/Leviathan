@@ -29,6 +29,7 @@ import hull_art
 import npc_art
 import hull_dungeon_art
 import cinderreach_art
+import gloamfen_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -460,6 +461,8 @@ def build_enemies():
     out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
     out["slagbeetle"] = sheet([[lit(cinderreach_art.SLAGBEETLE[k], 26) for k in ("walk_a", "walk_b", "crack", "flipped")]], 16, 14)
     out["geyser"] = sheet([[lit(cinderreach_art.geyser(f), 27) for f in range(3)]], 16, 32)
+    out["sporecap"] = sheet([[lit(gloamfen_art.sporecap(k), 28) for k in ("walk_a", "walk_b", "swell", "spent")]], 16, 16)
+    out["spore_cloud"] = sheet([[lit(gloamfen_art.spore_cloud(f), 29) for f in range(3)]], 48, 48)
     out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
@@ -938,6 +941,15 @@ assert not _clash, "cinderreach_art reuses material letters: %s" % sorted(_clash
 RAMPS.update(cinderreach_art.RAMPS)
 FLAT.update(cinderreach_art.FLAT)
 TILE_LAYOUT += cinderreach_art.TILES
+
+_taken = set(RAMPS) | set(FLAT)
+_clash = _taken & (set(gloamfen_art.RAMPS) | set(gloamfen_art.FLAT))
+assert not _clash, "gloamfen_art reuses material letters: %s" % sorted(_clash)
+RAMPS.update(gloamfen_art.RAMPS)
+FLAT.update(gloamfen_art.FLAT)
+_names = {n for n, _ in TILE_LAYOUT}
+assert not _names & {n for n, _ in gloamfen_art.TILES}, "gloamfen_art reuses tile names"
+TILE_LAYOUT += gloamfen_art.TILES
 
 
 def build_tiles():

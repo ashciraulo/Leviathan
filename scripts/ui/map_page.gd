@@ -17,6 +17,7 @@ const BIOME_COLORS := {
 	"brinewood": [Color("#7e9a5a"), Color("#1f3d4a"), Color("#3e7a6e")],
 	"hull": [Color("#a07e5e"), Color("#38282c"), Color("#3e665e")],
 	"cinderreach": [Color("#86726f"), Color("#8a3428"), Color("#f2783a")],
+	"gloamfen": [Color("#655a78"), Color("#2a5458"), Color("#2e2650")],
 }
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 

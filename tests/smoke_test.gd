@@ -34,6 +34,7 @@ func _ready() -> void:
 	await _test_villagers()
 	await _test_brinewood_pearl()
 	await _test_cinderreach()
+	await _test_gloamfen()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -1077,3 +1078,54 @@ func _test_audio() -> void:
 	Audio.play_music("region_saltmarrow")
 	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
 	Audio.stop_music(0.01)
+
+
+## Gloamfen: the Lumen Pool is only reached by hooking across Stillwater
+## Reach, and a Sporecap swells (the tell) before its spores burst.
+func _test_gloamfen() -> void:
+	var reach := Room.parse_layout(((load("res://rooms/room_5_1.tscn") as PackedScene).instantiate() as Room).layout)
+	var on_foot := _walkable_from(reach, Vector2i(0, 6))
+	_check(not on_foot.has(Vector2i(23, 5)), "Stillwater Reach's far bank needs the Tide Hook")
+	_check(on_foot.has(Vector2i(9, 5)), "the hook spot facing the far post is reachable")
+	var back := _walkable_from(reach, Vector2i(23, 5))
+	_check(back.has(Vector2i(13, 7)), "the return hook spot facing the near post is reachable")
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(4, 1), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var room: Room = game.current_room
+	var player: Player = game.player
+	_check(room.biome == "gloamfen", "Fenmouth is in Gloamfen")
+	player.global_position = room.global_position + Vector2(20 * Room.TILE, 6 * Room.TILE + 12)
+	var cap := Sporecap.new()
+	cap.position = Vector2(4 * Room.TILE + 8, 6 * Room.TILE + 12)
+	room.add_child(cap)
+	await _wait(0.3)
+	_check(cap.mode == Sporecap.Mode.WANDER, "a Sporecap ignores Wren from afar")
+	cap.position = Vector2(4 * Room.TILE + 8, 6 * Room.TILE + 12)
+	player.global_position = room.global_position + cap.position + Vector2(24, 0)
+	var swelled := false
+	var burst_after_swell := false
+	for i in 40:
+		await _wait(0.05)
+		swelled = swelled or cap.mode == Sporecap.Mode.SWELL
+		if cap.is_bursting():
+			burst_after_swell = swelled
+			break
+	_check(burst_after_swell, "a Sporecap swells before it bursts")
+	_check(cap._cloud.active, "the spores hurt while they burst")
+	player.global_position = room.global_position + Vector2(20 * Room.TILE, 6 * Room.TILE + 12)
+	var spent := false
+	for i in 30:
+		await _wait(0.05)
+		if cap.is_spent():
+			spent = true
+			break
+	_check(spent and not cap._cloud.active, "a spent Sporecap is harmless and open to a hit")
+	cap.queue_free()
+	game.queue_free()
+	await _wait(0.1)
