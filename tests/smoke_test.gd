@@ -1819,8 +1819,15 @@ func _test_text_fit() -> void:
 ## walked across.
 func _test_windmere() -> void:
 	var steps := Room.parse_layout(((load("res://rooms/room_3_-3.tscn") as PackedScene).instantiate() as Room).layout)
-	var below := _walkable_from(steps, Vector2i(8, 12))
-	_check(not below.has(Vector2i(8, 3)), "the Gullwatch chasm can't be crossed on foot")
+	# In the dark its veiled planks are only water; the Glowmoth Lantern
+	# shows them, a way across.
+	var dark := PackedStringArray()
+	var lit := PackedStringArray()
+	for row in steps:
+		dark.append(row.replace("v", "~"))
+		lit.append(row.replace("v", "."))
+	_check(not _walkable_from(dark, Vector2i(8, 12)).has(Vector2i(8, 3)), "the Gullwatch chasm can't be crossed on foot")
+	_check(steps[5].contains("v") and _walkable_from(lit, Vector2i(8, 12)).has(Vector2i(8, 3)), "lantern planks bridge the Gullwatch chasm")
 
 	GameState.reset_new_game()
 	GameState.set_checkpoint(Vector2i(4, -3), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
