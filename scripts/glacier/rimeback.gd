@@ -317,6 +317,7 @@ func _die() -> void:
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	_sprite.position = _sprite_origin
 	_sprite.frame = FRAME_DAZED
 	Audio.play_sfx("walrus_bellow", global_position, 0.6)

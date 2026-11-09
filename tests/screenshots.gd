@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "mantle", "lowe", "crucible", "turn"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "mantle", "lowe", "crucible", "turn"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -50,6 +50,8 @@ func _ready() -> void:
 				await _gale_shots(game)
 			"glacier":
 				await _glacier_shots(game)
+			"belfry":
+				await _belfry_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -177,7 +179,7 @@ func _ready() -> void:
 		Vector2i(2, -2): ["64_shiver_coast", Vector2i(11, 2)],
 		Vector2i(1, -2): ["65_floe_strand", Vector2i(9, 7)],
 		Vector2i(0, -2): ["66_still_cove", Vector2i(21, 7)],
-		Vector2i(1, 2): ["67_causeway_end", Vector2i(11, 1)],
+		Vector2i(1, 2): ["67_causeway_end", Vector2i(11, 1), Tide.Phase.LOW, "old_one_turned"],
 		Vector2i(0, 2): ["68_cockle_flats", Vector2i(6, 7)],
 		Vector2i(2, 2): ["69_wrack_shore", Vector2i(3, 8)],
 		Vector2i(0, 3): ["70_drowned_lane", Vector2i(8, 4)],
@@ -322,6 +324,9 @@ func _ready() -> void:
 
 	# 8f. Hollow Glacier.
 	await _glacier_shots(game)
+
+	# 8g. Drowned Belfry.
+	await _belfry_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -732,6 +737,82 @@ func _gale_shots(game: Node) -> void:
 	await _wait(0.3)
 	await _capture("104_storm_bell")
 	game.player._invuln = 0.0
+
+
+func _belfry_shots(game: Node) -> void:
+	GameState.give_item("divers_helm")
+	GameState.flags.erase(Room.low_water_flag("belfry"))
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(36, 10), "120_belfry_entry", Vector2i(11, 10)],
+		[Vector2i(36, 9), "121_belfry_flooded_court", Vector2i(11, 11)],
+		[Vector2i(35, 9), "122_belfry_vestry", Vector2i(22, 6)],
+		[Vector2i(37, 9), "123_belfry_cistern", Vector2i(1, 6)],
+		[Vector2i(36, 8), "124_belfry_valve_chamber", Vector2i(11, 11)],
+		[Vector2i(35, 8), "125_belfry_choir", Vector2i(22, 6)],
+		[Vector2i(37, 8), "126_belfry_loft", Vector2i(1, 6)],
+	]
+	for shot: Array in rooms:
+		await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		await _wait(0.4)
+		game.player._invuln = 0.0
+		await _wait(0.05)
+		await _capture(shot[1])
+
+	# Swimming, then diving under the Cistern's grates.
+	var room := await _jump(game, Vector2i(37, 9), Vector2i(1, 6))
+	game.player._invuln = 600.0
+	game.player.global_position = room.global_position + Vector2(10 * Room.TILE + 8, 5 * Room.TILE + 12)
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.5)
+	game.player._invuln = 0.0
+	await _wait(0.05)
+	await _capture("127_belfry_swimming")
+	game.player.use_item("divers_helm")
+	await _wait(0.5)
+	await _capture("128_belfry_diving")
+	await _wait(DiversHelm.DIVE_TIME)
+
+	# The valve lets the water down.
+	room = await _jump(game, Vector2i(36, 8), Vector2i(11, 11))
+	for child in room.get_children():
+		if child is Valve:
+			child.interact()
+	await _wait(1.0)
+	game.player._invuln = 0.0
+	await _capture("129_belfry_water_down")
+	room = await _jump(game, Vector2i(36, 9), Vector2i(11, 11))
+	await _wait(0.4)
+	await _capture("130_belfry_court_drained")
+	GameState.flags.erase(Room.low_water_flag("belfry"))
+
+	# Knell.
+	room = await _jump(game, Vector2i(36, 7), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	var knell: Knell = null
+	for child in room.get_children():
+		if child is Knell:
+			knell = child
+	if knell:
+		await _wait(2.5)
+		await _capture("131_knell_arms")
+		var arm: Tentacle = knell.arms[2]
+		game.player.global_position = arm.global_position + Vector2(0, 14)
+		game.player.facing = Vector2.UP
+		await _wait(0.1)
+		game.player.use_item("divers_helm")
+		await _wait(0.3)
+		await _capture("132_knell_dive_under")
+		for a: Tentacle in knell.arms:
+			a.dive_hit(Vector2.UP)
+		await _wait(DiversHelm.DIVE_TIME)
+		await _wait(0.3)
+		await _capture("133_knell_hidden")
+		knell.bell.mallet_hit(Vector2.UP)
+		game.player.global_position = knell.global_position + Vector2(0, 30)
+		await _wait(0.4)
+		await _capture("134_knell_dazed")
 
 
 func _glacier_shots(game: Node) -> void:

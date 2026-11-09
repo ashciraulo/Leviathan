@@ -84,7 +84,7 @@ ITEM_KITE_CLOAK_DESC,Catch the wind and glide from high places.
 ITEM_FROSTFANG_BOW,Frostfang Bow
 ITEM_FROSTFANG_BOW_DESC,Looses arrows of frost that freeze water solid. It never runs out.
 ITEM_DIVERS_HELM,Diver's Helm
-ITEM_DIVERS_HELM_DESC,Brass and glass. Lets Wren walk under deep water.
+ITEM_DIVERS_HELM_DESC,"Swim deep water, and dive under it for a few breaths."
 ITEM_ECHO_HORN,Echo Horn
 ITEM_ECHO_HORN_DESC,Its note shatters bone and shows the unseen.
 ITEM_WAYSHELL,Wayshell
@@ -420,6 +420,25 @@ CAPTION_FREEZE,Water freezes
 CAPTION_ICE_GROAN,Ice groans
 CAPTION_WALRUS,Walrus bellows
 CAPTION_SPLASH,Splash
+ROOM_BELFRY_ENTRY,The Drowned Belfry
+ROOM_BELFRY_COURT,The Drowned Belfry: Bell Court
+ROOM_BELFRY_VESTRY,The Drowned Belfry: Vestry
+ROOM_BELFRY_CISTERN,The Drowned Belfry: Cistern
+ROOM_BELFRY_VALVES,The Drowned Belfry: Valve Chamber
+ROOM_BELFRY_CHOIR,The Drowned Belfry: Sunken Choir
+ROOM_BELFRY_LOFT,The Drowned Belfry: Ringers' Loft
+ROOM_BELFRY_BOSS,The Drowned Belfry: the Great Bell
+DUNGEON_BELFRY,The Drowned Belfry
+TOAST_GOT_DIVERS_HELM,You found the Diver's Helm!
+GOT_DIVERS_HELM_1,"The Diver's Helm! Old brass, a round glass window, and a smell of the sea that never quite leaves it."
+GOT_DIVERS_HELM_2,"Now you can swim deep water. Press its item key (U or I) while swimming to dive under for a few breaths, and attack to slash underwater."
+BOSS_KNELL,Knell
+BELL_BELFRY_1,"You ring the Drowned Bell. Its note goes down and down through the green water, further than any bell should."
+BELL_BELFRY_2,"Far below, something vast turns over in its sleep, and settles. The tide along the Verge runs gentle again."
+CAPTION_VALVE,Valve turns
+CAPTION_WATER_RUSH,Water rushes
+CAPTION_GREAT_BELL,Great bell tolls
+CAPTION_KNELL,Kraken moans
 ROOM_GULLWATCH_STEPS,Gullwatch Steps
 ROOM_MILL_ROW,Mill Row
 ROOM_GALE_FLATS,Gale Flats

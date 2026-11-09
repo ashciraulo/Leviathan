@@ -26,6 +26,7 @@ Item gates (keep in step with the game):
   (Q and bow freezing arrive with the Hollow Glacier PR. Props block one
   tile here; their real footprints can be wider, which only makes this
   check more generous, never stricter.)
+  The Gale Bell turns the Old One over (old_one_turned): the Verge rises
   The seventh bell raises the Old One at Lullaby Point (alt_layout)
 """
 
@@ -45,12 +46,14 @@ HOOK_RANGE = 8
 GLIDE_TILES = 5
 GLIDE_WATER_TILES = GLIDE_TILES
 
-# Dungeon entry rooms (door_to) -> (name, the item Wren comes out with).
+# Dungeon entry rooms (door_to) -> (name, what Wren comes out with: an item
+# or story flag, or several separated by spaces).
 DUNGEONS = {
     (10, 10): ("Rotting Hull", "tide_hook"),
     (21, 10): ("Kiln", "stonebreaker"),
     (25, 10): ("Lantern Mire", "glowmoth_lantern"),
-    (28, 10): ("Gale Spire", "kite_cloak"),
+    # Ringing the Gale Bell turns the Old One over: the Verge rises.
+    (28, 10): ("Gale Spire", "kite_cloak old_one_turned"),
     (32, 10): ("Hollow Glacier", "frostfang_bow"),
     (36, 10): ("Drowned Belfry", "divers_helm"),
     (40, 10): ("Marrow Tomb", "tidebell_tomb"),
@@ -217,9 +220,9 @@ def route(rooms):
         stages.append((sorted(items), {c for c, _ in seen}, [n for n, _ in new], seen))
         if not new:
             return stages, seen, done
-        for name, item in new:
+        for name, gains in new:
             done.append(name)
-            items.add(item)
+            items.update(gains.split())
 
 
 def inside(rooms, coord, seen, items):

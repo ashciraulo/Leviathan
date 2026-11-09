@@ -4,11 +4,11 @@ extends Object
 ## crates, plates, bars, the big-key door, the boss, and the Kiln's lava,
 ## boulders, pegs, drop hammers and Clinkers, and the Mire's braziers,
 ## veiled planks, Shades and wisps, and the Glacier's ice eyes and
-## Rimelings), then wires up the
+## Rimelings, and the Belfry's grates and valves), then wires up the
 ## room-wide parts once every tile is placed: the gap field, the puzzle that
 ## opens the bars, and a listing deck.
 
-const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEa"
+const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEaLR"
 
 
 static func handles(letter: String) -> bool:
@@ -48,6 +48,10 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 			return IceEye.new()
 		"a":
 			return Rimeling.new()
+		"L":
+			return SunkenGrate.new()
+		"R":
+			return Valve.new()
 		"r":
 			return LightningRod.new()
 		"O":
@@ -80,6 +84,8 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 					return Stormheron.spawn_in(room, pos)
 				"glacier":
 					return Rimeback.spawn_in(room, pos)
+				"belfry":
+					return Knell.spawn_in(room, pos)
 			return BarnacleMatriarch.spawn_in(room, pos)
 	return null
 

@@ -45,6 +45,16 @@ static func stone_landing(coord: Vector2i) -> Vector2:
 	return Vector2(tile.x * Room.TILE + Room.TILE / 2.0, tile.y * Room.TILE + Room.TILE - 4) + Tidestone.CHECKPOINT_OFFSET
 
 
+## A room's layout as it stands now: its alt_layout once its alt_flag is set
+## (the Old One has turned, the seventh bell rung, and so on).
+static func rows_now(coord: Vector2i) -> PackedStringArray:
+	var info := get_room(coord)
+	if str(info.get("alt_flag", "")) != "" and not (info["alt_rows"] as PackedStringArray).is_empty() \
+			and GameState.has_flag(info["alt_flag"]):
+		return info["alt_rows"]
+	return info["rows"]
+
+
 static func _load() -> void:
 	_loaded = true
 	_rooms = {}
@@ -79,6 +89,8 @@ static func _load() -> void:
 			"stones": stones,
 			"chests": chests,
 			"doors": doors,
+			"alt_flag": room.alt_flag,
+			"alt_rows": Room.parse_layout(room.alt_layout) if room.alt_layout != "" else PackedStringArray(),
 		}
 		room.free()
 

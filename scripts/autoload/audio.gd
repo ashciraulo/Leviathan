@@ -18,6 +18,8 @@ const SFX_DIR := "res://audio/sfx/"
 const AMBIENCE_DIR := "res://audio/ambience/"
 const MIX_RATE := 22050
 const FADE_TIME := 1.2
+## How far the music dips under a jingle or a bell's phrase.
+const DUCK_DB := -18.0
 ## Effects playing at once. Extra ones steal the oldest player.
 const VOICES := 12
 ## The same effect retriggered faster than this is skipped (footsteps,
@@ -36,6 +38,11 @@ const MUSIC_CUES := [
 	"place_village", "place_shop", "place_house", "place_cave", "place_spring", "place_choir",
 	"story_danger", "story_sorrow", "story_choir", "story_flight",
 ]
+## Music cues that play once (the lullaby phrases); every other cue loops.
+const ONE_SHOT_MUSIC := ["lullaby", "bell_1", "bell_2", "bell_3", "bell_4", "bell_5", "bell_6", "bell_7"]
+## The seven Tidebells in lullaby order: bell_1.ogg is the Hull's phrase.
+## tools/music_gen.py weaves the same phrase into each dungeon's track.
+const BELL_ORDER := ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb"]
 ## Short jingles: they duck the music and don't loop.
 const JINGLES := ["jingle_item", "jingle_pearl", "jingle_secret", "jingle_clear",
 	"jingle_bell", "jingle_game_over", "jingle_puzzle"]
@@ -80,6 +87,11 @@ const SFX := {
 	"ice_groan": {"wave": "noise", "f0": 180.0, "f1": 90.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_ICE_GROAN"},
 	"walrus_bellow": {"wave": "square", "f0": 140.0, "f1": 90.0, "dur": 0.6, "vol": 0.45, "caption": "CAPTION_WALRUS"},
 	"splash": {"wave": "noise", "f0": 1200.0, "f1": 300.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_SPLASH"},
+	"valve_turn": {"wave": "square", "f0": 160.0, "f1": 200.0, "dur": 0.5, "vol": 0.25, "caption": "CAPTION_VALVE"},
+	"water_rush": {"wave": "noise", "f0": 600.0, "f1": 200.0, "dur": 1.4, "vol": 0.45, "caption": "CAPTION_WATER_RUSH"},
+	"great_bell": {"wave": "sine", "f0": 196.0, "f1": 190.0, "dur": 1.6, "vol": 0.6, "caption": "CAPTION_GREAT_BELL"},
+	"tentacle_cut": {"wave": "noise", "f0": 2200.0, "f1": 600.0, "dur": 0.2, "vol": 0.35},
+	"knell_moan": {"wave": "square", "f0": 110.0, "f1": 70.0, "dur": 0.8, "vol": 0.4, "caption": "CAPTION_KNELL"},
 	"hook_reel": {"wave": "square", "f0": 300.0, "f1": 520.0, "dur": 0.3, "vol": 0.25},
 	"stonebreaker_slam": {"wave": "noise", "f0": 600.0, "f1": 80.0, "dur": 0.35, "vol": 0.6, "caption": "CAPTION_SLAM"},
 	"ice_slide": {"wave": "noise", "f0": 6000.0, "f1": 4000.0, "dur": 0.3, "vol": 0.15},
@@ -170,6 +182,13 @@ var _last_played: Dictionary = {}
 var _warned: Dictionary = {}
 var _duck_tween: Tween
 var _music_tween: Tween
+## Two gains per music player, added together every frame: its cross-fade,
+## and the dip under jingles and bell phrases. Kept apart so a jingle during
+## a fade still dips, and a cue change during a phrase stays dipped.
+var _fade_db: Array[float] = [-60.0, -60.0]
+var _duck_db := 0.0
+## Plays the lullaby phrases over the (ducked) music.
+var _phrase: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -179,6 +198,9 @@ func _ready() -> void:
 		player.bus = "Music"
 		add_child(player)
 		_music.append(player)
+	_phrase = AudioStreamPlayer.new()
+	_phrase.bus = "Music"
+	add_child(_phrase)
 	_ambience = AudioStreamPlayer.new()
 	_ambience.bus = "Ambience"
 	add_child(_ambience)
@@ -251,39 +273,98 @@ func play_music(cue: String, fade: float = FADE_TIME) -> void:
 	# keep pushing (and later stop) the player about to be reused.
 	if _music_tween:
 		_music_tween.kill()
-	if _duck_tween:
-		_duck_tween.kill()
 	new.stop()
+	_fade_db[_music_index] = -60.0
 	if not old.playing and stream == null:
+		_apply_music_volume()
 		return
+	var old_index := 1 - _music_index
 	_music_tween = create_tween().set_parallel(true)
 	if old.playing:
-		_music_tween.tween_property(old, "volume_db", -60.0, fade)
+		_music_tween.tween_method(_set_fade.bind(old_index), _fade_db[old_index], -60.0, fade)
 		_music_tween.tween_callback(old.stop).set_delay(fade)
 	if stream:
-		new.stream = stream
-		new.volume_db = -60.0
+		new.stream = stream if cue in ONE_SHOT_MUSIC else _looping(stream)
 		new.play()
-		_music_tween.tween_property(new, "volume_db", 0.0, fade)
+		_music_tween.tween_method(_set_fade.bind(_music_index), -60.0, 0.0, fade)
+	_apply_music_volume()
 
 
+func _set_fade(db: float, index: int) -> void:
+	_fade_db[index] = db
+	_apply_music_volume()
+
+
+func _set_duck(db: float) -> void:
+	_duck_db = db
+	_apply_music_volume()
+
+
+func _apply_music_volume() -> void:
+	for i in _music.size():
+		_music[i].volume_db = maxf(_fade_db[i] + _duck_db, -80.0)
+
+
+## Fades the music out, and cuts off a lullaby phrase still ringing.
 func stop_music(fade: float = FADE_TIME) -> void:
+	_phrase.stop()
 	play_music("", fade)
 
 
 ## A jingle: the music dips while it plays, then comes back.
 func play_jingle(id: String) -> void:
 	play_sfx(id)
-	var length := _stream_length(id)
-	var current := _music[_music_index]
-	if not current.playing:
-		return
+	_duck(_stream_length(id))
+
+
+## A Tidebell's phrase of the lullaby (bell_N.ogg) over the dipped music.
+## Falls back to the bell jingle while the phrase has no file.
+func play_bell_phrase(bell_id: String) -> void:
+	var index := BELL_ORDER.find(bell_id)
+	if index < 0 or not _play_phrases([index]):
+		play_jingle("jingle_bell")
+
+
+## The lullaby as far as Wren knows it: the first `count` phrases in a row.
+func play_lullaby(count: int) -> void:
+	var phrases: Array[int] = []
+	for i in clampi(count, 0, BELL_ORDER.size()):
+		phrases.append(i)
+	_play_phrases(phrases)
+
+
+## Plays lullaby phrases (0-based) back to back. False when none has a file.
+func _play_phrases(phrases: Array) -> bool:
+	var playlist := AudioStreamPlaylist.new()
+	playlist.loop = false
+	playlist.fade_time = 0.0
+	var count := 0
+	var length := 0.0
+	for i: int in phrases:
+		var stream := _load(MUSIC_DIR, "bell_%d" % (i + 1))
+		if stream == null or count >= AudioStreamPlaylist.MAX_STREAMS:
+			continue
+		playlist.set_list_stream(count, stream)
+		length += stream.get_length()
+		count += 1
+	if count == 0:
+		return false
+	playlist.stream_count = count
+	_phrase.stream = playlist
+	_phrase.play()
+	_duck(length)
+	return true
+
+
+## Dips the music for `length` seconds, then brings it back. The dip holds
+## across cue changes, so a new track comes in under a ringing phrase.
+func _duck(length: float) -> void:
 	if _duck_tween:
 		_duck_tween.kill()
 	_duck_tween = create_tween()
-	_duck_tween.tween_property(current, "volume_db", -18.0, 0.1)
+	_duck_tween.tween_method(_set_duck, _duck_db, DUCK_DB, 0.1)
 	_duck_tween.tween_interval(length)
-	_duck_tween.tween_property(current, "volume_db", 0.0, 0.6)
+	_duck_tween.tween_method(_set_duck, DUCK_DB, 0.0, 0.6)
 
 
 ## Which music fits a room: its dungeon, else its region.
@@ -328,9 +409,17 @@ func play_ambience(id: String, fade: float = FADE_TIME) -> void:
 	_ambience_tween.tween_property(_ambience, "volume_db", 0.0, fade * 0.5)
 
 
-## A WAV set to loop end to end. (The ambience files already loop through
-## their import settings; this covers a file dropped in without them.)
+## A stream set to loop: an OGG from its loop offset, a WAV end to end.
+## (Files whose import settings already loop are left as they are; this
+## covers a file dropped in without them.)
 static func _looping(stream: AudioStream) -> AudioStream:
+	var ogg := stream as AudioStreamOggVorbis
+	if ogg:
+		if ogg.loop:
+			return stream
+		ogg = ogg.duplicate() as AudioStreamOggVorbis
+		ogg.loop = true
+		return ogg
 	var wav := stream as AudioStreamWAV
 	if wav == null or wav.loop_mode != AudioStreamWAV.LOOP_DISABLED:
 		return stream

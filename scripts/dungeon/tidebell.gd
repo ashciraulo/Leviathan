@@ -14,6 +14,7 @@ const BELLS := {
 	"mire": [MireSprites.MOTH_BELL, ["BELL_MIRE_1", "BELL_MIRE_2"]],
 	"gale": [GaleSprites.STORM_BELL, ["BELL_GALE_1", "BELL_GALE_2"]],
 	"glacier": [GlacierSprites.FROST_BELL, ["BELL_GLACIER_1", "BELL_GLACIER_2"]],
+	"belfry": [BelfrySprites.DROWNED_BELL, ["BELL_BELFRY_1", "BELL_BELFRY_2"]],
 }
 
 ## The dungeon this bell belongs to (a key of BELLS).
@@ -68,7 +69,7 @@ func interact() -> void:
 	GameState.resonance_max += RESONANCE_GAIN
 	Feel.shake(2.0)
 	Audio.play_sfx("bell_ring", global_position)
-	Audio.play_jingle("jingle_bell")
+	Audio.play_bell_phrase(bell)
 	# With the story running, the phrase is seen flowing into Wren (cutscene
 	# 5); the scene starts before the flag so it can follow on from it.
 	var director := get_tree().get_first_node_in_group("story_director")
