@@ -6,12 +6,17 @@ const LIFETIME := 4.0
 
 var velocity := Vector2.ZERO
 var _life := LIFETIME
+var _sprite: Sprite2D
 
 
 func _ready() -> void:
 	Layers.assign(self, Layers.ENEMY_ATTACK, [Layers.WORLD])
 	add_child(Layers.circle_shape(3.0, Vector2.ZERO))
 	body_entered.connect(_on_body_entered)
+	_sprite = Sprite2D.new()
+	_sprite.texture = Art.SHOT
+	_sprite.hframes = 2
+	add_child(_sprite)
 
 
 func _physics_process(delta: float) -> void:
@@ -19,7 +24,7 @@ func _physics_process(delta: float) -> void:
 	_life -= delta
 	if _life <= 0.0:
 		queue_free()
-	queue_redraw()
+	_sprite.frame = int(_life * 8.0) % 2
 
 
 func notify_hit() -> void:
@@ -28,9 +33,3 @@ func notify_hit() -> void:
 
 func _on_body_entered(_body: Node2D) -> void:
 	queue_free()
-
-
-func _draw() -> void:
-	draw_circle(Vector2.ZERO, 4.0, Palette.OUTLINE)
-	draw_circle(Vector2.ZERO, 3.0, Palette.SHOT)
-	draw_rect(Rect2(-2, -2, 1, 1), Palette.FLASH)

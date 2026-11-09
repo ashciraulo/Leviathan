@@ -57,24 +57,17 @@ func _on_blocked(direction: Vector2) -> void:
 	_knockback = direction * 60.0
 
 
-func _draw() -> void:
-	_draw_shadow(18)
-	var jitter := Vector2.ZERO
-	if mode == Mode.TURNING and ai_enabled and not dying:
-		jitter.x = 1.0 if int(_timer * 30.0) % 2 == 0 else -1.0
-	var body := Rect2(Vector2(-9, -15) + jitter, Vector2(18, 15))
-	draw_rect(body, Palette.OUTLINE)
-	draw_rect(body.grow(-1), _tint(Palette.SHELLBACK))
-	# The shell plate sits on the facing side: thick, pale and outlined.
-	var plate: Rect2
-	if shell_dir.x > 0.0:
-		plate = Rect2(Vector2(5, -16), Vector2(6, 17))
-	elif shell_dir.x < 0.0:
-		plate = Rect2(Vector2(-11, -16), Vector2(6, 17))
+func _make_sprite() -> Sprite2D:
+	return Art.sprite(Art.SHELLBACK, 3, 1, 11)
+
+
+func _update_sprite() -> void:
+	if shell_dir.y > 0.0:
+		_sprite.frame = 0
 	elif shell_dir.y < 0.0:
-		plate = Rect2(Vector2(-10, -18), Vector2(20, 6))
+		_sprite.frame = 1
 	else:
-		plate = Rect2(Vector2(-10, -5), Vector2(20, 6))
-	plate.position += jitter
-	draw_rect(plate, Palette.OUTLINE)
-	draw_rect(plate.grow(-1), _tint(Palette.SHELL))
+		_sprite.frame = 2
+	_sprite.flip_h = shell_dir.x < 0.0
+	if mode == Mode.TURNING and ai_enabled:
+		_jitter(_timer)

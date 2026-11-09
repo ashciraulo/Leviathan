@@ -1,0 +1,821 @@
+#!/usr/bin/env python3
+"""Builds Leviathan's pixel art from source in this file.
+
+Sprites are drawn as silhouettes where each letter is a material (hair,
+skin, tunic...). The builder then lights them the same way every time,
+following the plan's art rules:
+
+  * light from the top left (top-left edges get the highlight)
+  * shadow under overhangs and on bottom-right edges
+  * dark coloured outlines, never black: each outline is the darkest shade
+    of the material it wraps
+  * ramps shift hue: shadows lean blue-purple, highlights warm yellow
+
+Tiles are generated procedurally from the Saltmarrow palette.
+
+Run from the repo root:  python3 tools/build_art.py
+(--check only verifies that the committed files match.)
+Only the Python standard library is needed. Output goes to assets/.
+"""
+
+import os
+import random
+import struct
+import sys
+import zlib
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "assets")
+
+
+def hex_color(h, a=255):
+    h = h.lstrip("#")
+    return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), a)
+
+
+# --------------------------------------------------------------------------
+# Palette. Ramps run highlight, light, base, shadow, outline.
+# Saltmarrow anchors from the plan: sand #E8C88A, dusk purple #6B4E71,
+# bleached white #FFF4D6, buoy red #E2574C. Sea glass #2E7F8C, foam #A8E6CF.
+# --------------------------------------------------------------------------
+RAMPS = {
+    "y": ["#D9825A", "#B85E46", "#8C4A3C", "#5A2E46", "#2E1A33"],  # Wren's hair
+    "w": ["#FFE8CC", "#F6D2B0", "#E8B896", "#B97C7A", "#5A3348"],  # skin
+    "t": ["#A8E6CF", "#5FBFB7", "#2E8F8C", "#1F5872", "#18324A"],  # sea-glass tunic
+    "r": ["#FFB08A", "#F27A5E", "#E2574C", "#A8323F", "#5C1A33"],  # buoy-red scarf
+    "b": ["#C99A6B", "#A87A52", "#7A5240", "#4E3436", "#2E1E2E"],  # leather
+    "p": ["#9E86A8", "#85709A", "#6B4E71", "#4A3558", "#2A1E36"],  # dusk trousers
+    "d": ["#FFF4D6", "#E8C88A", "#B38A5A", "#7A5A40", "#3E2C2E"],  # driftwood
+    "c": ["#FFC08A", "#F58A5E", "#E2654C", "#A8323F", "#4A1530"],  # crab shell
+    "k": ["#FFF4E8", "#DCCCD4", "#B0A0B8", "#7A6890", "#3A2E4E"],  # barnacle shell
+    "f": ["#E2A6E0", "#B878C4", "#8A4FA0", "#5E3478", "#2E1A40"],  # barnacle flesh
+    "m": ["#C4DB7A", "#9FC46A", "#6F9A4E", "#3F6648", "#1F3A33"],  # moss body
+    "s": ["#FFF4D6", "#DCCFB4", "#B0A08E", "#7E6E72", "#3A2E44"],  # shell plate
+    "o": ["#E0D6E0", "#B9AABE", "#8E7C93", "#5E4E70", "#2A2238"],  # standing stone
+}
+# Flat colours: not lit, no outline of their own.
+FLAT = {
+    "e": "#2A1E36",   # eyes
+    "W": "#FFF4D6",   # eye glints
+    "g": "#FFE36E",   # wind-up glow (tell)
+    "G": "#F4C542",
+    "n": "#5E4E70",   # rune, dormant
+    "N": "#6EF0E0",   # rune, awake
+}
+# Materials that get a little speckle texture.
+TEXTURED = {"o": 0.10, "s": 0.08, "k": 0.10}
+# Materials that cast a one-pixel shadow on what is under them.
+CASTS_SHADOW = {"y", "r", "s"}
+
+SHADOW = hex_color("#3E2C4A", 90)
+
+
+def lit(rows, seed=1):
+    """Turn a material silhouette into lit RGBA pixels with outlines."""
+    h, w = len(rows), len(rows[0])
+    for r in rows:
+        assert len(r) == w, ("ragged sprite row", r)
+    rnd = random.Random(seed)
+
+    def mat(x, y):
+        if 0 <= x < w and 0 <= y < h:
+            ch = rows[y][x]
+            return None if ch == "." else ch
+        return None
+
+    px = [[(0, 0, 0, 0)] * w for _ in range(h)]
+    for y in range(h):
+        for x in range(w):
+            m = mat(x, y)
+            if m is None:
+                continue
+            if m in FLAT:
+                px[y][x] = hex_color(FLAT[m])
+                continue
+            ramp = RAMPS[m]
+            up = mat(x, y - 1)
+            # Lighting follows the whole silhouette, not each material, so
+            # a tunic under a scarf still reads as one rounded body.
+            open_up, open_left = up is None, mat(x - 1, y) is None
+            open_down, open_right = mat(x, y + 1) is None, mat(x + 1, y) is None
+            if up in CASTS_SHADOW and up != m:
+                shade = 3          # under an overhang (hair, scarf, shell)
+            elif open_up and open_left:
+                shade = 0
+            elif open_up or open_left:
+                shade = 1
+            elif open_down or open_right or mat(x + 2, y) is None:
+                shade = 3
+            else:
+                shade = 2
+            if m in TEXTURED and shade == 2 and rnd.random() < TEXTURED[m]:
+                shade = rnd.choice([1, 3])
+            px[y][x] = hex_color(ramp[shade])
+    # Outlines: the darkest shade of the material they wrap.
+    out = [row[:] for row in px]
+    for y in range(h):
+        for x in range(w):
+            if mat(x, y) is not None:
+                continue
+            for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                m = mat(x + dx, y + dy)
+                if m is not None:
+                    ramp = RAMPS.get(m)
+                    out[y][x] = hex_color(ramp[4] if ramp else "#2A1E36")
+                    break
+    return out
+
+
+def flip(px):
+    return [list(reversed(r)) for r in px]
+
+
+# --------------------------------------------------------------------------
+# Wren, 16x24, feet on row 22 (row 23 holds the outline).
+# Built from a head, a torso and legs so frames stay consistent.
+# --------------------------------------------------------------------------
+HEAD_DOWN = [
+    "................",
+    ".....yyyyyy.....",
+    "....yyyyyyyy....",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "...yywwwwwwyy...",
+    "...ywwwwwwwwy...",
+    "...ywewwwwewy...",
+    "...ywewwwwewy...",
+    "....wwwwwwww....",
+    ".....wwwwww.....",
+]
+HEAD_UP = [
+    "................",
+    ".....yyyyyy.....",
+    "....yyyyyyyy....",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "....yyyyyyyy....",
+    "....wyyyyyyw....",
+    ".....wwwwww.....",
+]
+HEAD_SIDE = [
+    "................",
+    ".....yyyyyy.....",
+    "....yyyyyyyy....",
+    "...yyyyyyyyyy...",
+    "...yyyyyyyyyy...",
+    "...yyyyyywwww...",
+    "...yyyyywwwwww..",
+    "...yyyyywwewww..",
+    "...yyyyywwwwww..",
+    "....yyyywwwww...",
+    ".....yywwww.....",
+]
+TORSO_DOWN = [
+    "....rrrrrrrr....",
+    "...rrrrrrrrrr...",
+    "..wttttttttttw..",
+    "..wttttttttttw..",
+    "..wttttttttttw..",
+    "...bbbbbbbbbb...",
+    "...tttttttttt...",
+    "....tttttttt....",
+]
+TORSO_UP = [
+    "....rrrrrrrr....",
+    "...rrrrrrrrrr...",
+    "..wttttrrttttw..",
+    "..wttttrrttttw..",
+    "..wtttttrttttw..",
+    "...bbbbbbbbbb...",
+    "...tttttttttt...",
+    "....tttttttt....",
+]
+TORSO_SIDE = [
+    ".....rrrrrr.....",
+    "...rrrrrrrr.....",
+    "..rr.tttttttt...",
+    "....tttttttt....",
+    "....tttttttt....",
+    "....bbbbbwbb....",
+    "....tttttttt....",
+    ".....tttttt.....",
+]
+LEGS = {
+    "down_idle": ["....ppp..ppp....", "....ppp..ppp....", "....bbb..bbb....", "....bbb..bbb....", "................"],
+    "down_a":    ["....ppp..ppp....", "....ppp..bbb....", "....bbb..bbb....", "....bbb.........", "................"],
+    "down_b":    ["....ppp..ppp....", "....bbb..ppp....", "....bbb..bbb....", ".........bbb....", "................"],
+    "side_idle": [".....ppppp......", ".....pp.pp......", ".....bb.bb......", ".....bb.bbb.....", "................"],
+    "side_a":    ["....ppppppp.....", "....pp...pp.....", "...bbb....bb....", "...bb.....bbb...", "................"],
+    "side_b":    [".....ppppp......", "......ppp.......", "......bbb.......", "......bbbb......", "................"],
+}
+
+
+def wren_frame(head, torso, legs, bob=0):
+    rows = head + torso + LEGS[legs]
+    assert len(rows) == 24, len(rows)
+    if bob:
+        rows = rows[bob:] + ["................"] * bob
+    return lit(rows, seed=7)
+
+
+def arm_forward(torso, row, cols):
+    """Swap a few torso pixels for skin to show a reaching arm."""
+    out = list(torso)
+    r = list(out[row])
+    for c in cols:
+        r[c] = "w"
+    out[row] = "".join(r)
+    return out
+
+
+def build_wren():
+    frames = {}
+    for name, head, torso, legs in (
+        ("down", HEAD_DOWN, TORSO_DOWN, "down"),
+        ("up", HEAD_UP, TORSO_UP, "down"),
+        ("side", HEAD_SIDE, TORSO_SIDE, "side"),
+    ):
+        frames[name] = [
+            wren_frame(head, torso, legs + "_idle"),
+            wren_frame(head, torso, legs + "_a", bob=1),
+            wren_frame(head, torso, legs + "_idle"),
+            wren_frame(head, torso, legs + "_b", bob=1),
+        ]
+    # Attack poses: lean into the swing.
+    frames["down"].append(wren_frame(HEAD_DOWN, arm_forward(TORSO_DOWN, 6, [7, 8]), "down_idle"))
+    frames["up"].append(wren_frame(HEAD_UP, TORSO_UP, "down_idle", bob=1))
+    frames["side"].append(wren_frame(HEAD_SIDE, arm_forward(TORSO_SIDE, 3, [12, 13]), "side_a"))
+    # Hum pose: eyes closed, hands together.
+    hum_head = [r.replace("e", "w") for r in HEAD_DOWN]
+    hum_head[8] = "...ywwwwwwwwy..."
+    hum_head[7] = "...ywewwwwewy...".replace("e", "y")
+    frames["down"].append(wren_frame(hum_head, arm_forward(TORSO_DOWN, 4, [7, 8]), "down_idle"))
+    frames["up"].append(frames["up"][0])
+    frames["side"].append(frames["side"][0])
+    # Sheet: rows down, up, side (faces right); columns idle, walk x3, attack, hum.
+    return sheet([frames["down"], frames["up"], frames["side"]], 16, 24)
+
+
+SWORD = [
+    "................",
+    "...b............",
+    ".bbbddddddddddd.",
+    ".bbbdddddddddd..",
+    "...b............",
+    "................",
+]
+
+# --------------------------------------------------------------------------
+# Enemies
+# --------------------------------------------------------------------------
+SCUTTLER = {
+    "walk_a": [
+        "................",
+        "................",
+        "................",
+        "..cc..e..e..cc..",
+        ".cccc.c..c.cccc.",
+        ".cc.c.c..c.c.cc.",
+        "...cccccccccc...",
+        "..cccccccccccc..",
+        "..cccccccccccc..",
+        "...cccccccccc...",
+        "..cc.cc..cc.cc..",
+        ".cc..c....c..cc.",
+        "................",
+        "................",
+    ],
+    "walk_b": [
+        "................",
+        "................",
+        "................",
+        "..cc..e..e..cc..",
+        ".cccc.c..c.cccc.",
+        ".cc.c.c..c.c.cc.",
+        "...cccccccccc...",
+        "..cccccccccccc..",
+        "..cccccccccccc..",
+        "...cccccccccc...",
+        "...cc.cc.cc.cc..",
+        "...c..c..c..c...",
+        "................",
+        "................",
+    ],
+    "windup": [
+        "................",
+        ".cc..........cc.",
+        "cccc........cccc",
+        "cc.c..e..e..c.cc",
+        "..cc..c..c..cc..",
+        "...cccccccccc...",
+        "..cccccccccccc..",
+        "..cccccccccccc..",
+        "..cccccccccccc..",
+        "...cccccccccc...",
+        "..ccc......ccc..",
+        ".cc..........cc.",
+        "................",
+        "................",
+    ],
+}
+SPITTER = {
+    "idle": [
+        "................",
+        "................",
+        "................",
+        "................",
+        "......ffff......",
+        ".....kffffk.....",
+        "....kkkkkkkk....",
+        "...kkkkkkkkkk...",
+        "...kkkkkkkkkk...",
+        "..kkkkkkkkkkkk..",
+        "..kkkkkkkkkkkk..",
+        ".kkkkkkkkkkkkkk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ],
+    "windup": [
+        "................",
+        "................",
+        "......gggg......",
+        ".....gGGGGg.....",
+        ".....kGffGk.....",
+        "....kkkffkkk....",
+        "...kkkkkkkkkk...",
+        "..kkkkkkkkkkkk..",
+        "..kkkkkkkkkkkk..",
+        ".kkkkkkkkkkkkkk.",
+        ".kkkkkkkkkkkkkk.",
+        "kkkkkkkkkkkkkkkk",
+        "kkkkkkkkkkkkkkkk",
+        "................",
+    ],
+}
+SHELLBACK = {
+    "down": [
+        "................",
+        "................",
+        "....mmmmmmmm....",
+        "...mmmmmmmmmm...",
+        "...mmmemmemmm...",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "...ssssssssss...",
+        "...m.m....m.m...",
+        "................",
+        "................",
+    ],
+    "up": [
+        "................",
+        "................",
+        "...ssssssssss...",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "..ssssssssssss..",
+        "...mmmmmmmmmm...",
+        "...mmmmmmmmmm...",
+        "...mmmmmmmmmm...",
+        "....mmmmmmmm....",
+        "...m.m....m.m...",
+        "................",
+        "................",
+    ],
+    "side": [
+        "................",
+        "..........sss...",
+        "....mmmmm.ssss..",
+        "...mmmmmmmssss..",
+        "...mmmmmemssss..",
+        "..mmmmmmmmssss..",
+        "..mmmmmmmmssss..",
+        "..mmmmmmmmssss..",
+        "..mmmmmmmmssss..",
+        "...mmmmmmmssss..",
+        "....mmmmm.sss...",
+        "....m.m.m.......",
+        "................",
+        "................",
+    ],
+}
+TIDESTONE = [
+    "................",
+    "................",
+    "......oooo......",
+    ".....oooooo.....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....ooonnooo....",
+    "....oonoonoo....",
+    "....oooooono....",
+    "....onnooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "....oooooooo....",
+    "...oooooooooo...",
+    "...oooooooooo...",
+    "................",
+]
+
+
+def build_enemies():
+    out = {}
+    out["scuttler"] = sheet([[lit(SCUTTLER[k], 3) for k in ("walk_a", "walk_b", "windup")]], 16, 14)
+    out["spitter"] = sheet([[lit(SPITTER[k], 4) for k in ("idle", "windup")]], 16, 14)
+    out["shellback"] = sheet([[lit(SHELLBACK[k], 5) for k in ("down", "up", "side")]], 16, 14)
+    awake = [r.replace("n", "N") for r in TIDESTONE]
+    out["tidestone"] = sheet([[lit(TIDESTONE, 6), lit(awake, 6)]], 16, 22)
+    out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
+    return out
+
+
+# --------------------------------------------------------------------------
+# Small round things: bubbles (HUD and shots) and drop shadows.
+# --------------------------------------------------------------------------
+def disc(size, radius, fill, rim, shine=None, inner=None):
+    c = (size - 1) / 2.0
+    px = [[(0, 0, 0, 0)] * size for _ in range(size)]
+    for y in range(size):
+        for x in range(size):
+            d = ((x - c) ** 2 + (y - c) ** 2) ** 0.5
+            if d <= radius - 0.5:
+                px[y][x] = fill
+                if inner and d > radius - 1.8 and (x - c) + (y - c) > 0:
+                    px[y][x] = inner
+            elif d <= radius + 0.5:
+                px[y][x] = rim
+    if shine:
+        sx, sy = int(c - radius / 2.2), int(c - radius / 2.2)
+        px[sy][sx] = shine
+        px[sy][sx + 1] = shine
+        px[sy + 1][sx] = shine
+    return px
+
+
+def ring(size, radius, color):
+    c = (size - 1) / 2.0
+    px = [[(0, 0, 0, 0)] * size for _ in range(size)]
+    for y in range(size):
+        for x in range(size):
+            d = ((x - c) ** 2 + (y - c) ** 2) ** 0.5
+            if abs(d - radius) <= 0.5:
+                px[y][x] = color
+    return px
+
+
+def ellipse(w, h, color):
+    cx, cy = (w - 1) / 2.0, (h - 1) / 2.0
+    return [[color if ((x - cx) / (w / 2.0)) ** 2 + ((y - cy) / (h / 2.0)) ** 2 <= 1.0 else (0, 0, 0, 0)
+             for x in range(w)] for y in range(h)]
+
+
+def build_round():
+    foam, glass, deep = hex_color("#A8E6CF"), hex_color("#5FBFB7"), hex_color("#18324A")
+    white = hex_color("#FFF4D6")
+    full = disc(11, 4.5, glass, deep, white, hex_color("#2E8F8C"))
+    for y in range(11):
+        for x in range(11):
+            if full[y][x] == glass and x + y < 9:
+                full[y][x] = foam
+    full[3][3] = white
+    full[3][4] = white
+    full[4][3] = white
+    empty = ring(11, 4.0, hex_color("#5FBFB7", 120))
+    bubbles = sheet([[full, empty]], 11, 11)
+    shot_a = disc(8, 3.2, hex_color("#B878C4"), hex_color("#2E1A40"), white)
+    shot_b = disc(8, 3.2, hex_color("#E2A6E0"), hex_color("#2E1A40"), white)
+    shots = sheet([[shot_a, shot_b]], 8, 8)
+    shadows = {
+        "shadow_small": sheet([[ellipse(12, 4, SHADOW)]], 12, 4),
+        "shadow_large": sheet([[ellipse(16, 5, SHADOW)]], 16, 5),
+    }
+    return bubbles, shots, shadows
+
+
+# --------------------------------------------------------------------------
+# Saltmarrow tiles, 16x16.
+# --------------------------------------------------------------------------
+T = 16
+SAND = [hex_color(c) for c in ("#FFF4D6", "#F2DCA6", "#E8C88A", "#D4AC72", "#B38867", "#8A6670")]
+WET = [hex_color(c) for c in ("#E8C88A", "#D9B47A", "#C9A06C", "#A88062", "#8A6670")]
+ROCK = [hex_color(c) for c in ("#D8CCD6", "#B4A3B6", "#8E7C93", "#66567A", "#463A5C", "#2A2238")]
+GRASS = [hex_color(c) for c in ("#D6E58A", "#A9C46A", "#6F9A4E", "#3F6648", "#24403A")]
+WATER = [hex_color(c) for c in ("#A8E6CF", "#5FBFB7", "#2E7F8C", "#236A80", "#1F5872")]
+FOAM = hex_color("#A8E6CF")
+FOAM_WHITE = hex_color("#FFF4D6")
+CLEAR = (0, 0, 0, 0)
+
+
+def blank(color=CLEAR):
+    return [[color] * T for _ in range(T)]
+
+
+def sand_tile(seed, ramp=SAND, wet=False):
+    rnd = random.Random(seed)
+    base = ramp[2] if not wet else ramp[1]
+    px = blank(base)
+    # Soft ripples: short horizontal dashes a shade lighter or darker.
+    for _ in range(4):
+        x, y = rnd.randrange(T - 4), rnd.randrange(T)
+        col = ramp[1] if not wet else ramp[0]
+        for i in range(rnd.randrange(2, 5)):
+            px[y][x + i] = col
+        if y + 1 < T:
+            for i in range(1, rnd.randrange(2, 5)):
+                px[y + 1][x + i] = ramp[3] if not wet else ramp[2]
+    # Speckles.
+    for _ in range(6):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = rnd.choice([ramp[1], ramp[3]])
+    # A pebble now and then (lit from the top left).
+    if rnd.random() < 0.6:
+        x, y = rnd.randrange(1, T - 3), rnd.randrange(1, T - 3)
+        px[y][x] = ramp[4]
+        px[y][x + 1] = ramp[4]
+        px[y + 1][x] = ramp[4]
+        px[y + 1][x + 1] = ramp[5] if not wet else ramp[4]
+        px[y - 1][x] = ramp[0]
+    return px
+
+
+def shell_deco(seed):
+    """A small clam shell on transparent background."""
+    px = blank()
+    pink, pink_d, white = hex_color("#F2B8A8"), hex_color("#B97C7A"), hex_color("#FFF4D6")
+    rows = ["..WPPW..", ".WPPPPW.", "WPPdPPdW", ".PdPPdP.", "..ddd..."]
+    ox, oy = 4 + seed % 4, 6 + seed % 3
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == "W":
+                px[oy + y][ox + x] = white
+            elif ch == "P":
+                px[oy + y][ox + x] = pink
+            elif ch == "d":
+                px[oy + y][ox + x] = pink_d
+    return px
+
+
+def grass_tuft(seed):
+    rnd = random.Random(seed)
+    px = blank()
+    base_x = 4 + rnd.randrange(6)
+    for blade in range(5):
+        x = base_x + blade + rnd.randrange(-1, 2)
+        height = rnd.randrange(5, 10)
+        lean = rnd.choice([-1, 0, 1])
+        for i in range(height):
+            yy = 14 - i
+            xx = min(T - 1, max(0, x + (lean if i > height // 2 else 0)))
+            px[yy][xx] = GRASS[1] if i > height - 3 else (GRASS[2] if i > 1 else GRASS[3])
+    return px
+
+
+def cliff_top(seed):
+    """Rock plateau capped with dune grass."""
+    rnd = random.Random(seed)
+    px = blank(GRASS[2])
+    for _ in range(26):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = rnd.choice([GRASS[1], GRASS[3], GRASS[1]])
+    for _ in range(5):
+        x, y = rnd.randrange(T), rnd.randrange(1, T)
+        px[y][x] = GRASS[0]
+        px[y - 1][x] = GRASS[1]
+    return px
+
+
+def cliff_face(seed):
+    """Front of a cliff: grass lip, layered rock, dark foot."""
+    rnd = random.Random(seed)
+    px = blank(ROCK[3])
+    for x in range(T):
+        px[0][x] = GRASS[2]
+        px[1][x] = GRASS[3] if rnd.random() < 0.6 else GRASS[2]
+        px[2][x] = ROCK[1]
+        px[3][x] = ROCK[2]
+    # Horizontal strata with lit tops.
+    for y in (6, 10):
+        for x in range(T):
+            px[y][x] = ROCK[4]
+            px[y + 1][x] = ROCK[2]
+    for _ in range(10):
+        x, y = rnd.randrange(T), rnd.randrange(4, T - 2)
+        px[y][x] = rnd.choice([ROCK[2], ROCK[4]])
+    # Vertical cracks.
+    for _ in range(2):
+        x = rnd.randrange(1, T - 1)
+        for y in range(rnd.randrange(4, 8), rnd.randrange(9, 14)):
+            px[y][x] = ROCK[5]
+            px[y][x + 1] = ROCK[2]
+    for x in range(T):
+        px[T - 1][x] = ROCK[5]
+        px[T - 2][x] = ROCK[4]
+    # Grass drips over the lip.
+    for _ in range(4):
+        x = rnd.randrange(T)
+        px[2][x] = GRASS[3]
+    return px
+
+
+def water_tile(frame):
+    px = blank(WATER[2])
+    rnd = random.Random(42)
+    for _ in range(14):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = WATER[3]
+    # Sparkle wavelets drift right between frames.
+    for i, (x, y) in enumerate(((2, 3), (9, 5), (5, 10), (12, 12), (1, 13))):
+        xx = (x + frame * 2) % T
+        for k in range(3):
+            px[y][(xx + k) % T] = WATER[1]
+        px[y + 1 if y + 1 < T else y][(xx + 1) % T] = WATER[3]
+    if frame == 1:
+        px[4][7] = FOAM
+        px[11][3] = FOAM
+    return px
+
+
+def foam_edge(side, frame):
+    """Foam where water meets sand. side: top, bottom, left, right."""
+    px = blank()
+    rnd = random.Random(10 + frame)
+    for i in range(T):
+        depth = 1 + (1 if (i + frame) % 4 < 2 else 0)
+        for d in range(depth + 1):
+            color = FOAM_WHITE if d == 0 else (FOAM if d <= depth - 0 else WATER[1])
+            if d == depth:
+                color = WATER[1] if rnd.random() < 0.7 else CLEAR
+            if side == "top":
+                px[d][i] = color
+            elif side == "bottom":
+                px[T - 1 - d][i] = color
+            elif side == "left":
+                px[i][d] = color
+            else:
+                px[i][T - 1 - d] = color
+    return px
+
+
+def shade_overlay(side):
+    px = blank()
+    col = hex_color("#6B4E71", 70)
+    for i in range(T):
+        for d in range(4 if side == "top" else 2):
+            if side == "top":
+                px[d][i] = col
+            else:
+                px[i][d] = col
+    return px
+
+
+TILE_LAYOUT = [
+    # name, builder
+    ("sand_0", lambda: sand_tile(1)), ("sand_1", lambda: sand_tile(2)),
+    ("sand_2", lambda: sand_tile(3)), ("sand_3", lambda: sand_tile(4)),
+    ("wet_0", lambda: sand_tile(5, WET, True)), ("wet_1", lambda: sand_tile(6, WET, True)),
+    ("wet_2", lambda: sand_tile(7, WET, True)), ("wet_3", lambda: sand_tile(8, WET, True)),
+    ("cliff_top_0", lambda: cliff_top(1)), ("cliff_top_1", lambda: cliff_top(2)),
+    ("cliff_face_0", lambda: cliff_face(1)), ("cliff_face_1", lambda: cliff_face(2)),
+    ("grass_0", lambda: grass_tuft(1)), ("grass_1", lambda: grass_tuft(5)),
+    ("shell_0", lambda: shell_deco(1)), ("shell_1", lambda: shell_deco(6)),
+    ("water_0", lambda: water_tile(0)), ("water_1", lambda: water_tile(1)),
+    ("foam_top_0", lambda: foam_edge("top", 0)), ("foam_bottom_0", lambda: foam_edge("bottom", 0)),
+    ("foam_left_0", lambda: foam_edge("left", 0)), ("foam_right_0", lambda: foam_edge("right", 0)),
+    ("shade_top", lambda: shade_overlay("top")), ("shade_left", lambda: shade_overlay("left")),
+    ("foam_top_1", lambda: foam_edge("top", 1)), ("foam_bottom_1", lambda: foam_edge("bottom", 1)),
+    ("foam_left_1", lambda: foam_edge("left", 1)), ("foam_right_1", lambda: foam_edge("right", 1)),
+]
+TILE_COLUMNS = 8
+
+
+def build_tiles():
+    tiles = [builder() for _, builder in TILE_LAYOUT]
+    rows = [tiles[i:i + TILE_COLUMNS] for i in range(0, len(tiles), TILE_COLUMNS)]
+    while len(rows[-1]) < TILE_COLUMNS:
+        rows[-1].append(blank())
+    return sheet(rows, T, T)
+
+
+def write_text(path, text):
+    if CHECK_ONLY:
+        if not os.path.exists(path) or open(path).read() != text:
+            STALE.append(os.path.relpath(path, ROOT))
+        return
+    with open(path, "w") as f:
+        f.write(text)
+
+
+def write_tile_atlas_gd(path):
+    lines = [
+        "class_name TileAtlas",
+        "extends Object",
+        "## Tile positions in assets/tiles/saltmarrow.png.",
+        "## Generated by tools/build_art.py. Do not edit by hand.",
+        "",
+        "const SIZE := 16",
+        "const POSITIONS := {",
+    ]
+    for i, (name, _) in enumerate(TILE_LAYOUT):
+        lines.append('\t"%s": Vector2i(%d, %d),' % (name, i % TILE_COLUMNS, i // TILE_COLUMNS))
+    lines += ["}", "", "",
+              "static func region(tile_name: String) -> Rect2:",
+              "\tvar cell: Vector2i = POSITIONS[tile_name]",
+              "\treturn Rect2(cell.x * SIZE, cell.y * SIZE, SIZE, SIZE)", ""]
+    write_text(path, "\n".join(lines))
+
+
+# --------------------------------------------------------------------------
+# Sheets and PNG output (standard library only).
+# --------------------------------------------------------------------------
+def sheet(rows_of_frames, fw, fh):
+    cols = max(len(r) for r in rows_of_frames)
+    w, h = cols * fw, len(rows_of_frames) * fh
+    px = [[(0, 0, 0, 0)] * w for _ in range(h)]
+    for ry, frames in enumerate(rows_of_frames):
+        for cx, frame in enumerate(frames):
+            assert len(frame) == fh and len(frame[0]) == fw, ("frame size", len(frame), len(frame[0]), fw, fh)
+            for y in range(fh):
+                for x in range(fw):
+                    px[ry * fh + y][cx * fw + x] = frame[y][x]
+    return px
+
+
+CHECK_ONLY = False
+STALE = []
+
+
+def raw_pixels(px):
+    return b"".join(b"\x00" + b"".join(struct.pack("BBBB", *p) for p in row) for row in px)
+
+
+def png_raw(path):
+    """The uncompressed image data of a PNG this script wrote."""
+    with open(path, "rb") as f:
+        data = f.read()
+    pos, idat = 8, b""
+    while pos < len(data):
+        length = struct.unpack(">I", data[pos:pos + 4])[0]
+        tag = data[pos + 4:pos + 8]
+        if tag == b"IDAT":
+            idat += data[pos + 8:pos + 8 + length]
+        pos += 12 + length
+    return zlib.decompress(idat)
+
+
+def write_png(path, px):
+    h, w = len(px), len(px[0])
+    raw = raw_pixels(px)
+    if CHECK_ONLY:
+        # Compare pixels, not bytes: zlib versions compress differently.
+        if not os.path.exists(path) or png_raw(path) != raw:
+            STALE.append(os.path.relpath(path, ROOT))
+        return
+
+    def chunk(tag, data):
+        c = struct.pack(">I", len(data)) + tag + data
+        return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+    png += chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(png)
+
+
+def main():
+    global CHECK_ONLY
+    CHECK_ONLY = "--check" in sys.argv
+    write_png(os.path.join(OUT, "sprites", "wren.png"), build_wren())
+    for name, px in build_enemies().items():
+        write_png(os.path.join(OUT, "sprites", name + ".png"), px)
+    bubbles, shots, shadows = build_round()
+    write_png(os.path.join(OUT, "ui", "bubbles.png"), bubbles)
+    write_png(os.path.join(OUT, "sprites", "shot.png"), shots)
+    for name, px in shadows.items():
+        write_png(os.path.join(OUT, "sprites", name + ".png"), px)
+    write_png(os.path.join(OUT, "tiles", "saltmarrow.png"), build_tiles())
+    write_tile_atlas_gd(os.path.join(ROOT, "scripts", "art", "tile_atlas.gd"))
+    if CHECK_ONLY:
+        if STALE:
+            print("Out of date (run python3 tools/build_art.py):", ", ".join(STALE))
+            sys.exit(1)
+        print("Art is up to date.")
+    else:
+        print("Art written to", OUT)
+
+
+if __name__ == "__main__":
+    main()

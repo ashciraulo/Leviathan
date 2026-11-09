@@ -49,15 +49,12 @@ func _fire_at(target: Vector2) -> void:
 	get_parent().add_child.call_deferred(shot)
 
 
-func _draw() -> void:
-	_draw_shadow(16)
-	var swell := 0.0
-	var mouth := Palette.OUTLINE
-	if mode == Mode.WINDUP and ai_enabled and not dying:
-		swell = 2.0 * (1.0 - _timer / WINDUP_TIME)
-		mouth = Palette.TELL
-	var color := _tint(Palette.SPITTER)
-	draw_rect(Rect2(-8 - swell, -14 - swell, 16 + swell * 2.0, 14 + swell), Palette.OUTLINE)
-	draw_rect(Rect2(-7 - swell, -13 - swell, 14 + swell * 2.0, 12 + swell), color)
-	# The mouth glows during the wind-up.
-	draw_rect(Rect2(-3, -15 - swell, 6, 4), mouth)
+func _make_sprite() -> Sprite2D:
+	return Art.sprite(Art.SPITTER, 2, 1, 12)
+
+
+func _update_sprite() -> void:
+	var winding := mode == Mode.WINDUP and ai_enabled
+	_sprite.frame = 1 if winding else 0
+	if winding and _timer < WINDUP_TIME * 0.5:
+		_jitter(_timer)

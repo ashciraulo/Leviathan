@@ -61,18 +61,15 @@ func _rest() -> void:
 	_timer = REST_TIME
 
 
-func _draw() -> void:
-	_draw_shadow(16)
-	var jitter := Vector2.ZERO
-	var color := _tint(Palette.SCUTTLER)
-	if mode == Mode.WINDUP and ai_enabled and not dying:
-		jitter.x = 1.0 if int(_timer * 30.0) % 2 == 0 else -1.0
-		color = _tint(Palette.TELL)
-	draw_rect(Rect2(Vector2(-8, -9) + jitter, Vector2(16, 8)), Palette.OUTLINE)
-	draw_rect(Rect2(Vector2(-7, -8) + jitter, Vector2(14, 6)), color)
-	# Claws.
-	draw_rect(Rect2(Vector2(-11, -11) + jitter, Vector2(4, 4)), Palette.OUTLINE)
-	draw_rect(Rect2(Vector2(7, -11) + jitter, Vector2(4, 4)), Palette.OUTLINE)
-	# Eye stalks.
-	draw_rect(Rect2(Vector2(-3, -11) + jitter, Vector2(2, 2)), Palette.OUTLINE)
-	draw_rect(Rect2(Vector2(1, -11) + jitter, Vector2(2, 2)), Palette.OUTLINE)
+func _make_sprite() -> Sprite2D:
+	return Art.sprite(Art.SCUTTLER, 3, 1, 11)
+
+
+func _update_sprite() -> void:
+	if mode == Mode.WINDUP and ai_enabled:
+		_sprite.frame = 2
+		_jitter(_timer)
+	elif velocity.length() > 1.0:
+		_sprite.frame = int(Time.get_ticks_msec() / 90) % 2
+	else:
+		_sprite.frame = 0

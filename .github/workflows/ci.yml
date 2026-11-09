@@ -18,6 +18,9 @@ jobs:
         with:
           lfs: true
 
+      - name: Check generated art is up to date
+        run: python3 tools/build_art.py --check
+
       - name: Download Godot
         run: |
           curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"

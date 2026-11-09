@@ -39,6 +39,15 @@ var _hit_ids: Dictionary = {}
 var _sword: Area2D
 var _sword_shape: CollisionShape2D
 var _hurtbox: Area2D
+var _body: Sprite2D
+var _front: Node2D
+var _anim_time := 0.0
+
+## Sheet columns in assets/sprites/wren.png.
+const FRAME_WALK := [0, 1, 2, 3]
+const FRAME_ATTACK := 4
+const FRAME_HUM := 5
+const WALK_FRAME_TIME := 0.11
 
 
 func _ready() -> void:
@@ -61,6 +70,15 @@ func _ready() -> void:
 	add_child(_sword)
 	_place_sword()
 
+	add_child(Art.shadow())
+	_body = Art.sprite(Art.WREN, 6, 3, 22)
+	add_child(_body)
+	# Sword and Hum effects draw on this layer, in front of Wren (or behind
+	# when swinging upwards).
+	_front = Node2D.new()
+	_front.draw.connect(_draw_front)
+	add_child(_front)
+
 
 func _physics_process(delta: float) -> void:
 	if frozen:
@@ -81,7 +99,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 	move_and_slide()
 	_check_damage()
-	queue_redraw()
+	_update_sprite(delta)
 
 
 func start_attack() -> void:
@@ -236,39 +254,68 @@ func _place_sword() -> void:
 	(_sword_shape.shape as RectangleShape2D).size = rect.size
 
 
-func _draw() -> void:
-	draw_rect(Rect2(-6, -2, 12, 4), Palette.SHADOW)
+func _update_sprite(delta: float) -> void:
+	var row := 0
+	if facing.y < 0.0:
+		row = 1
+	elif facing.x != 0.0:
+		row = 2
+	_body.flip_h = facing.x < 0.0
+	var column := 0
+	match state:
+		State.MOVE:
+			if velocity.length() > 1.0:
+				_anim_time += delta
+				column = FRAME_WALK[int(_anim_time / WALK_FRAME_TIME) % FRAME_WALK.size()]
+			else:
+				_anim_time = 0.0
+		State.ATTACK:
+			column = FRAME_ATTACK
+		State.HUM:
+			column = FRAME_HUM
+			row = 0
+			_body.flip_h = false
+	_body.frame = row * 6 + column
+	_body.modulate = Color(0.55, 0.5, 0.65) if state == State.DEAD else Color.WHITE
+	# Blink while invulnerable.
+	_body.visible = not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 20.0) % 2 == 1)
+	Art.set_flash(_body, 1.0 if _flash > 0.0 else 0.0)
+	_front.z_index = -1 if (state == State.ATTACK and facing.y < 0.0) else 0
+	_front.queue_redraw()
+
+
+func _draw_front() -> void:
 	if state == State.HUM:
 		_draw_hum_rings()
-	# Blink while invulnerable.
-	if _invuln > 0.0 and state != State.DEAD and int(_invuln * 20.0) % 2 == 1:
-		return
-	var body := Palette.WREN
-	if _flash > 0.0:
-		body = Palette.FLASH if Settings.flashes else Palette.SOFT_FLASH
-	if state == State.DEAD:
-		body = body.darkened(0.5)
-	draw_rect(Rect2(-6, -19, 12, 19), Palette.OUTLINE)
-	draw_rect(Rect2(-5, -12, 10, 11), body)
-	draw_rect(Rect2(-5, -18, 10, 6), Palette.WREN_SKIN)
-	# Eyes show which way Wren faces.
-	if facing.y >= 0.0:
-		var eye_x := facing.x * 2.0
-		draw_rect(Rect2(eye_x - 3, -16, 2, 2), Palette.OUTLINE)
-		draw_rect(Rect2(eye_x + 1, -16, 2, 2), Palette.OUTLINE)
+	if state == State.ATTACK:
+		_draw_sword()
+
+
+## The driftwood sword sweeps through a short arc during the swing.
+func _draw_sword() -> void:
+	var t := clampf(_state_time / ATTACK_TIME, 0.0, 1.0)
+	var base_angle := facing.angle()
+	var direction := -1.0 if (facing.x < 0.0 or facing.y < 0.0) else 1.0
+	var sweep := lerpf(-1.1, 1.1, ease(t, 0.4)) * direction
+	var pivot := Vector2(0, -9) + facing * 3.0
+	var angle := base_angle + sweep
 	if is_sword_active():
-		var rect := sword_rect()
-		draw_rect(rect.grow(-1), Palette.OUTLINE)
-		draw_rect(rect.grow(-2), Palette.SWORD)
+		var start := base_angle - 1.1 * direction
+		var trail := Palette.HUM
+		trail.a = 0.55
+		_front.draw_arc(pivot, 15.0, minf(start, angle), maxf(start, angle), 10, trail, 2.0)
+	_front.draw_set_transform(pivot, angle, Vector2.ONE)
+	_front.draw_texture(Art.SWORD, Vector2(-3, -3))
+	_front.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _draw_hum_rings() -> void:
-	var center := Vector2(0, -9)
+	var center := Vector2(0, -11)
 	for i in 3:
 		var radius := fmod(hum_progress * 30.0 + i * 8.0, 24.0) + 6.0
 		var color := Palette.HUM
 		color.a = clampf(1.0 - radius / 30.0, 0.0, 1.0)
-		draw_arc(center, radius, 0.0, TAU, 24, color, 1.0)
+		_front.draw_arc(center, radius, 0.0, TAU, 32, color, 1.0)
 	# Progress toward the next bubble.
-	draw_rect(Rect2(-8, 3, 16, 2), Palette.OUTLINE)
-	draw_rect(Rect2(-8, 3, 16.0 * hum_progress / HUM_TIME, 2), Palette.HUM)
+	_front.draw_rect(Rect2(-8, 3, 16, 3), Palette.OUTLINE)
+	_front.draw_rect(Rect2(-7, 4, 14.0 * hum_progress / HUM_TIME, 1), Palette.HUM)

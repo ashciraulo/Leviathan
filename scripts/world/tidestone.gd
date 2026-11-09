@@ -8,6 +8,7 @@ const CHECKPOINT_OFFSET := Vector2(0, 28)
 
 var room_coord := Vector2i.ZERO
 var awake := false
+var _sprite: Sprite2D
 
 
 func _ready() -> void:
@@ -21,6 +22,10 @@ func _ready() -> void:
 	area.body_entered.connect(_on_body_entered)
 	add_child(area)
 	awake = bool(GameState.flags.get(flag_key(), false))
+	add_child(Art.shadow(true))
+	_sprite = Art.sprite(Art.TIDESTONE, 2, 1, 20)
+	add_child(_sprite)
+	_sprite.frame = 1 if awake else 0
 
 
 func flag_key() -> String:
@@ -35,12 +40,4 @@ func _on_body_entered(body: Node2D) -> void:
 	GameState.set_checkpoint(room_coord, position + CHECKPOINT_OFFSET)
 	if SaveManager.save_game():
 		Events.toast.emit("TOAST_TIDESTONE_SAVED")
-	queue_redraw()
-
-
-func _draw() -> void:
-	draw_rect(Rect2(-8, -2, 16, 4), Palette.SHADOW)
-	draw_rect(Rect2(-7, -24, 14, 24), Palette.OUTLINE)
-	draw_rect(Rect2(-6, -23, 12, 22), Palette.STONE)
-	var rune := Palette.HUM if awake else Palette.OUTLINE
-	draw_rect(Rect2(-2, -18, 4, 8), rune)
+	_sprite.frame = 1

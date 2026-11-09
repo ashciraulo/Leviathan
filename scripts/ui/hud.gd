@@ -50,20 +50,17 @@ func show_toast(text_key: String) -> void:
 
 func _draw_gauge() -> void:
 	var count: int = GameState.max_bubbles
-	_gauge.draw_rect(Rect2(3, 3, count * BUBBLE_SPACING + 4, 23), Palette.UI_DARK)
+	_gauge.draw_rect(Rect2(2, 2, count * BUBBLE_SPACING + 5, 23), Palette.UI_DARK)
 	for i in count:
-		var center := Vector2(10 + i * BUBBLE_SPACING, 10)
-		if i < GameState.bubbles:
-			_gauge.draw_circle(center, 5.0, Palette.OUTLINE)
-			_gauge.draw_circle(center, 4.0, Palette.BUBBLE)
-			_gauge.draw_rect(Rect2(center + Vector2(-2, -2), Vector2(2, 2)), Palette.FLASH)
-		else:
-			_gauge.draw_circle(center, 4.0, Palette.BUBBLE_EMPTY, false, 1.0)
+		var cell := Rect2(4 + i * BUBBLE_SPACING, 4, 11, 11)
+		var full := i < GameState.bubbles
+		_gauge.draw_texture_rect_region(Art.BUBBLES, cell, Rect2(0 if full else 11, 0, 11, 11))
 	# Resonance meter, marked in thirds: each third is one Hum.
-	var bar := Rect2(5, 19, count * BUBBLE_SPACING, 4)
-	_gauge.draw_rect(bar, Palette.OUTLINE)
+	var bar := Rect2(5, 18, count * BUBBLE_SPACING - 1, 4)
+	_gauge.draw_rect(bar.grow(1), Palette.OUTLINE)
+	_gauge.draw_rect(bar, Palette.RESONANCE_EMPTY)
 	var fill: float = GameState.resonance / GameState.resonance_max
 	_gauge.draw_rect(Rect2(bar.position, Vector2(bar.size.x * fill, bar.size.y)), Palette.RESONANCE)
 	for third in [1, 2]:
 		var x: float = bar.position.x + bar.size.x * third / 3.0
-		_gauge.draw_rect(Rect2(x, bar.position.y, 1, bar.size.y), Palette.UI_DARK)
+		_gauge.draw_rect(Rect2(x, bar.position.y, 1, bar.size.y), Palette.OUTLINE)

@@ -28,6 +28,10 @@ var player_spawn := SIZE / 2.0
 
 var _rows := PackedStringArray()
 var _ground: Node2D
+var _water_frame := 0
+var _water_time := 0.0
+
+const WATER_FRAME_TIME := 0.6
 
 
 func _ready() -> void:
@@ -121,17 +125,61 @@ func _make_static(layer: int, node_name: String) -> StaticBody2D:
 	return body
 
 
+func _process(delta: float) -> void:
+	_water_time += delta
+	if _water_time >= WATER_FRAME_TIME:
+		_water_time = 0.0
+		_water_frame = 1 - _water_frame
+		_ground.queue_redraw()
+
+
+func _tile_at(x: int, y: int) -> String:
+	if y < 0 or y >= _rows.size() or x < 0 or x >= _rows[y].length():
+		return "#"
+	return _rows[y][x]
+
+
+## A stable pseudo-random number per tile, so variants don't flicker.
+func _hash(x: int, y: int) -> int:
+	return absi((x * 73856093) ^ (y * 19349663) ^ (coord.x * 83492791) ^ (coord.y * 2654435))
+
+
+func _near_water(x: int, y: int) -> bool:
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			if _tile_at(x + dx, y + dy) == "~":
+				return true
+	return false
+
+
+func _draw_tile(tile_name: String, x: int, y: int) -> void:
+	_ground.draw_texture_rect_region(Art.SALTMARROW_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
+
+
 func _draw_ground() -> void:
 	for y in _rows.size():
-		var row := _rows[y]
-		for x in row.length():
-			var rect := Rect2(x * TILE, y * TILE, TILE, TILE)
-			match row[x]:
-				"#":
-					_ground.draw_rect(rect, Palette.WALL)
-					_ground.draw_rect(Rect2(rect.position, Vector2(TILE, 3)), Palette.WALL_TOP)
-				"~":
-					_ground.draw_rect(rect, Palette.WATER)
-					_ground.draw_rect(Rect2(rect.position + Vector2(3, 6), Vector2(6, 1)), Palette.WATER_LIGHT)
-				_:
-					_ground.draw_rect(rect, Palette.FLOOR if (x + y) % 2 == 0 else Palette.FLOOR_ALT)
+		for x in _rows[y].length():
+			var tile := _tile_at(x, y)
+			var h := _hash(x, y)
+			if tile == "#":
+				# 3/4 view: a wall shows its face when open ground is below it.
+				if _tile_at(x, y + 1) == "#":
+					_draw_tile("cliff_top_%d" % (h % 2), x, y)
+				else:
+					_draw_tile("cliff_face_%d" % (h % 2), x, y)
+			elif tile == "~":
+				_draw_tile("water_%d" % _water_frame, x, y)
+				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
+					if _tile_at(x + side[1], y + side[2]) != "~":
+						_draw_tile("foam_%s_%d" % [side[0], _water_frame], x, y)
+			else:
+				var wet := _near_water(x, y)
+				_draw_tile(("wet_%d" if wet else "sand_%d") % (h % 4), x, y)
+				if _tile_at(x, y - 1) == "#":
+					_draw_tile("shade_top", x, y)
+				if _tile_at(x - 1, y) == "#":
+					_draw_tile("shade_left", x, y)
+				if wet and h % 11 == 0:
+					_draw_tile("shell_%d" % (h % 2), x, y)
+				elif not wet and h % 13 == 0:
+					_draw_tile("grass_%d" % (h % 2), x, y)

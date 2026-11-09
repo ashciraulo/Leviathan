@@ -1,7 +1,8 @@
 class_name Enemy
 extends CharacterBody2D
 ## Base for enemies: health, hit reaction, knockback, contact damage and death.
-## Subclasses set their stats in _init(), steer in _think() and draw in _draw().
+## Subclasses set their stats in _init(), steer in _think(), build their
+## sprite in _make_sprite() and pick its frame in _update_sprite().
 ##
 ## Every enemy should have one readable tell (a wind-up, a flash, a sound)
 ## before it attacks.
@@ -29,6 +30,8 @@ var _knockback := Vector2.ZERO
 var _flash := 0.0
 var _hurtbox: Area2D
 var _contact: DamageArea
+var _sprite: Sprite2D
+var _sprite_origin := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -54,11 +57,15 @@ func _ready() -> void:
 	_contact.add_child(Layers.rect_shape(body_size - Vector2(2, 0), Vector2(0, -body_size.y / 2.0)))
 	add_child(_contact)
 
+	add_child(Art.shadow(body_size.x > 14))
+	_sprite = _make_sprite()
+	add_child(_sprite)
+	_sprite_origin = _sprite.position
+
 
 func _physics_process(delta: float) -> void:
 	_flash = maxf(_flash - delta, 0.0)
 	if dying:
-		queue_redraw()
 		return
 	if _stun > 0.0:
 		_stun -= delta
@@ -69,7 +76,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
-	queue_redraw()
+	_sprite.position = _sprite_origin
+	_update_sprite()
+	Art.set_flash(_sprite, 1.0 if _flash > 0.0 else 0.0)
 
 
 ## Called by Wren's sword. `direction` is the way the swing travels.
@@ -123,15 +132,19 @@ func _die() -> void:
 	tween.chain().tween_callback(queue_free)
 
 
-## Body colour with the white hit flash applied.
-func _tint(base: Color) -> Color:
-	if _flash > 0.0:
-		return Palette.FLASH if Settings.flashes else Palette.SOFT_FLASH
-	return base
+## Override: return this enemy's sprite (see Art.sprite()).
+func _make_sprite() -> Sprite2D:
+	return Art.sprite(Art.SCUTTLER, 3, 1, 11)
 
 
-func _draw_shadow(width: float) -> void:
-	draw_rect(Rect2(-width / 2.0, -2, width, 4), Palette.SHADOW)
+## Override: choose the frame for this physics tick.
+func _update_sprite() -> void:
+	pass
+
+
+## Shake the sprite sideways: part of most wind-up tells.
+func _jitter(timer: float) -> void:
+	_sprite.position.x += 1.0 if int(timer * 30.0) % 2 == 0 else -1.0
 
 
 ## The nearest of the four directions to `v`.
