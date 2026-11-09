@@ -95,6 +95,22 @@ ROOMS = {
 #......QQQQQQQQQQQQQQQ.#
 #..m...................#
 #......................#
+###################..###"""),
+    # Optional: down through the Cistern's floor, a sunken undercroft. Only
+    # the Diver's Helm crosses its pool, to the Nacre Buckler.
+    (37, 10): ("ROOM_BELFRY_UNDERCROFT", {"chest_item": '"nacre_buckler"'}, """
+###################..###
+#QQQQQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ....#
+#.C.QQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ....#
+#..QQQQQQQQQQQQQQQQ.c..#
+#..QQQQQQQQQQQQQQQQ....#
+#QQQQQQQQQQQQQQQQQQ....#
 ########################"""),
     (36, 8): ("ROOM_BELFRY_VALVES", {"chest_item": '"map"'}, """
 ###########GG###########
