@@ -80,9 +80,12 @@ jobs:
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/screenshots.tscn 2>&1 | tee shots.log
           timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/menu_screenshots.tscn 2>&1 | tee -a shots.log
-          # The same menus with every string 40% longer (long-text check).
+          # The menus, HUD and conversations with every string 40% longer
+          # (long-text check).
           LEVIATHAN_PSEUDO=1 timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/menu_screenshots.tscn 2>&1 | tee -a shots.log
+          LEVIATHAN_PSEUDO=1 timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
+            "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/screenshots.tscn 2>&1 | tee -a shots.log
           ls -la screenshots
           # Also print the PNGs as base64 so they can be read from the job log.
           for f in $(ls screenshots/*.png | grep -v /pseudo_); do

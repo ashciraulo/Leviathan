@@ -38,6 +38,8 @@ file on import.
       LEVIATHAN_PSEUDO=1 xvfb-run -a godot --rendering-driver opengl3 \
           --path . res://tests/menu_screenshots.tscn
 
+  Run `res://tests/screenshots.tscn` the same way for the HUD, the
+  dialogue box (normal and large text) and a cutscene.
   The shots are saved as `screenshots/pseudo_*.png`. CI captures them too.
   Single-line labels drawn with `MenuKit.draw_text(..., max_width)` and
   wrapped text from `MenuKit.draw_wrapped` cut themselves short with ".."

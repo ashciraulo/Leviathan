@@ -16,17 +16,9 @@ var _pseudo := false
 
 
 func _ready() -> void:
-	if OS.get_environment("LEVIATHAN_PSEUDO") == "1":
+	if PseudoText.requested():
 		_pseudo = true
-		ProjectSettings.set_setting("internationalization/pseudolocalization/replace_with_accents", false)
-		ProjectSettings.set_setting("internationalization/pseudolocalization/double_vowels", false)
-		ProjectSettings.set_setting("internationalization/pseudolocalization/fake_bidi", false)
-		ProjectSettings.set_setting("internationalization/pseudolocalization/override", false)
-		ProjectSettings.set_setting("internationalization/pseudolocalization/expansion_ratio", 0.4)
-		ProjectSettings.set_setting("internationalization/pseudolocalization/prefix", "[")
-		ProjectSettings.set_setting("internationalization/pseudolocalization/suffix", "]")
-		TranslationServer.pseudolocalization_enabled = true
-		TranslationServer.reload_pseudolocalization()
+		PseudoText.enable()
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	_backup_saves()

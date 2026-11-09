@@ -4,14 +4,23 @@ extends Node
 ##     xvfb-run godot --rendering-driver opengl3 res://tests/screenshots.tscn
 ## PNGs (4x, nearest-neighbour) land in <project>/screenshots/.
 ## Uses save slot 2 so it never touches a real save.
+##
+## With LEVIATHAN_PSEUDO=1 every string is 40% longer and bracketed, and only
+## the text-heavy shots are taken (HUD, conversations, large text, a
+## cutscene), saved as pseudo_*.png: a check that longer translations still
+## fit the dialogue box and the HUD.
 
 const SCALE := 4
 const TEST_SLOT := 2
 
 var _out_dir := ""
+var _pseudo := false
 
 
 func _ready() -> void:
+	if PseudoText.requested():
+		_pseudo = true
+		PseudoText.enable()
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	SaveManager.current_slot = TEST_SLOT
@@ -164,6 +173,11 @@ func _ready() -> void:
 		Vector2i(0, -2): ["66_still_cove", Vector2i(21, 7)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
+	if _pseudo:
+		# Only the village, where the conversations are.
+		for coord: Vector2i in shots.keys():
+			if shots[coord][0] != "10_saltmarrow_village":
+				shots.erase(coord)
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
@@ -238,6 +252,16 @@ func _ready() -> void:
 			await _wait(1.5)
 			await _capture("27_dunstan_portrait")
 		await _finish_talk(game)
+
+	if _pseudo:
+		# A cutscene with portraits, then done: the rest has little text.
+		game.queue_free()
+		await _wait(0.2)
+		await _lowe_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
 
 	# 8. Opening a chest in the Hull's galley.
 	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))
@@ -698,7 +722,7 @@ func _capture(file_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.resize(image.get_width() * SCALE, image.get_height() * SCALE, Image.INTERPOLATE_NEAREST)
-	var path := _out_dir.path_join(file_name + ".png")
+	var path := _out_dir.path_join(("pseudo_" if _pseudo else "") + file_name + ".png")
 	var err := image.save_png(path)
 	print("Saved %s (%s)" % [path, error_string(err)])
 
