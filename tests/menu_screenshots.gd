@@ -179,17 +179,13 @@ func _press(pause: PauseMenu, action: String) -> void:
 ## Move real saves aside so the shots can use all three slots.
 func _backup_saves() -> void:
 	for slot in SaveManager.SLOT_COUNT:
-		var path := ProjectSettings.globalize_path(SaveManager.slot_path(slot))
-		if FileAccess.file_exists(path):
-			DirAccess.rename_absolute(path, path + ".shotbackup")
+		SaveManager.set_aside(slot, "shotbackup")
 
 
 func _restore_saves() -> void:
 	for slot in SaveManager.SLOT_COUNT:
-		var path := ProjectSettings.globalize_path(SaveManager.slot_path(slot))
 		SaveManager.delete_save(slot)
-		if FileAccess.file_exists(path + ".shotbackup"):
-			DirAccess.rename_absolute(path + ".shotbackup", path)
+		SaveManager.restore_aside(slot, "shotbackup")
 
 
 func _wait(seconds: float) -> void:

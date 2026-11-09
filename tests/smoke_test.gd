@@ -13,13 +13,7 @@ var _checks := 0
 func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
 	# Slot 2 is File 3 on the file select: keep a real save safe.
-	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
-	# A run that crashed left the real save in the backup: never overwrite it.
-	if FileAccess.file_exists(real_save + ".testbackup"):
-		DirAccess.remove_absolute(real_save)
-		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
-	if FileAccess.file_exists(real_save):
-		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
+	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
 	_test_room_layouts()
 	_test_game_state()
@@ -46,8 +40,7 @@ func _ready() -> void:
 	await _test_credits()
 	await _test_side_quests()
 	SaveManager.delete_save()
-	if FileAccess.file_exists(real_save + ".testbackup"):
-		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
+	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
 		print("SMOKE TEST PASSED (%d checks)" % _checks)
@@ -163,8 +156,33 @@ func _test_save_load() -> void:
 	_check(GameState.checkpoint_room == Vector2i(1, 1), "load restores the checkpoint room")
 	_check(GameState.checkpoint_pos == Vector2(40, 60), "load restores the checkpoint position")
 	_check(GameState.flags.get("test_flag") == true, "load restores flags")
+	# A damaged save falls back to the one before it.
+	var saved_signal := [0]
+	var count_saves := func() -> void: saved_signal[0] += 1
+	Events.game_saved.connect(count_saves)
+	GameState.flags["test_flag"] = false
+	SaveManager.save_game()
+	Events.game_saved.disconnect(count_saves)
+	_check(saved_signal[0] == 1, "saving tells the HUD")
+	var path := SaveManager.slot_path()
+	_check(FileAccess.file_exists(path + ".bak") and not FileAccess.file_exists(path + ".tmp"),
+		"saving keeps the previous save as a backup and leaves no temp file")
+	var broken := FileAccess.open(path, FileAccess.WRITE)
+	broken.store_string("{\"state\": ")
+	broken.close()
+	GameState.reset_new_game()
+	_check(SaveManager.load_game() and GameState.flags.get("test_flag") == true,
+		"a damaged save loads the backup instead")
+	_check(not SaveManager.read_summary(SaveManager.current_slot).get("damaged", false),
+		"the file select reads the backup of a damaged save")
+	# Saving over a damaged file keeps the good backup rather than the damage.
+	SaveManager.save_game()
+	var bak_data = JSON.parse_string(FileAccess.get_file_as_string(path + ".bak"))
+	_check(bak_data is Dictionary and bak_data.get("state") is Dictionary,
+		"saving over a damaged save keeps a good backup")
 	SaveManager.delete_save()
-	_check(not SaveManager.has_save(), "delete removes the save")
+	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
+		"delete removes the save and its backup")
 
 
 func _test_keys() -> void:
