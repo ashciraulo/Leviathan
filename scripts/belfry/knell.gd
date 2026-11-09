@@ -27,6 +27,9 @@ const ARM_SPOTS := [Vector2i(-5, 0), Vector2i(6, 0), Vector2i(0, 4)]
 const FRAME_PEEK := 0
 const FRAME_OUT := 1
 
+## How long it peeks out of the bell before it spits ink.
+const INK_TELL := 0.5
+var _ink_tell := 0.0
 var mode := Mode.INTRO
 var bell: GreatBell
 var arms: Array = []
@@ -113,6 +116,7 @@ func on_bell_rung() -> void:
 		return
 	mode = Mode.DAZED
 	_timer = DAZED_TIME
+	_ink_tell = 0.0
 	_hits_this_daze = 0
 	position = _home + Vector2(0, 14)
 	_hurtbox.collision_layer = 1 << (Layers.ENEMY_HURTBOX - 1)
@@ -130,10 +134,17 @@ func _think(delta: float) -> void:
 				# Every arm already cut (in the opening moments): straight in.
 				_on_arm_cut()
 		Mode.ARMS, Mode.HIDDEN:
-			_ink -= delta
-			if _ink <= 0.0 and wren and not wren.diving:
-				_ink = INK_EVERY * (0.7 if mode == Mode.HIDDEN else 1.0)
-				_spit(wren)
+			if _ink_tell > 0.0:
+				_ink_tell -= delta
+				if _ink_tell <= 0.0 and wren and not wren.diving:
+					_spit(wren)
+			else:
+				_ink -= delta
+				if _ink <= 0.0 and wren and not wren.diving:
+					# The tell: it peeks out of the bell's mouth and shudders.
+					_ink = INK_EVERY * (0.7 if mode == Mode.HIDDEN else 1.0)
+					_ink_tell = INK_TELL
+					Audio.play_sfx("enemy_tell", global_position, 0.8)
 		Mode.DAZED:
 			if _timer <= 0.0 or _hits_this_daze >= HITS_PER_DAZE:
 				mode = Mode.RETREAT
@@ -174,11 +185,13 @@ func hook_hit(_direction: Vector2) -> bool:
 
 func _die() -> void:
 	dying = true
+	_ink_tell = 0.0
 	mode = Mode.DYING
 	_contact.active = false
 	_hurtbox.set_deferred("monitorable", false)
 	_hurtbox.collision_layer = 0
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	for arm in arms:
 		if is_instance_valid(arm):
 			arm.queue_free()
@@ -216,7 +229,9 @@ func _make_sprite() -> Sprite2D:
 func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
-	_sprite.visible = mode != Mode.HIDDEN and mode != Mode.INTRO
+	_sprite.visible = (mode != Mode.HIDDEN and mode != Mode.INTRO) or _ink_tell > 0.0
+	if _ink_tell > 0.0:
+		_jitter(_ink_tell)
 	_sprite.frame = FRAME_OUT if mode in [Mode.DAZED, Mode.RETREAT] else FRAME_PEEK
 	if mode == Mode.DAZED and _timer < 1.0:
 		_jitter(_timer)

@@ -9,6 +9,11 @@ var _life := LIFETIME
 var _sprite: Sprite2D
 
 
+func _init() -> void:
+	# Shots still in the air are cleared when a boss falls.
+	add_to_group("enemy_shots")
+
+
 func _ready() -> void:
 	Layers.assign(self, Layers.ENEMY_ATTACK, [Layers.WORLD])
 	add_child(Layers.circle_shape(3.0, Vector2.ZERO))
