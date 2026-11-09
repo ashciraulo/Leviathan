@@ -1334,13 +1334,45 @@ func _test_items() -> void:
 	var old := SaveManager.read_summary(TEST_SLOT)
 	_check(int(old.get("bubbles", 0)) == 8 and str(old.get("place", "")) != "", "old saves get a summary")
 	# A gamepad button for Tab Next, which has no default button.
-	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	# It has no button to give back, so it can't take one in use.
+	_check(not Settings.rebind("tab_next", _pad_event(JOY_BUTTON_A)), "Tab Next can't take a button in use")
+	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_STICK))
 	var has_button := false
 	for event in InputMap.action_get_events("tab_next"):
-		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER)
-	_check(has_button, "rebinding Tab Next to a button works")
+		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_STICK)
+	_check(has_button, "rebinding Tab Next to a free button works")
 	Settings.pad_overrides.erase("tab_next")
 	Settings.apply()
+	# Taking a key another action uses swaps the two.
+	var key_was := Settings.key_overrides.duplicate()
+	var pad_was := Settings.pad_overrides.duplicate()
+	var take_k := InputEventKey.new()
+	take_k.physical_keycode = KEY_K
+	Settings.rebind("attack", take_k)
+	_check(Settings.main_key("attack") == KEY_K and Settings.main_key("interact") == KEY_J,
+		"rebinding to a used key swaps the two actions")
+	Settings.rebind("item_1", _pad_event(JOY_BUTTON_Y))
+	_check(Settings.main_button("item_1") == JOY_BUTTON_Y and Settings.main_button("item_2") == JOY_BUTTON_X,
+		"rebinding to a used button swaps the two actions")
+	var up_arrow := InputEventKey.new()
+	up_arrow.physical_keycode = KEY_UP
+	_check(not Settings.rebind("attack", up_arrow) and Settings.main_key("attack") == KEY_K,
+		"an arrow key (always movement) can't be taken")
+	var pause_k := InputEventKey.new()
+	pause_k.physical_keycode = KEY_K
+	_check(not Settings.rebind("pause", pause_k) and Settings.main_key("attack") == KEY_K,
+		"a swap never moves Escape off Pause")
+	Settings.key_overrides = key_was
+	Settings.pad_overrides = pad_was
+	Settings.apply()
+	# Prompts follow the device in use.
+	var pad_was_used := Settings.using_pad
+	Settings.using_pad = true
+	var pad_prompt := MenuKit.key_name("interact")
+	Settings.using_pad = false
+	var key_prompt := MenuKit.key_name("interact")
+	Settings.using_pad = pad_was_used
+	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
 	for id: String in Items.DEFS:
 		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
 	SaveManager.delete_save()

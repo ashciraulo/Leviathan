@@ -68,9 +68,12 @@ func _capture(event: InputEvent) -> bool:
 		return true
 	var wanted := (_column == 0 and event is InputEventKey) or (_column == 1 and event is InputEventJoypadButton)
 	if wanted:
-		Settings.rebind(Settings.REMAPPABLE[_row], event)
-		Settings.save_settings()
-		_waiting = false
+		if Settings.rebind(Settings.REMAPPABLE[_row], event):
+			Settings.save_settings()
+			_waiting = false
+		else:
+			# Taken by something that can't give it up: keep waiting.
+			Audio.play_sfx("door_locked")
 	return true
 
 
@@ -112,7 +115,7 @@ func _draw() -> void:
 			KEY_X - 40)
 		for col in 2:
 			var x := KEY_X if col == 0 else PAD_X
-			var text := MenuKit.key_name(action) if col == 0 else pad_text(action)
+			var text := MenuKit.keyboard_name(action) if col == 0 else pad_text(action)
 			var active := selected and col == _column
 			if active and _waiting:
 				text = "CONTROLS_PRESS" if int(Time.get_ticks_msec() / 300) % 2 == 0 else ""
