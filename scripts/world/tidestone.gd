@@ -40,6 +40,6 @@ func _on_body_entered(body: Node2D) -> void:
 	GameState.flags[flag_key()] = true
 	GameState.wake_tidestone(room_coord, position + CHECKPOINT_OFFSET)
 	GameState.set_checkpoint(room_coord, position + CHECKPOINT_OFFSET)
-	if SaveManager.save_game():
-		Events.toast.emit("TOAST_TIDESTONE_SAVED")
+	# The hum, the glow and the HUD's turning bubbles say it was saved.
+	SaveManager.save_game()
 	_sprite.frame = 1

@@ -42,6 +42,8 @@ extends Node2D
 ##          j  brazier (the raised lantern lights it)
 ##          v  veiled plank (walkable only in lantern light)
 ##          q  Shade (only hurt in lantern light)   x  wisp
+##          > < N S  wind fan blowing east, west, north, south
+##          r  lightning rod
 ##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
@@ -83,6 +85,11 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Wren is inside (0 for none), and the row where they're safe from it.
 @export var lava_rise := 0.0
 @export var lava_safe_row := 2
+## Holes in this floor (_) drop Wren to the floor below instead of
+## costing a bubble: room fall_to, landing on tile fall_spawn.
+@export var falls_through := false
+@export var fall_to := Vector2i.ZERO
+@export var fall_spawn := Vector2i.ZERO
 ## A dark room: only Wren's lantern and things that glow light it.
 @export var dark := false
 ## What signposts (n) in this room say: a translation key.
@@ -172,6 +179,12 @@ const BIOMES := {
 		"wet_deco": "shrooms_%d", "dry_deco": "spores_%d",
 		"floor_overlay": ["grave_lamp_%d", 29], "door": "exit_glow",
 	},
+	"gale": {
+		"floor": "gale_floor_%d", "wall_top": "gale_top_%d", "wall_face": "gale_face_%d",
+		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
+		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
+		"floor_overlay": ["lichen_%d", 17], "door": "exit_glow", "gap": "galesky",
+	},
 }
 
 
@@ -179,6 +192,7 @@ func _ready() -> void:
 	y_sort_enabled = true
 	if alt_flag != "" and alt_layout != "" and GameState.has_flag(alt_flag):
 		layout = alt_layout
+	add_to_group("rooms")
 	_rows = parse_layout(layout)
 	var problem := validate_layout(_rows)
 	if problem != "":
@@ -352,6 +366,15 @@ func _process(delta: float) -> void:
 		_water_time = 0.0
 		_water_frame = 1 - _water_frame
 		_ground.queue_redraw()
+
+
+## The room under a point (global), or null.
+static func under(tree: SceneTree, at: Vector2) -> Room:
+	for node in tree.get_nodes_in_group("rooms"):
+		var room := node as Room
+		if room and not room.is_queued_for_deletion() and Rect2(room.global_position, SIZE).has_point(at):
+			return room
+	return null
 
 
 ## The layout letter at a tile (walls outside the room).

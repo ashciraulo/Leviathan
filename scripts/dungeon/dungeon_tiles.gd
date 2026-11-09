@@ -7,7 +7,7 @@ extends Object
 ## room-wide parts once every tile is placed: the gap field, the puzzle that
 ## opens the bars, and a listing deck.
 
-const LETTERS := "_OK=|!GV^Yizkjvqx"
+const LETTERS := "_OK=|!GV^Yizkjvqx><NSr"
 
 
 static func handles(letter: String) -> bool:
@@ -39,6 +39,12 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 			return Shade.new()
 		"x":
 			return Wisp.new()
+		">", "<", "N", "S":
+			var fan := WindFan.new()
+			fan.direction = WindFan.LETTERS[letter]
+			return fan
+		"r":
+			return LightningRod.new()
 		"O":
 			return HookPost.new()
 		"K":
@@ -65,6 +71,8 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 					return Slagwyrm.spawn_in(room, pos)
 				"mire":
 					return PaleCongregation.spawn_in(room, pos)
+				"gale":
+					return Stormheron.spawn_in(room, pos)
 			return BarnacleMatriarch.spawn_in(room, pos)
 	return null
 

@@ -20,6 +20,7 @@ const BIOME_COLORS := {
 	"cinderreach": [Color("#86726f"), Color("#8a3428"), Color("#f2783a")],
 	"mire": [Color("#5a4e7c"), Color("#1e1834"), Color("#2a2a48")],
 	"gloamfen": [Color("#655a78"), Color("#2a5458"), Color("#2e2650")],
+	"gale": [Color("#8e9cb4"), Color("#36405a"), Color("#8fc4e8")],
 	"windmere": [Color("#8fb15a"), Color("#e8e2d0"), Color("#2f6e9e")],
 	"frostspine": [Color("#dce6f2"), Color("#5a98cc"), Color("#365e84")],
 	"sunken_verge": [Color("#a89c82"), Color("#6e6656"), Color("#3a585e")],
@@ -28,7 +29,7 @@ const BIOME_COLORS := {
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 
 ## Area names: "" is the overworld.
-const AREA_KEYS := {"": "MAP_OVERWORLD", "hull": "DUNGEON_HULL", "kiln": "DUNGEON_KILN", "mire": "DUNGEON_MIRE"}
+const AREA_KEYS := {"": "MAP_OVERWORLD", "hull": "DUNGEON_HULL", "kiln": "DUNGEON_KILN", "mire": "DUNGEON_MIRE", "gale": "DUNGEON_GALE"}
 
 var _view: Control
 var _area := ""

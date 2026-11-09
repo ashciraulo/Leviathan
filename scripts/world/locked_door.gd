@@ -43,11 +43,9 @@ func _on_touch(body: Node2D) -> void:
 		return
 	if GameState.use_key(dungeon):
 		open_lock(room_coord)
-		Events.toast.emit("TOAST_UNLOCKED")
 		Audio.play_sfx("door_unlock", global_position)
 	elif Time.get_ticks_msec() - _last_toast > TOAST_COOLDOWN * 1000.0:
 		_last_toast = Time.get_ticks_msec()
-		Events.toast.emit("TOAST_LOCKED")
 		Audio.play_sfx("door_locked", global_position)
 
 

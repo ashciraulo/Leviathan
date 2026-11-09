@@ -15,6 +15,7 @@ func _ready() -> void:
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	SaveManager.current_slot = TEST_SLOT
+	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
 
 	# 1. Title screen.
@@ -30,16 +31,28 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle"]:
-		if OS.get_environment("SHOTS_ONLY") == "kiln":
-			await _kiln_shots(game)
-		elif OS.get_environment("SHOTS_ONLY") == "mantle":
-			game.queue_free()
-			await _wait(0.2)
-			await _mantle_shots()
-		else:
-			await _mire_shots(game)
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle", "lowe", "crucible"]:
+		match OS.get_environment("SHOTS_ONLY"):
+			"kiln":
+				await _kiln_shots(game)
+			"mire":
+				await _mire_shots(game)
+			"gale":
+				await _gale_shots(game)
+			"mantle":
+				game.queue_free()
+				await _wait(0.2)
+				await _mantle_shots()
+			"lowe":
+				game.queue_free()
+				await _wait(0.2)
+				await _lowe_shots()
+			"crucible":
+				game.queue_free()
+				await _wait(0.2)
+				await _crucible_shots()
 		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
 		return
 	await _capture("02_saltmarrow_shore")
@@ -70,6 +83,10 @@ func _ready() -> void:
 	await _capture("04b_high_contrast")
 	Settings.high_contrast = contrast_was
 	Settings.captions = captions_was
+	# The little ring of bubbles that turns after a save.
+	Events.game_saved.emit()
+	await _wait(0.5)
+	await _capture("04c_saved")
 
 	# 4. A sword swing connecting with a Scuttler.
 	var room: Room = game.current_room
@@ -270,6 +287,9 @@ func _ready() -> void:
 	# 8d. Lantern Mire.
 	await _mire_shots(game)
 
+	# 8e. Gale Spire.
+	await _gale_shots(game)
+
 	# 9. Pause menu.
 	var pause: PauseMenu = null
 	for child in game.get_children():
@@ -297,6 +317,8 @@ func _ready() -> void:
 	story.queue_free()
 	await _wait(0.2)
 	await _mantle_shots()
+	await _lowe_shots()
+	await _crucible_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -356,6 +378,7 @@ func _ready() -> void:
 	_finish_talk(pools)
 
 	SaveManager.delete_save()
+	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	print("SCREENSHOTS DONE: " + _out_dir)
 	get_tree().quit(0)
 
@@ -398,6 +421,7 @@ func _hull_shots(game: Node) -> void:
 	await _wait(1.0)
 
 	# The Barnacle Matriarch: rearing up, then her soft body exposed.
+	GameState.set_flag(StoryDirector.LOWE_HULL_FLAG)
 	room = await _jump(game, Vector2i(10, 7), Vector2i(11, 9))
 	await _wait(1.0)
 	var boss: BarnacleMatriarch = null
@@ -493,6 +517,7 @@ func _kiln_shots(game: Node) -> void:
 	await _capture("56_kiln_riser")
 
 	# The Slagwyrm: chasing, plates set hard by a pool, then the wake.
+	GameState.set_flag(StoryDirector.CRUCIBLE_FLAG)
 	room = await _jump(game, Vector2i(21, 7), Vector2i(11, 10))
 	await _wait(1.6)
 	var boss: Slagwyrm = null
@@ -588,6 +613,72 @@ func _mire_shots(game: Node) -> void:
 	game.player._invuln = 0.0
 
 
+func _gale_shots(game: Node) -> void:
+	GameState.give_item("kite_cloak")
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(28, 10), "90_gale_entry", Vector2i(11, 10)],
+		[Vector2i(27, 10), "91_gale_rope_store", Vector2i(10, 8)],
+		[Vector2i(28, 9), "92_gale_fan_hall", Vector2i(11, 9)],
+		[Vector2i(27, 9), "93_gale_sail_loft", Vector2i(11, 9)],
+		[Vector2i(29, 9), "94_gale_gust_gallery", Vector2i(2, 6)],
+		[Vector2i(28, 8), "95_gale_bell_shaft", Vector2i(11, 11)],
+		[Vector2i(29, 8), "96_gale_weathervane", Vector2i(2, 6)],
+		[Vector2i(27, 8), "97_gale_rookery", Vector2i(21, 6)],
+	]
+	for shot: Array in rooms:
+		await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		await _wait(0.4)
+		await _capture(shot[1])
+
+	# Gliding over the drop on the fan's wind.
+	await _jump(game, Vector2i(29, 9), Vector2i(4, 6))
+	game.player._invuln = 600.0
+	game.player.facing = Vector2.RIGHT
+	game.player.use_item("kite_cloak")
+	await _wait(0.6)
+	await _capture("98_gale_gliding")
+	await _wait(2.0)
+
+	# The Stormheron.
+	var room := await _jump(game, Vector2i(28, 7), Vector2i(11, 10))
+	game.player._invuln = 600.0
+	await _wait(2.4)
+	await _capture("99_stormheron_perched")
+	var heron: Stormheron = null
+	for child in room.get_children():
+		if child is Stormheron:
+			heron = child
+	if heron:
+		heron._throws = 0
+		heron.mode = Stormheron.Mode.FLARE
+		heron._timer = 0.3
+		await _wait(0.45)
+		await _capture("100_stormheron_feathers")
+		heron._throws = Stormheron.THROWS_PER_STORM
+		heron.mode = Stormheron.Mode.PERCH
+		heron._timer = 0.0
+		await _wait(0.8)
+		await _capture("101_stormheron_storm")
+		await _wait(0.75)
+		await _capture("102_stormheron_struck")
+		await _wait(0.5)
+		game.player.global_position = heron.global_position + Vector2(-20, 6)
+		await _wait(0.3)
+		await _capture("103_stormheron_grounded")
+		while is_instance_valid(heron) and heron.hp > 0:
+			heron._stun = 0.0
+			heron._hits_this_landing = 0
+			heron.mode = Stormheron.Mode.GROUNDED
+			heron.take_hit(1, Vector2.UP)
+	await _wait(4.0)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
+	await _wait(0.3)
+	await _capture("104_storm_bell")
+	game.player._invuln = 0.0
+
+
 ## Wren (after a respawn, a new Wren) with the lantern up or down, and no
 ## harm coming to them mid-shot.
 func _mire_lantern(game: Node, raised: bool) -> void:
@@ -649,4 +740,54 @@ func _mantle_shots() -> void:
 	await _capture("36_mantle_rises")
 	await _skip_scene(strand)
 	strand.queue_free()
+	await _wait(0.2)
+
+
+## Sister Lowe at the Hull: her singers pry at the sleeping Matriarch, she
+## warns Wren off, then the Choir scatters as the Matriarch wakes.
+func _lowe_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.HULL_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var hold: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hold)
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.2)
+		if page == 1:
+			await _capture("39_lowe_at_the_hull")
+		var box := _dialogue_box(hold)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _wait(0.5)
+	await _capture("40_choir_scatters")
+	await _skip_scene(hold)
+	hold.queue_free()
+	await _wait(0.2)
+
+
+## The crucible at the Kiln: Lowe's smiths stoke it, then the Slagwyrm
+## bursts out of the melt and the Choir runs.
+func _crucible_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var kiln: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.2)
+		if page == 0:
+			await _capture("41_the_crucible")
+		var box := _dialogue_box(kiln)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _wait(0.6)
+	await _capture("42_slagwyrm_wakes")
+	await _skip_scene(kiln)
+	kiln.queue_free()
 	await _wait(0.2)

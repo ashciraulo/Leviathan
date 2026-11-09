@@ -34,6 +34,7 @@ import mire_art
 import verge_art
 import ossuary_art
 import gloamfen_art
+import gale_art
 import windmere_art
 import frostspine_art
 
@@ -1003,6 +1004,7 @@ TILE_LAYOUT += cinderreach_art.TILES
 TILE_LAYOUT += mire_art.TILES
 TILE_LAYOUT += verge_art.TILES
 TILE_LAYOUT += ossuary_art.TILES
+TILE_LAYOUT += gale_art.TILES
 _names = [entry[0] for entry in TILE_LAYOUT if entry]
 assert len(_names) == len(set(_names)), "tile names used twice: %s" % sorted(n for n in set(_names) if _names.count(n) > 1)
 
@@ -1136,7 +1138,11 @@ def build_font():
     from font_glyphs import GLYPHS
 
     body, edge = hex_color("#FFF4D6"), hex_color("#2A1E36")
-    cell_w, cell_h, per_row = 8, 11, 16
+    # A plain glyph is 9 rows in an 11-pixel cell (the outline takes a pixel
+    # on each side). Accented letters have up to 2 extra rows above; they
+    # stick out of the line box upwards (negative yoffset).
+    TALL = 2
+    cell_w, cell_h, per_row = 8, 11 + TALL, 16
     chars = sorted(GLYPHS, key=ord)
     rows = (len(chars) + per_row - 1) // per_row
     px = [[(0, 0, 0, 0)] * (cell_w * per_row) for _ in range(cell_h * rows)]
@@ -1144,7 +1150,9 @@ def build_font():
     for i, ch in enumerate(chars):
         glyph = GLYPHS[ch]
         gw = len(glyph[0])
-        ox, oy = (i % per_row) * cell_w, (i // per_row) * cell_h
+        extra = len(glyph) - 9
+        assert 0 <= extra <= TALL and gw + 2 <= cell_w and len(set(map(len, glyph))) == 1, ch
+        ox, oy = (i % per_row) * cell_w, (i // per_row) * cell_h + TALL - extra
         on = {(x, y) for y, r in enumerate(glyph) for x, c in enumerate(r) if c == "#"}
         for x, y in on:
             for dx in (-1, 0, 1):
@@ -1153,8 +1161,8 @@ def build_font():
                         px[oy + 1 + y + dy][ox + 1 + x + dx] = edge
         for x, y in on:
             px[oy + 1 + y][ox + 1 + x] = body
-        lines.append("char id=%d x=%d y=%d width=%d height=%d xoffset=-1 yoffset=0 xadvance=%d page=0 chnl=15"
-                     % (ord(ch), ox, oy, gw + 2, cell_h, gw + 2))
+        lines.append("char id=%d x=%d y=%d width=%d height=%d xoffset=-1 yoffset=%d xadvance=%d page=0 chnl=15"
+                     % (ord(ch), ox, oy, gw + 2, 11 + extra, -extra, gw + 2))
     header = [
         'info face="Tide" size=11 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=0 aa=1 padding=0,0,0,0 spacing=0,0',
         "common lineHeight=11 base=8 scaleW=%d scaleH=%d pages=1 packed=0" % (cell_w * per_row, cell_h * rows),
@@ -1193,6 +1201,8 @@ def main():
         write_png(os.path.join(OUT, "verge", name + ".png"), px)
     for name, px in ossuary_art.build(_lit_with(ossuary_art), sheet).items():
         write_png(os.path.join(OUT, "ossuary", name + ".png"), px)
+    for name, px in gale_art.build(_lit_with(gale_art), sheet).items():
+        write_png(os.path.join(OUT, "gale", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())

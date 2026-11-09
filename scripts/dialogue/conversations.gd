@@ -25,6 +25,7 @@ const SPEAKERS := {
 	"pell": ["NAME_PELL", Art.PORTRAIT_PELL],
 	"nettle": ["NAME_NETTLE", Art.PORTRAIT_NETTLE],
 	"agna": ["NAME_AGNA", Art.PORTRAIT_AGNA],
+	"lowe": ["NAME_LOWE", Art.PORTRAIT_LOWE],
 	"marga": ["NAME_MARGA", Art.PORTRAIT_MARGA],
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 }

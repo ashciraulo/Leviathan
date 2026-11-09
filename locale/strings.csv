@@ -7,7 +7,6 @@ MENU_QUIT,Quit
 MENU_RESUME,Resume
 MENU_QUIT_TO_TITLE,Quit to title
 PAUSE_TITLE,Paused
-TOAST_TIDESTONE_SAVED,The Tidestone hums. Progress saved.
 ROOM_SALTMARROW,Saltmarrow
 ROOM_SHORE,Saltmarrow Shore
 ROOM_TIDEPOOLS,The Tidepools
@@ -27,8 +26,6 @@ HESSA_5,"Past the tidepools, into the Brinewood. There's an old ship rotting in 
 HESSA_6,"Keep your lamp lit, keeper. I'll keep mine."
 HESSA_AGAIN,"East, past the tidepools, to the Rotting Hull. Go on now. The light will be here when you're back."
 TOAST_GOT_KEY,You found a small key.
-TOAST_LOCKED,Locked. A small key would open it.
-TOAST_UNLOCKED,The lock gives way.
 ROOM_LANTERN_WALK,The Lantern Walk
 ROOM_HERON_SHALLOWS,Heron Shallows
 ROOM_HULL_LANDING,Hull Landing
@@ -49,10 +46,7 @@ GOT_TIDE_HOOK_2,"Press U to throw it. It bites into iron rings and carries you a
 TOAST_GOT_MAP,You found the map.
 TOAST_GOT_COMPASS,You found the compass.
 TOAST_GOT_BIG_KEY,You found the big key!
-TOAST_BIG_DOOR_LOCKED,The great door won't move. It needs the big key.
-TOAST_BIG_DOOR_OPEN,The big key turns. The great door groans open.
 BOSS_MATRIARCH,The Barnacle Matriarch
-TOAST_BELL_QUIET,The Tidebell hums softly.
 BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
 BELL_HULL_3,You learned the first phrase of the lullaby. Your Resonance grows.
@@ -390,6 +384,26 @@ ROOM_LUMEN_POOL,Lumen Pool
 ROOM_DROWNED_CAUSEWAY,Drowned Causeway
 ROOM_WITHERROOT_HOLLOW,Witherroot Hollow
 ROOM_MIRELIGHT_EDGE,Mirelight Edge
+ROOM_GALE_ENTRY,Gale Spire
+ROOM_GALE_FANS,Gale Spire: Fan Hall
+ROOM_GALE_STORE,Gale Spire: Rope Store
+ROOM_GALE_SAIL_LOFT,Gale Spire: Sail Loft
+ROOM_GALE_GUSTS,Gale Spire: Gust Gallery
+ROOM_GALE_SHAFT,Gale Spire: Bell Shaft
+ROOM_GALE_VANE,Gale Spire: Weathervane Room
+ROOM_GALE_ROOKERY,Gale Spire: Rookery
+ROOM_GALE_BOSS,Gale Spire: the Crown
+DUNGEON_GALE,Gale Spire
+TOAST_GOT_KITE_CLOAK,You found the Kite Cloak!
+GOT_KITE_CLOAK_1,"The Kite Cloak! Old sailcloth stitched over a frame of cane, with a red kite painted on its back."
+GOT_KITE_CLOAK_2,"Press its item key (U or I) to throw it open and glide. A fan's wind will carry you further. Press the key again to come down."
+BOSS_STORMHERON,The Stormheron
+BELL_GALE_1,"You ring the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
+BELL_GALE_2,"The clouds part over the bay. Down in the deep, the great sleeper's breathing evens out, slow and steady."
+BELL_GALE_3,You learned the fourth phrase of the lullaby. Your Resonance grows.
+CAPTION_THUNDER,Thunder
+CAPTION_STORM,Storm gathering
+CAPTION_HERON,Heron screeches
 ROOM_GULLWATCH_STEPS,Gullwatch Steps
 ROOM_MILL_ROW,Mill Row
 ROOM_GALE_FLATS,Gale Flats
@@ -432,6 +446,7 @@ CAPTION_UNLOCK,Lock clicks open
 CAPTION_SWITCH,Switch clicks
 CAPTION_TIDESTONE,Tidestone hums awake
 CAPTION_BELL,A bell rings
+CAPTION_BELL_QUIET,A bell hums softly
 CAPTION_SECRET,Secret chime
 CAPTION_DOOR,Stone grinds
 CAPTION_PUZZLE,Something opened
@@ -488,3 +503,10 @@ AGNA_AFTER_2,"My forge is lit again. Here. Brinesteel, from the same metal as th
 NARRATE_GOT_BRINESTEEL,Wren got the Brinesteel sword.
 AGNA_AFTER_3,"It'll ring when it strikes true. Mind you listen for it."
 AGNA_SMITH,"The forge stays lit now. Come back if that blade ever dulls."
+NAME_LOWE,Sister Lowe
+LOWE_HULL_1,"Put your backs into it. The bell's under her, and Vael wants it before the tide turns."
+LOWE_HULL_2,"A keeper's child, all the way down here? Go home, little lamp. This is bigger than you."
+LOWE_HULL_3,"She's waking! Leave the bar. Down the holes, both of you. Now!"
+LOWE_KILN_1,"Work those bellows! It has to run like water before the tide turns."
+LOWE_KILN_2,"You again, little lamp? Too late. We'll pour it into a Waking Bell."
+LOWE_KILN_3,"The slag's alive! Get back from the rim. Out, all of you!"

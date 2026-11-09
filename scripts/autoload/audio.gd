@@ -65,6 +65,11 @@ const SFX := {
 	"brazier_catch": {"wave": "noise", "f0": 900.0, "f1": 2400.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_FLAME"},
 	"wisp_chime": {"wave": "triangle", "f0": 1568.0, "f1": 1568.0, "dur": 0.25, "vol": 0.2, "steps": 2},
 	"heart_beat": {"wave": "triangle", "f0": 110.0, "f1": 70.0, "dur": 0.22, "vol": 0.5, "caption": "CAPTION_HEARTBEAT"},
+	"cloak_open": {"wave": "noise", "f0": 1400.0, "f1": 500.0, "dur": 0.2, "vol": 0.3},
+	"thunder": {"wave": "noise", "f0": 300.0, "f1": 40.0, "dur": 0.9, "vol": 0.7, "caption": "CAPTION_THUNDER"},
+	"storm_gather": {"wave": "noise", "f0": 2000.0, "f1": 4000.0, "dur": 1.2, "vol": 0.25, "caption": "CAPTION_STORM"},
+	"heron_cry": {"wave": "square", "f0": 900.0, "f1": 500.0, "dur": 0.35, "vol": 0.35, "caption": "CAPTION_HERON"},
+	"wingbeat": {"wave": "noise", "f0": 250.0, "f1": 120.0, "dur": 0.3, "vol": 0.3},
 	"mantle_wings": {"wave": "noise", "f0": 300.0, "f1": 150.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_WINGS"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},
@@ -96,6 +101,7 @@ const SFX := {
 	"jaw_snap": {"wave": "square", "f0": 260.0, "f1": 90.0, "dur": 0.15, "vol": 0.4},
 	"ray_splash": {"wave": "noise", "f0": 2400.0, "f1": 900.0, "dur": 0.3, "vol": 0.3, "caption": "CAPTION_TELL"},
 	"tidestone_wake": {"wave": "triangle", "f0": 196.0, "f1": 196.0, "dur": 0.9, "vol": 0.5, "steps": 4, "caption": "CAPTION_TIDESTONE"},
+	"bell_quiet": {"wave": "triangle", "f0": 392.0, "f1": 390.0, "dur": 0.6, "vol": 0.2, "caption": "CAPTION_BELL_QUIET"},
 	"bell_ring": {"wave": "triangle", "f0": 784.0, "f1": 780.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_BELL"},
 	"secret": {"wave": "square", "f0": 523.0, "f1": 523.0, "dur": 0.5, "vol": 0.3, "steps": 4, "caption": "CAPTION_SECRET"},
 	"door_slide": {"wave": "noise", "f0": 200.0, "f1": 120.0, "dur": 0.4, "vol": 0.4, "caption": "CAPTION_DOOR"},
@@ -155,7 +161,12 @@ func _ready() -> void:
 		_flat_voices.append(flat)
 	# Building a placeholder takes up to ~15 ms: do them all off the main
 	# thread now, so the first sword swing or bell doesn't hitch a frame.
-	_prewarm_task = WorkerThreadPool.add_task(_prewarm)
+	if OS.has_feature("web"):
+		# The browser build has no worker threads, so the task would run
+		# here and hold up the first frame: build a few sounds per frame.
+		_prewarm_gradually()
+	else:
+		_prewarm_task = WorkerThreadPool.add_task(_prewarm)
 
 
 func _exit_tree() -> void:
@@ -171,6 +182,17 @@ func _prewarm() -> void:
 		if not (ResourceLoader.exists(SFX_DIR + id + ".ogg") or ResourceLoader.exists(SFX_DIR + id + ".wav")):
 			built[id] = synth(SFX[id])
 	_take_prewarmed.call_deferred(built)
+
+
+func _prewarm_gradually() -> void:
+	var count := 0
+	for id: String in SFX:
+		if _streams.has(id) or ResourceLoader.exists(SFX_DIR + id + ".ogg") or ResourceLoader.exists(SFX_DIR + id + ".wav"):
+			continue
+		_streams[id] = synth(SFX[id])
+		count += 1
+		if count % 3 == 0:
+			await get_tree().process_frame
 
 
 func _take_prewarmed(built: Dictionary) -> void:

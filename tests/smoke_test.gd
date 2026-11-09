@@ -13,13 +13,7 @@ var _checks := 0
 func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
 	# Slot 2 is File 3 on the file select: keep a real save safe.
-	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
-	# A run that crashed left the real save in the backup: never overwrite it.
-	if FileAccess.file_exists(real_save + ".testbackup"):
-		DirAccess.remove_absolute(real_save)
-		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
-	if FileAccess.file_exists(real_save):
-		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
+	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
 	_test_room_layouts()
 	_test_game_state()
@@ -34,6 +28,7 @@ func _ready() -> void:
 	await _test_hull_dungeon()
 	await _test_kiln_dungeon()
 	await _test_mire_dungeon()
+	await _test_gale_dungeon()
 	await _test_villagers()
 	await _test_story()
 	await _test_brinewood_pearl()
@@ -49,8 +44,7 @@ func _ready() -> void:
 	await _test_credits()
 	await _test_side_quests()
 	SaveManager.delete_save()
-	if FileAccess.file_exists(real_save + ".testbackup"):
-		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
+	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
 		print("SMOKE TEST PASSED (%d checks)" % _checks)
@@ -166,8 +160,33 @@ func _test_save_load() -> void:
 	_check(GameState.checkpoint_room == Vector2i(1, 1), "load restores the checkpoint room")
 	_check(GameState.checkpoint_pos == Vector2(40, 60), "load restores the checkpoint position")
 	_check(GameState.flags.get("test_flag") == true, "load restores flags")
+	# A damaged save falls back to the one before it.
+	var saved_signal := [0]
+	var count_saves := func() -> void: saved_signal[0] += 1
+	Events.game_saved.connect(count_saves)
+	GameState.flags["test_flag"] = false
+	SaveManager.save_game()
+	Events.game_saved.disconnect(count_saves)
+	_check(saved_signal[0] == 1, "saving tells the HUD")
+	var path := SaveManager.slot_path()
+	_check(FileAccess.file_exists(path + ".bak") and not FileAccess.file_exists(path + ".tmp"),
+		"saving keeps the previous save as a backup and leaves no temp file")
+	var broken := FileAccess.open(path, FileAccess.WRITE)
+	broken.store_string("{\"state\": ")
+	broken.close()
+	GameState.reset_new_game()
+	_check(SaveManager.load_game() and GameState.flags.get("test_flag") == true,
+		"a damaged save loads the backup instead")
+	_check(not SaveManager.read_summary(SaveManager.current_slot).get("damaged", false),
+		"the file select reads the backup of a damaged save")
+	# Saving over a damaged file keeps the good backup rather than the damage.
+	SaveManager.save_game()
+	var bak_data = JSON.parse_string(FileAccess.get_file_as_string(path + ".bak"))
+	_check(bak_data is Dictionary and bak_data.get("state") is Dictionary,
+		"saving over a damaged save keeps a good backup")
 	SaveManager.delete_save()
-	_check(not SaveManager.has_save(), "delete removes the save")
+	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
+		"delete removes the save and its backup")
 
 
 func _test_keys() -> void:
@@ -509,6 +528,84 @@ func _test_story() -> void:
 	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_AFTER_BELL", "Hessa points Wren to the Kiln afterwards")
 	home.queue_free()
 	await _wait(0.1)
+
+	# The Hull's boss chamber, the first time: Sister Lowe and her singers
+	# are prying at the sleeping Matriarch, and drop away when she wakes.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.HULL_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var hold: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hold)
+	await _wait(0.2)
+	_check(Cutscene.active, "the Matriarch's chamber starts Lowe's scene")
+	var choir: Array = hold.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(choir.size() == 3, "Lowe and two singers are in the chamber (%d)" % choir.size())
+	var sleeper: BarnacleMatriarch = null
+	for child in hold.current_room.get_children():
+		if child is BarnacleMatriarch:
+			sleeper = child
+	_check(sleeper != null and sleeper.mode == BarnacleMatriarch.Mode.INTRO and sleeper.modulate == BarnacleMatriarch.SLEEPING, "the Matriarch sleeps through the start")
+	var lowe_pages := await _play_scene(hold, 12.0)
+	_check(not Cutscene.active and not hold.player.in_cutscene, "Lowe's scene hands Wren back")
+	_check(lowe_pages == 3 and GameState.has_flag(StoryDirector.LOWE_HULL_FLAG), "Sister Lowe speaks three times (%d)" % lowe_pages)
+	var choir_left := 0
+	for figure: Variant in choir:
+		if is_instance_valid(figure):
+			choir_left += 1
+	_check(choir_left == 0, "the Choir is gone through the deck (%d left)" % choir_left)
+	for feet in [StoryDirector.LOWE_FROM_BOSS] + StoryDirector.SINGERS_FROM_BOSS:
+		var y: float = (sleeper.position.y if sleeper else 0.0) + feet.y
+		_check(y < 9 * Room.TILE, "the Choir stands clear of the dialogue box")
+	await _wait(1.6)
+	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO and sleeper.modulate == Color.WHITE, "the Matriarch wakes and fights")
+	hold.queue_free()
+	await _wait(0.1)
+	# Coming back (the scene has played): she rises at once, wide awake.
+	var back: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(back)
+	await _wait(0.2)
+	_check(not Cutscene.active, "Lowe's scene only plays once")
+	for child in back.current_room.get_children():
+		if child is BarnacleMatriarch:
+			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
+	back.queue_free()
+	await _wait(0.1)
+
+	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var kiln: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	await _wait(0.2)
+	_check(Cutscene.active, "the crucible chamber starts the crucible scene")
+	var pot: Array = kiln.current_room.get_children().filter(func(c: Node) -> bool: return c is Crucible)
+	var smiths: Array = kiln.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(pot.size() == 1 and smiths.size() == 3, "Lowe's smiths stoke the crucible (%d, %d)" % [pot.size(), smiths.size()])
+	var wyrm: Slagwyrm = null
+	for child in kiln.current_room.get_children():
+		if child is Slagwyrm:
+			wyrm = child
+	_check(wyrm != null and wyrm.mode == Slagwyrm.Mode.INTRO and wyrm._sprite.modulate.a == 0.0, "the Slagwyrm sleeps hidden in the melt")
+	var kiln_pages := await _play_scene(kiln, 12.0)
+	_check(not Cutscene.active and not kiln.player.in_cutscene, "the crucible scene hands Wren back")
+	_check(kiln_pages == 3 and GameState.has_flag(StoryDirector.CRUCIBLE_FLAG), "Lowe speaks three times at the Kiln (%d)" % kiln_pages)
+	var kiln_left := 0
+	for figure: Variant in smiths + pot:
+		if is_instance_valid(figure):
+			kiln_left += 1
+	_check(kiln_left == 0, "the Choir runs and the crucible bursts (%d left)" % kiln_left)
+	await _wait(1.8)
+	_check(is_instance_valid(wyrm) and wyrm.mode != Slagwyrm.Mode.INTRO, "the Slagwyrm wakes and fights")
+	kiln.queue_free()
+	await _wait(0.1)
+	var kiln_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln_again)
+	await _wait(1.0)
+	_check(not Cutscene.active, "the crucible scene only plays once")
+	for child in kiln_again.current_room.get_children():
+		if child is Slagwyrm:
+			_check(child._sprite.modulate.a > 0.5, "the Slagwyrm rises at once when Wren comes back")
+	kiln_again.queue_free()
+	await _wait(0.1)
 	Cutscene.fast = false
 
 
@@ -844,6 +941,131 @@ func _test_mire_dungeon() -> void:
 	game.queue_free()
 	await _wait(0.1)
 
+
+## Gale Spire: the Kite Cloak, wind fans, floors that drop to the one
+## below, and the Stormheron.
+func _test_gale_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_28_10.tscn"), "Gale Spire has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(28, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	_check(GameState.dungeon == "gale" and game.current_room.biome == "gale", "Wren starts inside Gale Spire")
+	_check(not player.use_item("kite_cloak"), "no cloak before it's found")
+	GameState.give_item("kite_cloak")
+	_check(GameState.item_slots.has("kite_cloak"), "the cloak goes in an item slot")
+
+	# The Rope Store: a fan's wind pushes Wren along its stream.
+	var room := await _goto(game, Vector2i(27, 10), Vector2i(10, 6))
+	await _calm(room)
+	var fans := _child_of(room, WindFan)
+	_check(fans.size() == 1 and (fans[0] as WindFan).direction == Vector2.RIGHT, "the Rope Store has a fan blowing east")
+	player.global_position = _tile_pos(room, Vector2i(10, 6))
+	var start := player.global_position.x
+	await _wait(0.5)
+	_check(player.global_position.x > start + 15.0, "standing in its stream, Wren is pushed along (%.0f px)" % (player.global_position.x - start))
+	Input.action_press("move_left")
+	await _wait(1.6)
+	Input.action_release("move_left")
+	_check(player.global_position.x < start - 20.0, "but Wren can still walk against it")
+
+	# The Gust Gallery: on foot the drop is impassable; the cloak and the
+	# fan's wind carry Wren over.
+	room = await _goto(game, Vector2i(29, 9), Vector2i(2, 6))
+	await _calm(room)
+	var before := GameState.bubbles
+	player.global_position = _tile_pos(room, Vector2i(3, 2))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	_check(player.use_item("kite_cloak") and player.airborne, "Wren throws the cloak open and glides")
+	await _wait(1.4)
+	await _wait(0.8)
+	var local := player.global_position - room.global_position
+	_check(GameState.bubbles == before - 1 and local.x < 6 * Room.TILE, "without wind Wren drops short into the sky (at %s)" % local)
+	GameState.refill()
+	await _wait(1.0)
+	player.global_position = _tile_pos(room, Vector2i(4, 6))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.0)
+	await _wait(0.6)
+	local = player.global_position - room.global_position
+	_check(GameState.bubbles == GameState.max_bubbles and local.x > 19 * Room.TILE and player.state == Player.State.MOVE, "the fan's wind carries Wren across to the far ledge (at %s)" % local)
+
+	# The Bell Shaft: falling through its floor drops Wren to the Fan Hall.
+	room = await _goto(game, Vector2i(28, 8), Vector2i(11, 11))
+	await _calm(room)
+	before = GameState.bubbles
+	player.global_position = _tile_pos(room, Vector2i(10, 10))
+	Input.action_press("move_up")
+	await _wait(0.6)
+	Input.action_release("move_up")
+	await _wait(1.4)
+	_check(game.current_room.coord == Vector2i(28, 9) and GameState.bubbles == before, "a hole in the Shaft's floor drops Wren to the Fan Hall, unhurt")
+
+	# The updraft carries Wren up the Shaft to the top landing.
+	room = await _goto(game, Vector2i(28, 8), Vector2i(12, 11))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(12, 10))
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(2.0)
+	player.use_item("kite_cloak")
+	await _wait(0.3)
+	local = player.global_position - room.global_position
+	_check(game.current_room == room and local.y < 3 * Room.TILE, "the Shaft's updraft lifts Wren to the top landing (at %s)" % local)
+
+	# The Stormheron.
+	GameState.refill()
+	room = await _goto(game, Vector2i(28, 7), Vector2i(11, 10))
+	var bosses := _child_of(room, Stormheron)
+	_check(bosses.size() == 1, "the Stormheron waits on the Crown")
+	if bosses.size() == 1:
+		var heron: Stormheron = bosses[0]
+		player._invuln = 60.0
+		_check(_child_of(room, LightningRod).size() == 2, "lightning rods stand on the Crown's side islands")
+		await _wait(2.0)
+		_check(heron.mode == Stormheron.Mode.PERCH and heron.rod != null, "it comes down onto a rod")
+		_check(heron.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "perched, the sword can't reach it")
+		heron._throws = Stormheron.THROWS_PER_STORM
+		heron._timer = 0.0
+		await _wait(0.1)
+		_check(heron.mode == Stormheron.Mode.STORM and heron.rod.charged, "the storm gathers on its rod")
+		await _wait(Stormheron.STORM_TIME + 0.1)
+		_check(heron.mode == Stormheron.Mode.GROUNDED, "the bolt knocks it to the ground")
+		_check(heron.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and heron.hp == 5, "grounded, the sword finds it")
+		heron._stun = 0.0
+		heron.take_hit(1, Vector2.UP)
+		await _wait(0.4)
+		_check(heron.mode == Stormheron.Mode.FLY, "after two strikes it flies to another rod")
+		await _wait(Stormheron.FLY_TIME + 0.2)
+		heron.mode = Stormheron.Mode.GROUNDED
+		while heron.hp > 0:
+			heron._stun = 0.0
+			heron._hits_this_landing = 0
+			heron.take_hit(1, Vector2.UP)
+		_check(GameState.flags.get(Stormheron.DEFEATED_FLAG, false), "striking it enough brings the Stormheron down")
+		await _wait(3.5)
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "gale", "the Storm Bell rises on the Crown")
+		if bell:
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("gale")), "ringing the Storm Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+	game.queue_free()
+	await _wait(0.1)
+
 func _tile_pos(room: Room, tile: Vector2i) -> Vector2:
 	return room.global_position + Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
 
@@ -1005,7 +1227,8 @@ func _test_hull_dungeon() -> void:
 	await _wait(0.4)
 	_check(GameState.flags.get(BigDoor.flag_for(room.coord), false), "the big key opens the great door")
 
-	# The Barnacle Matriarch.
+	# The Barnacle Matriarch (Sister Lowe's scene is tested in _test_story).
+	GameState.set_flag(StoryDirector.LOWE_HULL_FLAG)
 	room = await _goto(game, Vector2i(10, 7), Vector2i(11, 10))
 	var boss: BarnacleMatriarch = _child_of(room, BarnacleMatriarch)[0] if _child_of(room, BarnacleMatriarch).size() > 0 else null
 	_check(boss != null, "the Matriarch waits in the Figurehead Hold")
@@ -1198,6 +1421,7 @@ func _test_kiln_dungeon() -> void:
 	# The Slagwyrm.
 	GameState.refill()
 	GameState.set_flag(BigDoor.flag_for(Vector2i(21, 8)))
+	GameState.set_flag(StoryDirector.CRUCIBLE_FLAG)
 	room = await _goto(game, Vector2i(21, 7), Vector2i(11, 10))
 	await _wait(0.2)
 	var bosses := _child_of(room, Slagwyrm)

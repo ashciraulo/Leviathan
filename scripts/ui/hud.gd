@@ -5,11 +5,15 @@ extends CanvasLayer
 
 const BUBBLE_SPACING := 12.0
 const TOAST_TIME := 1.8
+## After a save: a small ring of bubbles turns in the bottom right corner.
+const SAVED_TIME := 1.6
+const SAVED_AT := Vector2(370, 202)
 
 var _gauge: Control
 var _toast: Label
 var _toast_tween: Tween
 var _keys: Label
+var _saved := 0.0
 
 ## Top right, under the item slots: the small-key count, shown only inside
 ## a dungeon.
@@ -35,6 +39,7 @@ func _ready() -> void:
 	_toast.modulate.a = 0.0
 	add_child(_toast)
 	Events.toast.connect(show_toast)
+	Events.game_saved.connect(func() -> void: _saved = SAVED_TIME)
 
 	_keys = UI.label("")
 	_keys.name = "Keys"
@@ -44,7 +49,8 @@ func _ready() -> void:
 	add_child(_keys)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_saved = maxf(_saved - delta, 0.0)
 	_gauge.queue_redraw()
 	var in_dungeon := GameState.dungeon != ""
 	_keys.visible = in_dungeon
@@ -91,3 +97,17 @@ func _draw_gauge() -> void:
 	for third in [1, 2]:
 		var x: float = bar.position.x + bar.size.x * third / 3.0
 		_gauge.draw_rect(Rect2(x, bar.position.y, 1, bar.size.y), Palette.OUTLINE)
+	if _saved > 0.0:
+		_draw_saved()
+
+
+## Six bubbles chasing round a ring, fading in and out.
+func _draw_saved() -> void:
+	var alpha := clampf(minf(_saved / 0.4, (SAVED_TIME - _saved) / 0.2), 0.0, 1.0)
+	var turn := (SAVED_TIME - _saved) * 5.0
+	_gauge.draw_circle(SAVED_AT + Vector2(1, 1), 10.0, Color(Palette.UI_DARK, 0.8 * alpha))
+	for i in 6:
+		var a := turn + i * TAU / 6.0
+		var at := (SAVED_AT + Vector2(cos(a), sin(a)) * 5.0).round()
+		var lead := 1.0 - i / 6.0
+		_gauge.draw_rect(Rect2(at, Vector2(2, 2)), Color(Palette.RESONANCE, alpha * (0.45 + 0.55 * lead)))
