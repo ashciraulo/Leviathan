@@ -43,8 +43,8 @@ func _scene() -> Cutscene:
 
 
 ## Cutscene 1, "The Point Bell is gone": a new game opens on black, then on
-## the shore, where Hessa's lamp calls Wren home. No narration: the lamps
-## say it (Ash: keep explanatory text off the screen).
+## the shore, where Hessa's lamp calls Wren home. The lamps are shown, not
+## explained: no on-screen text describing what the player can see.
 func opening() -> void:
 	GameState.set_flag("seen_opening")
 	var scene := _scene()
