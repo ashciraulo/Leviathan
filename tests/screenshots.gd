@@ -40,8 +40,10 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "mantle", "lowe", "crucible", "turn"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "mantle", "lowe", "crucible", "turn", "ambience"]:
 		match OS.get_environment("SHOTS_ONLY"):
+			"ambience":
+				await _ambience_shots(game)
 			"kiln":
 				await _kiln_shots(game)
 			"mire":
@@ -1157,3 +1159,21 @@ func _crucible_shots() -> void:
 	await _skip_scene(kiln)
 	kiln.queue_free()
 	await _wait(0.2)
+
+
+## SHOTS_ONLY=ambience: the overworld's ambient life, region by region.
+func _ambience_shots(game: Node) -> void:
+	var shots := {
+		Vector2i(0, 0): ["amb_saltmarrow_shore", Vector2i(5, 7)],
+		Vector2i(3, 0): ["amb_brinewood_edge", Vector2i(7, 6)],
+		Vector2i(4, 1): ["amb_fenmouth", Vector2i(11, 1)],
+		Vector2i(8, -2): ["amb_cinder_flats", Vector2i(11, 11)],
+		Vector2i(7, 0): ["amb_bleached_strand", Vector2i(11, 11)],
+	}
+	for coord: Vector2i in shots:
+		var tile: Vector2i = shots[coord][1]
+		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		await _wait(2.2)
+		await _capture(shots[coord][0])

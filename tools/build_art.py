@@ -32,6 +32,7 @@ import kiln_art
 import cinderreach_art
 import mire_art
 import verge_art
+import ambient_art
 import ossuary_art
 import gloamfen_art
 import gale_art
@@ -1006,6 +1007,7 @@ FLAT.update(cinderreach_art.FLAT)
 TILE_LAYOUT += cinderreach_art.TILES
 TILE_LAYOUT += mire_art.TILES
 TILE_LAYOUT += verge_art.TILES
+TILE_LAYOUT += ambient_art.TILES
 TILE_LAYOUT += ossuary_art.TILES
 TILE_LAYOUT += gale_art.TILES
 TILE_LAYOUT += glacier_art.TILES
@@ -1203,6 +1205,8 @@ def main():
         write_png(os.path.join(OUT, "kiln", name + ".png"), px)
     for name, px in mire_art.build(_lit_with(mire_art), sheet).items():
         write_png(os.path.join(OUT, "mire", name + ".png"), px)
+    for name, px in ambient_art.build(_lit_with(ambient_art), sheet).items():
+        write_png(os.path.join(OUT, "ambient", name + ".png"), px)
     for name, px in verge_art.build(_lit_with(verge_art), sheet).items():
         write_png(os.path.join(OUT, "verge", name + ".png"), px)
     for name, px in ossuary_art.build(_lit_with(ossuary_art), sheet).items():

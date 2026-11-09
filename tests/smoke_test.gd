@@ -49,6 +49,7 @@ func _ready() -> void:
 		await _test_maw_approach()
 		await _test_overworld_secrets()
 		await _test_tide_turning()
+		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
 		await _test_side_quests()
@@ -3146,6 +3147,43 @@ func _test_ossuary() -> void:
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Ambient life: gulls, fish and crabs on the shore, never in the way, and
+## crabs scuttle off when Wren comes close.
+func _test_ambience() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(0, 0), Vector2(11 * Room.TILE + 8, 6 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var life := room.get_node_or_null("Ambience") as Ambience
+	_check(life != null, "overworld rooms have ambient life")
+	if life == null:
+		game.queue_free()
+		return
+	_check(life.gulls.size() > 0 and life.crabs.size() > 0, "Saltmarrow has gulls and crabs")
+	var solid := false
+	for node in life.find_children("*", "CollisionObject2D", true, false):
+		solid = true
+	_check(not solid, "ambient life has nothing to bump into")
+	# Walk Wren up to a crab: it bolts.
+	var crab: Dictionary = life.crabs[0]
+	var start: Vector2 = crab["pos"]
+	game.player.global_position = room.global_position + start + Vector2(12, 0)
+	await _wait(0.5)
+	_check(bool(crab["fleeing"]) or (crab["pos"] as Vector2).distance_to(start) > 6.0, "a crab scuttles off when Wren comes close")
+	var tile := Vector2i(floori((crab["pos"] as Vector2).x / Room.TILE), floori((crab["pos"] as Vector2).y / Room.TILE))
+	_check(room.tile_at(tile.x, tile.y) == ".", "and stays on the sand")
+	game.queue_free()
+	await _wait(0.1)
+	# Dungeons are left quiet.
+	var hull: Room = (load("res://rooms/room_10_10.tscn") as PackedScene).instantiate()
+	add_child(hull)
+	_check(hull.get_node_or_null("Ambience") == null, "dungeons have no gulls")
+	hull.queue_free()
+	GameState.reset_new_game()
 
 
 ## After the Old One turns, a Tidestone turns the tide and holds it.

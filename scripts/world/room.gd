@@ -137,7 +137,7 @@ const BIOMES := {
 	"saltmarrow": {
 		"floor": "sand_%d", "wall_top": "cliff_top_%d", "wall_face": "cliff_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
-		"wet_deco": "shell_%d", "dry_deco": "grass_%d",
+		"wet_deco": "shell_%d", "dry_deco": "grass_%d", "floor_overlay": ["ripple_%d", 6],
 	},
 	"brinewood": {
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
@@ -312,6 +312,11 @@ func _build() -> void:
 		var sink := SinkField.new()
 		sink.name = "SinkField"
 		add_child(sink)
+	# Gulls, fish, crabs and the like, on the overworld only.
+	if dungeon == "":
+		var life := Ambience.new()
+		life.name = "Ambience"
+		add_child(life)
 	if wind != Vector2.ZERO:
 		var gust := Gust.new()
 		gust.name = "Gust"
