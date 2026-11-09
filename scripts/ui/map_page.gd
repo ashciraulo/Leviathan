@@ -137,7 +137,7 @@ func _build_texture() -> void:
 		for y in rows.size():
 			for x in rows[y].length():
 				var ch := rows[y][x]
-				var color: Color = colors[1] if ch == "#" else (colors[2] if ch == "~" else colors[0])
+				var color: Color = colors[1] if ch == "#" or ch == "$" else (colors[2] if ch == "~" else colors[0])
 				# A faint grain on floors, darker at room edges.
 				if ch != "#" and ch != "~" and (x + y) % 2 == 0:
 					color = color.darkened(0.06)

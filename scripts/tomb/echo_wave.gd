@@ -12,10 +12,13 @@ const FADE_TIME := 0.25
 
 var _time := 0.0
 var _heard := {}
+var _room: Room
 
 
 func _ready() -> void:
 	z_index = 3
+	# The note stays in the room it was blown in.
+	_room = Room.under(get_tree(), global_position)
 
 
 func _physics_process(delta: float) -> void:
@@ -24,6 +27,8 @@ func _physics_process(delta: float) -> void:
 	for node in get_tree().get_nodes_in_group("echo"):
 		var n := node as Node2D
 		if n == null or _heard.has(n.get_instance_id()) or not n.is_inside_tree():
+			continue
+		if _room != null and Room.under(get_tree(), n.global_position) != _room:
 			continue
 		if n.global_position.distance_to(global_position) <= radius + _reach(n):
 			_heard[n.get_instance_id()] = true

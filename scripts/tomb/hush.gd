@@ -6,7 +6,7 @@ extends Enemy
 ## then the sword can too.
 
 const DRIFT_SPEED := 30.0
-const SIGHT := 170.0
+const SIGHT := 220.0
 ## How long an echo shows it.
 const SHOWN_TIME := 4.0
 
@@ -23,7 +23,7 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	add_to_group("echo")
-	# It drifts through the barrow's bones and over gaps alike.
+	# It never falls: pits and water don't stop it, only walls.
 	collision_mask = 1 << (Layers.WORLD - 1)
 	for child in get_children():
 		if child is Sprite2D and child != _sprite:
@@ -33,13 +33,14 @@ func _ready() -> void:
 func _think(delta: float) -> void:
 	_sway += delta
 	shown = maxf(shown - delta, 0.0)
+	_set_seen(shown > 0.0)
 	var wren := get_player()
 	if wren == null:
 		velocity = Vector2.ZERO
 		return
 	var to_wren := wren.global_position - global_position
 	if to_wren.length() < SIGHT:
-		# Seen, it shrinks back a little; unseen, it comes on.
+		# Seen, it slows to a crawl; unseen, it comes on at full drift.
 		velocity = to_wren.normalized() * (DRIFT_SPEED * (0.4 if shown > 0.0 else 1.0))
 	else:
 		velocity = Vector2.ZERO
@@ -48,7 +49,17 @@ func _think(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if _stun > 0.0 or not ai_enabled:
 		shown = maxf(shown - delta, 0.0)
+		_set_seen(shown > 0.0)
 	super._physics_process(delta)
+
+
+## Unseen, nothing can touch it: no sword, arrow or hook finds it.
+func _set_seen(seen: bool) -> void:
+	if _hurtbox == null or dying:
+		return
+	var layer := (1 << (Layers.ENEMY_HURTBOX - 1)) if seen else 0
+	if _hurtbox.collision_layer != layer:
+		_hurtbox.set_deferred("collision_layer", layer)
 
 
 func horn_hit(_from: Vector2) -> void:
@@ -57,6 +68,7 @@ func horn_hit(_from: Vector2) -> void:
 	if shown <= 0.0:
 		Audio.play_sfx("hush_reveal", global_position)
 	shown = SHOWN_TIME
+	_set_seen(true)
 	_flash = 0.1
 
 

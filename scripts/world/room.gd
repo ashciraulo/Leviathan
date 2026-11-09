@@ -339,7 +339,6 @@ func _build_water() -> void:
 			body.add_child(Layers.rect_shape(size, Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)))
 
 
-## True when the tile is water a frost arrow froze.
 ## A hidden bone wall ($) has come down: it's floor now.
 func break_wall(tile: Vector2i) -> void:
 	_broken[tile] = true
@@ -351,6 +350,7 @@ func has_ice() -> bool:
 	return _has_ice_tiles or not _frozen.is_empty()
 
 
+## True when the tile is water a frost arrow froze.
 func is_frozen(tile: Vector2i) -> bool:
 	return _frozen.has(tile)
 

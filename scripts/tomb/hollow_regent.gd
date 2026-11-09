@@ -29,7 +29,7 @@ const REBUILD_TIME := 1.2
 ## Hits he takes while open before he rebuilds.
 const HITS_PER_OPEN := 2
 ## How soon one note after another can break another piece.
-const PLATE_COOLDOWN := 0.5
+const PLATE_COOLDOWN := 0.3
 ## Pieces of armour (frames of the armour sheet) and where they sit.
 const PLATES := [
 	{"frame": 0, "at": Vector2(-15, -38)},
@@ -172,7 +172,12 @@ func _throw(wren: Player, count: int) -> void:
 
 ## The Echo Horn's note: one piece of armour shatters.
 func horn_hit(_from: Vector2) -> void:
-	if dying or mode in [Mode.INTRO, Mode.OPEN, Mode.REBUILD] or _plate_cool > 0.0:
+	if dying or mode in [Mode.INTRO, Mode.OPEN, Mode.REBUILD]:
+		return
+	if _plate_cool > 0.0:
+		# Too soon after the last: the note only rings off the bone.
+		Audio.play_sfx("block", global_position, 0.8)
+		_flash = 0.05
 		return
 	for i in plates.size():
 		if plates[i]:
