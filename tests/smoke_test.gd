@@ -175,6 +175,11 @@ func _test_save_load() -> void:
 		"a damaged save loads the backup instead")
 	_check(not SaveManager.read_summary(SaveManager.current_slot).get("damaged", false),
 		"the file select reads the backup of a damaged save")
+	# Saving over a damaged file keeps the good backup rather than the damage.
+	SaveManager.save_game()
+	var bak_data = JSON.parse_string(FileAccess.get_file_as_string(path + ".bak"))
+	_check(bak_data is Dictionary and bak_data.get("state") is Dictionary,
+		"saving over a damaged save keeps a good backup")
 	SaveManager.delete_save()
 	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
 		"delete removes the save and its backup")

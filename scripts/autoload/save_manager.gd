@@ -19,7 +19,8 @@ func slot_path(slot: int = -1) -> String:
 
 func has_save(slot: int = -1) -> bool:
 	var path := slot_path(slot)
-	return FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak")
+	return FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak") \
+		or not _read(path + ".tmp").is_empty()
 
 
 func save_game(slot: int = -1) -> bool:
@@ -43,9 +44,13 @@ func save_game(slot: int = -1) -> bool:
 		return false
 	var bak := path + ".bak"
 	if FileAccess.file_exists(path):
-		if FileAccess.file_exists(bak):
-			DirAccess.remove_absolute(_abs(bak))
-		DirAccess.rename_absolute(_abs(path), _abs(bak))
+		if _read(path).is_empty():
+			# A damaged save never replaces a good backup.
+			DirAccess.remove_absolute(_abs(path))
+		else:
+			if FileAccess.file_exists(bak):
+				DirAccess.remove_absolute(_abs(bak))
+			DirAccess.rename_absolute(_abs(path), _abs(bak))
 	if DirAccess.rename_absolute(_abs(tmp), _abs(path)) != OK:
 		push_error("Could not move the new save into place: %s" % path)
 		return false
@@ -136,14 +141,16 @@ func delete_save(slot: int = -1) -> void:
 			DirAccess.remove_absolute(_abs(file))
 
 
-## A slot's save data, from the main file or, if that is missing or
-## damaged, from the backup. {} when neither is readable.
+## A slot's save data: the main file, or if that is missing or damaged, a
+## checked new save that never got moved into place (.tmp), or the backup.
+## {} when none is readable.
 func _read_slot(slot: int) -> Dictionary:
 	var path := slot_path(slot)
-	var data := _read(path)
-	if data.is_empty():
-		data = _read(path + ".bak")
-	return data
+	for file in [path, path + ".tmp", path + ".bak"]:
+		var data := _read(file)
+		if not data.is_empty():
+			return data
+	return {}
 
 
 ## A save file's data if it parses and has a state, else {}.
