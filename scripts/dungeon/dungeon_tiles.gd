@@ -5,7 +5,7 @@ extends Object
 ## room-wide parts once every tile is placed: the gap field, the puzzle that
 ## opens the bars, and a listing deck.
 
-const LETTERS := "_OK=|GV"
+const LETTERS := "_OK=|!GV"
 
 
 static func handles(letter: String) -> bool:
@@ -27,6 +27,10 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 			return plate
 		"|":
 			return Bars.new()
+		"!":
+			var fixed := Bars.new()
+			fixed.fixed = true
+			return fixed
 		"G":
 			var door := BigDoor.new()
 			door.room_coord = room.coord

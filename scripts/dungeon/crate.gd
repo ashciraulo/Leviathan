@@ -55,6 +55,15 @@ func _slide(dir: Vector2) -> void:
 	tween.tween_callback(func() -> void: _sliding = false)
 
 
+## The drag was cut short (Wren was hit): settle on the nearer tile.
+func stop_pull() -> void:
+	if _pull_to == Vector2.INF:
+		return
+	var from := _pull_to - (_pull_to - position).normalized() * Room.TILE
+	position = _pull_to if position.distance_to(_pull_to) < position.distance_to(from) else from
+	_pull_to = Vector2.INF
+
+
 ## Called by the Tide Hook every frame while it drags the crate. Moves
 ## tile by tile towards `target` (global). True when the crate has come to
 ## rest: next to Wren, or against something.

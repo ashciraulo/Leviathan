@@ -1,7 +1,7 @@
 class_name PressurePlate
 extends Node2D
-## A brass plate set into the deck. It stays down while Wren or a crate is on
-## it. The room's puzzle watches it.
+## A brass plate set into the deck. Wren is too light to move it: it stays
+## down only while a crate sits on it. The room's puzzle watches it.
 
 signal changed
 
@@ -33,9 +33,6 @@ func _physics_process(_delta: float) -> void:
 
 func _weighed_down() -> bool:
 	var room := get_parent() as Node2D
-	var player := get_tree().get_first_node_in_group("player") as Player
-	if player and not player.airborne and _tile_of(player.global_position - room.global_position) == tile:
-		return true
 	for crate in get_tree().get_nodes_in_group("crates"):
 		if (crate as Crate).get_parent() == room and _tile_of((crate as Node2D).position) == tile:
 			return true

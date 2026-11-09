@@ -56,7 +56,12 @@ func _physics_process(delta: float) -> void:
 		return
 	# Wren's feet are a little above her origin.
 	var feet := local + Vector2(0, -3)
-	if player.airborne or player.state in [Player.State.FALL, Player.State.DEAD]:
+	if player.airborne:
+		# She's crossing over: footing from the far side no longer counts.
+		_safe.clear()
+		_safe_timer = 0.0
+		return
+	if player.state in [Player.State.FALL, Player.State.DEAD]:
 		return
 	if is_gap(feet):
 		player.fall(_room.global_position + _safe_spot(local))

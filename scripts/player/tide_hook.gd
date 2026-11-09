@@ -22,6 +22,8 @@ const ZIP_SPEED := 260.0
 const ZIP_STOP := 12.0
 const DRAG_SPEED := 200.0
 const ENEMY_STUN := 0.6
+## A zip that hasn't arrived by now (something in the way) gives up.
+const ZIP_TIMEOUT := 1.2
 ## The chain leaves from Wren's hand, about here.
 const HAND := Vector2(0, -9)
 const CHAIN_LIGHT := Color("#c8d0e0")
@@ -37,6 +39,7 @@ var _caught: Node2D
 var _zip_target := Vector2.ZERO
 var _clinked := false
 var _sprite_angle := 0.0
+var _zip_time := 0.0
 
 
 func _ready() -> void:
@@ -94,7 +97,8 @@ func _cast(from: Vector2, to: Vector2) -> Dictionary:
 
 func _on_catch(collider: Object) -> void:
 	var target := collider as Node
-	if target is Area2D and target.get_parent() is Enemy:
+	# Enemies and hook posts are caught by an area on them: use its owner.
+	if target is Area2D:
 		target = target.get_parent()
 	if target.has_method("hook_hit"):
 		# Bosses and other special things answer for themselves.
@@ -137,9 +141,10 @@ func _clink() -> void:
 	phase = Phase.BACK
 
 
-func _zip(_delta: float) -> void:
+func _zip(delta: float) -> void:
+	_zip_time += delta
 	var to_target := _zip_target - _player.global_position
-	if to_target.length() < 3.0 or _player.get_slide_collision_count() > 0 and to_target.length() < 10.0:
+	if to_target.length() < 3.0 or _player.get_slide_collision_count() > 0 or _zip_time > ZIP_TIMEOUT:
 		_player.collision_mask = (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1))
 		_finish()
 		return
@@ -168,6 +173,8 @@ func _finish() -> void:
 
 
 func _exit_tree() -> void:
+	if _caught is Crate and is_instance_valid(_caught):
+		(_caught as Crate).stop_pull()
 	if is_instance_valid(_player):
 		_player.airborne = false
 		_player.collision_mask = (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1))

@@ -20,7 +20,7 @@ extends Node2D
 ##          Dungeon pieces (see DungeonTiles):
 ##          _  gap in the deck (Wren can fall in)   O  hook post
 ##          K  crate (push it, or hook it)   =  pressure plate
-##          |  bars (open when the room's gate is solved)
+##          |  bars (open when the room's gate is solved)   !  fixed bars
 ##          G  big-key door   V  the dungeon's boss
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a

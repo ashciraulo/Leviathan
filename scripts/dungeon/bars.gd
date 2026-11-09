@@ -3,6 +3,8 @@ extends StaticBody2D
 ## Iron bars across a way through. The room's puzzle opens them.
 
 var is_open := false
+## Fixed bars (a cell) never open, whatever the room's gate does.
+var fixed := false
 var _sprite: Sprite2D
 var _shape: CollisionShape2D
 

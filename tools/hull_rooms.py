@@ -6,7 +6,7 @@ Run from the repo root:  python3 tools/hull_rooms.py
 (--check only verifies that the committed rooms match.)
 
 The way through:
-  Entry -> Bilge -> Galley (small key) -> back to the Bilge's hatch ->
+  Entry -> Bilge -> Galley (small key) -> the Bilge's hatch ->
   Cargo Hold (map; shove the crate onto the plate) -> Rope Locker (beat
   everything; the Tide Hook) -> hook across the Orlop's broken deck
   (small key) -> Listing Deck -> hatch -> Captain's Cabin (hook a crate out
@@ -71,7 +71,7 @@ ROOMS = {
 #....~~~~.......~~~~...#
 #....~~~~...o...~~~~...#
 #..o...............o...#
-###########XX###########"""),
+###########..###########"""),
     (11, 9): ("ROOM_HULL_CARGO", {"chest_item": '"map"', "gate": '"plates"'}, """
 ###########..###########
 #..u..u...........u..u.#
@@ -158,8 +158,8 @@ X.......................
 ########################"""),
     (11, 10): ("ROOM_HULL_BRIG", {"chest_item": '"compass"', "gate": '"clear"', "chest_hidden": "true"}, """
 ########################
-#..|..|..|.............#
-#..|..|..|.......u.....#
+#..!..!..!.............#
+#..!..!..!.......u.....#
 #######..##............#
 #......................#
 .|.....................#
@@ -167,8 +167,8 @@ X.......................
 .|.....................#
 #......c.......c.......#
 #######..##............#
-#..|..|..|...s.........#
-#..|..|..|.............#
+#..!..!..!...s.........#
+#..!..!..!.............#
 ########################"""),
     (10, 7): ("ROOM_HULL_BOSS", {"door_to": "Vector2i(5, 0)", "door_spawn": "Vector2i(11, 8)"}, """
 ########################

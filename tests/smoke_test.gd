@@ -464,10 +464,12 @@ func _test_hull_dungeon() -> void:
 	# crabs out first so none wanders into the chain's path.)
 	for enemy in _child_of(room, Enemy):
 		enemy.queue_free()
-	# ...and any shot still in the air: a hit mid-flight drops the hook.
+	# ...and any shot still in the air (Spitters add theirs a frame late):
+	# a hit mid-flight drops the hook.
+	await _wait(0.2)
 	for shot in _child_of(room, Projectile):
 		shot.queue_free()
-	await _wait(0.1)
+	await _wait(1.1)
 	_check(not player.use_item("tide_hook"), "no hook before it's found")
 	GameState.give_item("tide_hook")
 	_check(GameState.item_slots[0] == "tide_hook", "the hook goes in the first item slot")
@@ -481,6 +483,17 @@ func _test_hull_dungeon() -> void:
 	_check(local.y < 8 * Room.TILE and GameState.bubbles == before, "the hook carries Wren across the gap (at %s)" % local)
 	_check(player.state == Player.State.MOVE and not player.airborne, "Wren lands and can move again")
 
+	# The Flooded Hold: a sideways throw from the middle of a row still bites
+	# the post, and carries Wren over the water to the big key's island.
+	room = await _goto(game, Vector2i(9, 10), Vector2i(12, 11))
+	player.global_position = _tile_pos(room, Vector2i(12, 11))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 17 and player.state == Player.State.MOVE, "a sideways hook crosses the Flooded Hold (at %s)" % local)
+
 	# The Cargo Hold: shove the crate onto the plate to open the bars.
 	room = await _goto(game, Vector2i(11, 9), Vector2i(8, 6))
 	var crate: Crate = _child_of(room, Crate)[0]
@@ -492,6 +505,10 @@ func _test_hull_dungeon() -> void:
 	_check(crate.position.x >= start.x + Room.TILE, "leaning on a crate shoves it (%s -> %s)" % [start, crate.position])
 	var plate: PressurePlate = _child_of(room, PressurePlate)[0]
 	await _wait(0.3)
+	player.global_position = _tile_pos(room, plate.tile)
+	await _wait(0.3)
+	_check(not plate.pressed, "Wren alone is too light for a plate")
+	player.global_position = _tile_pos(room, plate.tile + Vector2i(-2, 2))
 	crate.position = Vector2(plate.tile.x * Room.TILE + 8, plate.tile.y * Room.TILE + 12)
 	await _wait(0.3)
 	_check(plate.pressed, "a crate weighs down the plate")

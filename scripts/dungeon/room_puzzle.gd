@@ -80,7 +80,7 @@ func solve() -> void:
 
 
 func _bars() -> Array:
-	return _room.get_children().filter(func(n: Node) -> bool: return n is Bars)
+	return _room.get_children().filter(func(n: Node) -> bool: return n is Bars and not (n as Bars).fixed)
 
 
 func _chests() -> Array:
