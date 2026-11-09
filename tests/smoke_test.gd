@@ -40,6 +40,7 @@ func _ready() -> void:
 		await _test_tomb_dungeon()
 		await _test_maw_dungeon()
 		await _test_extras_dungeon()
+		await _test_echoes_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -2052,6 +2053,72 @@ func _test_extras_dungeon() -> void:
 		GameState.set_flag(MapPage.BOSS_FLAGS[dungeon])
 		_check(page._boss_calmed(bosses.filter(func(c: Vector2i) -> bool: return RoomInfo.get_room(c)["name_key"] != "ROOM_MAW_HEART")[0]), "%s: and stops once it is calmed" % dungeon)
 		page.queue_free()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
+## After the end: the echo stones round the sleeping Heart, a remembered
+## fight with a boss in its own room, and the way home.
+func _test_echoes_dungeon() -> void:
+	GameState.reset_new_game()
+	for id: String in EchoTrial.BOSSES:
+		GameState.set_flag(EchoTrial.BOSSES[id][1])
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_checkpoint(EchoTrial.HEART_ROOM, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	var room: Room = game.current_room
+	_check(room.coord == EchoTrial.HEART_ROOM, "after the end, Continue starts by the sleeping Heart")
+	await _wait(1.0 + EchoHall.RISE_GAP * 8 + 0.5)
+	var stones := _child_of(room, EchoStone)
+	_check(stones.size() == 8 and GameState.has_flag(EchoTrial.WOKEN_FLAG), "eight echo stones rise round the Heart")
+	_check(Audio.music_cue != "boss", "the sleeping Heart's chamber is no fight (%s)" % Audio.music_cue)
+	_check(stones.all(func(s: EchoStone) -> bool: return room.tile_at(s.return_tile.x, s.return_tile.y) == "."), "every stone sends Wren home onto floor")
+	if stones.size() == 8:
+		var stone: EchoStone = stones.filter(func(s: EchoStone) -> bool: return s.id == "hull")[0]
+		var back := stone.return_tile
+		stone.activate()
+		await _wait(1.0)
+		room = game.current_room
+		_check(room.coord == EchoTrial.BOSSES["hull"][0] and EchoTrial.boss == "hull", "a stone carries Wren into the Matriarch's echo")
+		var bosses := _child_of(room, BarnacleMatriarch)
+		_check(bosses.size() == 1 and _child_of(room, BossAftermath).is_empty(), "she is there again, and no bell")
+		_check(_child_of(room, CanvasModulate).size() == 1, "the room is washed in dream-light")
+		Events.boss_defeated.emit()
+		await _wait(EchoTrial.RETURN_DELAY + 1.2)
+		room = game.current_room
+		_check(room.coord == EchoTrial.HEART_ROOM and EchoTrial.boss == "", "calmed, Wren is carried back to the Heart")
+		_check(GameState.has_flag(EchoTrial.cleared_flag("hull")), "and the stone remembers it")
+		var local := player.global_position - room.global_position
+		_check(Vector2i(local / Room.TILE) == back, "Wren comes back in front of the stone (at %s)" % local)
+		# Vael's echo: no words before the song.
+		var vael_stone: EchoStone = _child_of(room, EchoStone).filter(func(s: EchoStone) -> bool: return s.id == "vael")[0]
+		var talked := [false]
+		var listen := func(_pages: Array) -> void: talked[0] = true
+		Events.conversation_requested.connect(listen)
+		vael_stone.activate()
+		await _wait(1.2)
+		Events.conversation_requested.disconnect(listen)
+		room = game.current_room
+		var vaels := _child_of(room, CantorVael)
+		_check(vaels.size() == 1 and not talked[0], "Vael's echo sings without a word")
+		# Leaving the room ends the echo.
+		room = await _goto(game, Vector2i(44, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "walking out of a remembered fight ends it")
+		room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))
+		_check(_child_of(room, CantorVael).is_empty(), "and the room is as Wren left it")
+		# Walking out in the wait after a calm ends the echo all the same.
+		EchoTrial.begin("kiln", Vector2i(4, 7))
+		await _wait(1.0)
+		Events.boss_defeated.emit()
+		await _wait(0.3)
+		room = await _goto(game, Vector2i(21, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "leaving before the trip home ends the echo too")
+	game.queue_free()
+	EchoTrial.end()
 	GameState.reset_new_game()
 	await _wait(0.1)
 
