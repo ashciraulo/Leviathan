@@ -95,6 +95,13 @@ func _ready() -> void:
 		Vector2i(6, -2): ["27_brine_spring", Vector2i(18, 7)],
 		Vector2i(6, -1): ["28_rootmaze", Vector2i(11, 1)],
 		Vector2i(6, 0): ["29_tangle_shore", Vector2i(11, 2)],
+		Vector2i(7, -2): ["40_ashfall_gate", Vector2i(15, 6)],
+		Vector2i(8, -2): ["41_cinder_flats", Vector2i(11, 11)],
+		Vector2i(8, -3): ["42_ember_ridge", Vector2i(11, 11)],
+		Vector2i(9, -2): ["43_slag_fields", Vector2i(2, 6)],
+		Vector2i(10, -2): ["44_kiln_mouth", Vector2i(11, 5)],
+		Vector2i(8, -1): ["45_geyser_basin", Vector2i(11, 1)],
+		Vector2i(9, -1): ["46_scorched_pass", Vector2i(2, 7)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
@@ -283,7 +290,7 @@ func _kiln_shots(game: Node) -> void:
 		Vector2i(21, 9): ["51_kiln_casting_floor", Vector2i(18, 6)],
 		Vector2i(20, 9): ["52_kiln_mould_store", Vector2i(11, 7)],
 		Vector2i(20, 10): ["53_kiln_bellows", Vector2i(11, 9)],
-		Vector2i(22, 9): ["54_kiln_slag_pits", Vector2i(11, 2)],
+		Vector2i(22, 9): ["54_kiln_slag_pits", Vector2i(11, 3)],
 		Vector2i(22, 10): ["55_kiln_quench_room", Vector2i(11, 4)],
 		Vector2i(21, 8): ["57_kiln_gallery", Vector2i(11, 5)],
 		Vector2i(20, 8): ["58_kiln_pattern_shop", Vector2i(20, 6)],
@@ -295,7 +302,7 @@ func _kiln_shots(game: Node) -> void:
 		await _capture(rooms[coord][0])
 
 	# The mallet coming down on a boulder in the Slag Pits.
-	var room := await _jump(game, Vector2i(22, 9), Vector2i(11, 2))
+	var room := await _jump(game, Vector2i(22, 9), Vector2i(11, 3))
 	for enemy in room.get_children():
 		if enemy is Enemy:
 			enemy.queue_free()

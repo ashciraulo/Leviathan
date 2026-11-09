@@ -154,7 +154,7 @@ func _think(delta: float) -> void:
 			global_position = _wake
 			velocity = Vector2.ZERO
 			if _timer <= 0.0 or _wake.distance_to(goal) < 2.0:
-				_target = _wake
+				_target = _clamp_to_arena(_wake)
 				_enter(Mode.TELL, TELL_TIME)
 				Audio.play_sfx("enemy_tell", _wake)
 				Feel.shake(1.5)
@@ -186,6 +186,11 @@ func _chase(delta: float, to_player: Vector2) -> void:
 	velocity = heading * SPEED * rage * stiff
 	if get_slide_collision_count() > 0:
 		heading = heading.bounce(get_slide_collision(0).get_normal()).normalized()
+	# Never out through the doorway: past the arena's edge it turns back in.
+	var inside := _clamp_to_arena(global_position)
+	if inside.distance_to(global_position) > 12.0:
+		heading = (inside - global_position).normalized()
+		velocity = heading * velocity.length()
 	# Lay down the path the body follows.
 	if _trail.is_empty() or _trail[0].distance_to(global_position) >= 1.0:
 		_trail.insert(0, global_position)
@@ -287,8 +292,8 @@ func _spit(to_player: Vector2) -> void:
 	for i in 3:
 		var shot := SlagGlob.new()
 		shot.velocity = Vector2.from_angle(aim + (i - 1) * 0.3) * SHOT_SPEED
-		shot.global_position = global_position + Vector2(0, -12)
 		get_parent().add_child(shot)
+		shot.global_position = global_position + Vector2(0, -12)
 
 
 ## A mallet blow broke a crusted plate off.
@@ -339,13 +344,20 @@ func _die() -> void:
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
 	GameState.flags[DEFEATED_FLAG] = true
+	# It may have been sinking into a dive: bring it back up to die.
+	_sprite.position = _sprite_origin
+	_sprite.modulate.a = 1.0
 	# It shudders, cools to stone, and crumbles.
 	for i in 8:
 		_flash = 0.08
 		Feel.shake(3.0)
 		await get_tree().create_timer(0.16).timeout
+		if not is_inside_tree():
+			return
 	_sprite.frame = FRAME_STONE
 	await get_tree().create_timer(0.8).timeout
+	if not is_inside_tree():
+		return
 	KilnDebris.burst(get_parent(), global_position + Vector2(0, -10), 14)
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.2, 0.3), 0.5)

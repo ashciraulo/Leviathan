@@ -193,7 +193,7 @@ func _draw() -> void:
 				if _room.tile_at(x, y + 1) != "_":
 					_tile("gap_bottom", x, y)
 			elif letter == "^" or (letter != "#" and y >= first):
-				_tile("lava_%d" % ((_lava_frame + x + y) % 2), x, y)
+				_tile("kiln_lava_%d" % ((_lava_frame + x + y) % 2), x, y)
 				if not _is_lava(x, y - 1, first):
 					_tile("lava_lip", x, y)
 				if not _is_lava(x - 1, y, first):

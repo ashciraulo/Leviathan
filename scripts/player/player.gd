@@ -205,13 +205,25 @@ func try_interact() -> bool:
 		if node.get("opened") == true:
 			continue
 		var distance := (node as Node2D).global_position.distance_to(interact_point())
-		if distance < best_distance:
+		if distance < best_distance and _can_see(node as Node2D):
 			best = node
 			best_distance = distance
 	if best == null:
 		return false
 	best.interact()
 	return true
+
+
+## Nothing solid (a wall, a peg) stands between Wren and `node`: no
+## opening chests through the wall.
+func _can_see(node: Node2D) -> bool:
+	var from := global_position + Vector2(0, -4)
+	var query := PhysicsRayQueryParameters2D.create(from, node.global_position + Vector2(0, -4), 1 << (Layers.WORLD - 1))
+	var skip: Array[RID] = [get_rid()]
+	if node is CollisionObject2D:
+		skip.append((node as CollisionObject2D).get_rid())
+	query.exclude = skip
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 ## Uses an equipped item. False if it can't be used now.

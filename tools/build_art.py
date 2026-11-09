@@ -29,6 +29,7 @@ import hull_art
 import npc_art
 import hull_dungeon_art
 import kiln_art
+import cinderreach_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -87,8 +88,25 @@ CASTS_SHADOW = {"y", "r", "s", "x", "C"}
 SHADOW = hex_color("#3E2C4A", 90)
 
 
-def lit(rows, seed=1):
-    """Turn a material silhouette into lit RGBA pixels with outlines."""
+def _lit_with(module):
+    """lit(), using a dungeon art file's own materials."""
+    palette = (module.RAMPS, module.FLAT)
+    return lambda rows, seed=1: lit(rows, seed, palette)
+
+
+def lit(rows, seed=1, palette=None):
+    """Turn a material silhouette into lit RGBA pixels with outlines.
+    `palette` is an art file's own (ramps, flat) materials: they win over
+    the shared ones, so dungeon art files don't run out of letters."""
+    ramps, flat = RAMPS, FLAT
+    if palette:
+        ramps, flat = dict(RAMPS), dict(FLAT)
+        for letter in palette[0]:
+            flat.pop(letter, None)
+        for letter in palette[1]:
+            ramps.pop(letter, None)
+        ramps.update(palette[0])
+        flat.update(palette[1])
     h, w = len(rows), len(rows[0])
     for r in rows:
         assert len(r) == w, ("ragged sprite row", r)
@@ -106,10 +124,10 @@ def lit(rows, seed=1):
             m = mat(x, y)
             if m is None:
                 continue
-            if m in FLAT:
-                px[y][x] = hex_color(FLAT[m])
+            if m in flat:
+                px[y][x] = hex_color(flat[m])
                 continue
-            ramp = RAMPS[m]
+            ramp = ramps[m]
             up = mat(x, y - 1)
             # Lighting follows the whole silhouette, not each material, so
             # a tunic under a scarf still reads as one rounded body.
@@ -458,6 +476,8 @@ def build_enemies():
     awake = [r.replace("n", "N") for r in TIDESTONE]
     out["tidestone"] = sheet([[lit(TIDESTONE, 6), lit(awake, 6)]], 16, 22)
     out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
+    out["slagbeetle"] = sheet([[lit(cinderreach_art.SLAGBEETLE[k], 26) for k in ("walk_a", "walk_b", "crack", "flipped")]], 16, 14)
+    out["geyser"] = sheet([[lit(cinderreach_art.geyser(f), 27) for f in range(3)]], 16, 32)
     out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
@@ -932,10 +952,13 @@ assert not _clash, "hull_dungeon_art reuses material letters: %s" % sorted(_clas
 RAMPS.update(hull_dungeon_art.RAMPS)
 FLAT.update(hull_dungeon_art.FLAT)
 _taken = set(RAMPS) | set(FLAT)
-_clash = _taken & (set(kiln_art.RAMPS) | set(kiln_art.FLAT))
-assert not _clash, "kiln_art reuses material letters: %s" % sorted(_clash)
-RAMPS.update(kiln_art.RAMPS)
-FLAT.update(kiln_art.FLAT)
+_clash = _taken & (set(cinderreach_art.RAMPS) | set(cinderreach_art.FLAT))
+assert not _clash, "cinderreach_art reuses material letters: %s" % sorted(_clash)
+RAMPS.update(cinderreach_art.RAMPS)
+FLAT.update(cinderreach_art.FLAT)
+TILE_LAYOUT += cinderreach_art.TILES
+_names = [entry[0] for entry in TILE_LAYOUT if entry]
+assert len(_names) == len(set(_names)), "tile names used twice: %s" % sorted(n for n in set(_names) if _names.count(n) > 1)
 
 
 def build_tiles():
@@ -1089,7 +1112,7 @@ def main():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     for name, px in hull_dungeon_art.build(lit, sheet).items():
         write_png(os.path.join(OUT, "dungeon", name + ".png"), px)
-    for name, px in kiln_art.build(lit, sheet).items():
+    for name, px in kiln_art.build(_lit_with(kiln_art), sheet).items():
         write_png(os.path.join(OUT, "kiln", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
