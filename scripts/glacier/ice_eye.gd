@@ -18,7 +18,7 @@ var _sprite: Sprite2D
 func _ready() -> void:
 	add_to_group("ice_eyes")
 	Layers.assign(self, Layers.WORLD, [])
-	add_child(Layers.rect_shape(Vector2(12, 10), Vector2(0, -5)))
+	add_child(Layers.rect_shape(Vector2(12, 14), Vector2(0, -7)))
 	add_child(Art.shadow())
 	_sprite = Art.sprite(GlacierSprites.ICE_EYE, 2, 1, 22)
 	add_child(_sprite)
@@ -39,6 +39,7 @@ func hold_open() -> void:
 	_held = true
 	lit = true
 	_sprite.frame = 1
+	_sprite.visible = true
 
 
 func _physics_process(delta: float) -> void:

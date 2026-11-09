@@ -105,6 +105,8 @@ var _water_frame := 0
 ## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
 ## ice (I) until it thaws, and goes back to water when the room reloads.
 var _frozen: Dictionary = {}
+## Whether the layout has any I tiles (so ice checks can skip other rooms).
+var _has_ice_tiles := false
 var _water_body: StaticBody2D
 var _deep_body: StaticBody2D
 var _water_time := 0.0
@@ -194,6 +196,7 @@ func _ready() -> void:
 	y_sort_enabled = true
 	add_to_group("rooms")
 	_rows = parse_layout(layout)
+	_has_ice_tiles = "I" in "".join(_rows)
 	var problem := validate_layout(_rows)
 	if problem != "":
 		push_error("Room %s: %s" % [scene_file_path, problem])
@@ -229,7 +232,7 @@ static func validate_layout(rows: PackedStringArray) -> String:
 
 
 static func is_solid(tile: String) -> bool:
-	return tile == "#" or tile == "~"
+	return tile == "#" or tile == "~" or tile == "Q"
 
 
 func _build() -> void:
@@ -292,6 +295,11 @@ func _build_water() -> void:
 
 
 ## True when the tile is water a frost arrow froze.
+## True when the room has any ice at all: I tiles or frozen water.
+func has_ice() -> bool:
+	return _has_ice_tiles or not _frozen.is_empty()
+
+
 func is_frozen(tile: Vector2i) -> bool:
 	return _frozen.has(tile)
 
@@ -306,19 +314,23 @@ func freeze(tile: Vector2i) -> Array[Vector2i]:
 	if pool.size() > 4:
 		pool = [tile]
 	for t in pool:
-		_frozen[t] = true
-		froze.append(t)
-	_build_water()
-	_ground.queue_redraw()
+		if not _frozen.has(t):
+			_frozen[t] = true
+			froze.append(t)
+	if not froze.is_empty():
+		_build_water()
+		_ground.queue_redraw()
 	return froze
 
 
 ## Lets frozen water go back to water.
 func thaw(tiles: Array) -> void:
+	var changed := false
 	for t: Vector2i in tiles:
-		_frozen.erase(t)
-	_build_water()
-	_ground.queue_redraw()
+		changed = _frozen.erase(t) or changed
+	if changed:
+		_build_water()
+		_ground.queue_redraw()
 
 
 ## The open water joined to `tile` (empty when it isn't water).

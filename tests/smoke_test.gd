@@ -569,6 +569,43 @@ func _test_story() -> void:
 	back.queue_free()
 	await _wait(0.1)
 
+	# Lantern Mire: the Pale Congregation laid to rest, its wisps make a
+	# calf of light one last time, and Murmur leaves the Choir.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.MIRE_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var mire: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(mire)
+	await _wait(0.3)
+	_check(not Cutscene.active, "nothing plays in the Still Pool before the fight")
+	mire.player._invuln = 60.0
+	for child in mire.current_room.get_children():
+		if child is PaleCongregation:
+			for blow in 20:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child.mode = PaleCongregation.Mode.SWIM
+				child._stun = 0.0
+				for wisp: Dictionary in child.wisps:
+					wisp["home"] = false
+				child.take_hit(1, Vector2.UP)
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.CALF_FLAG), "laying the Congregation to rest starts the calf scene")
+	var calf_pages := await _play_scene(mire, 15.0)
+	_check(not Cutscene.active and not mire.player.in_cutscene, "the calf scene hands Wren back")
+	_check(calf_pages == 3, "Murmur speaks three times (%d)" % calf_pages)
+	var calf_left: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is CalfOfLights or c is ChoirFigure)
+	_check(calf_left.is_empty(), "the lights scatter and Murmur leaves (%d left)" % calf_left.size())
+	# Fast scenes outrun the heart's last beats, which run in real time.
+	await _wait(4.0)
+	var moth_bell: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is Tidebell)
+	_check(moth_bell.size() == 1 and _child_of(mire.current_room, Doorway).size() == 1, "the Moth Bell and the way out are there after the scene")
+	if moth_bell.size() == 1:
+		moth_bell[0].interact()
+		_finish_talk(mire)
+		_check(GameState.has_flag(Tidebell.flag_for("mire")), "the Moth Bell rings after the scene")
+	mire.queue_free()
+	await _wait(0.1)
+
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
@@ -889,8 +926,9 @@ func _test_mire_dungeon() -> void:
 	_check(GameState.keys("mire") == 1, "the Hall's chest holds a small key")
 	await _wait(0.6)
 
-	# The Pale Congregation.
+	# The Pale Congregation (the calf scene after it is tested in _test_story).
 	GameState.refill()
+	GameState.set_flag(StoryDirector.CALF_FLAG)
 	room = await _goto(game, Vector2i(25, 7), Vector2i(11, 10))
 	var bosses := _child_of(room, PaleCongregation)
 	_check(bosses.size() == 1, "the Pale Congregation waits in the Still Pool")
@@ -1103,36 +1141,49 @@ func _test_glacier_dungeon() -> void:
 	await _wait(0.2)
 	_check(absf(player.global_position.x - x0) < 1.0, "on snow, Wren stops at once")
 
-	# The Black Pool: frost arrows freeze a way out to the island.
+	# The Black Pool: frost arrows freeze a way out to the island, too far
+	# off the shore for the Kite Cloak.
 	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
 	await _calm(room)
-	player.global_position = _tile_pos(room, Vector2i(11, 1))
-	player.facing = Vector2.DOWN
+	player.global_position = _tile_pos(room, Vector2i(2, 5))
+	player.facing = Vector2.RIGHT
 	player.velocity = Vector2.ZERO
 	await _wait(0.1)
-	_check(room.tile_at(11, 2) == "~", "water lies between the shore and the island")
+	_check(room.tile_at(3, 5) == "~", "water lies between the shore and the island")
+	GameState.give_item("kite_cloak")
+	var bubbles_before := GameState.bubbles
+	player.use_item("kite_cloak")
+	await _wait(2.6)
+	var glide_end := player.global_position - room.global_position
+	_check(glide_end.x < 3 * Room.TILE and GameState.bubbles == bubbles_before - 1, "a glide that runs out over water drops Wren back on the shore (at %s)" % glide_end)
+	GameState.refill()
+	player.global_position = _tile_pos(room, Vector2i(2, 5))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.6)
 	_check(player.use_item("frostfang_bow"), "Wren looses a frost arrow")
 	await _wait(0.6)
-	_check(room.tile_at(11, 2) == "I" and room.tile_at(11, 3) == "~", "the arrow freezes the first tile of the lake it reaches, only that one")
-	player.global_position = _tile_pos(room, Vector2i(11, 2))
-	await _wait(0.1)
+	_check(room.tile_at(3, 5) == "I" and room.tile_at(4, 5) == "~", "the arrow freezes the first tile of the lake it reaches, only that one")
+	for x in range(3, 10):
+		player.global_position = _tile_pos(room, Vector2i(x, 5))
+		player.velocity = Vector2.ZERO
+		player.facing = Vector2.RIGHT
+		await _wait(0.1)
+		player.use_item("frostfang_bow")
+		await _wait(0.5)
+	_check(room.tile_at(9, 5) == "I", "arrow by arrow, the ice reaches the island")
+	player.global_position = _tile_pos(room, Vector2i(8, 5))
 	player.velocity = Vector2.ZERO
-	player.facing = Vector2.DOWN
-	player.use_item("frostfang_bow")
-	await _wait(0.6)
-	_check(room.tile_at(11, 3) == "I", "a second arrow freezes the next")
-	player.global_position = _tile_pos(room, Vector2i(11, 3))
-	player.velocity = Vector2.ZERO
-	Input.action_press("move_down")
+	Input.action_press("move_right")
 	await _wait(0.7)
-	Input.action_release("move_down")
+	Input.action_release("move_right")
 	var local := player.global_position - room.global_position
-	_check(local.y > 4 * Room.TILE, "Wren walks across the new ice to the island (at %s)" % local)
+	_check(local.x > 10 * Room.TILE, "Wren walks across the new ice to the island (at %s)" % local)
 
 	# Leaving and coming back, the water has thawed.
 	room = await _goto(game, Vector2i(32, 9), Vector2i(11, 11))
 	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
-	_check(room.tile_at(11, 2) == "~", "back in the room, the lake is open water again")
+	_check(room.tile_at(3, 5) == "~", "back in the room, the lake is open water again")
 
 	# The Eye Gallery: every eye open at once opens the gate.
 	room = await _goto(game, Vector2i(32, 8), Vector2i(11, 11))

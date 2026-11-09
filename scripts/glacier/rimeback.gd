@@ -125,8 +125,9 @@ func _think(delta: float) -> void:
 		Mode.UP:
 			# Sitting in its hole: if an arrow freezes the hole round it, the
 			# ice just cracks again.
-			if hole >= 0:
-				_room.thaw(holes[hole]["tiles"].filter(func(t: Vector2i) -> bool: return _room.is_frozen(t)))
+			# (Never under Wren, though: that tile waits till they step off.)
+			if hole >= 0 and _any_frozen(hole):
+				_thaw_hole(hole)
 			if _timer <= 0.0:
 				if _spits < (3 if hp * 2 <= max_hp else 2):
 					_enter(Mode.SPIT, SPIT_TELL)
@@ -162,9 +163,17 @@ func _enter(new_mode: Mode, time: float) -> void:
 ## Up into an open hole, or, with every hole frozen, up through the ice.
 func _come_up(wren: Player) -> void:
 	var open: Array[int] = []
+	var held: Array[int] = []
 	for i in holes.size():
-		if not is_hole_frozen(i):
+		if is_hole_frozen(i):
+			continue
+		# A hole with ice still waiting to thaw under Wren is a last resort.
+		if _holds_waiting(i):
+			held.append(i)
+		else:
 			open.append(i)
+	if open.is_empty():
+		open = held
 	if open.is_empty():
 		# Nowhere to breathe: it breaks through under the hole nearest Wren.
 		hole = _nearest_hole(wren)
@@ -215,6 +224,20 @@ func _thrash() -> void:
 
 
 ## Thaws a hole now, except under Wren's feet: that waits till they step off.
+func _any_frozen(i: int) -> bool:
+	for t: Vector2i in holes[i]["tiles"]:
+		if _room.is_frozen(t):
+			return true
+	return false
+
+
+func _holds_waiting(i: int) -> bool:
+	for t: Vector2i in holes[i]["tiles"]:
+		if _to_thaw.has(t):
+			return true
+	return false
+
+
 func _thaw_hole(i: int) -> void:
 	var now: Array[Vector2i] = []
 	for t: Vector2i in holes[i]["tiles"]:
