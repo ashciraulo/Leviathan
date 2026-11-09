@@ -53,6 +53,12 @@ jobs:
           timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/screenshots.tscn 2>&1 | tee shots.log
           ls -la screenshots
+          # Also print the PNGs as base64 so they can be read from the job log.
+          for f in screenshots/*.png; do
+            echo "BEGIN_PNG $(basename "$f")"
+            base64 -w 4000 "$f"
+            echo "END_PNG"
+          done
 
       - name: Upload screenshots
         if: always()
