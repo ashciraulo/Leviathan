@@ -79,7 +79,9 @@ static func spawn_in(room: Room, pos: Vector2) -> Node2D:
 
 
 func _ready() -> void:
-	add_to_group("boss")
+	# Asleep, the Heart is no fight (no boss music in its chamber).
+	if mode != Mode.SLEEP:
+		add_to_group("boss")
 	if _room == null:
 		_room = get_parent() as Room
 	add_child(Art.shadow(true))

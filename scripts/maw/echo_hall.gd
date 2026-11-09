@@ -5,10 +5,12 @@ extends Node2D
 ## after the Old One sleeps, the stones rise out of the floor one after
 ## another, each with a note, and the chamber hums: that's the only sign.
 
-## Where the stones stand (tiles), a ring round the sleeping Heart.
+## Where the stones stand (tiles), a ring round the sleeping Heart. Each
+## sends Wren home to the tile just below it, so none stands on the last
+## floor row.
 const SPOTS := [
 	Vector2i(4, 6), Vector2i(19, 6), Vector2i(4, 9), Vector2i(19, 9),
-	Vector2i(8, 8), Vector2i(15, 8), Vector2i(8, 11), Vector2i(15, 11),
+	Vector2i(8, 7), Vector2i(15, 7), Vector2i(8, 10), Vector2i(15, 10),
 ]
 const RISE_GAP := 0.35
 

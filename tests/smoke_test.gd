@@ -2039,6 +2039,8 @@ func _test_echoes_dungeon() -> void:
 	await _wait(1.0 + EchoHall.RISE_GAP * 8 + 0.5)
 	var stones := _child_of(room, EchoStone)
 	_check(stones.size() == 8 and GameState.has_flag(EchoTrial.WOKEN_FLAG), "eight echo stones rise round the Heart")
+	_check(Audio.music_cue != "boss", "the sleeping Heart's chamber is no fight (%s)" % Audio.music_cue)
+	_check(stones.all(func(s: EchoStone) -> bool: return room.tile_at(s.return_tile.x, s.return_tile.y) == "."), "every stone sends Wren home onto floor")
 	if stones.size() == 8:
 		var stone: EchoStone = stones.filter(func(s: EchoStone) -> bool: return s.id == "hull")[0]
 		var back := stone.return_tile
@@ -2072,6 +2074,13 @@ func _test_echoes_dungeon() -> void:
 		_check(EchoTrial.boss == "", "walking out of a remembered fight ends it")
 		room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))
 		_check(_child_of(room, CantorVael).is_empty(), "and the room is as Wren left it")
+		# Walking out in the wait after a calm ends the echo all the same.
+		EchoTrial.begin("kiln", Vector2i(4, 7))
+		await _wait(1.0)
+		Events.boss_defeated.emit()
+		await _wait(0.3)
+		room = await _goto(game, Vector2i(21, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "leaving before the trip home ends the echo too")
 	game.queue_free()
 	EchoTrial.end()
 	GameState.reset_new_game()

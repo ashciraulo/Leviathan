@@ -16,7 +16,7 @@ var fresh := false
 func _ready() -> void:
 	# In a remembered fight (EchoTrial) there's no bell and no way out:
 	# Wren is carried back to the Heart.
-	if EchoTrial.here(room):
+	if room.has_meta("echo") or EchoTrial.here(room):
 		queue_free()
 		return
 	position = Vector2.ZERO

@@ -66,6 +66,7 @@ static func end() -> void:
 static func dress(room: Room) -> void:
 	var tint := CanvasModulate.new()
 	tint.color = TINT
+	room.set_meta("echo", true)
 	room.add_child.call_deferred(tint)
 	room.add_child.call_deferred(EchoTrial.new())
 
@@ -83,9 +84,9 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	# Leaving the room by any way ends the echo (a new one may already have
-	# begun if this is the trip home: only end our own).
-	if boss == _id and not _done:
+	# Leaving the room by any way ends the echo, even in the wait after the
+	# boss is calmed (a new one may already have begun: only end our own).
+	if boss == _id:
 		end()
 
 
