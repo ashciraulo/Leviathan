@@ -73,8 +73,11 @@ func flee_along(points: Array, seconds_per_leg: float) -> void:
 	prying = false
 	talking = false
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	var from := position
 	for point: Vector2 in points:
-		tween.tween_callback(face.bind(point.x < position.x - 1.0))
+		if absf(point.x - from.x) > 1.0:
+			tween.tween_callback(face.bind(point.x < from.x))
+		from = point
 		tween.tween_property(self, "position", point, Cutscene.scaled(seconds_per_leg))
 	tween.tween_property(self, "modulate:a", 0.0, Cutscene.scaled(0.2))
 	await tween.finished

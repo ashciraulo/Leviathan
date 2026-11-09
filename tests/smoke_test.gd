@@ -562,7 +562,7 @@ func _test_story() -> void:
 	for child in kiln.current_room.get_children():
 		if child is Slagwyrm:
 			wyrm = child
-	_check(wyrm != null and wyrm.mode == Slagwyrm.Mode.INTRO, "the Slagwyrm sleeps in the melt")
+	_check(wyrm != null and wyrm.mode == Slagwyrm.Mode.INTRO and wyrm._sprite.modulate.a == 0.0, "the Slagwyrm sleeps hidden in the melt")
 	var kiln_pages := await _play_scene(kiln, 12.0)
 	_check(not Cutscene.active and not kiln.player.in_cutscene, "the crucible scene hands Wren back")
 	_check(kiln_pages == 3 and GameState.has_flag(StoryDirector.CRUCIBLE_FLAG), "Lowe speaks three times at the Kiln (%d)" % kiln_pages)
@@ -574,6 +574,15 @@ func _test_story() -> void:
 	await _wait(1.8)
 	_check(is_instance_valid(wyrm) and wyrm.mode != Slagwyrm.Mode.INTRO, "the Slagwyrm wakes and fights")
 	kiln.queue_free()
+	await _wait(0.1)
+	var kiln_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln_again)
+	await _wait(1.0)
+	_check(not Cutscene.active, "the crucible scene only plays once")
+	for child in kiln_again.current_room.get_children():
+		if child is Slagwyrm:
+			_check(child._sprite.modulate.a > 0.5, "the Slagwyrm rises at once when Wren comes back")
+	kiln_again.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
 

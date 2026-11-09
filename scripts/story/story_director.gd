@@ -240,8 +240,11 @@ func the_crucible() -> void:
 		if runs[i].position.x > at.x:
 			for p in 2:
 				path[p] = Vector2(Room.SIZE.x - path[p].x, path[p].y)
-		runs[i].flee_along(path, 0.45 + 0.1 * i)
-	await scene.wait(2.0)
+		if i < runs.size() - 1:
+			runs[i].flee_along(path, 0.45 + 0.1 * i)
+		else:
+			# The last (slowest) runner: the scene ends once they're out.
+			await runs[i].flee_along(path, 0.45 + 0.1 * i)
 	for figure in runs:
 		if is_instance_valid(figure):
 			figure.queue_free()
