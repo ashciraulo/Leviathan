@@ -49,6 +49,10 @@ extends Node2D
 ##          Q  deep water (blocks like ~; with the Diver's Helm, Wren swims
 ##             it, and can dive under)
 ##          L  sunken grate (dive under it)   R  valve (raises or lowers the water)
+##          %  bone barricade   $  hidden bone wall (looks like wall)
+##             (the Echo Horn brings both down)
+##          Z  singing skull (the Echo Horn wakes it)
+##          M  Marrowguard (bone shield)   U  the Hush (unseen till an echo)
 ##          ,  floor the water rises over: deep water while the dungeon's
 ##             water is high (see flooded())
 ##          (a signpost n reads out sign_key when Wren faces it)
@@ -117,6 +121,8 @@ var _water_frame := 0
 ## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
 ## ice (I) until it thaws, and goes back to water when the room reloads.
 var _frozen: Dictionary = {}
+## Hidden bone walls ($) the Echo Horn has brought down.
+var _broken: Dictionary = {}
 ## Whether the layout has any I tiles (so ice checks can skip other rooms).
 var _has_ice_tiles := false
 var _water_body: StaticBody2D
@@ -212,6 +218,12 @@ const BIOMES := {
 		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "seaweed_%d", "dry_deco": "seashell_%d",
 		"floor_overlay": ["seashell_%d", 23], "door": "exit_glow",
+	},
+	"tomb": {
+		"floor": "tomb_floor_%d", "wall_top": "tomb_top_%d", "wall_face": "tomb_face_%d",
+		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
+		"wet_deco": "bonechips_%d", "dry_deco": "bonechips_%d",
+		"floor_overlay": ["ribs_%d", 37], "door": "exit_glow",
 	},
 }
 
@@ -329,12 +341,18 @@ func _build_water() -> void:
 			body.add_child(Layers.rect_shape(size, Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)))
 
 
-## True when the tile is water a frost arrow froze.
+## A hidden bone wall ($) has come down: it's floor now.
+func break_wall(tile: Vector2i) -> void:
+	_broken[tile] = true
+	_ground.queue_redraw()
+
+
 ## True when the room has any ice at all: I tiles or frozen water.
 func has_ice() -> bool:
 	return _has_ice_tiles or not _frozen.is_empty()
 
 
+## True when the tile is water a frost arrow froze.
 func is_frozen(tile: Vector2i) -> bool:
 	return _frozen.has(tile)
 
@@ -520,6 +538,9 @@ func _tile_at(x: int, y: int) -> String:
 	var letter := _rows[y][x]
 	if letter == "L" and dungeon != "":
 		return "Q"  # A sunken grate stands in deep water.
+	if letter == "$":
+		# A hidden bone wall: wall, until the Echo Horn brings it down.
+		return "." if _broken.has(Vector2i(x, y)) else "#"
 	if letter == ",":
 		# Floor the water rises over: deep while the dungeon's water is high.
 		return "Q" if flooded() else "."

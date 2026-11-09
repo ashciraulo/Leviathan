@@ -15,6 +15,7 @@ const BELLS := {
 	"gale": [GaleSprites.STORM_BELL, ["BELL_GALE_1", "BELL_GALE_2"]],
 	"glacier": [GlacierSprites.FROST_BELL, ["BELL_GLACIER_1", "BELL_GLACIER_2"]],
 	"belfry": [BelfrySprites.DROWNED_BELL, ["BELL_BELFRY_1", "BELL_BELFRY_2"]],
+	"tomb": [TombSprites.MARROW_BELL, ["BELL_TOMB_1", "BELL_TOMB_2"]],
 }
 
 ## The dungeon this bell belongs to (a key of BELLS).

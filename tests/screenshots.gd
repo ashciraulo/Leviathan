@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "mantle", "lowe", "crucible", "turn"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "mantle", "lowe", "crucible", "turn"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -52,6 +52,8 @@ func _ready() -> void:
 				await _glacier_shots(game)
 			"belfry":
 				await _belfry_shots(game)
+			"tomb":
+				await _tomb_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -327,6 +329,9 @@ func _ready() -> void:
 
 	# 8g. Drowned Belfry.
 	await _belfry_shots(game)
+
+	# 8h. Marrow Tomb.
+	await _tomb_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -737,6 +742,92 @@ func _gale_shots(game: Node) -> void:
 	await _wait(0.3)
 	await _capture("104_storm_bell")
 	game.player._invuln = 0.0
+
+
+func _tomb_shots(game: Node) -> void:
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(40, 10), "135_tomb_entry", Vector2i(11, 10)],
+		[Vector2i(40, 9), "136_tomb_hall_of_ribs", Vector2i(11, 11)],
+		[Vector2i(39, 9), "137_tomb_horn_crypt", Vector2i(11, 7)],
+		[Vector2i(40, 8), "138_tomb_echo_chamber", Vector2i(11, 11)],
+		[Vector2i(39, 8), "139_tomb_forgotten_ossuary", Vector2i(21, 6)],
+		[Vector2i(41, 9), "140_tomb_bone_pit", Vector2i(3, 6)],
+	]
+	for shot: Array in rooms:
+		var at := await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		# Everyone holds still for the picture.
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		await _wait(0.5)
+		game.player._invuln = 0.0
+		await _wait(0.05)
+		await _capture(shot[1])
+	GameState.give_item("echo_horn")
+
+	# The horn's note, and the barricade coming down.
+	var room := await _jump(game, Vector2i(40, 9), Vector2i(11, 3))
+	game.player._invuln = 600.0
+	game.player.facing = Vector2.UP
+	await _wait(0.3)
+	game.player.use_item("echo_horn")
+	await _wait(0.2)
+	await _capture("141_tomb_echo_horn")
+	await _wait(0.6)
+
+	# Skulls singing in the Echo Chamber, and the hidden wall found.
+	room = await _jump(game, Vector2i(40, 8), Vector2i(7, 4))
+	game.player._invuln = 600.0
+	await _wait(0.3)
+	game.player.use_item("echo_horn")
+	await _wait(0.8)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 8 * Room.TILE + 12)
+	await _wait(0.2)
+	game.player.use_item("echo_horn")
+	await _wait(0.5)
+	game.player._invuln = 0.0
+	await _capture("142_tomb_skulls_singing")
+	game.player._invuln = 600.0
+	game.player.global_position = room.global_position + Vector2(2 * Room.TILE + 8, 6 * Room.TILE + 12)
+	game.player.facing = Vector2.LEFT
+	await _wait(0.3)
+	game.player.use_item("echo_horn")
+	await _wait(0.9)
+	game.player._invuln = 0.0
+	await _capture("143_tomb_hidden_wall_found")
+
+	# The Hush, shown by an echo.
+	room = await _jump(game, Vector2i(39, 8), Vector2i(12, 6))
+	game.player._invuln = 600.0
+	await _wait(0.4)
+	game.player.use_item("echo_horn")
+	await _wait(0.6)
+	game.player._invuln = 0.0
+	await _capture("144_tomb_hush_shown")
+
+	# The Hollow Regent.
+	room = await _jump(game, Vector2i(40, 7), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	var regent: HollowRegent = null
+	for child in room.get_children():
+		if child is HollowRegent:
+			regent = child
+	if regent:
+		await _wait(1.6)
+		await _capture("145_regent_armoured")
+		regent.ai_enabled = false
+		regent.mode = HollowRegent.Mode.RAISE
+		await _wait(0.2)
+		await _capture("146_regent_raises_sceptre")
+		game.player.global_position = regent.global_position + Vector2(0, 40)
+		regent.mode = HollowRegent.Mode.WALK
+		for i in 3:
+			game.player.use_item("echo_horn")
+			await _wait(0.7)
+		await _wait(0.2)
+		await _capture("147_regent_open")
 
 
 func _belfry_shots(game: Node) -> void:

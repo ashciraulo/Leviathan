@@ -7,6 +7,7 @@ extends Node
 ##             inside, then slam shut behind them.
 ##   "braziers" every brazier (j) lit with the Glowmoth Lantern
 ##   "eyes"    every ice eye (E) open at once (frost arrows open them)
+##   "skulls"  every singing skull (Z) singing at once (the Echo Horn wakes them)
 ## A solved gate stays solved (saved as a flag).
 
 var _room: Room
@@ -84,7 +85,7 @@ func _check_braziers() -> void:
 
 
 func _check_eyes() -> void:
-	if solved or _room.gate != "eyes":
+	if solved or not _room.gate in ["eyes", "skulls"]:
 		return
 	for eye in _eyes():
 		if not eye.lit:
@@ -95,7 +96,7 @@ func _check_eyes() -> void:
 
 
 func _eyes() -> Array:
-	return _room.get_children().filter(func(n: Node) -> bool: return n is IceEye)
+	return _room.get_children().filter(func(n: Node) -> bool: return n is IceEye or n is SingingSkull)
 
 
 func _braziers() -> Array:
