@@ -25,7 +25,8 @@ jobs:
 
       - name: Download Godot
         run: |
-          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          # GitHub release downloads sometimes 504; retry before giving up.
+          curl -fsSL --retry 6 --retry-delay 10 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$RUNNER_TEMP/godot"
           "$RUNNER_TEMP/godot" --version
