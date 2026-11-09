@@ -39,6 +39,7 @@ import glacier_art
 import belfry_art
 import tomb_art
 import maw_art
+import dungeon_deco_art
 import windmere_art
 import frostspine_art
 
@@ -1042,6 +1043,9 @@ FLAT.update(frostspine_art.FLAT)
 _names = {n for n, _ in TILE_LAYOUT}
 assert not _names & {n for n, _ in frostspine_art.TILES}, "frostspine_art reuses tile names"
 TILE_LAYOUT += frostspine_art.TILES
+_names = {n for n, _ in TILE_LAYOUT}
+assert not _names & {n for n, _ in dungeon_deco_art.TILES}, "dungeon_deco_art reuses tile names"
+TILE_LAYOUT += dungeon_deco_art.TILES
 
 
 def build_tiles():
