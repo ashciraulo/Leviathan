@@ -12,15 +12,28 @@ var _checks := 0
 
 func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
+	# Slot 2 is File 3 on the file select: keep a real save safe.
+	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
+	# A run that crashed left the real save in the backup: never overwrite it.
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.remove_absolute(real_save)
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
+	if FileAccess.file_exists(real_save):
+		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
 	SaveManager.delete_save()
 	_test_room_layouts()
 	_test_game_state()
 	_test_save_load()
 	_test_keys()
+	_test_items()
+	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
+	await _test_villagers()
 	SaveManager.delete_save()
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
 		print("SMOKE TEST PASSED (%d checks)" % _checks)
@@ -58,6 +71,12 @@ func _test_room_layouts() -> void:
 			continue
 		var rows := Room.parse_layout(room.layout)
 		var problem := Room.validate_layout(rows)
+		# People (and readable signs) stand where the dialogue box can't cover them.
+		for y in rows.size():
+			for x in rows[y].length():
+				var tile := rows[y][x]
+				if Npc.LETTERS.has(tile) or (tile == "n" and room.sign_key != ""):
+					_check(y <= DialogueBox.LAST_SPEAKER_ROW, "%s: '%s' on row %d would sit behind the dialogue box (keep to rows 0-%d)" % [file, tile, y, DialogueBox.LAST_SPEAKER_ROW])
 		_check(problem == "", file + ": " + problem)
 		_check(room.name_key != "" and tr(room.name_key) != room.name_key, file + " has a translated name")
 		var parts := file.get_basename().trim_prefix("room_").split("_")
@@ -153,7 +172,7 @@ func _test_talk_and_dungeon() -> void:
 	var player: Player = game.player
 	var hessa: Npc = null
 	for child in game.current_room.get_children():
-		if child is Npc:
+		if child is Npc and child.kind == "hessa":
 			hessa = child
 	_check(hessa != null, "Old Hessa stands in Saltmarrow")
 	if hessa == null:
@@ -170,15 +189,17 @@ func _test_talk_and_dungeon() -> void:
 	for child in game.get_children():
 		if child is DialogueBox:
 			box = child
+	_check(box != null and box.current_portrait() == Art.PORTRAIT_HESSA, "Hessa's portrait shows in the box")
+	var expected: int = Conversations.TALKS["hessa"][-1]["lines"].size()
 	var pages := 0
 	while box and DialogueBox.is_open and pages < 20:
 		box.advance()
 		box.advance()
 		pages += 1
 	_check(not DialogueBox.is_open and not get_tree().paused, "the talk ends and the game resumes")
-	_check(pages == Npc.KINDS["hessa"]["first"].size(), "Hessa's first talk has every page (%d)" % pages)
-	_check(GameState.flags.get("met_hessa", false), "meeting Hessa is remembered")
-	_check(hessa.current_lines().size() == 1, "Hessa has a short reminder after that")
+	_check(pages == expected and pages >= 6, "Hessa's first talk has every page (%d of %d)" % [pages, expected])
+	_check(GameState.has_flag("met_hessa"), "meeting Hessa is remembered")
+	_check(hessa.current_pages().size() == 1, "Hessa has a short reminder after that")
 	await _wait(0.4)
 
 	# The doorway in Hull Landing leads into the Rotting Hull.
@@ -198,6 +219,12 @@ func _test_talk_and_dungeon() -> void:
 		await _wait(1.0)
 	_check(game.current_room.coord == Vector2i(10, 10), "walking into the hole enters the Rotting Hull (in %s)" % game.current_room.coord)
 	_check(GameState.dungeon == "hull", "GameState knows Wren is in the Hull")
+	_check(GameState.has_flag("entered_hull"), "entering the Hull sets a story flag")
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_HULL_1", "Pell asks about the Hull")
+	Conversations.talk("pell")
+	_finish_talk(game)
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_QUEST_1", "after the Hull talk, Pell still asks for a heron feather")
+	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_HULL_1", "Hessa has news for Wren after the Hull")
 
 	# A chest in the Galley holds the key for the Bilge's hatch.
 	Events.door_entered.emit(Vector2i(9, 9), Vector2i(20, 6))
@@ -236,6 +263,122 @@ func _test_talk_and_dungeon() -> void:
 	await _wait(1.0)
 	Input.action_release("move_right")
 	_check(game.current_room.coord == Vector2i(11, 9), "through the hatch to the Cargo Hold (in %s)" % game.current_room.coord)
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Talks every page of whatever is open.
+func _finish_talk(game: Node) -> int:
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	var pages := 0
+	while box and DialogueBox.is_open and pages < 30:
+		box.advance()
+		box.advance()
+		pages += 1
+	return pages
+
+
+## Saltmarrow's villagers, their portraits, Marga's rope errand (a chain of
+## story flags across two people), Pell wandering, and the village sign.
+func _test_villagers() -> void:
+	GameState.reset_new_game()
+	_check(not GameState.has_flag("asked_for_rope"), "a new game has no story flags")
+	GameState.set_flag("entered_hull")
+	_check(Conversations.branch_for("hessa").get("set", []).has("met_hessa"), "going to the Hull first still gets Hessa's introduction")
+	GameState.clear_flag("entered_hull")
+	GameState.set_flag("x")
+	_check(GameState.has_flag("x") and GameState.flags_match(["x"], ["y"]), "flags set and match")
+	GameState.clear_flag("x")
+	_check(not GameState.has_flag("x"), "flags clear")
+	GameState.set_checkpoint(Vector2i(0, -1), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var people := {}
+	var sign: Prop = null
+	for child in game.current_room.get_children():
+		if child is Npc:
+			people[child.kind] = child
+		elif child is Prop and child.kind == "n":
+			sign = child
+	for who in ["hessa", "pell", "marga", "dunstan"]:
+		_check(people.has(who), "%s lives in Saltmarrow" % who)
+	# On screen, each of them, and Wren standing just below to talk, stays
+	# above the tallest the dialogue box (and its name tab) ever gets.
+	for who in people:
+		var feet: float = people[who].get_global_transform_with_canvas().origin.y
+		_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "%s and Wren stay clear of the dialogue box (%d vs %d)" % [who, feet + Room.TILE, DialogueBox.HIGHEST_POINT])
+	for who in Conversations.TALKS:
+		_check(not Conversations.branch_for(who).is_empty(), "%s always has something to say" % who)
+		for branch: Dictionary in Conversations.TALKS[who]:
+			for page: Dictionary in Conversations.pages(who, branch):
+				_check(TranslationServer.translate(page["text"]) != page["text"], "line %s is in strings.csv" % page["text"])
+	if not people.has("marga") or not people.has("dunstan"):
+		game.queue_free()
+		return
+	# Every line fits in the box, with or without a portrait.
+	var fit_box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			fit_box = child
+	for who in Conversations.TALKS:
+		for branch: Dictionary in Conversations.TALKS[who]:
+			for page: Dictionary in Conversations.pages(who, branch):
+				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
+				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
+	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	var player: Player = game.player
+
+	# Dunstan grunts until Marga sends Wren over.
+	_check(people["dunstan"].current_pages()[0]["text"] == "DUNSTAN_1", "Dunstan has nothing to say about rope yet")
+	player.global_position = people["marga"].global_position + Vector2(0, 14)
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	_check(player.try_interact(), "Wren can talk to Marga")
+	await _wait(0.05)
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	_check(box != null and box.current_portrait() == Art.PORTRAIT_MARGA, "Marga's portrait shows")
+	_check(box != null and box.current_page()["name"] == "NAME_MARGA", "the tab names Marga")
+	_finish_talk(game)
+	_check(GameState.has_flag("asked_for_rope"), "Marga's errand is remembered")
+	await _wait(0.4)
+	player.global_position = people["dunstan"].global_position + Vector2(0, 14)
+	await _wait(0.1)
+	_check(player.try_interact(), "Wren can talk to Dunstan")
+	await _wait(0.05)
+	var narration := 0
+	while box and DialogueBox.is_open:
+		if box.current_page()["name"] == "":
+			narration += 1
+			_check(box.current_portrait() == null, "narration has no portrait")
+		box.advance()
+		box.advance()
+	_check(narration >= 1, "Wren answers without words (narration pages)")
+	_check(GameState.has_flag("rope_promised"), "Dunstan promises the rope")
+	_check(people["marga"].current_pages()[0]["text"] == "MARGA_THANKS_1", "Marga hears the good news")
+	await _wait(0.4)
+
+	# Pell wanders.
+	if people.has("pell"):
+		player.global_position = game.current_room.global_position + Vector2(22 * Room.TILE, 1 * Room.TILE + 12)
+		var from_x: float = people["pell"].position.x
+		await _wait(4.0)
+		_check(absf(people["pell"].position.x - from_x) > 2.0, "Pell runs about the village")
+
+	# The village sign reads out.
+	_check(sign != null and sign.is_in_group("interactable"), "the village sign can be read")
+	if sign:
+		player.global_position = sign.global_position + Vector2(0, 14)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(player.try_interact() and box.current_page()["text"] == "SIGN_SALTMARROW", "reading the sign shows its words")
+		_finish_talk(game)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -609,3 +752,118 @@ func _test_hull_dungeon() -> void:
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 	game.queue_free()
 	await _wait(0.1)
+
+
+## The item model: giving, slots, equipment, jars, pearls, saving.
+func _test_items() -> void:
+	GameState.reset_new_game()
+	_check(GameState.has_item("driftwood_sword") and GameState.equipped_item(Items.SWORD) == "driftwood_sword",
+		"a new file starts with the driftwood sword equipped")
+	_check(GameState.item_slots == ["", ""], "item slots start empty")
+	GameState.give_item("tide_hook")
+	_check(GameState.item_slots[0] == "tide_hook", "a new tool goes to the first empty slot")
+	GameState.give_item("puffer_bombs", 5)
+	_check(GameState.item_slots[1] == "puffer_bombs" and GameState.item_count("puffer_bombs") == 5, "counted tools stack")
+	GameState.give_item("puffer_bombs", 99)
+	_check(GameState.item_count("puffer_bombs") == Items.max_count("puffer_bombs"), "counts stop at the max")
+	_check(GameState.take_item("puffer_bombs", 3), "spending bombs")
+	_check(not GameState.take_item("arrows"), "can't spend what you don't have")
+	GameState.assign_slot(0, "puffer_bombs")
+	_check(GameState.item_slots == ["puffer_bombs", "tide_hook"], "assigning a slotted tool swaps the slots")
+	GameState.assign_slot(1, "echo_horn")
+	_check(GameState.item_slots[1] == "tide_hook", "can't slot a tool you don't own")
+	GameState.give_item("scaleweave")
+	_check(GameState.equipped_item(Items.TUNIC) == "scaleweave", "a better tunic is put on")
+	GameState.equip("oilskin")
+	_check(GameState.equipped_item(Items.TUNIC) == "oilskin", "equip switches back")
+	GameState.give_item("jar", 2)
+	_check(GameState.jars == [Items.JAR_EMPTY, Items.JAR_EMPTY], "jars arrive empty")
+	_check(GameState.fill_jar(Items.JAR_SPRITE) and GameState.jars[0] == Items.JAR_SPRITE, "a jar can hold a sea sprite")
+	GameState.give_item("breath_pearl")
+	_check(GameState.max_bubbles == GameState.START_BUBBLES + 1, "a Breath Pearl adds a bubble")
+	GameState.give_item(Items.dungeon_item("hull", "map"))
+	_check(GameState.has_dungeon_item("hull", "map") and not GameState.has_dungeon_item("hull", "compass"),
+		"dungeon items belong to their dungeon")
+	_check(Items.name_key("hull_map") == "ITEM_MAP", "dungeon items share one name")
+	GameState.wake_tidestone(Vector2i(1, 0), Vector2(100, 120))
+	GameState.play_time = 125.0
+	SaveManager.save_game()
+	GameState.reset_new_game()
+	SaveManager.load_game()
+	_check(GameState.item_slots == ["puffer_bombs", "tide_hook"], "load restores the item slots")
+	_check(GameState.item_count("puffer_bombs") == 17, "load restores counts")
+	_check(GameState.equipped_item(Items.TUNIC) == "oilskin", "load restores equipment")
+	_check(GameState.jars == [Items.JAR_SPRITE, Items.JAR_EMPTY], "load restores jars")
+	_check(GameState.tidestone_position(Vector2i(1, 0)) == Vector2(100, 120), "load restores woken Tidestones")
+	_check(is_equal_approx(GameState.play_time, 125.0), "load restores play time")
+	var summary := SaveManager.read_summary(TEST_SLOT)
+	_check(int(summary.get("bubbles", 0)) == 6 and summary.has("saved_at"), "the save has a file-select summary")
+	# A counted tool stays slotted when it runs out, also after loading.
+	GameState.take_item("puffer_bombs", 17)
+	SaveManager.save_game()
+	SaveManager.load_game()
+	_check(GameState.item_slots[0] == "puffer_bombs", "an empty counted tool stays slotted after loading")
+	# Saves from before summaries still show their bubbles and place.
+	var file := FileAccess.open(SaveManager.slot_path(TEST_SLOT), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"state": {"max_bubbles": 8, "checkpoint_room": [0, 0]}}))
+	file.close()
+	var old := SaveManager.read_summary(TEST_SLOT)
+	_check(int(old.get("bubbles", 0)) == 8 and str(old.get("place", "")) != "", "old saves get a summary")
+	# A gamepad button for Tab Next, which has no default button.
+	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	var has_button := false
+	for event in InputMap.action_get_events("tab_next"):
+		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER)
+	_check(has_button, "rebinding Tab Next to a button works")
+	Settings.pad_overrides.erase("tab_next")
+	Settings.apply()
+	for id: String in Items.DEFS:
+		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
+	SaveManager.delete_save()
+
+
+## Every menu page opens, takes input and draws without errors.
+func _test_menus() -> void:
+	GameState.reset_new_game()
+	_check(RoomInfo.has_room(Vector2i(0, 0)), "RoomInfo reads the rooms")
+	_check(RoomInfo.stone_landing(Vector2i(1, 0)) != GameState.NO_POSITION or RoomInfo.get_room(Vector2i(1, 0))["stones"].is_empty(),
+		"Tidestone landings come from the layout")
+	# The options tab saves what it changes: keep the real settings file.
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	var had_settings := FileAccess.file_exists(settings_path)
+	var old_settings := FileAccess.get_file_as_string(settings_path) if had_settings else ""
+	var pause := PauseMenu.new()
+	add_child(pause)
+	for tab in PauseMenu.TABS.size():
+		pause.open(tab)
+		for action: String in ["move_right", "move_down", "interact", "move_left", "move_up"]:
+			var event := InputEventAction.new()
+			event.action = action
+			event.pressed = true
+			pause._unhandled_input(event)
+		await get_tree().process_frame
+		_check(pause.visible and pause.current == tab, "pause tab %d opens" % tab)
+	pause.close()
+	_check(not get_tree().paused, "closing the pause menu unpauses")
+	pause.queue_free()
+	if had_settings:
+		var file := FileAccess.open(settings_path, FileAccess.WRITE)
+		file.store_string(old_settings)
+		file.close()
+	else:
+		DirAccess.remove_absolute(settings_path)
+	Settings.load_settings()
+	Settings.apply()
+	var files := FileSelect.new()
+	add_child(files)
+	files.on_open()
+	await get_tree().process_frame
+	files.queue_free()
+	await get_tree().process_frame
+
+
+func _pad_event(button: JoyButton) -> InputEventJoypadButton:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	event.pressed = true
+	return event

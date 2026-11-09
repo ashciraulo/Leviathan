@@ -51,7 +51,7 @@ func interact() -> void:
 		"small_key":
 			GameState.add_key(dungeon)
 		"map", "compass", "big_key":
-			GameState.give_item("%s_%s" % [dungeon, item])
+			GameState.give_item(Items.dungeon_item(dungeon, item))
 		_:
 			GameState.give_item(item)
 	var spec: Array = ITEMS.get(item, ITEMS["small_key"])

@@ -23,15 +23,15 @@ CLEAR = (0, 0, 0, 0)
 # Materials (ramps run highlight, light, base, shadow, outline).
 # --------------------------------------------------------------------------
 RAMPS = {
-    "A": ["#F2A08A", "#D2665A", "#A2424A", "#6E2C46", "#341832"],   # crab shell, coral red
-    "F": ["#FFF8E8", "#EADCC4", "#C8B49C", "#8E7A78", "#40303E"],   # figurehead paint
-    "M": ["#FFE8A0", "#E8B85A", "#B8843E", "#7A5032", "#3A2226"],   # gilt
-    "Y": ["#FFD4D8", "#F2A4B4", "#D07892", "#9A5274", "#4A2440"],   # soft body
-    "P": ["#8E6E58", "#6E5446", "#54403A", "#3C2C2E", "#1E1418"],   # old hull plank
-    "R": ["#E89A5A", "#B86A3E", "#8A4A34", "#5A3030", "#2A1820"],   # rust
+    "5": ["#F2A08A", "#D2665A", "#A2424A", "#6E2C46", "#341832"],   # crab shell, coral red
+    "6": ["#FFF8E8", "#EADCC4", "#C8B49C", "#8E7A78", "#40303E"],   # figurehead paint
+    "7": ["#FFE8A0", "#E8B85A", "#B8843E", "#7A5032", "#3A2226"],   # gilt
+    "&": ["#FFD4D8", "#F2A4B4", "#D07892", "#9A5274", "#4A2440"],   # soft body
+    "8": ["#8E6E58", "#6E5446", "#54403A", "#3C2C2E", "#1E1418"],   # old hull plank
+    "9": ["#E89A5A", "#B86A3E", "#8A4A34", "#5A3030", "#2A1820"],   # rust
     "X": ["#B8D88A", "#86B06A", "#5A8A56", "#3A6048", "#1E3430"],   # weed and slime
-    "V": ["#C8F0D8", "#86CCB4", "#4E9C8E", "#2E6A6A", "#163638"],   # verdigris bronze
-    "Z": ["#FFFFFF", "#F6EEDC", "#D8CCD6", "#A898B0", "#4E405E"],   # barnacle white
+    "0": ["#C8F0D8", "#86CCB4", "#4E9C8E", "#2E6A6A", "#163638"],   # verdigris bronze
+    "$": ["#FFFFFF", "#F6EEDC", "#D8CCD6", "#A898B0", "#4E405E"],   # barnacle white
 }
 FLAT = {
     "1": "#1A1020",   # eye black
@@ -154,28 +154,28 @@ HOOK_POST = [
     ".....SS..SS.....",
     "......SSSS......",
     ".......SS.......",
-    "....PPPPPPPP....",
-    "...PPPPPPPPPP...",
-    "....PPPPPPPP....",
-    ".....PPPPPP.....",
-    ".....PPPPPP.....",
+    "....88888888....",
+    "...8888888888...",
+    "....88888888....",
+    ".....888888.....",
+    ".....888888.....",
     ".....SSSSSS.....",
-    ".....PPPPPP.....",
-    ".....PPPPPP.....",
-    "....PPPPPPPP....",
-    "...PPPPPPPPPP...",
-    "...XPPPPPPPPX...",
-    "...XXPPPPPPXX...",
+    ".....888888.....",
+    ".....888888.....",
+    "....88888888....",
+    "...8888888888...",
+    "...X88888888X...",
+    "...XX888888XX...",
     "................",
 ]
 
 # A cargo crate: planks, a cross brace, iron corners. 16x18, foot row 17.
 CRATE = [
     "................",
-    ".SPPPPPPPPPPPPS.",
-    ".PPPPPPPPPPPPPP.",
-    ".PPPPPPPPPPPPPP.",
-    ".SPPPPPPPPPPPPS.",
+    ".S888888888888S.",
+    ".88888888888888.",
+    ".88888888888888.",
+    ".S888888888888S.",
     ".TTTTTTTTTTTTTT.",
     ".TTTTTTTTTTTTTT.",
     ".TTTTTTTTTTTTTT.",
@@ -196,9 +196,9 @@ def crate():
     c = [list(r) for r in CRATE]
     # Cross brace on the front face.
     for i in range(10):
-        put(c, 2 + i * 12 // 9, 5 + i, "P")
-        put(c, 3 + i * 12 // 9, 5 + i, "P")
-        put(c, 13 - i * 12 // 9, 5 + i, "P")
+        put(c, 2 + i * 12 // 9, 5 + i, "8")
+        put(c, 3 + i * 12 // 9, 5 + i, "8")
+        put(c, 13 - i * 12 // 9, 5 + i, "8")
     # Plank seams on the front.
     for y in range(5, 16):
         if c[y][5] == "T":
@@ -224,10 +224,10 @@ BARS = [
     "..S....S....S...",
     "..S....S....S...",
     "..S....S....S...",
-    "..R....R....R...",
-    "..R....R....R...",
-    "PPPPPPPPPPPPPPPP",
-    "PPPPPPPPPPPPPPPP",
+    "..9....9....9...",
+    "..9....9....9...",
+    "8888888888888888",
+    "8888888888888888",
     "................",
     "................",
 ]
@@ -243,21 +243,21 @@ def big_door_half():
     for y in range(16):
         inset = max(0, 4 - y) if y < 4 else 0
         for x in range(1 + inset, 16):
-            c[y][x] = "P"
+            c[y][x] = "8"
     # Vertical planks with dark seams.
     for x in (5, 10):
         for y in range(16):
-            if c[y][x] == "P":
+            if c[y][x] == "8":
                 c[y][x] = "3"
     # Iron hinge straps.
     for y in (4, 11):
         for x in range(2, 14):
-            if c[y][x] in ("P", "3"):
+            if c[y][x] in ("8", "3"):
                 c[y][x] = "S"
         put(c, 2, y + 1, "S")
     # Gilt rivets on the straps.
     for (x, y) in ((4, 4), (8, 4), (12, 4), (4, 11), (8, 11), (12, 11)):
-        put(c, x, y, "M")
+        put(c, x, y, "7")
     # The lock: half of a brass plate with the big keyhole at the seam.
     fill_rect(c, 11, 6, 5, 4, "Q")
     put(c, 15, 7, "3")
@@ -270,13 +270,13 @@ def plate_frames():
     """Pressure plate, up and pressed down, drawn flat on the deck."""
     up = canvas(16, 16)
     fill_rect(up, 2, 3, 12, 10, "Q")
-    fill_rect(up, 4, 5, 8, 6, "M")
+    fill_rect(up, 4, 5, 8, 6, "7")
     for x in range(2, 14):
         up[12][x] = "S"
     down = canvas(16, 16)
     fill_rect(down, 2, 4, 12, 9, "S")
     fill_rect(down, 3, 5, 10, 7, "Q")
-    fill_rect(down, 5, 7, 6, 4, "M")
+    fill_rect(down, 5, 7, 6, 4, "7")
     return rows_of(up), rows_of(down)
 
 
@@ -315,18 +315,18 @@ ITEM_TIDE_HOOK = [
 ]
 ITEM_BIG_KEY = [
     "................",
-    "....MMMMM.......",
-    "...MM...MM......",
-    "...M..4..M......",
-    "...MM...MM......",
-    "....MMMMM.......",
-    "......M.........",
-    "......M.........",
-    "......MMMM......",
-    "......M.........",
-    "......MMM.......",
-    "......M.........",
-    "......MMMM......",
+    "....77777.......",
+    "...77...77......",
+    "...7..4..7......",
+    "...77...77......",
+    "....77777.......",
+    "......7.........",
+    "......7.........",
+    "......7777......",
+    "......7.........",
+    "......777.......",
+    "......7.........",
+    "......7777......",
     "................",
     "................",
     "................",
@@ -334,16 +334,16 @@ ITEM_BIG_KEY = [
 ITEM_MAP = [
     "................",
     "................",
-    "..FFFFFFFFFFF...",
-    ".FFFFFFFFFFFFF..",
-    ".FFAFFFFFFFFFF..",
-    ".FFFAFFFFFFFFF..",
-    ".FFFFAAAFFFFFF..",
-    ".FFFFFFFAFFFFF..",
-    ".FFFFFFFFAFFFF..",
-    ".FFFFFFFFFAAFF..",
-    ".FFFFFFFFFFFFF..",
-    "..FFFFFFFFFFF...",
+    "..66666666666...",
+    ".6666666666666..",
+    ".6656666666666..",
+    ".6665666666666..",
+    ".6666555666666..",
+    ".6666666566666..",
+    ".6666666656666..",
+    ".6666666665566..",
+    ".6666666666666..",
+    "..66666666666...",
     "................",
     "................",
     "................",
@@ -353,13 +353,13 @@ ITEM_COMPASS = [
     "................",
     "................",
     ".....QQQQQ......",
-    "....QFFFFFQ.....",
-    "...QFFFAFFFQ....",
-    "...QFFFAFFFQ....",
-    "...QFFFAFFFQ....",
-    "...QFFFSFFFQ....",
-    "...QFFFSFFFQ....",
-    "....QFFFFFQ.....",
+    "....Q66666Q.....",
+    "...Q6665666Q....",
+    "...Q6665666Q....",
+    "...Q6665666Q....",
+    "...Q666S666Q....",
+    "...Q666S666Q....",
+    "....Q66666Q.....",
     ".....QQQQQ......",
     "................",
     "................",
@@ -372,11 +372,11 @@ ITEM_COMPASS = [
 # barnacles. 16x12.
 MATRIARCH_PLATE = [
     "............",
-    "..PPPPPPPP..",
-    ".PPZPPPPPPP.",
+    "..88888888..",
+    ".88$8888888.",
     ".SSSSSSSSSS.",
-    ".PPPPPPPZPP.",
-    "..PPPXPPPP..",
+    ".8888888$88.",
+    "..888X8888..",
     "............",
     "............",
 ]
@@ -384,7 +384,7 @@ MATRIARCH_PLATE = [
 
 def barnacle_shot(frame):
     c = canvas(8, 8)
-    fill_ellipse(c, 3.5, 3.5, 3.0, 2.6, "Z")
+    fill_ellipse(c, 3.5, 3.5, 3.0, 2.6, "$")
     if frame == 0:
         put(c, 3, 3, "3")
         put(c, 4, 3, "3")
@@ -401,11 +401,11 @@ def barnacle_shot(frame):
 def tidebell(rung):
     c = canvas(32, 40)
     # Frame: two posts and a crossbeam.
-    fill_rect(c, 3, 4, 26, 3, "P")
-    fill_rect(c, 4, 7, 3, 31, "P")
-    fill_rect(c, 25, 7, 3, 31, "P")
-    fill_rect(c, 2, 36, 7, 2, "P")
-    fill_rect(c, 23, 36, 7, 2, "P")
+    fill_rect(c, 3, 4, 26, 3, "8")
+    fill_rect(c, 4, 7, 3, 31, "8")
+    fill_rect(c, 25, 7, 3, 31, "8")
+    fill_rect(c, 2, 36, 7, 2, "8")
+    fill_rect(c, 23, 36, 7, 2, "8")
     # Hanger.
     fill_rect(c, 14, 7, 4, 3, "S")
     # Bell: crown, waist, flared lip.
@@ -413,19 +413,19 @@ def tidebell(rung):
         t = (y - 10) / 22.0
         half = 4 + 6 * t + (5 * (t - 0.75) / 0.25 if t > 0.75 else 0)
         for x in range(int(16 - half), int(16 + half)):
-            put(c, x, y, "V")
+            put(c, x, y, "0")
     for x in range(5, 27):
-        if c[32][x] == "V":
-            c[33][x] = "V"
+        if c[32][x] == "0":
+            c[33][x] = "0"
     # Raised bands and a wave motif.
     for y in (14, 27):
         for x in range(32):
-            if c[y][x] == "V":
-                c[y][x] = "M" if rung else "V"
+            if c[y][x] == "0":
+                c[y][x] = "7" if rung else "0"
     for x in range(10, 22):
         y = round(21 - 2 * math.sin((x - 10) / 12 * math.tau))
-        if c[y][x] == "V":
-            c[y][x] = "M"
+        if c[y][x] == "0":
+            c[y][x] = "7"
     # Clapper under the lip.
     fill_rect(c, 15, 33, 2, 3, "S")
     # Weed hanging off the frame and lip.
@@ -434,7 +434,7 @@ def tidebell(rung):
             put(c, x, y + i, "X")
     if rung:
         for x in range(32):
-            if c[33][x] == "V":
+            if c[33][x] == "0":
                 c[33][x] = "4"
     return rows_of(c)
 
@@ -452,29 +452,29 @@ def _figurehead(c, lift=0, tilt=0):
     wood; a band of faded paint marks her gown."""
     cy = 17 - lift
     cx = 34 + tilt
-    fill_ellipse(c, cx, cy, 21, 12, "P")
+    fill_ellipse(c, cx, cy, 21, 12, "8")
     # Faded gown paint across the middle of the carving.
-    fill_ellipse(c, cx + 6, cy + 3, 11, 6, "F", only=("P",))
-    line(c, cx - 3, cy + 6, cx + 14, cy, "V", 2)
+    fill_ellipse(c, cx + 6, cy + 3, 11, 6, "6", only=("8",))
+    line(c, cx - 3, cy + 6, cx + 14, cy, "0", 2)
     # Hair: a few long locks flowing back from the head.
     for i, (dy, bend) in enumerate(((-9, 2), (-6, 3), (-3, 2))):
         for x in range(cx - 12, cx + 14):
             y = cy + dy + round(bend * math.sin((x - cx) / 6.0 + i))
-            if c[y][x] in ("P", "F"):
-                c[y][x] = "M"
+            if c[y][x] in ("8", "6"):
+                c[y][x] = "7"
     # The carved head at the prow end: face turned up, eyes closed.
     hx, hy = cx - 18, cy + 1
-    fill_ellipse(c, hx, hy, 6, 6, "M")
-    fill_ellipse(c, hx - 1, hy + 1, 4, 4, "F")
-    put(c, hx - 3, hy, "P")
-    put(c, hx - 2, hy, "P")
-    put(c, hx, hy, "P")
-    put(c, hx + 1, hy, "P")
-    put(c, hx - 1, hy + 3, "A")
+    fill_ellipse(c, hx, hy, 6, 6, "7")
+    fill_ellipse(c, hx - 1, hy + 1, 4, 4, "6")
+    put(c, hx - 3, hy, "8")
+    put(c, hx - 2, hy, "8")
+    put(c, hx, hy, "8")
+    put(c, hx + 1, hy, "8")
+    put(c, hx - 1, hy + 3, "5")
     # Barnacles crusting the rim, weed hanging off.
     for x in (20, 24, 41, 46, 50):
-        put(c, x + tilt, cy + 10, "Z")
-        put(c, x + 1 + tilt, cy + 10, "Z")
+        put(c, x + tilt, cy + 10, "$")
+        put(c, x + 1 + tilt, cy + 10, "$")
     for x in (cx + 18, cx + 20):
         for i in range(4):
             put(c, x, cy + 3 + i, "X")
@@ -483,24 +483,24 @@ def _figurehead(c, lift=0, tilt=0):
 def _crab(c, step=0, claw="rest", mouth=False, out=False):
     """Everything of the crab that shows in front of the shell."""
     base = 33
-    fill_ellipse(c, 33, base, 17, 6, "A")
+    fill_ellipse(c, 33, base, 17, 6, "5")
     # Barnacle spots on the carapace.
     for (x, y) in ((24, 32), (40, 31), (36, 35)):
-        put(c, x, y, "Z")
+        put(c, x, y, "$")
     if out:
         # Lurched half out: the soft pink abdomen curls up behind.
-        fill_ellipse(c, 50, base - 8, 10, 9, "Y")
-        fill_ellipse(c, 55, base - 15, 5, 5, "Y")
+        fill_ellipse(c, 50, base - 8, 10, 9, "&")
+        fill_ellipse(c, 55, base - 15, 5, 5, "&")
         for x in range(44, 58, 4):
-            line(c, x, base - 15, x + 1, base - 2, "A")
+            line(c, x, base - 15, x + 1, base - 2, "5")
     # Eye stalks, standing up in front of the shell rim.
     for ex, lean in ((28, -1), (38, 1)):
-        line(c, ex, base - 3, ex + lean, base - 9, "A", 2)
-        fill_rect(c, ex + lean - 1, base - 12, 4, 4, "A")
+        line(c, ex, base - 3, ex + lean, base - 9, "5", 2)
+        fill_rect(c, ex + lean - 1, base - 12, 4, 4, "5")
         fill_rect(c, ex + lean, base - 11, 2, 2, "1")
         put(c, ex + lean, base - 11, "2")
     if mouth:
-        fill_rect(c, 30, base + 1, 7, 3, "Y")
+        fill_rect(c, 30, base + 1, 7, 3, "&")
         fill_rect(c, 31, base + 2, 5, 1, "3")
     # Legs: three a side, jointed, stepping.
     for i in range(3):
@@ -509,38 +509,38 @@ def _crab(c, step=0, claw="rest", mouth=False, out=False):
             hx = 33 + sgn * (9 + i * 3)
             kx = 33 + sgn * (17 + i * 4)
             fx = 33 + sgn * (19 + i * 5)
-            line(c, hx, base + 2, kx, base - 1 + lift, "A", 2)
-            line(c, kx, base - 1 + lift, fx, 45 - (i % 2) - max(lift, 0), "A", 2)
+            line(c, hx, base + 2, kx, base - 1 + lift, "5", 2)
+            line(c, kx, base - 1 + lift, fx, 45 - (i % 2) - max(lift, 0), "5", 2)
     # The small claw (viewer's right).
-    fill_ellipse(c, 46, base + 6, 4, 3, "A")
-    line(c, 49, base + 4, 51, base + 7, "A")
+    fill_ellipse(c, 46, base + 6, 4, 3, "5")
+    line(c, 49, base + 4, 51, base + 7, "5")
     # The great claw (viewer's left), heavy and barnacled.
     if claw == "rest":
-        line(c, 22, base + 2, 17, base + 4, "A", 3)
-        fill_ellipse(c, 13, 39, 9, 6, "A")
+        line(c, 22, base + 2, 17, base + 4, "5", 3)
+        fill_ellipse(c, 13, 39, 9, 6, "5")
         # Two pincer fingers, open a crack.
-        line(c, 5, 32, 9, 37, "A", 3)
-        line(c, 3, 38, 8, 40, "A", 2)
+        line(c, 5, 32, 9, 37, "5", 3)
+        line(c, 3, 38, 8, 40, "5", 2)
         put(c, 8, 38, "3")
         for (x, y) in ((12, 36), (16, 39), (10, 42)):
-            put(c, x, y, "Z")
+            put(c, x, y, "$")
     elif claw == "up":
-        line(c, 22, base, 14, 20, "A", 3)
-        fill_ellipse(c, 11, 12, 9, 8, "A")
-        fill_ellipse(c, 5, 4, 3, 4, "A")
-        fill_ellipse(c, 15, 3, 3, 3, "A")
+        line(c, 22, base, 14, 20, "5", 3)
+        fill_ellipse(c, 11, 12, 9, 8, "5")
+        fill_ellipse(c, 5, 4, 3, 4, "5")
+        fill_ellipse(c, 15, 3, 3, 3, "5")
         fill_rect(c, 8, 6, 5, 2, "3")
         for (x, y) in ((10, 10), (14, 14)):
-            put(c, x, y, "Z")
+            put(c, x, y, "$")
     elif claw == "down":
-        line(c, 22, base + 3, 16, 40, "A", 3)
-        fill_ellipse(c, 13, 43, 11, 4, "A")
-        fill_ellipse(c, 3, 41, 3, 3, "A")
+        line(c, 22, base + 3, 16, 40, "5", 3)
+        fill_ellipse(c, 13, 43, 11, 4, "5")
+        fill_ellipse(c, 3, 41, 3, 3, "5")
         for (x, y) in ((12, 41), (17, 43)):
-            put(c, x, y, "Z")
+            put(c, x, y, "$")
         # Splinters thrown up by the slam.
         for (x, y) in ((2, 35), (26, 38), (5, 31), (25, 34), (28, 41)):
-            put(c, x, y, "P")
+            put(c, x, y, "8")
 
 
 def matriarch_frames():
@@ -565,7 +565,7 @@ def matriarch_frames():
             for y in range(18, 26):
                 for x in range(20, 44):
                     if c[y][x] in ("1", "2"):
-                        c[y][x] = "A"
+                        c[y][x] = "5"
         frames.append(rows_of(c))
     return frames
 

@@ -26,6 +26,7 @@ import zlib
 
 import brinewood_art
 import hull_art
+import npc_art
 import hull_dungeon_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -920,6 +921,9 @@ RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
 FLAT.update(hull_art.FLAT)
+assert not set(npc_art.RAMPS) & set(RAMPS), ("npc_art material letters clash", set(npc_art.RAMPS) & set(RAMPS))
+RAMPS.update(npc_art.RAMPS)
+FLAT.update(npc_art.FLAT)
 _taken = set(RAMPS) | set(FLAT)
 _clash = _taken & (set(hull_dungeon_art.RAMPS) | set(hull_dungeon_art.FLAT))
 assert not _clash, "hull_dungeon_art reuses material letters: %s" % sorted(_clash)
@@ -1067,6 +1071,10 @@ def main():
         write_png(os.path.join(OUT, "props", name + ".png"), px)
     for name, px in build_dungeon_objects().items():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
+    for name, frames in npc_art.SPRITES.items():
+        write_png(os.path.join(OUT, "sprites", "villager_" + name + ".png"), sheet([[lit(f, 31) for f in frames()]], 16, 24))
+    for name, rows in npc_art.PORTRAITS.items():
+        write_png(os.path.join(OUT, "portraits", name + ".png"), sheet([[lit(rows, 41)]], 32, 32))
     bubbles, shots, shadows = build_round()
     write_png(os.path.join(OUT, "ui", "bubbles.png"), bubbles)
     write_png(os.path.join(OUT, "sprites", "shot.png"), shots)
@@ -1078,6 +1086,8 @@ def main():
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())
     write_png(os.path.join(OUT, "ui", "title_bg.png"), title_art.build_title_bg())
+    import ui_art
+    ui_art.build(sys.modules[__name__])
     font_px, font_fnt = build_font()
     write_png(os.path.join(OUT, "fonts", "tide.png"), font_px)
     write_text(os.path.join(OUT, "fonts", "tide.fnt"), font_fnt)

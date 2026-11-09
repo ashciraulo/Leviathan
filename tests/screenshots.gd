@@ -103,7 +103,7 @@ func _ready() -> void:
 	# 7. Talking to Old Hessa (we're in the village now).
 	var hessa: Npc = null
 	for child in game.current_room.get_children():
-		if child is Npc:
+		if child is Npc and child.kind == "hessa":
 			hessa = child
 	if hessa:
 		game.player.global_position = hessa.global_position + Vector2(-2, 16)
@@ -122,6 +122,37 @@ func _ready() -> void:
 			if child is DialogueBox:
 				child.close()
 		await _wait(0.3)
+
+	# 7b. Saltmarrow's villagers: Marga's errand, with portraits and narration.
+	var people := {}
+	for child in game.current_room.get_children():
+		if child is Npc:
+			people[child.kind] = child
+	if people.has("marga") and people.has("dunstan"):
+		game.player.global_position = people["marga"].global_position + Vector2(10, 18)
+		game.player.facing = Vector2.UP
+		await _wait(0.4)
+		await _capture("24_saltmarrow_villagers")
+		game.player.global_position = people["marga"].global_position + Vector2(0, 18)
+		await _wait(0.1)
+		game.player.try_interact()
+		await _wait(2.5)
+		await _capture("25_marga_asks")
+		await _finish_talk(game)
+		game.player.global_position = people["dunstan"].global_position + Vector2(-4, 20)
+		await _wait(0.2)
+		game.player.try_interact()
+		var box := _dialogue_box(game)
+		if box:
+			box.advance()
+			box.advance()
+			await _wait(0.8)
+			await _capture("26_wren_nods")
+			box.advance()
+			box.advance()
+			await _wait(1.5)
+			await _capture("27_dunstan_portrait")
+		await _finish_talk(game)
 
 	# 8. Opening a chest in the Hull's galley.
 	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))
@@ -232,6 +263,21 @@ func _hull_shots(game: Node) -> void:
 				for box in game.get_children():
 					if box is DialogueBox:
 						box.close()
+
+
+func _dialogue_box(game: Node) -> DialogueBox:
+	for child in game.get_children():
+		if child is DialogueBox:
+			return child
+	return null
+
+
+func _finish_talk(game: Node) -> void:
+	var box := _dialogue_box(game)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+	await _wait(0.4)
 
 
 func _wait(seconds: float) -> void:

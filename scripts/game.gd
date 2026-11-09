@@ -23,6 +23,7 @@ func _ready() -> void:
 	add_child(camera)
 	camera.make_current()
 	add_child(Hud.new())
+	add_child(ItemSlotsHud.new())
 	add_child(PauseMenu.new())
 	add_child(DialogueBox.new())
 	var fade_layer := CanvasLayer.new()
@@ -35,6 +36,8 @@ func _ready() -> void:
 	fade_layer.add_child(_fade)
 	Events.player_died.connect(_on_player_died)
 	Events.door_entered.connect(_on_door_entered)
+	Events.room_entered.connect(_on_room_entered)
+	Events.fast_travel_requested.connect(_on_fast_travel)
 	_start()
 
 
@@ -55,6 +58,15 @@ func _physics_process(_delta: float) -> void:
 		_change_room(direction)
 
 
+func _on_room_entered(coord: Vector2i) -> void:
+	GameState.mark_seen(coord)
+
+
+func _process(delta: float) -> void:
+	# The game scene stops while paused, so menus don't count.
+	GameState.play_time += delta
+
+
 ## Build the world at the checkpoint in GameState.
 func _start() -> void:
 	world = Node2D.new()
@@ -68,6 +80,7 @@ func _start() -> void:
 		current_room = _spawn_room(Vector2i.ZERO)
 	GameState.room_coord = current_room.coord
 	GameState.dungeon = current_room.dungeon
+	GameState.mark_seen(current_room.coord)
 
 	player = Player.new()
 	player.name = "Wren"
@@ -159,9 +172,38 @@ func _on_player_died() -> void:
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
 	await tween.finished
 	Engine.time_scale = 1.0
+	# Time played keeps counting across deaths.
+	var played := GameState.play_time
 	if not SaveManager.load_game():
 		GameState.reset_new_game()
+	GameState.play_time = played
 	GameState.refill()
+	world.queue_free()
+	world = null
+	current_room = null
+	player = null
+	_start()
+
+
+## The Wayshell: Mantle carries Wren to a woken Tidestone. For now a fade;
+## the flight over the coast comes with Mantle's art.
+func _on_fast_travel(coord: Vector2i) -> void:
+	if busy or player == null:
+		return
+	var landing := GameState.tidestone_position(coord)
+	if landing == GameState.NO_POSITION:
+		landing = RoomInfo.stone_landing(coord)
+	if landing == GameState.NO_POSITION:
+		return
+	busy = true
+	player.frozen = true
+	Events.toast.emit("TOAST_MANTLE")
+	var tween := create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME * 2.0)
+	await tween.finished
+	GameState.set_checkpoint(coord, landing)
+	GameState.wake_tidestone(coord, landing)
+	SaveManager.save_game()
 	world.queue_free()
 	world = null
 	current_room = null
