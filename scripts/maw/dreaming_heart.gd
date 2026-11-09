@@ -43,7 +43,7 @@ const ECHO_SPOTS := [Vector2(-64, 10), Vector2(64, 10)]
 const BEAT_FAST := 0.9
 const BEAT_SLOW := 2.2
 ## How near the beat a strike must land (seconds either side).
-const BEAT_WINDOW := 0.2
+const BEAT_WINDOW := 0.16
 ## Seconds of Hum the eighth line takes.
 const HUM_NEEDED := 3.5
 const WAKE_TIME := 2.5
@@ -220,6 +220,10 @@ func _sleep() -> void:
 	mode = Mode.SLEEP
 	GameState.final_line = false
 	GameState.set_flag(DEFEATED_FLAG)
+	# Keep the ending: Continue after the credits starts here, not before
+	# the Maw.
+	GameState.set_checkpoint(_room.coord if _room else GameState.room_coord, GameState.NO_POSITION)
+	SaveManager.save_game()
 	_beat = BEAT_SLOW * 1.5
 	Audio.play_sfx("old_one_hum", global_position)
 	Feel.shake(4.0)

@@ -1188,7 +1188,10 @@ func _maw_shots(game: Node) -> void:
 		await _wait(1.0)
 		game.player._invuln = 0.0
 		await _capture("158_heart_glacier_echo")
+	game.player._invuln = 600.0
 	DreamingHeart.roll_credits = true
+	# Out of the fight before the shots that follow.
+	await _jump(game, Vector2i(44, 9), Vector2i(11, 11))
 
 
 ## Pages through whatever dialogue is open.

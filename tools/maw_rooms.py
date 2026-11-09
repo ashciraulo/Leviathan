@@ -11,8 +11,8 @@ and drains it again on one clock for the whole Maw (see MawBreath). Every
 tool Wren has found is needed somewhere.
 
 The way through:
-  The Throat (entry) -> the Palate (map) -> west to the Hollows (hook
-  across the gap; small key) -> east to the Dim Gallery (light the four
+  The Throat (entry) -> the Palate (map) -> west to the Hollows (hook or
+  glide across the gap; small key) -> east to the Dim Gallery (light the four
   braziers, crossing the veiled planks by lantern light; big key) -> the
   Palate's north hatch into the Veins (compass) -> the great door -> the
   Choir Loft, Cantor Vael -> the Dreaming Heart.
@@ -67,17 +67,17 @@ ROOMS = {
 ###########..###########"""),
     (43, 9): ("ROOM_MAW_HOLLOWS", {"chest_item": '"small_key"'}, """
 ########################
-#.....______...........#
-#.....______...........#
-#.....______...........#
-#.....______...........#
-#.C..O______............
-#.....______............
-#.....______O...........
-#.....______...........#
-#.....______...x.......#
-#.....______...........#
-#.....______...........#
+#.....____.............#
+#.....____.............#
+#.....____.............#
+#.....____.............#
+#.C.O.____..............
+#.....____..............
+#.....____.O............
+#.....____.............#
+#.....____.....x.......#
+#.....____.............#
+#.....____.............#
 ########################"""),
     (45, 9): ("ROOM_MAW_LANTERNS", {"chest_item": '"big_key"', "gate": '"braziers"', "chest_hidden": "true"}, """
 ########################

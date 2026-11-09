@@ -1752,7 +1752,23 @@ func _test_maw_dungeon() -> void:
 	# The Hollows: hook posts on both sides of the gap.
 	room = await _goto(game, Vector2i(43, 9), Vector2i(22, 6))
 	_check(room.has_node("PitField") and room.tile_at(8, 6) == "_", "the Hollows are split by a gap")
-	_check(room.tile_at(5, 5) == "O" and room.tile_at(12, 7) == "O", "a hook post stands either side")
+	_check(room.tile_at(4, 5) == "O" and room.tile_at(11, 7) == "O", "a hook post stands either side")
+	await _calm(room)
+	GameState.give_item("tide_hook")
+	player.global_position = _tile_pos(room, Vector2i(10, 5))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	var local := player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 5 and player.state == Player.State.MOVE, "the hook carries Wren west over the gap (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(5, 7))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 10 and player.state == Player.State.MOVE, "and back east (at %s)" % local)
 	# The Dim Gallery: four braziers, a hidden chest, veiled planks.
 	room = await _goto(game, Vector2i(45, 9), Vector2i(1, 6))
 	await _calm(room)
@@ -1822,6 +1838,12 @@ func _test_maw_dungeon() -> void:
 					await get_tree().physics_frame
 				bell.take_hit(1, Vector2.UP)
 				_check(not bell.rung, "off the beat, the bell only clanks")
+				while heart.off_beat() > 0.05:
+					await get_tree().physics_frame
+				bell.take_hit(1, Vector2.UP)
+				_check(not bell.rung, "and it rings dead through the next beat (no mashing)")
+				while bell._dead > 0.0:
+					await get_tree().physics_frame
 			while heart.off_beat() > 0.05:
 				await get_tree().physics_frame
 			bell.take_hit(1, Vector2.UP)
@@ -1838,6 +1860,7 @@ func _test_maw_dungeon() -> void:
 		await _wait(DreamingHeart.HUM_NEEDED)
 		Input.action_release("hum")
 		_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG), "the eighth line: the Old One sleeps")
+		_check(SaveManager.load_game() and GameState.has_flag(DreamingHeart.DEFEATED_FLAG), "the ending is saved")
 		await _wait(3.0)
 		await _close_dialogue(game)
 		await _wait(2.0)

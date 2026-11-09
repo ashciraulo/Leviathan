@@ -21,6 +21,7 @@ static var _stamp := -1
 
 var _room: Room
 var _was_high := false
+var _was_phase := Phase.OUT
 
 
 static func phase() -> Phase:
@@ -43,6 +44,7 @@ func _ready() -> void:
 	_room = get_parent() as Room
 	z_index = -5
 	_was_high = high()
+	_was_phase = phase()
 
 
 func _physics_process(delta: float) -> void:
@@ -50,17 +52,31 @@ func _physics_process(delta: float) -> void:
 	if _stamp != frame:
 		_stamp = frame
 		elapsed += delta
+	# The sound comes with the tell, before the water moves.
+	var now_phase := phase()
+	if now_phase != _was_phase:
+		_was_phase = now_phase
+		if now_phase in [Phase.IN_TELL, Phase.OUT_TELL]:
+			Audio.play_sfx("maw_breath_in" if now_phase == Phase.IN_TELL else "maw_breath_out", global_position + Room.SIZE / 2.0)
 	var now := high()
 	if now != _was_high:
 		_was_high = now
 		if _room:
 			_room.refresh_water()
-		Audio.play_sfx("maw_breath_in" if now else "maw_breath_out", global_position + Room.SIZE / 2.0)
 	queue_redraw()
 
 
 func _draw() -> void:
-	if _room == null or phase() != Phase.IN_TELL:
+	if _room == null:
+		return
+	if phase() == Phase.OUT_TELL:
+		# The water starting to draw back: pale ripples running over it.
+		for y in Room.ROWS:
+			for x in Room.COLS:
+				if _room.raw_tile(x, y) == "," and (x + y + int(elapsed * 8.0)) % 3 == 0:
+					draw_rect(Rect2(x * Room.TILE + 3, y * Room.TILE + 7, Room.TILE - 6, 1), Color(0.78, 0.94, 0.92, 0.45))
+		return
+	if phase() != Phase.IN_TELL:
 		return
 	# The floor shivering as the water gathers under it.
 	var t := fmod(elapsed, CYCLE) - OUT_TIME

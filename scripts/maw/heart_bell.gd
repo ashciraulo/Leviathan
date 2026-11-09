@@ -9,6 +9,9 @@ extends Enemy
 var bell := "hull"
 var heart: DreamingHeart
 var rung := false
+## After a strike off the beat the bell rings dead until the next beat
+## has passed, so swinging wildly never finds it.
+var _dead := 0.0
 
 
 func _init() -> void:
@@ -33,7 +36,7 @@ func take_hit(_damage: int, _direction: Vector2) -> HitResult:
 	if rung or heart == null:
 		return HitResult.IGNORED
 	_flash = 0.1
-	if heart.off_beat() <= DreamingHeart.BEAT_WINDOW:
+	if _dead <= 0.0 and heart.off_beat() <= DreamingHeart.BEAT_WINDOW:
 		rung = true
 		heart.bell_rung(self)
 		var tween := create_tween()
@@ -42,6 +45,7 @@ func take_hit(_damage: int, _direction: Vector2) -> HitResult:
 		tween.tween_callback(queue_free)
 	else:
 		Audio.play_sfx("block", global_position, 0.7)
+		_dead = heart.beat_length() * (1.0 - heart.beat_phase()) + DreamingHeart.BEAT_WINDOW + 0.05
 		heart.bell_missed(self)
 	return HitResult.HIT
 
@@ -52,6 +56,11 @@ func hook_hit(_direction: Vector2) -> bool:
 
 func _make_sprite() -> Sprite2D:
 	return Art.sprite(Tidebell.BELLS[bell][0], 2, 1, 37)
+
+
+func _physics_process(delta: float) -> void:
+	_dead = maxf(_dead - delta, 0.0)
+	super._physics_process(delta)
 
 
 func _update_sprite() -> void:
@@ -65,6 +74,6 @@ func _draw() -> void:
 	# The ring of the heartbeat closing in: it meets the bell on the beat.
 	var phase := heart.beat_phase()
 	var radius := 6.0 + 26.0 * (1.0 - phase)
-	var near := heart.off_beat() <= DreamingHeart.BEAT_WINDOW
+	var near := _dead <= 0.0 and heart.off_beat() <= DreamingHeart.BEAT_WINDOW
 	var color := Color(0.54, 0.94, 0.88, 0.85) if near else Color(0.82, 0.25, 0.31, 0.55)
 	draw_arc(Vector2(0, -16), radius, 0.0, TAU, 40, color, 2.0)
