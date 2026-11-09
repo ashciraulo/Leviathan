@@ -307,6 +307,17 @@ DUNSTAN_2,Bell's quiet. Sea's quiet. Even the gulls are quiet. Whole coast's hol
 DUNSTAN_ROPE_1,Marga sent you? Was she asking nicely?
 DUNSTAN_ROPE_2,...Hm. Tell her she'll have it by supper.
 DUNSTAN_AGAIN,Rope's coming. Rope's always coming.
+OPENING_1,"For a thousand years, seven bells have kept the Old One asleep beneath the bay."
+OPENING_2,"At every turn of the tide a keeper rang them. Lately, only one keeper was left."
+OPENING_3,"Last night, out on the point at Saltmarrow, the oldest bell went quiet."
+WAYSHELL_1,"You found it. I felt the Point Bell ring through the floorboards, clear as morning."
+WAYSHELL_2,"One bell home. Six more out there, and the Choir after every one of them."
+WAYSHELL_3,"Take this. The old keepers' Wayshell. Blow it under open sky, think of a Tidestone you've woken, and the sky-rays will carry you there."
+NARRATE_GOT_WAYSHELL,"Wren got the Wayshell. Outdoors, open the map and pick a woken Tidestone to travel there."
+WAYSHELL_4,"The next bell is crying out from the Kiln, in Cinderreach. Go on. I'll keep the lamp lit."
+HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp stays lit."
+PELL_BELL_1,You got the bell back?! Can I hold it? Just for a second?
+PELL_BELL_2,...Fine. But I'm telling everyone I nearly did.
 TOAST_GOT_PEARL,You found a Breath Pearl!
 ROOM_ASHFALL_GATE,Ashfall Gate
 ROOM_CINDER_FLATS,Cinder Flats

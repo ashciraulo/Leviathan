@@ -32,6 +32,7 @@ func _ready() -> void:
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
 	await _test_villagers()
+	await _test_story()
 	await _test_brinewood_pearl()
 	await _test_cinderreach()
 	await _test_fast_travel()
@@ -335,6 +336,31 @@ func _test_villagers() -> void:
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
 	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	# Large text: the same box, one big line per page, long pages split.
+	var was_large := Settings.large_text
+	Settings.large_text = true
+	fit_box.open_pages(Conversations.pages("marga", Conversations.TALKS["marga"][-1]))
+	var split_pages := fit_box.page_count()
+	var all_fit := true
+	while DialogueBox.is_open:
+		if fit_box.lines_for(fit_box.current_page()["text"], fit_box.current_portrait() != null) > DialogueBox.LARGE_MAX_LINES:
+			all_fit = false
+		fit_box.advance()
+		fit_box.advance()
+	Settings.large_text = was_large
+	_check(split_pages > Conversations.TALKS["marga"][-1]["lines"].size(), "large text splits long pages (%d pages)" % split_pages)
+	_check(all_fit, "every large-text page fits on one line")
+	Settings.large_text = true
+	fit_box.open_pages([{"name": "", "portrait": null, "text": "Underwaterbelltowerkeeperlanternlighterassociationofsaltmarrow"}])
+	var long_word_fits := true
+	while DialogueBox.is_open:
+		if fit_box.lines_for(fit_box.current_page()["text"], false) > DialogueBox.LARGE_MAX_LINES:
+			long_word_fits = false
+		fit_box.advance()
+		fit_box.advance()
+	Settings.large_text = was_large
+	_check(long_word_fits, "a word too long for one line is cut to fit")
+	_check(GameState.has_flag("asked_for_rope") == false, "opening the box directly doesn't set story flags")
 	var player: Player = game.player
 
 	# Dunstan grunts until Marga sends Wren over.
@@ -386,6 +412,69 @@ func _test_villagers() -> void:
 		_finish_talk(game)
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Plays story scenes fast, turning every dialogue page, until the scene is
+## over or the time runs out. Returns how many pages were shown.
+func _play_scene(game: Node, seconds: float) -> int:
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	var pages := 0
+	var waited := 0.0
+	while waited < seconds:
+		await _wait(0.05)
+		waited += 0.05
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+			pages += 1
+		elif not Cutscene.active and waited > 0.3:
+			break
+	return pages
+
+
+## Story scenes: the opening on a new file, and the Wayshell after the Hull.
+func _test_story() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.play_opening = true
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	_check(Cutscene.active and game.player.in_cutscene, "a new file opens with the opening scene")
+	var pages := await _play_scene(game, 8.0)
+	_check(not Cutscene.active and not game.player.in_cutscene, "the opening ends and hands Wren back")
+	_check(GameState.has_flag("seen_opening") and pages == 0, "the opening plays without dialogue pages (%d)" % pages)
+	_check(not GameState.play_opening, "the opening only plays once")
+	game.queue_free()
+	await _wait(0.1)
+
+	# Loading a file never replays it.
+	var again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(again)
+	await _wait(0.2)
+	_check(not Cutscene.active, "loading a file doesn't replay the opening")
+	again.queue_free()
+	await _wait(0.1)
+
+	# Back in Saltmarrow with the Point Bell: Hessa gives Wren the Wayshell.
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	# Coming in from the shore path at the bottom of the village.
+	GameState.set_checkpoint(Vector2i(0, -1), Vector2(12 * Room.TILE, 11 * Room.TILE + 12))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	await _wait(0.2)
+	_check(Cutscene.active, "coming home with the bell starts the Wayshell scene")
+	await _play_scene(home, 10.0)
+	_check(not Cutscene.active and not home.player.in_cutscene, "the Wayshell scene hands Wren back")
+	_check(GameState.has_item("wayshell"), "Hessa gives Wren the Wayshell")
+	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_AFTER_BELL", "Hessa points Wren to the Kiln afterwards")
+	home.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
 
 
 func _test_play() -> void:

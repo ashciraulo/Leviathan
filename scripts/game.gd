@@ -30,6 +30,7 @@ func _ready() -> void:
 	add_child(CaptionsHud.new())
 	add_child(PauseMenu.new())
 	add_child(DialogueBox.new())
+	add_child(StoryDirector.new())
 	var fade_layer := CanvasLayer.new()
 	fade_layer.layer = 30
 	add_child(fade_layer)
@@ -109,6 +110,8 @@ func _start(by_mantle: bool = false) -> void:
 	tween.tween_property(_fade, "color:a", 0.0, FADE_TIME)
 	if by_mantle:
 		_arrive_by_mantle()
+	else:
+		Events.game_started.emit()
 
 
 func _arrive_by_mantle() -> void:
