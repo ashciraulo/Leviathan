@@ -116,6 +116,7 @@ func on_bell_rung() -> void:
 		return
 	mode = Mode.DAZED
 	_timer = DAZED_TIME
+	_ink_tell = 0.0
 	_hits_this_daze = 0
 	position = _home + Vector2(0, 14)
 	_hurtbox.collision_layer = 1 << (Layers.ENEMY_HURTBOX - 1)
@@ -183,13 +184,14 @@ func hook_hit(_direction: Vector2) -> bool:
 
 
 func _die() -> void:
-	Events.boss_defeated.emit()
 	dying = true
+	_ink_tell = 0.0
 	mode = Mode.DYING
 	_contact.active = false
 	_hurtbox.set_deferred("monitorable", false)
 	_hurtbox.collision_layer = 0
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	for arm in arms:
 		if is_instance_valid(arm):
 			arm.queue_free()

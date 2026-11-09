@@ -227,7 +227,9 @@ func _sleep() -> void:
 	mode = Mode.SLEEP
 	GameState.final_line = false
 	GameState.set_flag(DEFEATED_FLAG)
-	Events.boss_defeated.emit()
+	# Not boss_defeated: the ending keeps its own music. Clear stray shots.
+	for shot in get_tree().get_nodes_in_group("enemy_shots"):
+		shot.queue_free()
 	# Keep the ending: Continue after the credits starts here, not before
 	# the Maw.
 	GameState.set_checkpoint(_room.coord if _room else GameState.room_coord, GameState.NO_POSITION)

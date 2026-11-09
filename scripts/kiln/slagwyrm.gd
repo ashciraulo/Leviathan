@@ -41,13 +41,14 @@ const ARENA := Rect2(2.5 * 16.0, 3.0 * 16.0, 19.0 * 16.0, 8.0 * 16.0)
 ## Sheet columns in assets/kiln/wyrm_head.png (32x28 frames).
 const FRAME_CLOSED := 0
 const FRAME_OPEN := 1
+const FRAME_STONE := 2
 ## How long its jaw gapes before a spit of slag.
 const SPIT_TELL := 0.5
-const FRAME_STONE := 2
 
 ## True while it sleeps in the crucible through Lowe's scene.
-var _spit_tell := 0.0
 var asleep := false
+## Seconds left of the gaping jaw before a spit (0: no spit coming).
+var _spit_tell := 0.0
 var mode := Mode.INTRO
 var heading := Vector2.DOWN
 var segments: Array[WyrmSegment] = []
@@ -192,6 +193,8 @@ func _think(delta: float) -> void:
 func _enter(new_mode: Mode, time: float) -> void:
 	mode = new_mode
 	_timer = time
+	# A spit only comes from the surface: leaving it drops the tell.
+	_spit_tell = 0.0
 
 
 func _chase(delta: float, to_player: Vector2) -> void:
