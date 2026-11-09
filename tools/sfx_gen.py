@@ -584,6 +584,13 @@ def main():
         for name in SOUNDS:
             if name not in known:
                 stale.append("%s has no entry in Audio.SFX (scripts/autoload/audio.gd)" % name)
+        # And every sound the code plays by name needs an entry, or it's silent.
+        import glob
+        for path in sorted(glob.glob(os.path.join(ROOT, "scripts", "**", "*.gd"), recursive=True)):
+            with open(path, encoding="utf-8") as f:
+                for name in re.findall(r'Audio\.play_(?:sfx|jingle)\("([a-z0-9_]+)"', f.read()):
+                    if name not in known:
+                        stale.append("%s plays \"%s\", which isn't in Audio.SFX" % (os.path.relpath(path, ROOT), name))
         if stale:
             print("Sounds out of date (run python3 tools/sfx_gen.py):")
             for p in stale:

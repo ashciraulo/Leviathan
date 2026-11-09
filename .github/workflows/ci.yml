@@ -101,3 +101,52 @@ jobs:
           name: screenshots
           path: screenshots/*.png
           if-no-files-found: warn
+
+  playthrough:
+    # One game from a new file through every built dungeon in order, saving
+    # and loading between them (tests/playthrough.gd). Runs beside the
+    # smoke test, so it adds no time to a push.
+    name: End-to-end playthrough
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GODOT_VERSION: 4.7.2
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
+
+      - name: Import project
+        run: timeout 300 "$RUNNER_TEMP/godot" --headless --path . --import > import.log 2>&1 || true
+
+      - name: Play through
+        run: |
+          set +e
+          timeout 600 "$RUNNER_TEMP/godot" --headless --path . res://tests/playthrough.tscn 2>&1 | tee play.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" play.log; then
+            echo "::error::Script errors during the playthrough"
+            exit 1
+          fi
+          grep -q "PLAYTHROUGH PASSED" play.log || { echo "::error::Playthrough did not pass (exit $status)"; exit 1; }

@@ -179,6 +179,7 @@ func _die() -> void:
 	_hurtbox.set_deferred("monitorable", false)
 	_hurtbox.collision_layer = 0
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	for arm in arms:
 		if is_instance_valid(arm):
 			arm.queue_free()
