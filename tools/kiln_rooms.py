@@ -19,9 +19,8 @@ The way through:
   an island in the lava; a second small key) opens the Gallery's west hatch
   into the Pattern Shop (pegs; compass).
 
-Until Cinderreach exists, the front door (and the way out after the boss)
-leads back to Saltmarrow. The overworld thread will point them at the Kiln
-Mouth screen.
+The front door, and the way out after the boss, lead to the Kiln Mouth in
+Cinderreach (overworld room (10, -2)), arriving just below its doorway.
 """
 
 import os
@@ -37,7 +36,7 @@ HEADER = """[gd_scene load_steps=2 format=3]
 script = ExtResource("1_room")
 """
 
-OUTSIDE = {"door_to": "Vector2i(0, 0)", "door_spawn": "Vector2i(4, 7)"}
+OUTSIDE = {"door_to": "Vector2i(10, -2)", "door_spawn": "Vector2i(11, 5)"}
 
 # coord: (name key, extra exports, layout)
 ROOMS = {

@@ -37,6 +37,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0 and to_player.length() < SIGHT * 0.8:
 				mode = Mode.GRIND
 				_timer = GRIND_TIME
+				Audio.play_sfx("enemy_tell", global_position)
 				_charge_dir = Enemy.cardinal(to_player)
 			elif _timer <= 0.0:
 				_timer = 0.8
@@ -77,6 +78,7 @@ func _flip(direction: Vector2) -> void:
 	_stun = 0.2
 	_knockback = direction * 80.0
 	_flash = 0.1
+	Audio.play_sfx("hit_shell", global_position, 0.7)
 	Feel.shake(1.5)
 
 

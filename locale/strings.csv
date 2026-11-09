@@ -55,7 +55,6 @@ TOAST_BIG_DOOR_OPEN,The big key turns. The great door groans open.
 TOAST_CHEST_APPEARS,A chest appears!
 TOAST_GATE_OPENS,Something unlocks with a clank.
 BOSS_MATRIARCH,The Barnacle Matriarch
-TOAST_BOSS_DOWN,The Matriarch sinks into the bilge.
 TOAST_BELL_QUIET,The Tidebell hums softly.
 BELL_HULL_1,"You ring the Tidebell. The note rolls down through the wreck and out across the bay."
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
@@ -171,7 +170,7 @@ OPT_NORMAL,Normal
 OPT_FAST,Fast
 OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
-OPT_LARGE_TEXT_DESC,Bigger letters for talk and messages.
+OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
 OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
 OPT_COLOR_FILTER,Colour filter
@@ -323,9 +322,22 @@ DUNGEON_KILN,The Kiln
 TOAST_GOT_STONEBREAKER,You found the Stonebreaker Mallet!
 GOT_STONEBREAKER_1,"The Stonebreaker Mallet! An iron-bound head on an ash handle, heavy enough to dent an anvil."
 GOT_STONEBREAKER_2,"Press its item key (U or I) to bring it down in front of you. It bursts cracked boulders, drives pegs into the floor and flips armoured shells."
-TOAST_LAVA_DRAINS,The lava sinks back into the floor.
 BOSS_SLAGWYRM,The Slagwyrm
-TOAST_BOSS_DOWN_KILN,The Slagwyrm cools into stone.
 BELL_KILN_1,"You ring the Ember Bell. A low, warm note fills the foundry, and the furnaces settle."
 BELL_KILN_2,"Somewhere under the bay, the great breathing slows. The fire is banked and low."
 BELL_KILN_3,You learned the second phrase of the lullaby. Your Resonance grows.
+CAPTION_HUM,Wren hums
+CAPTION_FUSE,Fuse hissing
+CAPTION_BLAST,Blast
+CAPTION_WAYSHELL,Wayshell call
+CAPTION_WINGS,Great wings beat
+CAPTION_BLOCK,Clang
+CAPTION_TELL,Enemy winds up
+CAPTION_ROAR,Roar
+CAPTION_UNLOCK,Lock clicks open
+CAPTION_SWITCH,Switch clicks
+CAPTION_TIDESTONE,Tidestone hums awake
+CAPTION_BELL,A bell rings
+CAPTION_SECRET,Secret chime
+CAPTION_DOOR,Stone grinds
+CAPTION_PUZZLE,Something opened

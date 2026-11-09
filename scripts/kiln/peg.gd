@@ -25,5 +25,6 @@ func mallet_hit(_direction: Vector2) -> bool:
 	_sprite.frame = 1
 	z_index = -5
 	_shape.set_deferred("disabled", true)
+	Audio.play_sfx("hit_shell", global_position, 0.5)
 	Feel.shake(1.5)
 	return true

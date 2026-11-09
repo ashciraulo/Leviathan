@@ -145,7 +145,6 @@ func _update_rise(delta: float, local: Vector2) -> void:
 		rising = false
 		_draining = true
 		GameState.set_flag(rise_flag(_room.coord))
-		Events.toast.emit("TOAST_LAVA_DRAINS")
 		Feel.shake(2.0)
 		return
 	_rise_grace -= delta

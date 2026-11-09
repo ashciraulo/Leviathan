@@ -48,6 +48,8 @@ var _knockback := Vector2.ZERO
 var _invuln := 0.0
 var _flash := 0.0
 var _hum_latched := false
+## The charge chime already played for this hold.
+var _charge_chimed := false
 var _hit_ids: Dictionary = {}
 var _sword: Area2D
 var _sword_shape: CollisionShape2D
@@ -126,6 +128,7 @@ func start_attack() -> void:
 	_hit_ids.clear()
 	_knockback = Vector2.ZERO
 	_place_sword()
+	Audio.play_sfx("sword_swing", global_position)
 
 
 ## The area the sword covers this swing, relative to Wren's feet.
@@ -156,6 +159,8 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	_hum_latched = false
 	Feel.hitstop(3)
 	Feel.shake(3.0)
+	Audio.play_sfx("player_hurt", global_position)
+	Audio.play_sfx("bubble_pop", global_position)
 	if GameState.is_dead():
 		_enter(State.DEAD)
 		Events.player_died.emit()
@@ -257,6 +262,7 @@ func fall(back_to: Vector2) -> void:
 	var shrink := func(k: float) -> void:
 		_body.scale = Vector2(k, k)
 		_body.position = middle + (origin - middle) * k
+	Audio.play_sfx("player_fall", global_position)
 	var tween := create_tween()
 	tween.tween_method(shrink, 1.0, 0.1, 0.35)
 	await tween.finished
@@ -294,7 +300,11 @@ func is_charged() -> bool:
 func _charge_state() -> void:
 	velocity = _input_direction() * SPEED * CHARGE_SPEED_SCALE
 	if Input.is_action_pressed("attack"):
+		if is_charged() and not _charge_chimed:
+			_charge_chimed = true
+			Audio.play_sfx("spin_charged", global_position)
 		return
+	_charge_chimed = false
 	if is_charged():
 		_start_spin()
 	else:
@@ -309,6 +319,7 @@ func _start_spin() -> void:
 	circle.radius = SPIN_RADIUS
 	_sword_shape.shape = circle
 	Feel.shake(1.0)
+	Audio.play_sfx("sword_spin", global_position)
 
 
 func _spin_state(delta: float) -> void:
@@ -333,10 +344,12 @@ func _on_sword_contact(result: Enemy.HitResult) -> void:
 	match result:
 		Enemy.HitResult.HIT:
 			GameState.add_resonance(GameState.RESONANCE_PER_HIT)
+			Audio.play_sfx("hit_flesh", global_position)
 			_knockback = -facing * RECOIL_SPEED
 			Feel.hitstop(2)
 			Feel.shake(1.5)
 		Enemy.HitResult.BLOCKED:
+			Audio.play_sfx("block", global_position)
 			_knockback = -facing * BLOCKED_RECOIL_SPEED
 			Feel.hitstop(3)
 			Feel.shake(2.5)
@@ -360,6 +373,7 @@ func _hum_state(delta: float) -> void:
 	if hum_progress >= HUM_TIME:
 		hum_progress = 0.0
 		GameState.hum_heal()
+		Audio.play_sfx("hum_heal", global_position)
 
 
 func _check_damage() -> void:
@@ -378,6 +392,8 @@ func _enter(new_state: State) -> void:
 	state = new_state
 	_state_time = 0.0
 	hum_progress = 0.0
+	if new_state == State.CHARGE:
+		_charge_chimed = false
 
 
 func _hum_requested() -> bool:

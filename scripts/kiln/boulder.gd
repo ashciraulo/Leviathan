@@ -21,6 +21,7 @@ func mallet_hit(_direction: Vector2) -> bool:
 	if is_queued_for_deletion():
 		return false
 	KilnDebris.burst(get_parent(), global_position + Vector2(0, -6), 7)
+	Audio.play_sfx("pot_break", global_position, 0.5)
 	Feel.shake(2.0)
 	queue_free()
 	return true

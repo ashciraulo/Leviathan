@@ -30,6 +30,8 @@ func _ready() -> void:
 	_toast.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	_toast.offset_top = -22
 	_toast.offset_bottom = -6
+	# Grows upwards when large text wraps it onto more lines.
+	_toast.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	_toast.modulate.a = 0.0
 	add_child(_toast)
 	Events.toast.connect(show_toast)
@@ -51,6 +53,11 @@ func _process(_delta: float) -> void:
 
 
 func show_toast(text_key: String) -> void:
+	# Large text doubles toasts (Tide stays crisp at whole multiples).
+	var big := Settings.large_text
+	_toast.add_theme_font_size_override("font_size", UI.FONT_SIZE * (2 if big else 1))
+	_toast.offset_top = -72 if big else -22
+	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if text_key == "":
 		return
 	_toast.text = text_key

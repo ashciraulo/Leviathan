@@ -27,8 +27,6 @@ func _ready() -> void:
 	door.position = Vector2(EXIT_TILE.x * Room.TILE + Room.TILE / 2.0, EXIT_TILE.y * Room.TILE + 12)
 	room.add_child.call_deferred(door)
 	z_index = -9
-	if fresh:
-		Events.toast.emit("TOAST_BOSS_DOWN" if room.dungeon == "hull" else "TOAST_BOSS_DOWN_" + room.dungeon.to_upper())
 
 
 func _draw() -> void:

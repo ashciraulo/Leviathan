@@ -58,6 +58,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	get_viewport().set_input_as_handled()
+	_play_input_sound(event)
 	if event.is_action_pressed("pause") or (event.is_action_pressed("map") and current == Tab.MAP):
 		# The controls page may be waiting for a key: let it see Escape first.
 		if not _pages[current].handle_input(event):
@@ -75,7 +76,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
+## Menu blips: move, select, back, tab switch.
+func _play_input_sound(event: InputEvent) -> void:
+	if MenuKit.direction(event) != Vector2i.ZERO:
+		Audio.play_sfx("ui_move")
+	elif MenuKit.confirm(event) or event.is_action_pressed("item_1") or event.is_action_pressed("item_2"):
+		Audio.play_sfx("ui_select")
+	elif event.is_action_pressed("tab_prev") or event.is_action_pressed("tab_next"):
+		Audio.play_sfx("ui_move", null, 0.8)
+	elif MenuKit.cancel(event) or event.is_action_pressed("pause"):
+		Audio.play_sfx("ui_back")
+
+
 func open(tab: Tab = Tab.SATCHEL) -> void:
+	Audio.play_sfx("ui_open")
 	visible = true
 	get_tree().paused = true
 	_opened_at = Time.get_ticks_msec()

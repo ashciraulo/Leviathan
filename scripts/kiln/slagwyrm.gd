@@ -112,6 +112,7 @@ func _ready() -> void:
 	var tween := create_tween()
 	tween.tween_property(_sprite, "modulate:a", 1.0, 0.8)
 	Events.toast.emit("BOSS_SLAGWYRM")
+	Audio.play_sfx("boss_roar", global_position)
 	Feel.shake(3.0)
 
 
@@ -155,6 +156,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0 or _wake.distance_to(goal) < 2.0:
 				_target = _wake
 				_enter(Mode.TELL, TELL_TIME)
+				Audio.play_sfx("enemy_tell", _wake)
 				Feel.shake(1.5)
 		Mode.TELL:
 			velocity = Vector2.ZERO
@@ -267,6 +269,7 @@ func _erupt() -> void:
 	_enter(Mode.ERUPT, ERUPT_TIME)
 	_burst.active = true
 	KilnDebris.burst(get_parent(), global_position + Vector2(0, -6), 10)
+	Audio.play_sfx("bomb_blast", global_position, 0.8)
 	Feel.shake(4.0)
 	Feel.hitstop(3)
 
@@ -295,6 +298,7 @@ func segment_smashed(segment: WyrmSegment) -> void:
 	segments.erase(segment)
 	KilnDebris.burst(get_parent(), segment.global_position + Vector2(0, -7), 8)
 	segment.queue_free()
+	Audio.play_sfx("pot_break", segment.global_position, 0.45)
 	hp -= 1
 	_flash = 0.2
 	Feel.hitstop(4)

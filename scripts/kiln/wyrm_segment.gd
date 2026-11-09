@@ -46,6 +46,7 @@ func is_hard() -> bool:
 func harden(time: float) -> void:
 	if not is_hard():
 		Feel.shake(0.5)
+		Audio.play_sfx("bomb_fuse", global_position, 0.6)
 		boss.steam_at(global_position)
 	hard_time = time
 	_refresh()

@@ -47,6 +47,7 @@ func interact() -> void:
 	if opened:
 		return
 	opened = true
+	Audio.play_sfx("chest_open", global_position)
 	_sprite.frame = 1
 	GameState.flags[flag_key()] = true
 	match item:

@@ -28,6 +28,7 @@ func _ready() -> void:
 	_player = get_parent() as Player
 	direction = _player.facing
 	z_index = 1
+	Audio.play_sfx("sword_swing", _player.global_position, 0.6)
 
 
 ## The centre of the blow, in global coordinates.
@@ -73,6 +74,7 @@ func _strike() -> void:
 			if enemy.take_hit(DAMAGE, direction) == Enemy.HitResult.HIT:
 				GameState.add_resonance(GameState.RESONANCE_PER_HIT)
 				landed = true
+	Audio.play_sfx("hit_shell" if landed else "block", impact_point(), 0.55)
 	Feel.hitstop(4 if landed else 2)
 	Feel.shake(3.0 if landed else 1.5)
 	if not landed:

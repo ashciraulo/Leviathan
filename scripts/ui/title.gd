@@ -29,6 +29,7 @@ func _ready() -> void:
 	_logo.position = Vector2(roundf((get_viewport_rect().size.x - Art.TITLE_LOGO.get_width()) / 2.0), LOGO_TOP)
 	add_child(_logo)
 	_bob_logo()
+	Audio.play_music("title")
 
 	var menu := VBoxContainer.new()
 	menu.add_theme_constant_override("separation", 0)
@@ -99,6 +100,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _page == null:
 		return
 	get_viewport().set_input_as_handled()
+	if MenuKit.direction(event) != Vector2i.ZERO:
+		Audio.play_sfx("ui_move")
+	elif MenuKit.confirm(event):
+		Audio.play_sfx("ui_select")
 	if _page.handle_input(event):
 		return
 	if MenuKit.cancel(event) or event.is_action_pressed("pause"):

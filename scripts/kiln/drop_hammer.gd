@@ -77,6 +77,7 @@ func _land() -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player and player.global_position.distance_to(global_position) < 64.0:
 		Feel.shake(1.5)
+		Audio.play_sfx("hit_shell", global_position, 0.35)
 	# A hammer bursts any boulder caught under it.
 	for node in get_tree().get_nodes_in_group("smashable"):
 		if node is Boulder and (node as Node2D).global_position.distance_to(global_position) < 8.0:

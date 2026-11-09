@@ -7,8 +7,8 @@ script = ExtResource("1_room")
 name_key = "ROOM_KILN_BOSS"
 biome = "kiln"
 dungeon = "kiln"
-door_to = Vector2i(0, 0)
-door_spawn = Vector2i(4, 7)
+door_to = Vector2i(10, -2)
+door_spawn = Vector2i(11, 5)
 layout = "########################
 #......................#
 #......................#

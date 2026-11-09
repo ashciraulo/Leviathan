@@ -67,6 +67,8 @@ func interact() -> void:
 	GameState.refill()
 	GameState.add_resonance(GameState.resonance_max)
 	Feel.shake(2.0)
+	Audio.play_sfx("bell_ring", global_position)
+	Audio.play_jingle("jingle_bell")
 	Events.dialogue_requested.emit("", PackedStringArray(BELLS[bell][1]))
 
 
