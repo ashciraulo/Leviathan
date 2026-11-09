@@ -7,8 +7,8 @@ extends Node2D
 ## They can lean left and right a little, and fold the cloak (the item key
 ## again) to come down early. When the glide ends they drop where they are
 ## (into the sky, if that's where they are). A glide never comes down on
-## water: it carries on to the far bank, or, blown up against a wall over
-## the water, drops Wren back where they took off, a bubble lighter.
+## water: ending over it, Wren drops back where they took off, a bubble
+## lighter. Only a stream can carry them across wide water.
 ##
 ## Lives as a child of Wren while in use, and frees itself when done.
 
@@ -67,11 +67,11 @@ func _physics_process(delta: float) -> void:
 	if _left <= 0.0 or _time >= MAX_TIME or fold or _stuck > 0.2:
 		if not _over_water():
 			_land()
-		elif _stuck > 0.2 or _time >= MAX_TIME + 1.5:
+		else:
+			# Out of glide over water: no carrying on to the far bank on
+			# their own, Wren drops back where they took off.
 			_land()
 			_player.fall(_from)
-		else:
-			_left = 0.05
 
 
 func _over_water() -> bool:

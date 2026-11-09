@@ -66,6 +66,8 @@ var _hurtbox: Area2D
 var _body: Sprite2D
 var _front: Node2D
 var _anim_time := 0.0
+## The room Wren last stood in, so on_ice() needn't search every frame.
+var _room_here: Room
 
 ## Sheet columns in assets/sprites/wren.png.
 const FRAME_WALK := [0, 1, 2, 3]
@@ -293,8 +295,12 @@ func use_item(id: String) -> bool:
 func on_ice() -> bool:
 	if airborne:
 		return false
-	var room := Room.under(get_tree(), global_position)
-	if room == null:
+	var room := _room_here
+	if room == null or not is_instance_valid(room) or room.is_queued_for_deletion() \
+			or not Rect2(room.global_position, Room.SIZE).has_point(global_position):
+		room = Room.under(get_tree(), global_position)
+		_room_here = room
+	if room == null or not room.has_ice():
 		return false
 	var feet := global_position - room.global_position + Vector2(0, -3)
 	return room.tile_at(floori(feet.x / Room.TILE), floori(feet.y / Room.TILE)) == "I"

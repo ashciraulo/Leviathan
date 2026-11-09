@@ -679,20 +679,23 @@ func _glacier_shots(game: Node) -> void:
 		await _capture(shot[1])
 
 	# Freezing a way across the Black Pool.
-	var room := await _jump(game, Vector2i(33, 9), Vector2i(11, 1))
+	var room := await _jump(game, Vector2i(33, 9), Vector2i(2, 5))
 	game.player._invuln = 600.0
-	game.player.facing = Vector2.DOWN
+	game.player.facing = Vector2.RIGHT
 	await _wait(0.2)
 	game.player.use_item("frostfang_bow")
 	await _wait(0.2)
 	await _capture("112_glacier_frost_arrow")
 	await _wait(0.4)
-	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 2 * Room.TILE + 12)
-	game.player.velocity = Vector2.ZERO
-	game.player.facing = Vector2.DOWN
-	await _wait(0.2)
-	game.player.use_item("frostfang_bow")
-	await _wait(0.6)
+	for x in range(3, 7):
+		game.player.global_position = room.global_position + Vector2(x * Room.TILE + 8, 5 * Room.TILE + 12)
+		game.player.velocity = Vector2.ZERO
+		game.player.facing = Vector2.RIGHT
+		await _wait(0.2)
+		game.player.use_item("frostfang_bow")
+		await _wait(0.5)
+	game.player._invuln = 0.0
+	await _wait(0.05)
 	await _capture("113_glacier_frozen_path")
 
 	# Two eyes open in the Eye Gallery.

@@ -1102,36 +1102,49 @@ func _test_glacier_dungeon() -> void:
 	await _wait(0.2)
 	_check(absf(player.global_position.x - x0) < 1.0, "on snow, Wren stops at once")
 
-	# The Black Pool: frost arrows freeze a way out to the island.
+	# The Black Pool: frost arrows freeze a way out to the island, too far
+	# off the shore for the Kite Cloak.
 	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
 	await _calm(room)
-	player.global_position = _tile_pos(room, Vector2i(11, 1))
-	player.facing = Vector2.DOWN
+	player.global_position = _tile_pos(room, Vector2i(2, 5))
+	player.facing = Vector2.RIGHT
 	player.velocity = Vector2.ZERO
 	await _wait(0.1)
-	_check(room.tile_at(11, 2) == "~", "water lies between the shore and the island")
+	_check(room.tile_at(3, 5) == "~", "water lies between the shore and the island")
+	GameState.give_item("kite_cloak")
+	var bubbles_before := GameState.bubbles
+	player.use_item("kite_cloak")
+	await _wait(2.6)
+	var glide_end := player.global_position - room.global_position
+	_check(glide_end.x < 3 * Room.TILE and GameState.bubbles == bubbles_before - 1, "a glide that runs out over water drops Wren back on the shore (at %s)" % glide_end)
+	GameState.refill()
+	player.global_position = _tile_pos(room, Vector2i(2, 5))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.6)
 	_check(player.use_item("frostfang_bow"), "Wren looses a frost arrow")
 	await _wait(0.6)
-	_check(room.tile_at(11, 2) == "I" and room.tile_at(11, 3) == "~", "the arrow freezes the first tile of the lake it reaches, only that one")
-	player.global_position = _tile_pos(room, Vector2i(11, 2))
-	await _wait(0.1)
+	_check(room.tile_at(3, 5) == "I" and room.tile_at(4, 5) == "~", "the arrow freezes the first tile of the lake it reaches, only that one")
+	for x in range(3, 10):
+		player.global_position = _tile_pos(room, Vector2i(x, 5))
+		player.velocity = Vector2.ZERO
+		player.facing = Vector2.RIGHT
+		await _wait(0.1)
+		player.use_item("frostfang_bow")
+		await _wait(0.5)
+	_check(room.tile_at(9, 5) == "I", "arrow by arrow, the ice reaches the island")
+	player.global_position = _tile_pos(room, Vector2i(8, 5))
 	player.velocity = Vector2.ZERO
-	player.facing = Vector2.DOWN
-	player.use_item("frostfang_bow")
-	await _wait(0.6)
-	_check(room.tile_at(11, 3) == "I", "a second arrow freezes the next")
-	player.global_position = _tile_pos(room, Vector2i(11, 3))
-	player.velocity = Vector2.ZERO
-	Input.action_press("move_down")
+	Input.action_press("move_right")
 	await _wait(0.7)
-	Input.action_release("move_down")
+	Input.action_release("move_right")
 	var local := player.global_position - room.global_position
-	_check(local.y > 4 * Room.TILE, "Wren walks across the new ice to the island (at %s)" % local)
+	_check(local.x > 10 * Room.TILE, "Wren walks across the new ice to the island (at %s)" % local)
 
 	# Leaving and coming back, the water has thawed.
 	room = await _goto(game, Vector2i(32, 9), Vector2i(11, 11))
 	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
-	_check(room.tile_at(11, 2) == "~", "back in the room, the lake is open water again")
+	_check(room.tile_at(3, 5) == "~", "back in the room, the lake is open water again")
 
 	# The Eye Gallery: every eye open at once opens the gate.
 	room = await _goto(game, Vector2i(32, 8), Vector2i(11, 11))

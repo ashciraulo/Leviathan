@@ -47,7 +47,7 @@ func _physics_process(delta: float) -> void:
 
 func _slide(dir: Vector2) -> void:
 	var step := dir * Room.TILE
-	if test_move(global_transform, step):
+	if test_move(global_transform, step) or _someone_in(step):
 		Feel.shake(0.4)
 		return
 	_sliding = true
@@ -57,8 +57,20 @@ func _slide(dir: Vector2) -> void:
 	tween.tween_property(self, "position", position + step, SLIDE_TIME * (0.5 if on_ice else 1.0))
 	tween.tween_callback(func() -> void:
 		_sliding = false
-		if _on_ice() and not test_move(global_transform, step):
+		if _on_ice() and not test_move(global_transform, step) and not _someone_in(step):
 			_slide(dir))
+
+
+## True when Wren or an enemy stands in the tile the crate would move into.
+func _someone_in(step: Vector2) -> bool:
+	var query := PhysicsShapeQueryParameters2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(12, 11)
+	query.shape = box
+	query.transform = Transform2D(0.0, global_position + step + Vector2(0, -5.5))
+	query.collision_mask = (1 << (Layers.PLAYER - 1)) | (1 << (Layers.ENEMY - 1))
+	query.exclude = [get_rid()]
+	return not get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 ## True when the crate stands on ice (I).
