@@ -60,24 +60,42 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Wind-scoured flagstones, pale slate, laid in long courses."""
+    """Wind-scoured flagstones, pale slate, laid in long courses two tiles
+    deep. Joins fall on only some tiles, so the courses run on across the
+    floor instead of boxing every tile; the wind has worn pale streaks along
+    the stone and blown grit into the joins."""
     rnd = random.Random(3100 + seed)
-    px = blank(STONE[2] if seed != 3 else STONE[1])
-    for i in range(T):
-        px[0][i] = STONE[1]
-        px[T - 1][i] = STONE[4]
-    split = 5 + seed * 3 % 7
-    for y in range(T):
-        px[y][split] = STONE[4]
-        px[y][(split + 1) % T] = STONE[1]
+    base = STONE[2]
+    px = blank(base)
+    if seed in (0, 1):
+        for x in range(T):
+            px[T - 1][x] = STONE[4]
+            px[0][x] = STONE[1]
+    if seed in (1, 2):
+        split = rnd.randrange(4, 12)
+        for y in range(T):
+            if px[y][split] == base or y in (0, T - 1):
+                px[y][split] = STONE[4]
+            if px[y][split + 1] == base:
+                px[y][split + 1] = STONE[1]
     # Streaks the wind has worn along the stone.
-    for _ in range(3):
-        y = rnd.randrange(2, T - 2)
+    for _ in range(2):
+        y = rnd.randrange(3, T - 3)
         x0 = rnd.randrange(0, 8)
-        for x in range(x0, min(T, x0 + rnd.randrange(3, 7))):
-            px[y][x] = STONE[1]
+        for x in range(x0, min(T, x0 + rnd.randrange(4, 9))):
+            if px[y][x] == base:
+                px[y][x] = STONE[1]
     for _ in range(5):
-        px[rnd.randrange(1, T - 1)][rnd.randrange(T)] = rnd.choice((STONE[3], STONE[3], STONE[0]))
+        x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
+        if px[y][x] == base:
+            px[y][x] = rnd.choice((STONE[3], STONE[3], STONE[0]))
+    # A tuft of lichen in a join.
+    if seed == 1:
+        px[T - 1][rnd.randrange(2, T - 2)] = LICHEN[1]
+    if seed == 3:
+        x, y = rnd.randrange(3, T - 4), rnd.randrange(3, T - 4)
+        px[y][x] = LICHEN[2]
+        px[y][x + 1] = LICHEN[1]
     return px
 
 

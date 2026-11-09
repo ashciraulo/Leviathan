@@ -59,24 +59,35 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Packed snow over rock: soft, a few footprints of grit and blue shadow."""
+    """Packed snow over rock. One even base on every variant, so no tile
+    stands out as a square; wind has drawn long soft ripples across it, blue
+    shadow pools in the hollows, and here and there grit or a glint shows."""
     rnd = random.Random(4100 + seed)
-    px = blank(SNOW[1] if seed != 2 else SNOW[2])
-    for _ in range(14):
+    px = blank(SNOW[1])
+    for _ in range(8):
         x, y = rnd.randrange(T), rnd.randrange(T)
-        px[y][x] = rnd.choice((SNOW[0], SNOW[2], SNOW[2], SNOW[3]))
-    # Wind ripples in the snow.
-    for k in range(2):
-        y0 = rnd.randrange(3, T - 3)
-        x0 = rnd.randrange(0, 6)
-        for i in range(rnd.randrange(5, 10)):
-            x = x0 + i
-            if x < T:
-                px[y0 + (1 if i % 4 == 3 else 0)][x] = SNOW[3]
-                px[y0 - 1][x] = SNOW[0]
+        px[y][x] = rnd.choice((SNOW[0], SNOW[2], SNOW[2]))
+    # A long, gently curving wind ripple: shadow under a bright crest,
+    # running off both sides of the tile.
+    if seed in (0, 1):
+        y0 = rnd.randrange(5, 11)
+        phase = rnd.random() * 6.28
+        for x in range(T):
+            y = y0 + int(round(1.4 * math.sin(phase + x * 0.35)))
+            px[y][x] = SNOW[3] if x % 7 else SNOW[2]
+            px[y - 1][x] = SNOW[0]
+    # A soft blue hollow.
+    if seed == 2:
+        cx, cy = rnd.randrange(5, 11), rnd.randrange(5, 11)
+        for y in range(T):
+            for x in range(T):
+                d = ((x - cx) / 4.5) ** 2 + ((y - cy) / 2.5) ** 2
+                if d <= 1.0 and (d < 0.6 or (x + y) % 2):
+                    px[y][x] = SNOW[2]
     if seed == 3:
         for (x, y) in ((4, 5), (11, 10), (7, 12)):
             px[y][x] = SNOW[5]
+        px[3][12] = SNOW[0]
     return px
 
 
