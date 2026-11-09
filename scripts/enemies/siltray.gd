@@ -95,10 +95,10 @@ func _think(delta: float) -> void:
 			if _in_water(position) and _timer <= 0.0:
 				_set_mode(Mode.SWIM)
 				return
-			for dir: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
-				if _in_water(position + dir * Room.TILE):
-					velocity = dir * FLOP_SPEED * 3.0
-					break
+			for reach in range(1, 4):
+				for dir: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+					if velocity == Vector2.ZERO and _in_water(position + dir * Room.TILE * reach):
+						velocity = dir * FLOP_SPEED * 3.0
 			if velocity == Vector2.ZERO and int(_timer * 2.0) % 3 == 0:
 				velocity = Vector2(signf(sin(_timer * 7.0)), 0.0) * FLOP_SPEED
 	var margin := Vector2(12, 12)
@@ -115,10 +115,6 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 	if mode == Mode.SWIM:
 		return HitResult.IGNORED
 	return super.take_hit(damage, direction)
-
-
-func is_submerged() -> bool:
-	return mode == Mode.SWIM
 
 
 func _make_sprite() -> Sprite2D:
