@@ -438,7 +438,49 @@ def murmur_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# Vael, who leads the Choir: Hessa's first apprentice, about 55. Grey robes
+# like his singers, close-cropped grey hair and beard, and the keepers' lamp
+# badge he still wears, gone dull. Opens a hand when he speaks.
+# --------------------------------------------------------------------------
+VAEL = [
+    "................",
+    "......ZZZZ......",
+    ".....ZZZZZZ.....",
+    "....ZZZZZZZZ....",
+    "....ZVVVVVVZ....",
+    "....VVeVVeVV....",
+    "....VVVVVVVV....",
+    "....ZVVVVVVZ....",
+    ".....ZZ--ZZ.....",
+    "......ZZZZ......",
+    "...SSSSSSSSSS...",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSTTSSS..",
+    ".VSSSSSSSTTSSSV.",
+    ".VSSSSSSSSSSSSV.",
+    ".VSSSUUUUUUSSSV.",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "...SSSSSSSSSS...",
+    "....vv....vv....",
+]
+
+
+def vael_frames():
+    idle = VAEL
+    breathe = settle(idle, 10)
+    # Talking: one hand opens, palm up, towards Wren.
+    talk = paint(idle, [(13, 14, "S."), (14, 14, "S."), (15, 14, "S."), (13, 14, "SV"), (12, 15, "V")])
+    return [idle, breathe, talk]
+
+
 SPRITES = {
+    "vael": vael_frames,
     "murmur": murmur_frames,
     "lowe": lowe_frames,
     "singer": singer_frames,
@@ -636,7 +678,20 @@ def portrait_murmur():
     return _rows(c)
 
 
+def portrait_vael():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
+    _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, down
+    _box(c, 19, 28, 3, 3, "T")                         # the old lamp badge
+    _ellipse(c, 16, 12, 9, 6, "Z")                     # cropped grey hair
+    _face(c, "V", eye_row=16, cy=17, rx=7, ry=8, cheeks=False, mouth=False)
+    _ellipse(c, 16, 22, 6, 4, "Z")                     # beard
+    _box(c, 14, 21, 4, 1, "-")                         # a gentle mouth
+    return _rows(c)
+
+
 PORTRAITS = {
+    "vael": portrait_vael(),
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),
     "agna": portrait_agna(),

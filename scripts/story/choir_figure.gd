@@ -10,6 +10,7 @@ const KINDS := {
 	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3},
 	"singer": {"texture": Art.VILLAGER_SINGER, "frames": 4},
 	"murmur": {"texture": Art.VILLAGER_MURMUR, "frames": 3},
+	"vael": {"texture": Art.VILLAGER_VAEL, "frames": 3},
 }
 const FRAME_IDLE := 0
 const FRAME_BREATHE := 1

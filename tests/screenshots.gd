@@ -683,7 +683,20 @@ func _gale_shots(game: Node) -> void:
 			heron._hits_this_landing = 0
 			heron.mode = Stormheron.Mode.GROUNDED
 			heron.take_hit(1, Vector2.UP)
-	await _wait(4.0)
+	# Vael at the spire.
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.6)
+		if page == 2:
+			await _capture("44_vael_at_the_spire")
+		var box := _dialogue_box(game)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _skip_scene(game)
+	await _wait(0.5)
 	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
 	await _wait(0.3)
 	await _capture("104_storm_bell")

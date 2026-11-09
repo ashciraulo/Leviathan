@@ -38,6 +38,12 @@ const CALF_FLAG := "seen_calf"
 ## (and back out).
 const CALF_AT := Vector2(7 * 16 + 8, 6 * 16 + 12)
 const MURMUR_IN := [Vector2(11 * 16 + 16, 13 * 16 + 8), Vector2(11 * 16 + 16, 11 * 16), Vector2(14 * 16 + 8, 7 * 16 + 12)]
+## The Gale Spire's summit, the Crown, where Vael waits after the Stormheron.
+const GALE_BOSS := Vector2i(28, 7)
+const VAEL_FLAG := "seen_vael_spire"
+## Vael steps out onto the top ledge, across the open sky from Wren.
+const VAEL_FROM := Vector2(10 * 16 + 8, 1 * 16 + 4)
+const VAEL_AT := Vector2(10 * 16 + 8, 2 * 16 + 12)
 ## Where Wren stops to watch, in any of these chambers.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
@@ -76,8 +82,12 @@ func _on_room_entered(coord: Vector2i) -> void:
 
 
 func _on_flag_changed(flag: String, _value: Variant) -> void:
-	if flag == PaleCongregation.DEFEATED_FLAG and GameState.room_coord == MIRE_BOSS and not GameState.has_flag(CALF_FLAG) and not Cutscene.active:
+	if Cutscene.active:
+		return
+	if flag == PaleCongregation.DEFEATED_FLAG and GameState.room_coord == MIRE_BOSS and not GameState.has_flag(CALF_FLAG):
 		the_calf()
+	elif flag == Stormheron.DEFEATED_FLAG and GameState.room_coord == GALE_BOSS and not GameState.has_flag(VAEL_FLAG):
+		vael_at_the_spire()
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -297,6 +307,36 @@ func the_calf() -> void:
 	out.reverse()
 	await murmur.walk_along(out.slice(1), 30.0, -1)
 	murmur.queue_free()
+	scene.finish()
+
+
+## Cutscene 10, "Vael at the spire": with the Stormheron gone, Vael steps
+## out on the ledge across the open sky. He does not fight. He tells Wren
+## he was Hessa's apprentice, that the Old One weeps under every phrase, and
+## asks Wren to listen when they ring the bell. Then he goes.
+func vael_at_the_spire() -> void:
+	GameState.set_flag(VAEL_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# The heron lifts away on the wind and the Storm Bell rises first.
+	await scene.wait(3.0)
+	# The Crown is ringed with open sky: if Wren is out on a side ledge
+	# there's no safe way across, so they stay put and look up.
+	await scene.walk_route(room.global_position + WATCH_FROM, false)
+	scene.face(Vector2.UP)
+	var vael := ChoirFigure.new("vael")
+	vael.position = VAEL_FROM
+	room.add_child(vael)
+	await vael.walk_along([VAEL_AT], 18.0, 1)
+	await scene.wait(1.0)
+	for key in ["VAEL_SPIRE_1", "VAEL_SPIRE_2", "VAEL_SPIRE_3", "VAEL_SPIRE_4"]:
+		vael.talking = true
+		await scene.speak("vael", [key])
+		vael.talking = false
+		await scene.wait(0.4)
+	await scene.wait(0.6)
+	await vael.walk_along([VAEL_FROM], 18.0, -1)
+	vael.queue_free()
 	scene.finish()
 
 

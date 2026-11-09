@@ -155,8 +155,9 @@ func walk_around_to(target: Vector2) -> void:
 
 ## Walk Wren to a point along open ground, round water, walls, props and
 ## people: a breadth-first search over the room's tiles, walked corner to
-## corner. Falls back to walk_around_to when there is no route.
-func walk_route(target: Vector2) -> void:
+## corner. With no route, falls back to walk_around_to, or (fallback off,
+## for rooms with pits or open sky) leaves Wren where they are.
+func walk_route(target: Vector2, fallback: bool = true) -> void:
 	var player := _player()
 	var room: Room = game.current_room if game else null
 	if player == null or room == null:
@@ -166,7 +167,8 @@ func walk_route(target: Vector2) -> void:
 	var to := _tile_of(target - origin)
 	var path := _route(room, from, to)
 	if path.is_empty():
-		await walk_around_to(target)
+		if fallback:
+			await walk_around_to(target)
 		return
 	for i in range(1, path.size()):
 		# Only stop at corners.
