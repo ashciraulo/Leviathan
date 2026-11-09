@@ -25,6 +25,8 @@ const BIOME_COLORS := {
 	"belfry": [Color("#72a092"), Color("#34564c"), Color("#1c4a5c")],
 	"windmere": [Color("#8fb15a"), Color("#e8e2d0"), Color("#2f6e9e")],
 	"frostspine": [Color("#dce6f2"), Color("#5a98cc"), Color("#365e84")],
+	"sunken_verge": [Color("#a89c82"), Color("#6e6656"), Color("#3a585e")],
+	"ossuary": [Color("#e8c890"), Color("#b07850"), Color("#3e7c86")],
 }
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 

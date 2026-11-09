@@ -31,6 +31,7 @@ var _fast_armed := false
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Audio.play_music("credits")
+	Audio.play_ambience("")
 	_height = 216.0 + Art.TITLE_LOGO.get_height() + GAP
 	for section: Array in SECTIONS:
 		_height += LINE * section.size() + GAP

@@ -41,12 +41,23 @@ func _think(delta: float) -> void:
 			if (position[axis] <= lo[axis] and _velocity[axis] < 0.0) or (position[axis] >= hi[axis] and _velocity[axis] > 0.0):
 				_velocity[axis] = -_velocity[axis] * BOUNCE
 				_drift[axis] = -_drift[axis]
+				_rattle()
 		position = position.clamp(lo, hi)
-	velocity = _velocity
+	# Only bounce when still heading into the wall: the last slide's collision
+	# lingers a frame after the bounce, and would send it straight back.
 	if get_slide_collision_count() > 0:
 		var normal := get_slide_collision(0).get_normal()
-		_velocity = _velocity.bounce(normal) * BOUNCE
+		if _velocity.dot(normal) < 0.0:
+			_velocity = _velocity.bounce(normal) * BOUNCE
+			_rattle()
+	velocity = _velocity
 	_roll += velocity.x * delta * 0.25 + velocity.y * delta * 0.1
+
+
+## A dry rattle when it bounces, louder the faster it was rolling.
+func _rattle() -> void:
+	if _velocity.length() > 20.0:
+		Audio.play_sfx("burr_roll", global_position, clampf(_velocity.length() / 80.0, 0.8, 1.3))
 
 
 func _gust() -> Gust:

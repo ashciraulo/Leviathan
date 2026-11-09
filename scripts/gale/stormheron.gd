@@ -138,7 +138,7 @@ func _think(delta: float) -> void:
 					Audio.play_sfx("storm_gather", rod.global_position)
 				else:
 					_enter(Mode.FLARE, FLARE_TIME)
-					Audio.play_sfx("enemy_tell", global_position)
+					Audio.play_sfx("heron_tell", global_position)
 		Mode.FLARE:
 			if _timer <= 0.0:
 				_throw(to_wren)
@@ -229,6 +229,7 @@ func hook_hit(_direction: Vector2) -> bool:
 func _die() -> void:
 	dying = true
 	mode = Mode.DYING
+	Audio.play_sfx("boss_fall", global_position, 1.1)
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)

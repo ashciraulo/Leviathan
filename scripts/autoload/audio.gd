@@ -85,7 +85,27 @@ const SFX := {
 	"great_bell": {"wave": "sine", "f0": 196.0, "f1": 190.0, "dur": 1.6, "vol": 0.6, "caption": "CAPTION_GREAT_BELL"},
 	"tentacle_cut": {"wave": "noise", "f0": 2200.0, "f1": 600.0, "dur": 0.2, "vol": 0.35},
 	"knell_moan": {"wave": "square", "f0": 110.0, "f1": 70.0, "dur": 0.8, "vol": 0.4, "caption": "CAPTION_KNELL"},
+	"hook_reel": {"wave": "square", "f0": 300.0, "f1": 520.0, "dur": 0.3, "vol": 0.25},
+	"stonebreaker_slam": {"wave": "noise", "f0": 600.0, "f1": 80.0, "dur": 0.35, "vol": 0.6, "caption": "CAPTION_SLAM"},
+	"ice_slide": {"wave": "noise", "f0": 6000.0, "f1": 4000.0, "dur": 0.3, "vol": 0.15},
+	"block_push": {"wave": "noise", "f0": 500.0, "f1": 300.0, "dur": 0.4, "vol": 0.3, "caption": "CAPTION_SCRAPE"},
 	"mantle_wings": {"wave": "noise", "f0": 300.0, "f1": 150.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_WINGS"},
+	# Creatures: each has its own warning, so a player learns them by ear.
+	"scuttler_snap": {"wave": "square", "f0": 1500.0, "f1": 900.0, "dur": 0.1, "vol": 0.3, "caption": "CAPTION_SNAP"},
+	"scuttler_skitter": {"wave": "noise", "f0": 6000.0, "f1": 6000.0, "dur": 0.2, "vol": 0.2},
+	"shell_clack": {"wave": "square", "f0": 900.0, "f1": 700.0, "dur": 0.08, "vol": 0.3, "caption": "CAPTION_CLACK"},
+	"skipper_croak": {"wave": "square", "f0": 180.0, "f1": 140.0, "dur": 0.25, "vol": 0.3, "caption": "CAPTION_CROAK"},
+	"skipper_burrow": {"wave": "noise", "f0": 1500.0, "f1": 300.0, "dur": 0.3, "vol": 0.25},
+	"moth_flutter": {"wave": "noise", "f0": 1400.0, "f1": 900.0, "dur": 0.35, "vol": 0.2, "caption": "CAPTION_WINGS"},
+	"moth_flare": {"wave": "triangle", "f0": 600.0, "f1": 1500.0, "dur": 0.35, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"burr_roll": {"wave": "noise", "f0": 1800.0, "f1": 1000.0, "dur": 0.4, "vol": 0.2},
+	"spitter_gulp": {"wave": "triangle", "f0": 200.0, "f1": 420.0, "dur": 0.3, "vol": 0.3, "caption": "CAPTION_GULP"},
+	# Bosses: a warning of their own before each big attack.
+	"matriarch_tell": {"wave": "noise", "f0": 4000.0, "f1": 3000.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_TELL"},
+	"wyrm_tell": {"wave": "noise", "f0": 200.0, "f1": 1800.0, "dur": 0.7, "vol": 0.45, "caption": "CAPTION_RUMBLE"},
+	"congregation_tell": {"wave": "triangle", "f0": 330.0, "f1": 349.0, "dur": 0.7, "vol": 0.35, "caption": "CAPTION_TELL"},
+	"heron_tell": {"wave": "square", "f0": 700.0, "f1": 1400.0, "dur": 0.4, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"boss_fall": {"wave": "noise", "f0": 800.0, "f1": 60.0, "dur": 1.6, "vol": 0.6, "caption": "CAPTION_BOSS_FALL"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},
 	"hit_shell": {"wave": "square", "f0": 1600.0, "f1": 1100.0, "dur": 0.07, "vol": 0.4},
@@ -109,6 +129,12 @@ const SFX := {
 	"spore_swell": {"wave": "triangle", "f0": 300.0, "f1": 600.0, "dur": 0.5, "vol": 0.25, "caption": "CAPTION_TELL"},
 	"spore_burst": {"wave": "noise", "f0": 2200.0, "f1": 600.0, "dur": 0.3, "vol": 0.35},
 	"seal_bark": {"wave": "square", "f0": 330.0, "f1": 220.0, "dur": 0.25, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"tide_rise": {"wave": "noise", "f0": 400.0, "f1": 1400.0, "dur": 1.6, "vol": 0.3, "caption": "CAPTION_TIDE"},
+	"tide_sweep": {"wave": "noise", "f0": 1600.0, "f1": 300.0, "dur": 0.5, "vol": 0.4},
+	"sand_hiss": {"wave": "noise", "f0": 3000.0, "f1": 1800.0, "dur": 0.5, "vol": 0.2, "caption": "CAPTION_SAND"},
+	"jaw_rattle": {"wave": "noise", "f0": 900.0, "f1": 700.0, "dur": 0.5, "vol": 0.3, "steps": 5, "caption": "CAPTION_TELL"},
+	"jaw_snap": {"wave": "square", "f0": 260.0, "f1": 90.0, "dur": 0.15, "vol": 0.4},
+	"ray_splash": {"wave": "noise", "f0": 2400.0, "f1": 900.0, "dur": 0.3, "vol": 0.3, "caption": "CAPTION_TELL"},
 	"tidestone_wake": {"wave": "triangle", "f0": 196.0, "f1": 196.0, "dur": 0.9, "vol": 0.5, "steps": 4, "caption": "CAPTION_TIDESTONE"},
 	"bell_quiet": {"wave": "triangle", "f0": 392.0, "f1": 390.0, "dur": 0.6, "vol": 0.2, "caption": "CAPTION_BELL_QUIET"},
 	"bell_ring": {"wave": "triangle", "f0": 784.0, "f1": 780.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_BELL"},
@@ -136,6 +162,7 @@ var music_cue := ""
 var _music: Array[AudioStreamPlayer] = []
 var _music_index := 0
 var _ambience: AudioStreamPlayer
+var _ambience_tween: Tween
 var _ambience_id := ""
 var _voices: Array[AudioStreamPlayer2D] = []
 var _flat_voices: Array[AudioStreamPlayer] = []
@@ -273,16 +300,48 @@ static func cue_for_room(biome: String, dungeon: String) -> String:
 # Ambience
 # --------------------------------------------------------------------------
 
-func play_ambience(id: String) -> void:
+## The background loop for a room: dungeons share one, the overworld has
+## one per region.
+static func ambience_for_room(biome: String, dungeon: String) -> String:
+	return "dungeon" if dungeon != "" else biome
+
+
+## Fades to an ambience loop (from audio/ambience/). "" fades it out.
+func play_ambience(id: String, fade: float = FADE_TIME) -> void:
 	if id == _ambience_id:
 		return
 	_ambience_id = id
 	var stream := _load(AMBIENCE_DIR, id) if id != "" else null
-	if stream == null:
-		_ambience.stop()
+	if _ambience_tween:
+		_ambience_tween.kill()
+	_ambience_tween = create_tween()
+	# Back to the loop that is still fading out: bring it up, don't restart it.
+	if _ambience.playing and stream != null and _ambience.stream == _looping(stream):
+		_ambience_tween.tween_property(_ambience, "volume_db", 0.0, fade * 0.5)
 		return
-	_ambience.stream = stream
-	_ambience.play()
+	if _ambience.playing:
+		_ambience_tween.tween_property(_ambience, "volume_db", -40.0, fade * 0.5)
+	if stream == null:
+		_ambience_tween.tween_callback(_ambience.stop)
+		return
+	_ambience_tween.tween_callback(func() -> void:
+		_ambience.stream = _looping(stream)
+		_ambience.volume_db = -40.0
+		_ambience.play())
+	_ambience_tween.tween_property(_ambience, "volume_db", 0.0, fade * 0.5)
+
+
+## A WAV set to loop end to end. (The ambience files already loop through
+## their import settings; this covers a file dropped in without them.)
+static func _looping(stream: AudioStream) -> AudioStream:
+	var wav := stream as AudioStreamWAV
+	if wav == null or wav.loop_mode != AudioStreamWAV.LOOP_DISABLED:
+		return stream
+	wav = wav.duplicate() as AudioStreamWAV
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_begin = 0
+	wav.loop_end = int(wav.get_length() * wav.mix_rate)
+	return wav
 
 
 # --------------------------------------------------------------------------

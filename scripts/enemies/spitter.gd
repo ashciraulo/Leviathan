@@ -34,6 +34,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0 and player and global_position.distance_to(player.global_position) < RANGE:
 				mode = Mode.WINDUP
 				_timer = WINDUP_TIME
+				Audio.play_sfx("spitter_gulp", global_position)
 		Mode.WINDUP:
 			if _timer <= 0.0:
 				if player:
