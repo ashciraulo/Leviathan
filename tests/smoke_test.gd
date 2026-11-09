@@ -48,6 +48,7 @@ func _ready() -> void:
 		await _test_ossuary()
 		await _test_maw_approach()
 		await _test_overworld_secrets()
+		await _test_tide_turning()
 		await _test_fast_travel()
 		await _test_credits()
 		await _test_side_quests()
@@ -3145,6 +3146,46 @@ func _test_ossuary() -> void:
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
+
+
+## After the Old One turns, a Tidestone turns the tide and holds it.
+func _test_tide_turning() -> void:
+	GameState.reset_new_game()
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	var stone := Tidestone.new()
+	stone.room_coord = Vector2i(0, 2)
+	add_child(stone)
+	stone.awake = true
+	stone.interact()
+	_check(Tide.held() == "" and not Tide.can_turn(), "before the Old One turns, a Tidestone leaves the tide alone")
+	GameState.set_flag("old_one_turned")
+	stone.interact()
+	_check(Tide.held() == "high" and is_equal_approx(Tide.level(), 1.0) and Tide.phase() == Tide.Phase.HIGH, "after the turn, a Tidestone brings the tide in (at once, with no flats in sight)")
+	# It holds: the clock moving on doesn't let it out again.
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	_check(is_equal_approx(Tide.level(), 1.0), "a held tide stays in")
+	stone.interact()
+	_check(Tide.held() == "low" and is_equal_approx(Tide.level(), 0.0), "the stone sends it out again")
+	stone.queue_free()
+	# In the Verge, the turned tide runs in at the flooding pace.
+	GameState.set_checkpoint(Vector2i(0, 2), Vector2(6 * Room.TILE + 8, 7 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var tide := room.get_node_or_null("Tide") as Tide
+	_check(tide != null and not tide.is_flooded(Vector2i(9, 4)), "held out, Cockle Flats are dry")
+	_check(Tide.turn(get_tree()) == "high" and Tide.phase() == Tide.Phase.RISING, "turned in the Verge, the tide starts rising")
+	await _wait(Tide.RISING_TIME + 0.6)
+	_check(Tide.phase() == Tide.Phase.HIGH and tide != null and tide.is_flooded(Vector2i(9, 4)), "and the flats go under")
+	_check(GameState.has_flag(Tide.HELD_FLAG) and GameState.has_flag(Tide.HELD_IN_FLAG), "the held tide is kept as plain flags")
+	# Turned and then left behind mid-ebb, it finishes while Wren is away.
+	Tide.turn(get_tree())
+	game.queue_free()
+	await _wait(0.1)
+	_check(Tide.held() == "low" and Tide.phase() == Tide.Phase.LOW, "a tide left mid-turn finishes running out")
+	Tide.offset = 0.0
+	GameState.reset_new_game()
 
 
 ## Overworld secrets: chests hold what their room says, a cache holds a
