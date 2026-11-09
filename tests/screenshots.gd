@@ -30,9 +30,13 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "mantle"]:
 		if OS.get_environment("SHOTS_ONLY") == "kiln":
 			await _kiln_shots(game)
+		elif OS.get_environment("SHOTS_ONLY") == "mantle":
+			game.queue_free()
+			await _wait(0.2)
+			await _mantle_shots()
 		else:
 			await _mire_shots(game)
 		SaveManager.delete_save()
@@ -255,18 +259,7 @@ func _ready() -> void:
 	await _skip_scene(story)
 	story.queue_free()
 	await _wait(0.2)
-	GameState.reset_new_game()
-	GameState.set_flag("tidebell_hull")
-	GameState.set_checkpoint(Vector2i(4, 0), Vector2(1 * Room.TILE + 8, 6 * Room.TILE + 12))
-	var strand: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
-	add_child(strand)
-	await _wait(1.0)
-	await _capture("35_mantle_netted")
-	await _wait(6.0)
-	await _capture("36_mantle_rises")
-	await _skip_scene(strand)
-	strand.queue_free()
-	await _wait(0.2)
+	await _mantle_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -604,3 +597,19 @@ func _capture(file_name: String) -> void:
 	var path := _out_dir.path_join(file_name + ".png")
 	var err := image.save_png(path)
 	print("Saved %s (%s)" % [path, error_string(err)])
+
+
+## Freeing Mantle on the Wreck Strand: netted, then cut free and rising.
+func _mantle_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	GameState.set_checkpoint(Vector2i(4, 0), Vector2(1 * Room.TILE + 8, 6 * Room.TILE + 12))
+	var strand: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(strand)
+	await _wait(1.0)
+	await _capture("35_mantle_netted")
+	await _wait(6.0)
+	await _capture("36_mantle_rises")
+	await _skip_scene(strand)
+	strand.queue_free()
+	await _wait(0.2)
