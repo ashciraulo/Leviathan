@@ -79,7 +79,9 @@ static func spawn_in(room: Room, pos: Vector2) -> Node2D:
 
 
 func _ready() -> void:
-	add_to_group("boss")
+	# Asleep, the Heart is no fight (no boss music in its chamber).
+	if mode != Mode.SLEEP:
+		add_to_group("boss")
 	if _room == null:
 		_room = get_parent() as Room
 	add_child(Art.shadow(true))
@@ -91,6 +93,10 @@ func _ready() -> void:
 	body.add_child(Layers.rect_shape(Vector2(48, 14), Vector2(0, -7)))
 	add_child(body)
 	if mode == Mode.SLEEP:
+		# After the end (once the ending is told), the echo stones keep watch
+		# round the Heart.
+		if GameState.has_flag(StoryDirector.ENDING_FLAG):
+			get_parent().add_child.call_deferred(EchoHall.new())
 		return
 	Events.toast.emit("BOSS_HEART")
 	Audio.play_sfx("heart_roar", global_position)

@@ -43,12 +43,15 @@ var _hits_this_daze := 0
 ## What a V tile becomes in the Drowned Belfry: the kraken in its bell, or,
 ## once it's beaten, the Drowned Bell and the way out.
 static func spawn_in(room: Room, pos: Vector2) -> Node2D:
-	if GameState.flags.get(DEFEATED_FLAG, false):
+	# Beaten for good, unless Wren has come back to its echo (EchoTrial).
+	if GameState.flags.get(DEFEATED_FLAG, false) and not EchoTrial.here(room):
 		var after := BossAftermath.new()
 		after.room = room
 		after.boss_spot = pos + Vector2(0, 30)
 		return after
 	var boss := Knell.new()
+	if EchoTrial.here(room):
+		EchoTrial.dress(room)
 	boss._room = room
 	return boss
 
