@@ -35,6 +35,10 @@ const INTERACT_RANGE := 16.0
 ## On ice (I): how fast Wren gets going, and how slowly they come to a stop.
 const ICE_GRIP := 170.0
 const ICE_DRIFT := 45.0
+## What stops Wren in the air (gliding, or on the Tide Hook's line): walls.
+const AIR_MASK := (1 << (Layers.WORLD - 1)) | (1 << (Layers.GRATE - 1))
+## Swimming in deep water is slower.
+const SWIM_SPEED := 58.0
 
 var state := State.MOVE
 var facing := Vector2.DOWN
@@ -51,6 +55,9 @@ var item_velocity := Vector2.ZERO
 var airborne := false
 ## True while Wren holds the Glowmoth Lantern up (see Lantern).
 var lantern_raised := false
+## True while Wren is under the surface with the Diver's Helm: nothing up
+## top can touch them.
+var diving := false
 
 var _state_time := 0.0
 var _knockback := Vector2.ZERO
@@ -66,6 +73,7 @@ var _hurtbox: Area2D
 var _body: Sprite2D
 var _front: Node2D
 var _anim_time := 0.0
+var _swim_depth := 0.0
 ## The room Wren last stood in, so on_ice() needn't search every frame.
 var _room_here: Room
 
@@ -79,7 +87,8 @@ const WALK_FRAME_TIME := 0.11
 func _ready() -> void:
 	add_to_group("player")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	Layers.assign(self, Layers.PLAYER, [Layers.WORLD, Layers.WATER])
+	Layers.assign(self, Layers.PLAYER, [])
+	collision_mask = ground_mask()
 	add_child(Layers.rect_shape(Vector2(10, 6), Vector2(0, -3)))
 
 	_hurtbox = Area2D.new()
@@ -188,7 +197,12 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 
 func _move_state() -> void:
 	var direction := _input_direction()
-	if on_ice():
+	if not airborne:
+		# (Picking up the Diver's Helm opens deep water straight away.)
+		collision_mask = ground_mask()
+	if swimming():
+		velocity = direction * SWIM_SPEED
+	elif on_ice():
 		# Ice keeps what speed Wren has; pushing only slowly changes it.
 		var grip := ICE_GRIP if direction != Vector2.ZERO else ICE_DRIFT
 		velocity = velocity.limit_length(SPEED).move_toward(direction * SPEED, grip * get_physics_process_delta_time())
@@ -283,6 +297,16 @@ func use_item(id: String) -> bool:
 			# On ice, Wren keeps sliding while they shoot.
 			item_velocity = velocity if on_ice() else Vector2.ZERO
 			return true
+		"divers_helm":
+			# Under the surface: from deep water, or diving in off its edge.
+			if not swimming() and not _deep_ahead():
+				return false
+			var helm := DiversHelm.new()
+			helm.name = "DiversHelm"
+			add_child(helm)
+			_enter(State.ITEM)
+			item_velocity = velocity
+			return true
 		"glowmoth_lantern":
 			# Up or down; Wren keeps walking either way.
 			lantern_raised = not lantern_raised
@@ -291,15 +315,50 @@ func use_item(id: String) -> bool:
 	return false
 
 
-## True when Wren is standing on ice (an I tile, or frozen water).
-func on_ice() -> bool:
+## What stops Wren on foot: walls, water and sunken grates, and deep water
+## unless they have the Diver's Helm.
+func ground_mask() -> int:
+	var mask := (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1)) | (1 << (Layers.GRATE - 1))
+	if not GameState.has_item("divers_helm"):
+		mask |= 1 << (Layers.DEEP - 1)
+	return mask
+
+
+## True when Wren is in deep water (swimming it with the Diver's Helm).
+func swimming() -> bool:
 	if airborne:
 		return false
+	var room := _room_now()
+	if room == null:
+		return false
+	var feet := global_position - room.global_position + Vector2(0, -3)
+	return room.tile_at(floori(feet.x / Room.TILE), floori(feet.y / Room.TILE)) == "Q"
+
+
+## Deep water just in front of Wren (they can dive in off the edge).
+func _deep_ahead() -> bool:
+	var room := Room.under(get_tree(), global_position)
+	if room == null:
+		return false
+	var at := global_position - room.global_position + Vector2(0, -3) + facing * 12.0
+	return room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE)) == "Q"
+
+
+## The room Wren stands in (remembered, so per-frame checks don't search).
+func _room_now() -> Room:
 	var room := _room_here
 	if room == null or not is_instance_valid(room) or room.is_queued_for_deletion() \
 			or not Rect2(room.global_position, Room.SIZE).has_point(global_position):
 		room = Room.under(get_tree(), global_position)
 		_room_here = room
+	return room
+
+
+## True when Wren is standing on ice (an I tile, or frozen water).
+func on_ice() -> bool:
+	if airborne:
+		return false
+	var room := _room_now()
 	if room == null or not room.has_ice():
 		return false
 	var feet := global_position - room.global_position + Vector2(0, -3)
@@ -472,7 +531,7 @@ func _hum_state(delta: float) -> void:
 
 
 func _check_damage() -> void:
-	if _invuln > 0.0 or state in [State.DEAD, State.FALL]:
+	if _invuln > 0.0 or diving or state in [State.DEAD, State.FALL]:
 		return
 	for area in _hurtbox.get_overlapping_areas():
 		var hazard := area as DamageArea
@@ -562,15 +621,20 @@ func _update_sprite(delta: float) -> void:
 			row = 0
 			_body.flip_h = false
 	_body.frame = row * 6 + column
+	# Swimming, only Wren's head and shoulders are above the water.
+	_swim_depth = move_toward(_swim_depth, 8.0 if (state != State.FALL and swimming()) else 0.0, 60.0 * delta)
+	_body.offset.y = _swim_depth
 	_body.modulate = Color(0.55, 0.5, 0.65) if state == State.DEAD else Color.WHITE
 	# Blink while invulnerable.
-	_body.visible = not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 20.0) % 2 == 1)
+	_body.visible = not diving and not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 20.0) % 2 == 1)
 	Art.set_flash(_body, 1.0 if _flash > 0.0 else 0.0)
 	_front.z_index = -1 if (state in [State.ATTACK, State.CHARGE] and facing.y < 0.0) else 0
 	_front.queue_redraw()
 
 
 func _draw_front() -> void:
+	if _swim_depth > 0.5 and not diving:
+		_draw_waterline()
 	if lantern_raised and state != State.DEAD:
 		_draw_lantern()
 	if state == State.HUM:
@@ -581,6 +645,17 @@ func _draw_front() -> void:
 		_draw_held_sword()
 	elif state == State.SPIN:
 		_draw_spin()
+
+
+## The water closing round Wren as they swim: it hides their legs.
+func _draw_waterline() -> void:
+	var cut := -_swim_depth * 0.5 - 1.0
+	var water := Color("#1c4a5c")
+	_front.draw_rect(Rect2(-9, cut, 18, _swim_depth + 6.0), water)
+	var bob := sin(_anim_time * 9.0 + _state_time * 3.0) * 1.0
+	_front.draw_line(Vector2(-9, cut + bob * 0.3), Vector2(9, cut - bob * 0.3), Color(0.75, 0.92, 0.95, 0.8), 1.0)
+	_front.draw_line(Vector2(-6, cut + 3), Vector2(-2, cut + 3), Color(0.5, 0.75, 0.85, 0.6), 1.0)
+	_front.draw_line(Vector2(3, cut + 5), Vector2(7, cut + 5), Color(0.5, 0.75, 0.85, 0.6), 1.0)
 
 
 func _draw_blade(pivot: Vector2, angle: float) -> void:

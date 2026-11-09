@@ -38,7 +38,7 @@ func _ready() -> void:
 	hp = max_hp
 	add_to_group("enemies")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	Layers.assign(self, Layers.ENEMY, [Layers.WORLD, Layers.WATER, Layers.ENEMY])
+	Layers.assign(self, Layers.ENEMY, [Layers.WORLD, Layers.WATER, Layers.ENEMY, Layers.DEEP, Layers.GRATE])
 	add_child(Layers.rect_shape(body_size, Vector2(0, -body_size.y / 2.0)))
 
 	_hurtbox = Area2D.new()
