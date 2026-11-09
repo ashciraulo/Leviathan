@@ -76,8 +76,8 @@ func handle_input(event: InputEvent) -> bool:
 			"jar":
 				if _jar(cell) == Items.JAR_POTION:
 					var wren := get_tree().get_first_node_in_group("player") as Player
-					if wren:
-						wren.drink_potion()
+					if wren and not wren.drink_potion():
+						Audio.play_sfx("ui_back")
 		return true
 	return false
 

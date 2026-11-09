@@ -338,7 +338,8 @@ func use_item(id: String) -> bool:
 			item_velocity = Vector2.ZERO
 			return true
 		"puffer_bombs":
-			if not GameState.take_item("puffer_bombs"):
+			# Not in the water: it would only fizzle out.
+			if swimming() or not GameState.take_item("puffer_bombs"):
 				return false
 			PufferBomb.place(self)
 			return true
@@ -380,7 +381,10 @@ func _out_of_breath() -> bool:
 
 ## Kelp tonic from a jar: every bubble back.
 func drink_potion() -> bool:
-	if state in [State.DEAD, State.FALL] or not GameState.use_jar(Items.JAR_POTION):
+	# Never wasted on full breath.
+	if state in [State.DEAD, State.FALL] or GameState.bubbles >= GameState.max_bubbles:
+		return false
+	if not GameState.use_jar(Items.JAR_POTION):
 		return false
 	GameState.refill()
 	Audio.play_sfx("potion_drink", global_position)
@@ -523,7 +527,8 @@ func fall(back_to: Vector2) -> void:
 	global_position = back_to
 	if GameState.is_dead() and _out_of_breath():
 		return
-	_invuln = INVULN_TIME
+	# Longer if a sea sprite has just breathed Wren back.
+	_invuln = maxf(_invuln, INVULN_TIME)
 	_flash = FLASH_TIME
 	_enter(State.MOVE)
 

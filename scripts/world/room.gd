@@ -575,7 +575,6 @@ func _tile_at(x: int, y: int) -> String:
 	return letter
 
 
-## A stable pseudo-random number per tile, so variants don't flicker.
 ## True when the tile shows a tuft a sword can cut (drawn by _draw_ground).
 func has_plant(x: int, y: int) -> bool:
 	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
@@ -631,6 +630,7 @@ class Clippings extends Node2D:
 			draw_rect(Rect2(out + Vector2(1, -1), Vector2(1, 1)), Color("#8cbf5a"))
 
 
+## A stable pseudo-random number per tile, so variants don't flicker.
 func _hash(x: int, y: int) -> int:
 	return absi((x * 73856093) ^ (y * 19349663) ^ (coord.x * 83492791) ^ (coord.y * 2654435))
 

@@ -14,6 +14,10 @@ const PLACE_AHEAD := 12.0
 var _age := 0.0
 var _burst := false
 var _next_fizz := 0.0
+## Boss -> when a bomb last hurt it (msec): a pile of bombs set down
+## together hurts a boss once, like one sword blow.
+static var _boss_hit_at := {}
+const BOSS_HIT_GAP_MSEC := 1000
 
 
 ## Sets a lit bomb down in front of `wren`, in the room under them.
@@ -76,10 +80,18 @@ func burst() -> void:
 		elif target is Enemy:
 			var enemy := target as Enemy
 			var away := (enemy.global_position - global_position).normalized()
-			var amount := DAMAGE if not enemy.is_in_group("boss") else Player.BOSS_HIT_CAP
+			var amount := DAMAGE
+			if enemy.is_in_group("boss"):
+				var id := enemy.get_instance_id()
+				var now := Time.get_ticks_msec()
+				if now - int(_boss_hit_at.get(id, -BOSS_HIT_GAP_MSEC)) < BOSS_HIT_GAP_MSEC:
+					continue
+				_boss_hit_at[id] = now
+				amount = Player.BOSS_HIT_CAP
 			enemy.take_hit(amount, away)
 	var wren := get_tree().get_first_node_in_group("player") as Player
-	if wren and wren.global_position.distance_to(global_position) < RADIUS:
+	# Under the water, diving, nothing up top touches Wren.
+	if wren and not wren.diving and wren.global_position.distance_to(global_position) < RADIUS:
 		wren.take_damage(1, global_position)
 
 

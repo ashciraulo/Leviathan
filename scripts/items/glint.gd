@@ -74,6 +74,10 @@ func _process(delta: float) -> void:
 		position = _hop_from.lerp(_hop_to, t)
 	elif _age - delta < HOP_TIME:
 		position = _hop_to
+	# Landed under Wren: body_entered won't come again, so look.
+	if not _taken and _age >= HOP_TIME * 0.6:
+		for body in get_overlapping_bodies():
+			_on_body_entered(body)
 	if _age >= LIFETIME and not _taken:
 		queue_free()
 	queue_redraw()
