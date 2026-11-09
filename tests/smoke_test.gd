@@ -336,6 +336,28 @@ func _test_play() -> void:
 	_check(bog.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a risen Bogskipper can be hit")
 	bog.queue_free()
 	GameState.refill()
+
+	# Lanternmoth circles Wren, flares (its tell), then dives.
+	var moth := Lanternmoth.new()
+	moth.position = Vector2(200, row_y)
+	room.add_child(moth)
+	player.global_position = room.global_position + Vector2(140, row_y)
+	await _wait(0.2)
+	_check(moth.mode == Lanternmoth.Mode.CIRCLE, "Lanternmoth starts circling when it sees Wren")
+	var flared := false
+	for i in 30:
+		await _wait(0.1)
+		if moth.is_flaring():
+			flared = true
+			break
+	_check(flared, "Lanternmoth flares before it dives")
+	await _wait(Lanternmoth.FLARE_TIME + 0.05)
+	_check(moth.mode in [Lanternmoth.Mode.DIVE, Lanternmoth.Mode.RETREAT], "Lanternmoth dives after the flare")
+	_check(moth.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a Lanternmoth can be hit")
+	await _wait(0.4)
+	_check(not is_instance_valid(moth), "one hit downs a Lanternmoth")
+	GameState.refill()
+	await _wait(Player.INVULN_TIME)
 	await _wait(0.1)
 
 	# Hold Sword to charge, release to spin: hits all around for 2.
