@@ -30,7 +30,21 @@ const SMITHS_FROM_CRUCIBLE := [Vector2(-30, 6), Vector2(30, 6)]
 ## Points: down between the pools and Wren, across to the door, and out.
 ## Figures on the right mirror the first two.
 const KILN_EXIT := [Vector2(140, 120), Vector2(140, 176), Vector2(192, 176), Vector2(192, 216)]
-## Where Wren stops to watch, in either chamber.
+## Lantern Mire's heart chamber, where the Pale Congregation is laid to rest.
+const MIRE_BOSS := Vector2i(25, 7)
+const CALF_FLAG := "seen_calf"
+## Where the calf of lights hangs (left of the bell, on open floor), and the
+## way Murmur walks in from the door
+## (and back out).
+const CALF_AT := Vector2(7 * 16 + 8, 6 * 16 + 12)
+const MURMUR_IN := [Vector2(11 * 16 + 16, 13 * 16 + 8), Vector2(11 * 16 + 16, 11 * 16), Vector2(14 * 16 + 8, 7 * 16 + 12)]
+## The Gale Spire's summit, the Crown, where Vael waits after the Stormheron.
+const GALE_BOSS := Vector2i(28, 7)
+const VAEL_FLAG := "seen_vael_spire"
+## Vael steps out onto the top ledge, across the open sky from Wren.
+const VAEL_FROM := Vector2(10 * 16 + 8, 1 * 16 + 4)
+const VAEL_AT := Vector2(10 * 16 + 8, 2 * 16 + 12)
+## Where Wren stops to watch, in any of these chambers.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
 var game: Node
@@ -41,6 +55,7 @@ func _ready() -> void:
 	add_to_group("story_director")
 	Events.game_started.connect(_on_game_started)
 	Events.room_entered.connect(_on_room_entered)
+	Events.flag_changed.connect(_on_flag_changed)
 
 
 func _on_game_started() -> void:
@@ -64,6 +79,15 @@ func _on_room_entered(coord: Vector2i) -> void:
 			lowe_at_the_hull()
 		else:
 			the_crucible()
+
+
+func _on_flag_changed(flag: String, _value: Variant) -> void:
+	if Cutscene.active:
+		return
+	if flag == PaleCongregation.DEFEATED_FLAG and GameState.room_coord == MIRE_BOSS and not GameState.has_flag(CALF_FLAG):
+		the_calf()
+	elif flag == Stormheron.DEFEATED_FLAG and GameState.room_coord == GALE_BOSS and not GameState.has_flag(VAEL_FLAG):
+		vael_at_the_spire()
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -248,6 +272,71 @@ func the_crucible() -> void:
 	for figure in runs:
 		if is_instance_valid(figure):
 			figure.queue_free()
+	scene.finish()
+
+
+## Cutscene 9, "The calf in the lights": the Pale Congregation laid to
+## rest, its wisps gather one last time into a leviathan calf. Murmur, who
+## sang them out of their lanterns for the Choir, sees it and leaves the
+## Choir. Then the lights scatter home.
+func the_calf() -> void:
+	GameState.set_flag(CALF_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# Let the heart beat out and the bell rise first.
+	await scene.wait(3.6)
+	await scene.walk_route(room.global_position + WATCH_FROM)
+	scene.face(Vector2.LEFT)
+	var calf := CalfOfLights.new()
+	calf.position = CALF_AT
+	room.add_child(calf)
+	await calf.gather()
+	var murmur := ChoirFigure.new("murmur")
+	murmur.position = MURMUR_IN[0]
+	room.add_child(murmur)
+	await murmur.walk_along(MURMUR_IN.slice(1), 30.0, 1)
+	murmur.face(true)
+	await scene.wait(0.8)
+	murmur.talking = true
+	await scene.speak("murmur", ["MURMUR_CALF_1", "MURMUR_CALF_2"])
+	murmur.talking = false
+	await calf.scatter()
+	await scene.wait(0.4)
+	await scene.speak("murmur", ["MURMUR_CALF_3"])
+	var out: Array = MURMUR_IN.duplicate()
+	out.reverse()
+	await murmur.walk_along(out.slice(1), 30.0, -1)
+	murmur.queue_free()
+	scene.finish()
+
+
+## Cutscene 10, "Vael at the spire": with the Stormheron gone, Vael steps
+## out on the ledge across the open sky. He does not fight. He tells Wren
+## he was Hessa's apprentice, that the Old One weeps under every phrase, and
+## asks Wren to listen when they ring the bell. Then he goes.
+func vael_at_the_spire() -> void:
+	GameState.set_flag(VAEL_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# The heron lifts away on the wind and the Storm Bell rises first.
+	await scene.wait(3.0)
+	# The Crown is ringed with open sky: if Wren is out on a side ledge
+	# there's no safe way across, so they stay put and look up.
+	await scene.walk_route(room.global_position + WATCH_FROM, false)
+	scene.face(Vector2.UP)
+	var vael := ChoirFigure.new("vael")
+	vael.position = VAEL_FROM
+	room.add_child(vael)
+	await vael.walk_along([VAEL_AT], 18.0, 1)
+	await scene.wait(1.0)
+	for key in ["VAEL_SPIRE_1", "VAEL_SPIRE_2", "VAEL_SPIRE_3", "VAEL_SPIRE_4"]:
+		vael.talking = true
+		await scene.speak("vael", [key])
+		vael.talking = false
+		await scene.wait(0.4)
+	await scene.wait(0.6)
+	await vael.walk_along([VAEL_FROM], 18.0, -1)
+	vael.queue_free()
 	scene.finish()
 
 

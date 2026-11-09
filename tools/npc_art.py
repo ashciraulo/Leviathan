@@ -396,7 +396,92 @@ def singer_frames():
     return [idle, breathe, pry_a, pry_b]
 
 
+# --------------------------------------------------------------------------
+# Murmur, the Choir's wisp-tender in Gloamfen. Grey robe with the hood down,
+# long pale hair, a small lantern with a wisp in it held close. Lifts the
+# lantern to the face when speaking.
+# --------------------------------------------------------------------------
+MURMUR = [
+    "................",
+    "......HHHH......",
+    ".....HHHHHH.....",
+    "....HHHHHHHH....",
+    "....HAAAAAAH....",
+    "....HAeAAeAH....",
+    "....HAAAAAAH....",
+    "....HHAAAAHH....",
+    "....HHHAAHHH....",
+    "...SHHSSSSHHS...",
+    "..SSHHSSSSHHSS..",
+    "..SSSHSSSSHSSS..",
+    ".ASSSSSSSSSSSSA.",
+    ".ASSSSSSSSSSSQQQ",
+    "..SSSUUUUUUSSQNQ",
+    "..SSSSSSSSSSSQQQ",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "...SSSSSSSSSS...",
+    "...SSSSSSSSSS...",
+    "....vv....vv....",
+    "................",
+]
+
+
+def murmur_frames():
+    idle = MURMUR
+    breathe = settle(idle, 9)
+    # Talking: the lantern comes up under the chin, lighting the face.
+    talk = paint(idle, [(13, 13, "SA."), (14, 13, "S.."), (15, 13, "S.."),
+                        (9, 13, "QQQ"), (10, 13, "QNQ"), (11, 13, "QQQ"), (12, 14, "A")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
+# Vael, who leads the Choir: Hessa's first apprentice, about 55. Grey robes
+# like his singers, close-cropped grey hair and beard, and the keepers' lamp
+# badge he still wears, gone dull. Opens a hand when he speaks.
+# --------------------------------------------------------------------------
+VAEL = [
+    "................",
+    "......ZZZZ......",
+    ".....ZZZZZZ.....",
+    "....ZZZZZZZZ....",
+    "....ZVVVVVVZ....",
+    "....VVeVVeVV....",
+    "....VVVVVVVV....",
+    "....ZVVVVVVZ....",
+    ".....ZZ--ZZ.....",
+    "......ZZZZ......",
+    "...SSSSSSSSSS...",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSTTSSS..",
+    ".VSSSSSSSTTSSSV.",
+    ".VSSSSSSSSSSSSV.",
+    ".VSSSUUUUUUSSSV.",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "...SSSSSSSSSS...",
+    "....vv....vv....",
+]
+
+
+def vael_frames():
+    idle = VAEL
+    breathe = settle(idle, 10)
+    # Talking: one hand opens, palm up, towards Wren.
+    talk = paint(idle, [(13, 14, "S."), (14, 14, "S."), (15, 14, "S."), (13, 14, "SV"), (12, 15, "V")])
+    return [idle, breathe, talk]
+
+
 SPRITES = {
+    "vael": vael_frames,
+    "murmur": murmur_frames,
     "lowe": lowe_frames,
     "singer": singer_frames,
     "agna": agna_frames,
@@ -579,7 +664,35 @@ def portrait_lowe():
     return _rows(c)
 
 
+def portrait_murmur():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
+    _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, down
+    _ellipse(c, 16, 16, 12, 12, "H")                   # long pale hair
+    _box(c, 4, 16, 24, 12, "H")
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, mouth=False)
+    _box(c, 15, 22, 2, 1, "-")                         # a small, sad mouth
+    # The lantern held close, a wisp glowing in it.
+    _box(c, 22, 25, 7, 7, "Q")
+    _box(c, 24, 27, 3, 3, "N")
+    return _rows(c)
+
+
+def portrait_vael():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
+    _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, down
+    _box(c, 19, 28, 3, 3, "T")                         # the old lamp badge
+    _ellipse(c, 16, 12, 9, 6, "Z")                     # cropped grey hair
+    _face(c, "V", eye_row=16, cy=17, rx=7, ry=8, cheeks=False, mouth=False)
+    _ellipse(c, 16, 22, 6, 4, "Z")                     # beard
+    _box(c, 14, 21, 4, 1, "-")                         # a gentle mouth
+    return _rows(c)
+
+
 PORTRAITS = {
+    "vael": portrait_vael(),
+    "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),

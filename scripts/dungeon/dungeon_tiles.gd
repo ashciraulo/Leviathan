@@ -3,11 +3,12 @@ extends Object
 ## Builds the dungeon pieces a Room's layout asks for (gaps, hook posts,
 ## crates, plates, bars, the big-key door, the boss, and the Kiln's lava,
 ## boulders, pegs, drop hammers and Clinkers, and the Mire's braziers,
-## veiled planks, Shades and wisps), then wires up the
+## veiled planks, Shades and wisps, and the Glacier's ice eyes and
+## Rimelings), then wires up the
 ## room-wide parts once every tile is placed: the gap field, the puzzle that
 ## opens the bars, and a listing deck.
 
-const LETTERS := "_OK=|!GV^Yizkjvqx><NSr"
+const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEa"
 
 
 static func handles(letter: String) -> bool:
@@ -43,6 +44,10 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 			var fan := WindFan.new()
 			fan.direction = WindFan.LETTERS[letter]
 			return fan
+		"E":
+			return IceEye.new()
+		"a":
+			return Rimeling.new()
 		"r":
 			return LightningRod.new()
 		"O":
@@ -73,6 +78,8 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 					return PaleCongregation.spawn_in(room, pos)
 				"gale":
 					return Stormheron.spawn_in(room, pos)
+				"glacier":
+					return Rimeback.spawn_in(room, pos)
 			return BarnacleMatriarch.spawn_in(room, pos)
 	return null
 
@@ -84,7 +91,7 @@ static func finish(room: Room) -> void:
 		for x in Room.COLS:
 			var letter := room.tile_at(x, y)
 			has_gap = has_gap or letter in ["_", "^"]
-			has_puzzle = has_puzzle or letter in ["=", "|", "j"]
+			has_puzzle = has_puzzle or letter in ["=", "|", "j", "E"]
 	if has_gap or room.lava_rise > 0.0:
 		var field := PitField.new()
 		field.name = "PitField"

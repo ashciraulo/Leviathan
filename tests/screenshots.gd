@@ -4,14 +4,23 @@ extends Node
 ##     xvfb-run godot --rendering-driver opengl3 res://tests/screenshots.tscn
 ## PNGs (4x, nearest-neighbour) land in <project>/screenshots/.
 ## Uses save slot 2 so it never touches a real save.
+##
+## With LEVIATHAN_PSEUDO=1 every string is 40% longer and bracketed, and only
+## the text-heavy shots are taken (HUD, conversations, large text, a
+## cutscene), saved as pseudo_*.png: a check that longer translations still
+## fit the dialogue box and the HUD.
 
 const SCALE := 4
 const TEST_SLOT := 2
 
 var _out_dir := ""
+var _pseudo := false
 
 
 func _ready() -> void:
+	if PseudoText.requested():
+		_pseudo = true
+		PseudoText.enable()
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	SaveManager.current_slot = TEST_SLOT
@@ -31,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle", "lowe", "crucible"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "mantle", "lowe", "crucible"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -39,6 +48,8 @@ func _ready() -> void:
 				await _mire_shots(game)
 			"gale":
 				await _gale_shots(game)
+			"glacier":
+				await _glacier_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -178,6 +189,11 @@ func _ready() -> void:
 		Vector2i(2, 1): ["79_lullaby_point", Vector2i(11, 9), Tide.Phase.LOW, Tidebell.flag_for("tomb")],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
+	if _pseudo:
+		# Only the village, where the conversations are.
+		for coord: Vector2i in shots.keys():
+			if shots[coord][0] != "10_saltmarrow_village":
+				shots.erase(coord)
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
@@ -263,6 +279,16 @@ func _ready() -> void:
 			await _capture("27_dunstan_portrait")
 		await _finish_talk(game)
 
+	if _pseudo:
+		# A cutscene with portraits, then done: the rest has little text.
+		game.queue_free()
+		await _wait(0.2)
+		await _lowe_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# 8. Opening a chest in the Hull's galley.
 	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))
 	SaveManager.save_game()
@@ -289,6 +315,9 @@ func _ready() -> void:
 
 	# 8e. Gale Spire.
 	await _gale_shots(game)
+
+	# 8f. Hollow Glacier.
+	await _glacier_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -606,7 +635,13 @@ func _mire_shots(game: Node) -> void:
 			boss.take_hit(1, Vector2.UP)
 	await _wait(1.2)
 	await _capture("83_congregation_released")
-	await _wait(4.0)
+	# The calf in the lights, with Murmur.
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(1.6)
+	await _capture("43_calf_in_the_lights")
+	await _skip_scene(game)
+	await _wait(0.5)
 	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 8 * Room.TILE + 12)
 	await _wait(0.3)
 	await _capture("84_moth_bell")
@@ -672,10 +707,111 @@ func _gale_shots(game: Node) -> void:
 			heron._hits_this_landing = 0
 			heron.mode = Stormheron.Mode.GROUNDED
 			heron.take_hit(1, Vector2.UP)
-	await _wait(4.0)
+	# Vael at the spire.
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.6)
+		if page == 2:
+			await _capture("44_vael_at_the_spire")
+		var box := _dialogue_box(game)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _skip_scene(game)
+	await _wait(0.5)
 	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
 	await _wait(0.3)
 	await _capture("104_storm_bell")
+	game.player._invuln = 0.0
+
+
+func _glacier_shots(game: Node) -> void:
+	GameState.give_item("frostfang_bow")
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(32, 10), "105_glacier_entry", Vector2i(11, 10)],
+		[Vector2i(31, 10), "106_glacier_frozen_pond", Vector2i(21, 6)],
+		[Vector2i(32, 9), "107_glacier_crevasse_hall", Vector2i(11, 10)],
+		[Vector2i(31, 9), "108_glacier_bowyers_cave", Vector2i(20, 6)],
+		[Vector2i(33, 9), "109_glacier_black_pool", Vector2i(1, 6)],
+		[Vector2i(32, 8), "110_glacier_eye_gallery", Vector2i(11, 11)],
+		[Vector2i(33, 8), "111_glacier_slide_hall", Vector2i(1, 7)],
+	]
+	for shot: Array in rooms:
+		await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		await _wait(0.4)
+		await _capture(shot[1])
+
+	# Freezing a way across the Black Pool.
+	var room := await _jump(game, Vector2i(33, 9), Vector2i(2, 5))
+	game.player._invuln = 600.0
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.2)
+	game.player.use_item("frostfang_bow")
+	await _wait(0.2)
+	await _capture("112_glacier_frost_arrow")
+	await _wait(0.4)
+	for x in range(3, 7):
+		game.player.global_position = room.global_position + Vector2(x * Room.TILE + 8, 5 * Room.TILE + 12)
+		game.player.velocity = Vector2.ZERO
+		game.player.facing = Vector2.RIGHT
+		await _wait(0.2)
+		game.player.use_item("frostfang_bow")
+		await _wait(0.5)
+	game.player._invuln = 0.0
+	await _wait(0.05)
+	await _capture("113_glacier_frozen_path")
+
+	# Two eyes open in the Eye Gallery.
+	room = await _jump(game, Vector2i(32, 8), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	var eyes := room.get_children().filter(func(n: Node) -> bool: return n is IceEye)
+	if eyes.size() >= 2:
+		eyes[0].arrow_hit(Vector2.UP)
+		eyes[1].arrow_hit(Vector2.UP)
+	game.player.global_position = room.global_position + Vector2(10 * Room.TILE + 8, 6 * Room.TILE + 12)
+	await _wait(0.4)
+	await _capture("114_glacier_eyes_open")
+
+	# Rimeback.
+	room = await _jump(game, Vector2i(32, 7), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	var walrus: Rimeback = null
+	for child in room.get_children():
+		if child is Rimeback:
+			walrus = child
+	if walrus:
+		await _wait(0.3)
+		walrus.hole = 0
+		walrus._come_up(game.player)
+		await _wait(Rimeback.RISE_TIME + 0.4)
+		await _capture("115_rimeback_surfaced")
+		walrus.mode = Rimeback.Mode.SPIT
+		walrus._timer = 0.3
+		await _wait(0.45)
+		await _capture("116_rimeback_ice")
+		for i in walrus.holes.size():
+			room.freeze(walrus.holes[i]["tiles"][0])
+		walrus.mode = Rimeback.Mode.UNDER
+		walrus._timer = 0.0
+		await _wait(0.6)
+		await _capture("117_rimeback_breaking_through")
+		await _wait(Rimeback.BREACH_TELL)
+		game.player.global_position = walrus.global_position + Vector2(0, 30)
+		await _wait(0.3)
+		await _capture("118_rimeback_dazed")
+		while is_instance_valid(walrus) and walrus.hp > 0:
+			walrus._stun = 0.0
+			walrus._hits_this_daze = 0
+			walrus.mode = Rimeback.Mode.DAZED
+			walrus.take_hit(1, Vector2.UP)
+	await _wait(4.0)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
+	await _wait(0.3)
+	await _capture("119_frost_bell")
 	game.player._invuln = 0.0
 
 
@@ -722,7 +858,7 @@ func _capture(file_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.resize(image.get_width() * SCALE, image.get_height() * SCALE, Image.INTERPOLATE_NEAREST)
-	var path := _out_dir.path_join(file_name + ".png")
+	var path := _out_dir.path_join(("pseudo_" if _pseudo else "") + file_name + ".png")
 	var err := image.save_png(path)
 	print("Saved %s (%s)" % [path, error_string(err)])
 

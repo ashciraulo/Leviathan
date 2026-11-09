@@ -83,7 +83,7 @@ ITEM_GLOWMOTH_LANTERN_DESC,Moths that glow in the dark. Raise it to show what hi
 ITEM_KITE_CLOAK,Kite Cloak
 ITEM_KITE_CLOAK_DESC,Catch the wind and glide from high places.
 ITEM_FROSTFANG_BOW,Frostfang Bow
-ITEM_FROSTFANG_BOW_DESC,Arrows that freeze what they hit. Uses arrows.
+ITEM_FROSTFANG_BOW_DESC,Looses arrows of frost that freeze water solid. It never runs out.
 ITEM_DIVERS_HELM,Diver's Helm
 ITEM_DIVERS_HELM_DESC,Brass and glass. Lets Wren walk under deep water.
 ITEM_ECHO_HORN,Echo Horn
@@ -266,6 +266,7 @@ JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps ever
 FILES_TITLE,Choose a journey
 FILES_EMPTY,New journey
 FILES_DAMAGED,This file is damaged.
+FILES_NEWER,Saved by a newer version.
 FILES_COPY,Copy
 FILES_ERASE,Erase
 FILES_BACK,Back
@@ -404,6 +405,26 @@ BELL_GALE_3,You learned the fourth phrase of the lullaby. Your Resonance grows.
 CAPTION_THUNDER,Thunder
 CAPTION_STORM,Storm gathering
 CAPTION_HERON,Heron screeches
+ROOM_GLACIER_ENTRY,Hollow Glacier
+ROOM_GLACIER_POND,Hollow Glacier: Frozen Pond
+ROOM_GLACIER_HALL,Hollow Glacier: Crevasse Hall
+ROOM_GLACIER_BOWYER,Hollow Glacier: Bowyer's Cave
+ROOM_GLACIER_POOL,Hollow Glacier: Black Pool
+ROOM_GLACIER_EYES,Hollow Glacier: Eye Gallery
+ROOM_GLACIER_SLIDE,Hollow Glacier: Slide Hall
+ROOM_GLACIER_BOSS,Hollow Glacier: the Breathing Hall
+DUNGEON_GLACIER,Hollow Glacier
+TOAST_GOT_FROSTFANG_BOW,You found the Frostfang Bow!
+GOT_FROSTFANG_BOW_1,"The Frostfang Bow! Pale ash wood, tipped with two fangs of ice that never melt."
+GOT_FROSTFANG_BOW_2,"Press its item key (U or I) to loose an arrow of frost. It freezes water solid where it lands, and never runs out."
+BOSS_RIMEBACK,Rimeback
+BELL_GLACIER_1,"You ring the Frost Bell. Its note rings clear under the ice, and the old glacier creaks and settles."
+BELL_GLACIER_2,"Far out in the bay, the frost on the water melts away. Down in the deep, the great sleeper stops shivering."
+BELL_GLACIER_3,You learned the fifth phrase of the lullaby. Your Resonance grows.
+CAPTION_FREEZE,Water freezes
+CAPTION_ICE_GROAN,Ice groans
+CAPTION_WALRUS,Walrus bellows
+CAPTION_SPLASH,Splash
 ROOM_GULLWATCH_STEPS,Gullwatch Steps
 ROOM_MILL_ROW,Mill Row
 ROOM_GALE_FLATS,Gale Flats
@@ -510,3 +531,12 @@ LOWE_HULL_3,"She's waking! Leave the bar. Down the holes, both of you. Now!"
 LOWE_KILN_1,"Work those bellows! It has to run like water before the tide turns."
 LOWE_KILN_2,"You again, little lamp? Too late. We'll pour it into a Waking Bell."
 LOWE_KILN_3,"The slag's alive! Get back from the rim. Out, all of you!"
+NAME_MURMUR,Murmur
+MURMUR_CALF_1,"Oh... look at them. Every light in the fen, dreaming the same shape."
+MURMUR_CALF_2,"That's a calf. The Old One isn't angry. It's grieving, and they're its dreams."
+MURMUR_CALF_3,"I sang them out of their lanterns for Vael. I won't do it again. Not for anyone."
+NAME_VAEL,Vael
+VAEL_SPIRE_1,"So you carry Hessa's lamp now. I carried it once, before you were born."
+VAEL_SPIRE_2,"I was her first apprentice. She taught me the lullaby, just as she's teaching you."
+VAEL_SPIRE_3,"But I listened too closely. Under every phrase, the Old One is weeping."
+VAEL_SPIRE_4,"Ring the bell, and listen. Then tell me we should keep singing it to sleep."
