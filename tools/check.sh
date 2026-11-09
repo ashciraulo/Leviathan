@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 python3 tools/build_art.py --check
 python3 tools/check_strings.py
 python3 tools/sfx_gen.py --check
+python3 tools/dungeon_check.py --check
 for f in tools/*_rooms.py; do
   python3 "$f" --check
 done

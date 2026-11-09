@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "mantle", "lowe", "crucible", "turn", "mural"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "mantle", "lowe", "crucible", "turn", "mural"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"hull":
 				await _hull_shots(game)
@@ -58,6 +58,8 @@ func _ready() -> void:
 				await _tomb_shots(game)
 			"maw":
 				await _maw_shots(game)
+			"extras":
+				await _extras_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -343,6 +345,9 @@ func _ready() -> void:
 
 	# 8i. The Maw.
 	await _maw_shots(game)
+
+	# 8j. The optional rooms, and a dungeon map with its compass.
+	await _extras_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -1221,6 +1226,43 @@ func _crucible_shots() -> void:
 	await _skip_scene(kiln)
 	kiln.queue_free()
 	await _wait(0.2)
+
+
+func _extras_shots(game: Node) -> void:
+	for item in ["echo_horn", "divers_helm", "kite_cloak", "glowmoth_lantern", "tide_hook"]:
+		GameState.give_item(item)
+	MawBreath.elapsed = 0.0
+	var rooms := [
+		[Vector2i(37, 10), "159_belfry_undercroft", Vector2i(20, 1)],
+		[Vector2i(41, 10), "160_tomb_ossuary", Vector2i(19, 1)],
+		[Vector2i(45, 10), "161_maw_tidewell", Vector2i(20, 1)],
+	]
+	for shot: Array in rooms:
+		var at := await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		MawBreath.elapsed = 0.0
+		await _wait(0.5)
+		game.player._invuln = 0.0
+		await _wait(0.05)
+		await _capture(shot[1])
+	# The Marrow Tomb's map, with its map and compass: every room, and the
+	# chests and boss not yet found (earlier shots may have opened some).
+	await _jump(game, Vector2i(40, 10), Vector2i(11, 6))
+	GameState.give_item(Items.dungeon_item("tomb", "map"))
+	GameState.give_item(Items.dungeon_item("tomb", "compass"))
+	var pause: PauseMenu = null
+	for child in game.get_children():
+		if child is PauseMenu:
+			pause = child
+	if pause:
+		pause.open(PauseMenu.Tab.MAP)
+		await _wait(0.4)
+		await _capture("162_tomb_map_compass")
+		pause.close()
+		await _wait(0.1)
 
 
 func _maw_shots(game: Node) -> void:
