@@ -27,6 +27,7 @@ const SPEAKERS := {
 
 const TALKS := {
 	"hessa": [
+		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_hessa_hull"], "set": ["heard_hessa_hull"], "lines": ["HESSA_HULL_1", "HESSA_HULL_2"]},
 		{"if": ["met_hessa"], "lines": ["HESSA_AGAIN"]},
 		{
@@ -41,6 +42,7 @@ const TALKS := {
 		{"lines": ["CORRIN_1", "CORRIN_2"]},
 	],
 	"pell": [
+		{"if": ["tidebell_hull"], "unless": ["heard_pell_bell"], "set": ["heard_pell_bell"], "lines": ["PELL_BELL_1", "PELL_BELL_2"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_pell_hull"], "set": ["heard_pell_hull"], "lines": ["PELL_HULL_1", "PELL_HULL_2"]},
 		{"if": ["talked_pell_quest"], "lines": ["PELL_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_pell_quest"], "lines": ["PELL_QUEST_1", "PELL_QUEST_2"]},

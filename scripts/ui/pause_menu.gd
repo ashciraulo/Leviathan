@@ -48,8 +48,8 @@ func _process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
-		# Not during dialogue, or a death, slide or flight sequence.
-		if DialogueBox.is_open or bool(get_parent().get("busy")):
+		# Not during dialogue, a cutscene, or a death, slide or flight sequence.
+		if DialogueBox.is_open or Cutscene.active or bool(get_parent().get("busy")):
 			return
 		if event.is_action_pressed("pause"):
 			open(Tab.SATCHEL)
