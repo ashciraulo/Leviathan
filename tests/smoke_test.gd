@@ -3332,6 +3332,14 @@ func _test_ambience() -> void:
 	_check(bool(crab["fleeing"]) or (crab["pos"] as Vector2).distance_to(start) > 6.0, "a crab scuttles off when Wren comes close")
 	var tile := Vector2i(floori((crab["pos"] as Vector2).x / Room.TILE), floori((crab["pos"] as Vector2).y / Room.TILE))
 	_check(room.tile_at(tile.x, tile.y) == ".", "and stays on the sand")
+	# Fish never swim across land between pools.
+	var dry := false
+	for f: Dictionary in life.fish:
+		for target: Vector2 in [f["pos"] as Vector2, f["to"] as Vector2]:
+			var at := Vector2i((target / Room.TILE).floor())
+			dry = dry or room.tile_at(at.x, at.y) != "~"
+		dry = dry or not life._all_water(f["pos"], f["to"])
+	_check(life.fish.size() > 0 and not dry, "fish keep to the water")
 	game.queue_free()
 	await _wait(0.1)
 	# Dungeons are left quiet.

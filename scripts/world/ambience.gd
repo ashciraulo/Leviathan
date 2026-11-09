@@ -138,7 +138,28 @@ func _new_buzzard() -> Dictionary:
 
 func _new_fish() -> Dictionary:
 	var at := _pick(_water)
-	return {"pos": at, "to": _pick(_water), "clock": _rnd.randf() * 4.0, "jump": _rnd.randf_range(4.0, 12.0)}
+	var f := {"pos": at, "to": at, "clock": _rnd.randf() * 4.0, "jump": _rnd.randf_range(4.0, 12.0)}
+	f["to"] = _fish_target(at)
+	return f
+
+
+## Somewhere a fish can swim to in a straight line without crossing land:
+## a few tries at a random water spot, or stay put.
+func _fish_target(from: Vector2) -> Vector2:
+	for attempt in 8:
+		var to := _pick(_water)
+		if _all_water(from, to):
+			return to
+	return from
+
+
+func _all_water(from: Vector2, to: Vector2) -> bool:
+	var steps := maxi(1, int(from.distance_to(to) / 4.0))
+	for i in steps + 1:
+		var tile := Vector2i((from.lerp(to, float(i) / steps) / Room.TILE).floor())
+		if _room.tile_at(tile.x, tile.y) != "~":
+			return false
+	return true
 
 
 func _new_crab() -> Dictionary:
@@ -215,7 +236,7 @@ func _move_fish(f: Dictionary, delta: float) -> void:
 	var pos: Vector2 = f["pos"]
 	var to: Vector2 = f["to"]
 	if pos.distance_to(to) < 2.0:
-		f["to"] = _pick(_water)
+		f["to"] = _fish_target(pos)
 	else:
 		f["pos"] = pos.move_toward(to, FISH_SPEED * delta)
 	f["jump"] = float(f["jump"]) - delta
