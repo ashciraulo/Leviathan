@@ -256,12 +256,24 @@ func use_item(id: String) -> bool:
 			_enter(State.ITEM)
 			item_velocity = Vector2.ZERO
 			return true
+		"kite_cloak":
+			var cloak := KiteCloak.new()
+			cloak.name = "KiteCloak"
+			add_child(cloak)
+			_enter(State.ITEM)
+			item_velocity = facing * KiteCloak.SPEED
+			return true
 		"glowmoth_lantern":
 			# Up or down; Wren keeps walking either way.
 			lantern_raised = not lantern_raised
 			Audio.play_sfx("lantern_up" if lantern_raised else "lantern_down", global_position)
 			return true
 	return false
+
+
+## The direction the player is pressing (for items that steer).
+func steer_input() -> Vector2:
+	return _input_direction()
 
 
 ## Called by the item in use when it's done.
@@ -274,6 +286,23 @@ func end_item() -> void:
 
 func is_using_item() -> bool:
 	return state == State.ITEM
+
+
+## Wren drops through a hole in the floor to the floor below: room `coord`,
+## landing on `tile`. No bubble lost; it's just a long step down.
+func drop_through(coord: Vector2i, tile: Vector2i) -> void:
+	if state in [State.FALL, State.DEAD]:
+		return
+	end_item()
+	_enter(State.FALL)
+	velocity = Vector2.ZERO
+	Audio.play_sfx("player_fall", global_position, 1.3)
+	var tween := create_tween()
+	tween.tween_property(_body, "scale", Vector2(0.3, 0.3), 0.3)
+	await tween.finished
+	_body.scale = Vector2.ONE
+	_enter(State.MOVE)
+	Events.door_entered.emit(coord, tile)
 
 
 ## Wren drops through a gap in the deck: shrink away, lose a bubble, and

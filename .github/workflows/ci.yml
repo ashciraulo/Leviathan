@@ -25,6 +25,7 @@ jobs:
           python3 tools/hull_rooms.py --check
           python3 tools/kiln_rooms.py --check
           python3 tools/mire_rooms.py --check
+          python3 tools/gale_rooms.py --check
 
       # Cached: GitHub's release downloads sometimes time out (504).
       - name: Cache Godot

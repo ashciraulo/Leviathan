@@ -34,6 +34,7 @@ func _ready() -> void:
 	await _test_hull_dungeon()
 	await _test_kiln_dungeon()
 	await _test_mire_dungeon()
+	await _test_gale_dungeon()
 	await _test_villagers()
 	await _test_story()
 	await _test_brinewood_pearl()
@@ -836,6 +837,131 @@ func _test_mire_dungeon() -> void:
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 	if player.lantern_raised:
 		player.use_item("glowmoth_lantern")
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Gale Spire: the Kite Cloak, wind fans, floors that drop to the one
+## below, and the Stormheron.
+func _test_gale_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_28_10.tscn"), "Gale Spire has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(28, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	_check(GameState.dungeon == "gale" and game.current_room.biome == "gale", "Wren starts inside Gale Spire")
+	_check(not player.use_item("kite_cloak"), "no cloak before it's found")
+	GameState.give_item("kite_cloak")
+	_check(GameState.item_slots.has("kite_cloak"), "the cloak goes in an item slot")
+
+	# The Rope Store: a fan's wind pushes Wren along its stream.
+	var room := await _goto(game, Vector2i(27, 10), Vector2i(10, 6))
+	await _calm(room)
+	var fans := _child_of(room, WindFan)
+	_check(fans.size() == 1 and (fans[0] as WindFan).direction == Vector2.RIGHT, "the Rope Store has a fan blowing east")
+	player.global_position = _tile_pos(room, Vector2i(10, 6))
+	var start := player.global_position.x
+	await _wait(0.5)
+	_check(player.global_position.x > start + 15.0, "standing in its stream, Wren is pushed along (%.0f px)" % (player.global_position.x - start))
+	Input.action_press("move_left")
+	await _wait(1.6)
+	Input.action_release("move_left")
+	_check(player.global_position.x < start - 20.0, "but Wren can still walk against it")
+
+	# The Gust Gallery: on foot the drop is impassable; the cloak and the
+	# fan's wind carry Wren over.
+	room = await _goto(game, Vector2i(29, 9), Vector2i(2, 6))
+	await _calm(room)
+	var before := GameState.bubbles
+	player.global_position = _tile_pos(room, Vector2i(3, 2))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	_check(player.use_item("kite_cloak") and player.airborne, "Wren throws the cloak open and glides")
+	await _wait(1.4)
+	await _wait(0.8)
+	var local := player.global_position - room.global_position
+	_check(GameState.bubbles == before - 1 and local.x < 6 * Room.TILE, "without wind Wren drops short into the sky (at %s)" % local)
+	GameState.refill()
+	await _wait(1.0)
+	player.global_position = _tile_pos(room, Vector2i(4, 6))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.0)
+	await _wait(0.6)
+	local = player.global_position - room.global_position
+	_check(GameState.bubbles == GameState.max_bubbles and local.x > 19 * Room.TILE and player.state == Player.State.MOVE, "the fan's wind carries Wren across to the far ledge (at %s)" % local)
+
+	# The Bell Shaft: falling through its floor drops Wren to the Fan Hall.
+	room = await _goto(game, Vector2i(28, 8), Vector2i(11, 11))
+	await _calm(room)
+	before = GameState.bubbles
+	player.global_position = _tile_pos(room, Vector2i(10, 10))
+	Input.action_press("move_up")
+	await _wait(0.6)
+	Input.action_release("move_up")
+	await _wait(1.4)
+	_check(game.current_room.coord == Vector2i(28, 9) and GameState.bubbles == before, "a hole in the Shaft's floor drops Wren to the Fan Hall, unhurt")
+
+	# The updraft carries Wren up the Shaft to the top landing.
+	room = await _goto(game, Vector2i(28, 8), Vector2i(12, 11))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(12, 10))
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(2.0)
+	player.use_item("kite_cloak")
+	await _wait(0.3)
+	local = player.global_position - room.global_position
+	_check(game.current_room == room and local.y < 3 * Room.TILE, "the Shaft's updraft lifts Wren to the top landing (at %s)" % local)
+
+	# The Stormheron.
+	GameState.refill()
+	room = await _goto(game, Vector2i(28, 7), Vector2i(11, 10))
+	var bosses := _child_of(room, Stormheron)
+	_check(bosses.size() == 1, "the Stormheron waits on the Crown")
+	if bosses.size() == 1:
+		var heron: Stormheron = bosses[0]
+		player._invuln = 60.0
+		_check(_child_of(room, LightningRod).size() == 2, "lightning rods stand on the Crown's side islands")
+		await _wait(2.0)
+		_check(heron.mode == Stormheron.Mode.PERCH and heron.rod != null, "it comes down onto a rod")
+		_check(heron.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "perched, the sword can't reach it")
+		heron._throws = Stormheron.THROWS_PER_STORM
+		heron._timer = 0.0
+		await _wait(0.1)
+		_check(heron.mode == Stormheron.Mode.STORM and heron.rod.charged, "the storm gathers on its rod")
+		await _wait(Stormheron.STORM_TIME + 0.1)
+		_check(heron.mode == Stormheron.Mode.GROUNDED, "the bolt knocks it to the ground")
+		_check(heron.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and heron.hp == 5, "grounded, the sword finds it")
+		heron._stun = 0.0
+		heron.take_hit(1, Vector2.UP)
+		await _wait(0.4)
+		_check(heron.mode == Stormheron.Mode.FLY, "after two strikes it flies to another rod")
+		await _wait(Stormheron.FLY_TIME + 0.2)
+		heron.mode = Stormheron.Mode.GROUNDED
+		while heron.hp > 0:
+			heron._stun = 0.0
+			heron._hits_this_landing = 0
+			heron.take_hit(1, Vector2.UP)
+		_check(GameState.flags.get(Stormheron.DEFEATED_FLAG, false), "striking it enough brings the Stormheron down")
+		await _wait(3.5)
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "gale", "the Storm Bell rises on the Crown")
+		if bell:
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("gale")), "ringing the Storm Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
 	game.queue_free()
 	await _wait(0.1)
 

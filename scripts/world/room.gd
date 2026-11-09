@@ -33,6 +33,8 @@ extends Node2D
 ##          j  brazier (the raised lantern lights it)
 ##          v  veiled plank (walkable only in lantern light)
 ##          q  Shade (only hurt in lantern light)   x  wisp
+##          > < N S  wind fan blowing east, west, north, south
+##          r  lightning rod
 ##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
@@ -70,6 +72,11 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Wren is inside (0 for none), and the row where they're safe from it.
 @export var lava_rise := 0.0
 @export var lava_safe_row := 2
+## Holes in this floor (_) drop Wren to the floor below instead of
+## costing a bubble: room fall_to, landing on tile fall_spawn.
+@export var falls_through := false
+@export var fall_to := Vector2i.ZERO
+@export var fall_spawn := Vector2i.ZERO
 ## A dark room: only Wren's lantern and things that glow light it.
 @export var dark := false
 ## What signposts (n) in this room say: a translation key.
@@ -131,6 +138,12 @@ const BIOMES := {
 		"water": "murk_%d", "water_edge": "murkbank_%s_%d", "damp": "mirewet_%s",
 		"wet_deco": "shrooms_%d", "dry_deco": "spores_%d",
 		"floor_overlay": ["grave_lamp_%d", 29], "door": "exit_glow",
+	},
+	"gale": {
+		"floor": "gale_floor_%d", "wall_top": "gale_top_%d", "wall_face": "gale_face_%d",
+		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
+		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
+		"floor_overlay": ["lichen_%d", 17], "door": "exit_glow", "gap": "galesky",
 	},
 }
 

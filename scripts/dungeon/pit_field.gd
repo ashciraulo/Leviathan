@@ -104,9 +104,7 @@ func _physics_process(delta: float) -> void:
 	var feet := local + Vector2(0, -3)
 	_update_rise(delta, local)
 	if player.airborne:
-		# She's crossing over: footing from the far side no longer counts.
-		_safe.clear()
-		_safe_timer = 0.0
+		# Crossing over: if they drop short, they're back where they took off.
 		return
 	if player.state in [Player.State.FALL, Player.State.DEAD]:
 		return
@@ -119,7 +117,11 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 	if is_gap(feet):
-		player.fall(_room.global_position + _safe_spot(local))
+		var tile := _room.tile_at(floori(feet.x / Room.TILE), floori(feet.y / Room.TILE))
+		if _room.falls_through and tile == "_":
+			player.drop_through(_room.fall_to, _room.fall_spawn)
+		else:
+			player.fall(_room.global_position + _safe_spot(local))
 		return
 	_safe_timer -= delta
 	if _safe_timer <= 0.0:
@@ -178,20 +180,25 @@ func _near_gap(local: Vector2) -> bool:
 
 func _draw() -> void:
 	var first := _first_lava_row()
+	var gap: String = Room.BIOMES.get(_room.biome, {}).get("gap", "gap")
 	for y in Room.ROWS:
 		for x in Room.COLS:
 			var letter := _room.tile_at(x, y)
 			if letter == "_":
-				_tile("gap_%d" % ((x * 7 + y * 3) % 2), x, y)
-				# 3/4 view: the far side of the hole shows its broken planks.
+				var variant := (x * 7 + y * 3) % 2
+				if gap != "gap":
+					# Open sky: only now and then a wisp of cloud.
+					variant = 1 if (x * 7 + y * 13 + x * y) % 6 == 0 else 0
+				_tile("%s_%d" % [gap, variant], x, y)
+				# 3/4 view: the far side of the hole shows its broken edge.
 				if _room.tile_at(x, y - 1) != "_":
-					_tile("gap_lip", x, y)
+					_tile(gap + "_lip", x, y)
 				if _room.tile_at(x - 1, y) != "_":
-					_tile("gap_left", x, y)
+					_tile(gap + "_left", x, y)
 				if _room.tile_at(x + 1, y) != "_":
-					_tile("gap_right", x, y)
+					_tile(gap + "_right", x, y)
 				if _room.tile_at(x, y + 1) != "_":
-					_tile("gap_bottom", x, y)
+					_tile(gap + "_bottom", x, y)
 			elif letter == "^" or (letter != "#" and y >= first):
 				_tile("kiln_lava_%d" % ((_lava_frame + x + y) % 2), x, y)
 				if not _is_lava(x, y - 1, first):
