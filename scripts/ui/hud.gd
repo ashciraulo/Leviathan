@@ -43,6 +43,8 @@ func _ready() -> void:
 
 	_keys = UI.label("")
 	_keys.name = "Keys"
+	# A count, not a text key.
+	_keys.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	_keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_keys.position = Vector2(KEYS_AT.x + 14, KEYS_AT.y + 2)
 	_keys.add_theme_color_override("font_color", Palette.KEY_TEXT)
