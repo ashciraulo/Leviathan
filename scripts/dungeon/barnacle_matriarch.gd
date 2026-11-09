@@ -47,6 +47,8 @@ const SLEEPING := Color(0.62, 0.6, 0.72)
 const PLATE_SPOTS := [Vector2(0, -38), Vector2(11, -37), Vector2(19, -30)]
 
 var mode := Mode.INTRO
+## True while she sleeps through Lowe's scene (no boss theme yet).
+var asleep := false
 var _timer := 1.2
 var _lunge := Vector2.ZERO
 var _hits_this_opening := 0
@@ -89,6 +91,7 @@ func _ready() -> void:
 	# sleeps (StoryDirector.lowe_at_the_hull), and she wakes when they're done.
 	if _room and get_tree().get_first_node_in_group("story_director") and StoryDirector.lowe_waits(_room.coord):
 		modulate = SLEEPING
+		asleep = true
 		return
 	# Rise out of the bilge.
 	_sprite.modulate.a = 0.0
@@ -101,6 +104,8 @@ func _ready() -> void:
 ## She stirs under the singers' bars, flashes and shakes the deck awake.
 ## The fight starts once the scene ends.
 func wake() -> void:
+	asleep = false
+	Events.boss_woke.emit()
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(self, "modulate", Color.WHITE, 0.4)
 	_flash = 0.2

@@ -26,6 +26,8 @@ signal door_entered(target_room: Vector2i, target_tile: Vector2i)
 signal item_gained(id: String, count: int)
 ## The map asked to fly to a woken Tidestone in that room.
 signal fast_travel_requested(coord: Vector2i)
+## A boss woke after a story scene (the boss theme starts).
+signal boss_woke
 ## A boss fell (the room's music goes back to its usual track).
 signal boss_defeated
 ## The game was saved (the HUD shows a small spinning shell).

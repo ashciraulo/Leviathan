@@ -142,13 +142,15 @@ def degree(scale, root, d, octave=0):
     return root + scale[i] + 12 * (o + octave)
 
 
-def phrase_in_key(index, root):
-    """Lullaby phrase `index` (0-based), moved into a track's key."""
+def phrase_in_key(index, root, octave=0):
+    """Lullaby phrase `index` (0-based), moved into a track's key (the
+    nearest transposition), then `octave` octaves up or down."""
     shift = root - LULLABY["root"]
     while shift > 6:
         shift -= 12
     while shift < -6:
         shift += 12
+    shift += 12 * octave
     return [(m + shift, b) for m, b in LULLABY["phrases"][index]]
 
 
@@ -191,15 +193,19 @@ def compose(c, seed):
     d = 4
     end = bars * bpb * beat
     motif = c.get("motif")
+    # The phrase starts on its bar line, and the melody picks up again on
+    # the first bar line after it ends.
+    motif_start = motif_bar * bpb * beat if motif is not None else end
     while t < end - 0.01:
-        bar = int(t / (bpb * beat))
-        if motif is not None and bar == motif_bar:
-            mt = t
-            for m, b in phrase_in_key(motif, root + 12 * c.get("lead_octave", 0)):
+        if t >= motif_start - 0.001 and motif is not None:
+            mt = motif_start
+            for m, b in phrase_in_key(motif, root, c.get("lead_octave", 0)):
                 notes.append((mt, lead, m, b * beat * 0.95, 0.55))
                 notes.append((mt, "bell", m + 12, b * beat, 0.12))
                 mt += b * beat
-            t = (motif_bar + 2) * bpb * beat
+            bar_len = bpb * beat
+            t = np.ceil((mt - motif_start) / bar_len - 1e-6) * bar_len + motif_start
+            motif = None
             continue
         if rng.random() < c.get("rest", 0.25):
             t += beat * rng.choice([1, 2])
@@ -207,7 +213,8 @@ def compose(c, seed):
         d += int(rng.choice([-2, -1, -1, 0, 1, 1, 2]))
         d = max(0, min(9, d))
         length = rng.choice(c.get("lengths", [1, 1, 2, 0.5]))
-        length = min(length, (end - t) / beat)
+        # No note runs over the end of the loop or into the phrase.
+        length = min(length, (end - t) / beat, max(0.5, (motif_start - t) / beat) if t < motif_start else length)
         notes.append((t, lead, degree(scale, root, d, c.get("lead_octave", 0)), length * beat * 0.95, 0.45))
         t += length * beat
     return notes, hits, end
@@ -241,7 +248,8 @@ def render_track(c, seed):
 def render_phrase(index):
     beat = 60.0 / LULLABY["tempo"]
     notes = LULLABY["phrases"][index]
-    total = sum(b for _, b in notes) * beat + 2.0
+    # The ring-out is one bar, so phrases played back to back stay in time.
+    total = (sum(b for _, b in notes) + LULLABY.get("beats", 3)) * beat
     mix = np.zeros(int(total * RATE))
     t = 0.0
     for m, b in notes:
@@ -310,15 +318,46 @@ TRACKS = {
 }
 
 
-def write_ogg(path, samples):
+## Loudness targets (integrated LUFS). Music sits at -18 so effects ride
+## over it; the bell phrases come in louder, over the dipped track.
+MUSIC_LUFS = -18.0
+PHRASE_LUFS = -16.0
+## The highest sample peak left after levelling (about -1.5 dBFS).
+PEAK_LIMIT = 0.84
+
+
+def _write_wav(name, samples):
     pcm = (np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes()
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        name = tmp.name
     with wave.open(name, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(RATE)
         w.writeframes(pcm)
+
+
+def loudness(samples):
+    """Integrated loudness in LUFS (EBU R128, measured by ffmpeg)."""
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+        name = tmp.name
+    _write_wav(name, samples)
+    out = subprocess.run(["ffmpeg", "-nostats", "-i", name, "-af", "ebur128", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    os.unlink(name)
+    summary = out[out.rindex("Integrated loudness"):]
+    return float(summary.split("I:")[1].split()[0])
+
+
+def level(samples, target):
+    """Scales a mix to `target` LUFS, keeping its peaks under PEAK_LIMIT."""
+    gain = 10.0 ** ((target - loudness(samples)) / 20.0)
+    gain = min(gain, PEAK_LIMIT / max(1e-9, np.abs(samples).max()))
+    return samples * gain
+
+
+def write_ogg(path, samples):
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+        name = tmp.name
+    _write_wav(name, samples)
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", name, "-c:a", "libvorbis", "-q:a", "3",
                     "-map_metadata", "-1", "-fflags", "+bitexact", path], check=True)
     os.unlink(name)
@@ -328,9 +367,13 @@ def main():
     only = None
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
-    jobs = [(name, lambda c=c, s=i: render_track(c, 1000 + s)) for i, (name, c) in enumerate(TRACKS.items())]
-    jobs += [("bell_%d" % (i + 1), lambda i=i: render_phrase(i)) for i in range(len(LULLABY["phrases"]))]
-    jobs.append(("lullaby", lambda: np.concatenate([render_phrase(i) for i in range(len(LULLABY["phrases"]))])))
+    jobs = [(name, lambda c=c, s=i: level(render_track(c, 1000 + s), MUSIC_LUFS))
+            for i, (name, c) in enumerate(TRACKS.items())]
+    jobs += [("bell_%d" % (i + 1), lambda i=i: level(render_phrase(i), PHRASE_LUFS))
+             for i in range(len(LULLABY["phrases"]))]
+    # The whole lullaby is levelled as one, so the phrases keep their balance.
+    jobs.append(("lullaby", lambda: level(np.concatenate([render_phrase(i) for i in range(len(LULLABY["phrases"]))]),
+                                          PHRASE_LUFS)))
     done = 0
     for name, make in jobs:
         if only and name not in only:

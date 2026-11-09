@@ -18,6 +18,8 @@ const SFX_DIR := "res://audio/sfx/"
 const AMBIENCE_DIR := "res://audio/ambience/"
 const MIX_RATE := 22050
 const FADE_TIME := 1.2
+## How far the music dips under a jingle or a bell's phrase.
+const DUCK_DB := -18.0
 ## Effects playing at once. Extra ones steal the oldest player.
 const VOICES := 12
 ## The same effect retriggered faster than this is skipped (footsteps,
@@ -173,6 +175,11 @@ var _last_played: Dictionary = {}
 var _warned: Dictionary = {}
 var _duck_tween: Tween
 var _music_tween: Tween
+## Two gains per music player, added together every frame: its cross-fade,
+## and the dip under jingles and bell phrases. Kept apart so a jingle during
+## a fade still dips, and a cue change during a phrase stays dipped.
+var _fade_db: Array[float] = [-60.0, -60.0]
+var _duck_db := 0.0
 ## Plays the lullaby phrases over the (ducked) music.
 var _phrase: AudioStreamPlayer
 
@@ -259,23 +266,41 @@ func play_music(cue: String, fade: float = FADE_TIME) -> void:
 	# keep pushing (and later stop) the player about to be reused.
 	if _music_tween:
 		_music_tween.kill()
-	if _duck_tween:
-		_duck_tween.kill()
 	new.stop()
+	_fade_db[_music_index] = -60.0
 	if not old.playing and stream == null:
+		_apply_music_volume()
 		return
+	var old_index := 1 - _music_index
 	_music_tween = create_tween().set_parallel(true)
 	if old.playing:
-		_music_tween.tween_property(old, "volume_db", -60.0, fade)
+		_music_tween.tween_method(_set_fade.bind(old_index), _fade_db[old_index], -60.0, fade)
 		_music_tween.tween_callback(old.stop).set_delay(fade)
 	if stream:
 		new.stream = stream if cue in ONE_SHOT_MUSIC else _looping(stream)
-		new.volume_db = -60.0
 		new.play()
-		_music_tween.tween_property(new, "volume_db", 0.0, fade)
+		_music_tween.tween_method(_set_fade.bind(_music_index), -60.0, 0.0, fade)
+	_apply_music_volume()
 
 
+func _set_fade(db: float, index: int) -> void:
+	_fade_db[index] = db
+	_apply_music_volume()
+
+
+func _set_duck(db: float) -> void:
+	_duck_db = db
+	_apply_music_volume()
+
+
+func _apply_music_volume() -> void:
+	for i in _music.size():
+		_music[i].volume_db = maxf(_fade_db[i] + _duck_db, -80.0)
+
+
+## Fades the music out, and cuts off a lullaby phrase still ringing.
 func stop_music(fade: float = FADE_TIME) -> void:
+	_phrase.stop()
 	play_music("", fade)
 
 
@@ -324,17 +349,15 @@ func _play_phrases(phrases: Array) -> bool:
 	return true
 
 
-## Dips the playing music for `length` seconds, then brings it back.
+## Dips the music for `length` seconds, then brings it back. The dip holds
+## across cue changes, so a new track comes in under a ringing phrase.
 func _duck(length: float) -> void:
-	var current := _music[_music_index]
-	if not current.playing:
-		return
 	if _duck_tween:
 		_duck_tween.kill()
 	_duck_tween = create_tween()
-	_duck_tween.tween_property(current, "volume_db", -18.0, 0.1)
+	_duck_tween.tween_method(_set_duck, _duck_db, DUCK_DB, 0.1)
 	_duck_tween.tween_interval(length)
-	_duck_tween.tween_property(current, "volume_db", 0.0, 0.6)
+	_duck_tween.tween_method(_set_duck, DUCK_DB, 0.0, 0.6)
 
 
 ## Which music fits a room: its dungeon, else its region.

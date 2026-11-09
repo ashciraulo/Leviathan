@@ -43,6 +43,7 @@ func _ready() -> void:
 	Events.door_entered.connect(_on_door_entered)
 	Events.room_entered.connect(_on_room_entered)
 	Events.boss_defeated.connect(_on_boss_defeated)
+	Events.boss_woke.connect(_play_room_music)
 	Events.fast_travel_requested.connect(_on_fast_travel)
 	_start()
 
@@ -79,7 +80,7 @@ func _play_room_music() -> void:
 
 func _room_has_boss() -> bool:
 	for boss in get_tree().get_nodes_in_group("boss"):
-		if current_room.is_ancestor_of(boss) and not bool(boss.get("dying")):
+		if current_room.is_ancestor_of(boss) and boss.get("dying") != true and boss.get("asleep") != true:
 			return true
 	return false
 

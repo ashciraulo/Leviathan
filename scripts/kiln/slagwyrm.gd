@@ -43,6 +43,8 @@ const FRAME_CLOSED := 0
 const FRAME_OPEN := 1
 const FRAME_STONE := 2
 
+## True while it sleeps in the crucible through Lowe's scene.
+var asleep := false
 var mode := Mode.INTRO
 var heading := Vector2.DOWN
 var segments: Array[WyrmSegment] = []
@@ -112,12 +114,15 @@ func _ready() -> void:
 	# The first time, it sleeps in the crucible while Sister Lowe's smiths
 	# stoke it (StoryDirector.the_crucible), and wakes when they're done.
 	if _room and get_tree().get_first_node_in_group("story_director") and StoryDirector.lowe_waits(_room.coord):
+		asleep = true
 		return
 	wake()
 
 
 ## It heaves up out of the melt. The fight starts once any scene ends.
 func wake() -> void:
+	asleep = false
+	Events.boss_woke.emit()
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(_sprite, "modulate:a", 1.0, 0.8)
 	Events.toast.emit("BOSS_SLAGWYRM")

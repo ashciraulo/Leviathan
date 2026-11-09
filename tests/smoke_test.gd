@@ -571,6 +571,7 @@ func _test_story() -> void:
 	add_child(hold)
 	await _wait(0.2)
 	_check(Cutscene.active, "the Matriarch's chamber starts Lowe's scene")
+	_check(Audio.music_cue == "dungeon_hull", "no boss theme while she sleeps through Lowe's scene (%s)" % Audio.music_cue)
 	var choir: Array = hold.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
 	_check(choir.size() == 3, "Lowe and two singers are in the chamber (%d)" % choir.size())
 	var sleeper: BarnacleMatriarch = null
@@ -591,6 +592,7 @@ func _test_story() -> void:
 		_check(y < 9 * Room.TILE, "the Choir stands clear of the dialogue box")
 	await _wait(1.6)
 	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO and sleeper.modulate == Color.WHITE, "the Matriarch wakes and fights")
+	_check(Audio.music_cue == "boss", "the boss theme starts as she wakes (%s)" % Audio.music_cue)
 	hold.queue_free()
 	await _wait(0.1)
 	# Coming back (the scene has played): she rises at once, wide awake.
@@ -2176,11 +2178,19 @@ func _test_audio() -> void:
 	_check(Audio.BELL_ORDER.size() == 7 and Audio.BELL_ORDER.has("hull"), "the seven bells are in lullaby order")
 	for bell: String in Tidebell.BELLS:
 		_check(Audio.BELL_ORDER.has(bell), "the %s bell has a lullaby phrase" % bell)
+	# A phrase rung while the track is still fading in dips it all the same.
 	Audio.play_bell_phrase("kiln")
 	var phrase := Audio._phrase.stream as AudioStreamPlaylist
 	_check(Audio._phrase.playing and phrase != null and phrase.stream_count == 1 and phrase.get_list_stream(0).resource_path.ends_with("bell_2.ogg"), "ringing the Kiln's bell plays the lullaby's second phrase")
-	await _wait(0.2)
-	_check(playing.volume_db < -10.0, "the music dips under a bell's phrase")
+	await _wait(Audio.FADE_TIME + 0.3)
+	_check(playing.playing and playing.volume_db < -15.0, "the music dips under a bell's phrase, even mid-fade (%.1f dB)" % playing.volume_db)
+	# A new track while the phrase still rings comes in dipped too.
+	Audio.play_music("dungeon_hull")
+	await _wait(Audio.FADE_TIME + 0.3)
+	var next: AudioStreamPlayer = Audio._music[Audio._music_index]
+	_check(Audio._phrase.playing and next.playing and next.volume_db < -15.0, "a new track stays under the ringing phrase (%.1f dB)" % next.volume_db)
+	_check(not playing.playing, "the old track fades out and stops")
+	_check(is_equal_approx(phrase.get_list_stream(0).get_length(), 9 * 60.0 / 80.0), "a phrase is three bars long, so phrases run on in time")
 	Audio.play_lullaby(3)
 	phrase = Audio._phrase.stream as AudioStreamPlaylist
 	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")

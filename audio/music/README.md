@@ -1,6 +1,6 @@
 # Music
 
-Drop finished tracks here as `<cue>.ogg` (OGG Vorbis, 44.1 kHz stereo, about -14 LUFS). The game picks them up by name; no code changes needed. Every cue loops except the lullaby phrases (`bell_1`..`bell_7`, `lullaby`); set Loop Offset in Godot's import dock when a track has an intro.
+Drop finished tracks here as `<cue>.ogg` (OGG Vorbis, 44.1 kHz stereo, about -18 LUFS integrated, the bell phrases -16). The game picks them up by name; no code changes needed. Every cue loops except the lullaby phrases (`bell_1`..`bell_7`, `lullaby`); set Loop Offset in Godot's import dock when a track has an intro.
 
 ## Placeholders
 
