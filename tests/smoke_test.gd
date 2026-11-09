@@ -330,6 +330,20 @@ func _test_villagers() -> void:
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
 	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	# Large text: the same box, one big line per page, long pages split.
+	Settings.large_text = true
+	fit_box.open_pages(Conversations.pages("marga", Conversations.TALKS["marga"][-1]))
+	var split_pages := fit_box.page_count()
+	var all_fit := true
+	while DialogueBox.is_open:
+		if fit_box.lines_for(fit_box.current_page()["text"], fit_box.current_portrait() != null) > DialogueBox.LARGE_MAX_LINES:
+			all_fit = false
+		fit_box.advance()
+		fit_box.advance()
+	Settings.large_text = false
+	_check(split_pages > Conversations.TALKS["marga"][-1]["lines"].size(), "large text splits long pages (%d pages)" % split_pages)
+	_check(all_fit, "every large-text page fits on one line")
+	_check(GameState.has_flag("asked_for_rope") == false, "opening the box directly doesn't set story flags")
 	var player: Player = game.player
 
 	# Dunstan grunts until Marga sends Wren over.

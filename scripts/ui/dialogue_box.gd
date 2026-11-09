@@ -17,6 +17,9 @@ const SCREEN := Vector2(384, 216)
 const BOX := Rect2(4, 180, 376, 32)
 const PAD := Vector2(8, 4)
 const MAX_LINES := 2
+## Large text (Options) doubles the font, so the same box holds one line.
+## Pages that don't fit are split into more pages at word breaks.
+const LARGE_MAX_LINES := 1
 ## The portrait sits at the left, its frame poking a few pixels above the
 ## box; the name tab sits beside it.
 const PORTRAIT_SIZE := 32
@@ -84,7 +87,8 @@ func open(speaker_key: String, lines: PackedStringArray) -> void:
 func open_pages(pages: Array) -> void:
 	if pages.is_empty():
 		return
-	_pages = pages
+	_apply_text_size()
+	_pages = _paginate(pages)
 	_page = 0
 	visible = true
 	is_open = true
@@ -144,15 +148,72 @@ func _tab_rect() -> Rect2:
 
 ## How many lines a page of text takes in the box.
 func lines_for(text_key: String, with_portrait: bool) -> int:
-	var indent := PORTRAIT_TEXT_INDENT if with_portrait else 0.0
-	var probe := _text.duplicate() as Label
-	probe.size = Vector2(BOX.size.x - PAD.x * 2.0 - indent, 200)
-	probe.visible_characters = -1
+	var probe := _probe(with_portrait)
 	probe.text = text_key
-	add_child(probe)
 	var count := probe.get_line_count()
 	probe.queue_free()
 	return count
+
+
+## How many lines fit in the box at the current text size.
+static func max_lines() -> int:
+	return LARGE_MAX_LINES if Settings.large_text else MAX_LINES
+
+
+func _apply_text_size() -> void:
+	var font_size := UI.FONT_SIZE * (2 if Settings.large_text else 1)
+	_text.add_theme_font_size_override("font_size", font_size)
+	_text.add_theme_constant_override("line_spacing", 1 if not Settings.large_text else 0)
+
+
+## A hidden copy of the text label, sized like the box's text area.
+func _probe(with_portrait: bool) -> Label:
+	var indent := PORTRAIT_TEXT_INDENT if with_portrait else 0.0
+	var probe := _text.duplicate() as Label
+	probe.size = Vector2(BOX.size.x - PAD.x * 2.0 - indent, 400)
+	probe.visible_characters = -1
+	add_child(probe)
+	return probe
+
+
+## Splits any page that runs past max_lines() into several, at word breaks.
+## Lines are written to fit at normal size, so this mostly matters for Large
+## text and for languages that run longer than English.
+func _paginate(pages: Array) -> Array:
+	var out: Array = []
+	for page: Dictionary in pages:
+		var text := tr(str(page.get("text", "")))
+		var probe := _probe(page.get("portrait") != null)
+		probe.text = text
+		if probe.get_line_count() <= max_lines():
+			out.append(page)
+			probe.queue_free()
+			continue
+		var words := text.split(" ", false)
+		var chunk := ""
+		for word in words:
+			var trial := word if chunk == "" else chunk + " " + word
+			probe.text = trial
+			if chunk != "" and probe.get_line_count() > max_lines():
+				out.append(_with_text(page, chunk))
+				chunk = word
+			else:
+				chunk = trial
+		if chunk != "":
+			out.append(_with_text(page, chunk))
+		probe.queue_free()
+	return out
+
+
+static func _with_text(page: Dictionary, text: String) -> Dictionary:
+	var copy := page.duplicate()
+	copy["text"] = text
+	return copy
+
+
+## How many pages the box is showing in this conversation (after splitting).
+func page_count() -> int:
+	return _pages.size()
 
 
 ## The page on screen ({} when closed).

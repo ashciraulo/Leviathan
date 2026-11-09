@@ -139,6 +139,17 @@ func _ready() -> void:
 		await _wait(2.5)
 		await _capture("25_marga_asks")
 		await _finish_talk(game)
+		# Large text: same box, one big line per page.
+		Settings.large_text = true
+		var big := _dialogue_box(game)
+		if big:
+			big.open_pages(Conversations.pages("marga", Conversations.TALKS["marga"][-1]))
+			big.advance()
+			big.advance()
+			await _wait(1.5)
+			await _capture("28_large_text")
+			await _finish_talk(game)
+		Settings.large_text = false
 		game.player.global_position = people["dunstan"].global_position + Vector2(-4, 20)
 		await _wait(0.2)
 		game.player.try_interact()
