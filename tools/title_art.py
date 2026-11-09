@@ -216,7 +216,7 @@ PALE_RIM = hex_color("#F0F4EC")
 GLOW = hex_color("#8FFFF0")
 GLOW_MID = hex_color("#4FD8D0")
 GLOW_DIM = hex_color("#2A8A96")
-ROCK = [hex_color(c) for c in ("#4A3E5E", "#2E2640", "#1E1A30")]
+SHELF = [hex_color(c) for c in ("#5A7A8E", "#34506A", "#22384E", "#18283C")]
 W, H = 384, 216
 HORIZON = 112
 SURFACE = HORIZON + 2
@@ -354,6 +354,43 @@ def build_title_bg():
                 if 0 <= x < W and rnd.random() < fade * 0.55 and (x + y) % 2 == 0:
                     c = px[y][x]
                     px[y][x] = (min(255, c[0] + 14), min(255, c[1] + 22), min(255, c[2] + 26), 255)
+
+    # Under the water the headland is a rocky shelf sloping down into the
+    # deep, tinted blue by the water, with the whale's back passing beyond.
+    def shelf(x):
+        return SURFACE + 2 + round(60 * (x / 96.0) ** 1.4) + round(2 * math.sin(x / 5.0)) + (3 if (x // 9) % 3 == 1 else 0)
+
+    for x in range(0, 100):
+        top = shelf(x)
+        for y in range(max(top, SURFACE), H):
+            depth = y - top
+            band = 0 if depth < 1 else 1 if depth < 4 else 2 if depth < 22 else 3
+            if band >= 2 and (depth == 22 or depth == 23) and (x + y) % 2:
+                band = 2
+            px[y][x] = SHELF[band]
+        # Rock strata: short darker ledges across the face.
+        for ledge in (9, 17, 28):
+            y = top + ledge + round(1.5 * math.sin(x / 4.0 + ledge))
+            if SURFACE < y < H and (x // 5 + ledge) % 4 != 0:
+                px[y][x] = SHELF[3]
+                if y - 1 > top:
+                    px[y - 1][x] = SHELF[1]
+    # Boulders on the slope, each with a lit top.
+    for (bx, br) in ((16, 4), (38, 5), (58, 4), (74, 6)):
+        by = shelf(bx) + br - 1
+        for y in range(by - br, by + br + 1):
+            for x in range(bx - br - 2, bx + br + 3):
+                if 0 <= x < W and SURFACE < y < H and ((x - bx) / (br + 2.0)) ** 2 + ((y - by) / float(br)) ** 2 <= 1.0:
+                    px[y][x] = SHELF[0] if y < by - br + 2 else SHELF[1] if y < by else SHELF[2]
+    # Kelp rooted on the slope, swaying up toward the light.
+    for kx in (8, 26, 47, 66, 86):
+        base = shelf(kx)
+        for i in range(rnd.randrange(10, 20)):
+            y = base - 1 - i
+            if y <= SURFACE + 1:
+                break
+            x = kx + round(1.5 * math.sin(i / 2.5 + kx))
+            px[y][x] = hex_color("#2E6A58") if i % 3 else hex_color("#4E8A60")
 
     # The leviathan: an old, pale giant, scarred from ages of battles,
     # lit by the moon along its back and fading into the deep below.
@@ -502,20 +539,6 @@ def build_title_bg():
         top = HORIZON - 4 - round(3 * math.sin(x / 17.0) + (120 - x) / 14)
         for y in range(top, SURFACE):
             px[y][x] = hex_color("#2A2238")
-    for x in range(0, 112):
-        bottom = SURFACE + round(34 * (1 - x / 112.0) ** 1.6) + round(2 * math.sin(x / 5.0))
-        for y in range(SURFACE, min(bottom, H)):
-            depth = bottom - y
-            px[y][x] = ROCK[0] if depth < 2 else ROCK[1] if y < SURFACE + 8 else ROCK[2]
-    # Kelp on the rock.
-    for kx in (14, 30, 44, 61, 78):
-        base = SURFACE + round(34 * (1 - kx / 112.0) ** 1.6)
-        for i in range(rnd.randrange(8, 16)):
-            y = base - i
-            if y <= SURFACE + 1:
-                break
-            x = kx + round(1.5 * math.sin(i / 2.5 + kx))
-            px[y][x] = hex_color("#2E5A48") if i % 3 else hex_color("#4E7A48")
     lx = 18
     lbase = HORIZON - 12
     for y in range(lbase - 20, lbase):
