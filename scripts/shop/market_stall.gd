@@ -6,8 +6,8 @@ extends StaticBody2D
 
 ## Where Marlo stands, behind the counter.
 const MARLO_AT := Vector2(0, -12)
-## Solid from the counter's front back to the wall behind Marlo, so nobody
-## walks round behind the stall.
+## Solid from the counter's front back past Marlo, so nobody walks through
+## him.
 const FOOTPRINT := Vector2(46, 26)
 
 var marlo: Npc

@@ -23,6 +23,10 @@ const INPUT_DELAY := 0.2
 const SHAKE_TIME := 0.3
 const FLASH_TIME := 0.35
 
+## Like the dialogue box: the press that closes the shop mustn't also reach
+## Wren (an interact that reopens it, a sword swing).
+static var _closed_at := -100000
+
 var _rows: Array = []
 var _cursor := 0
 var _time := 0.0
@@ -50,6 +54,10 @@ func _ready() -> void:
 	Audio.play_sfx("ui_open")
 
 
+static func recently_closed() -> bool:
+	return Time.get_ticks_msec() - _closed_at < DialogueBox.CLOSE_GRACE_MSEC
+
+
 ## The rows on sale now (stock waiting on a flag is left out).
 static func rows() -> Array:
 	var out: Array = []
@@ -65,7 +73,8 @@ static func blocked(row: Dictionary) -> String:
 	if row.has("jar"):
 		if GameState.jars.is_empty() or not Items.JAR_EMPTY in GameState.jars:
 			return "SHOP_NO_JAR"
-	elif GameState.item_count(str(row["id"])) >= Items.max_count(str(row["id"])):
+	elif GameState.item_count(str(row["id"])) + int(row["count"]) > Items.max_count(str(row["id"])):
+		# No paying full price for a part bundle.
 		return "SHOP_FULL"
 	return ""
 
@@ -85,7 +94,11 @@ func buy(i: int) -> bool:
 	if row.has("jar"):
 		GameState.fill_jar(str(row["jar"]))
 	else:
+		# Bought goods go in the satchel, not straight onto an item slot:
+		# the player chooses what to carry on the slots.
+		var slots: Array = GameState.item_slots.duplicate()
 		GameState.give_item(str(row["id"]), int(row["count"]), false)
+		GameState.item_slots = slots
 	_bought = true
 	_flash = FLASH_TIME
 	_spent = int(row["price"])
@@ -98,6 +111,7 @@ func close() -> void:
 	if _done:
 		return
 	_done = true
+	_closed_at = Time.get_ticks_msec()
 	Audio.play_sfx("ui_back")
 	get_tree().paused = false
 	queue_free()
