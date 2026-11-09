@@ -131,7 +131,7 @@ func _build_texture() -> void:
 		var info := RoomInfo.get_room(coord)
 		var colors: Array = BIOME_COLORS.get(info["biome"], DEFAULT_COLORS)
 		var fade := 1.0 if GameState.has_seen(coord) else 0.45
-		var rows: PackedStringArray = info["rows"]
+		var rows := RoomInfo.rows_now(coord)
 		var base := (coord - lo) * Vector2i(Room.COLS, Room.ROWS)
 		for y in rows.size():
 			for x in rows[y].length():
