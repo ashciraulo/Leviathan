@@ -23,6 +23,7 @@ jobs:
           python3 tools/build_art.py --check
           python3 tools/hull_rooms.py --check
           python3 tools/kiln_rooms.py --check
+          python3 tools/mire_rooms.py --check
 
       - name: Download Godot
         run: |

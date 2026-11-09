@@ -10,6 +10,7 @@ const ITEMS := {
 	"small_key": ["TOAST_GOT_KEY", Art.SMALL_KEY],
 	"tide_hook": ["TOAST_GOT_TIDE_HOOK", HullSprites.TIDE_HOOK],
 	"stonebreaker": ["TOAST_GOT_STONEBREAKER", KilnSprites.STONEBREAKER],
+	"glowmoth_lantern": ["TOAST_GOT_GLOWMOTH_LANTERN", MireSprites.GLOWMOTH_LANTERN],
 	"map": ["TOAST_GOT_MAP", HullSprites.MAP],
 	"compass": ["TOAST_GOT_COMPASS", HullSprites.COMPASS],
 	"big_key": ["TOAST_GOT_BIG_KEY", HullSprites.BIG_KEY],
@@ -19,6 +20,7 @@ const ITEMS := {
 const ITEM_TALK := {
 	"tide_hook": ["GOT_TIDE_HOOK_1", "GOT_TIDE_HOOK_2"],
 	"stonebreaker": ["GOT_STONEBREAKER_1", "GOT_STONEBREAKER_2"],
+	"glowmoth_lantern": ["GOT_GLOWMOTH_LANTERN_1", "GOT_GLOWMOTH_LANTERN_2"],
 }
 
 var room_coord := Vector2i.ZERO
