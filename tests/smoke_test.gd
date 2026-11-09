@@ -2587,7 +2587,7 @@ func _test_verge() -> void:
 	var rows := Room.parse_layout(causeway.alt_layout)
 	_check(causeway.alt_flag == "old_one_turned" and not causeway.layout.contains("r") and rows[9].contains("r"), "the Verge's flats only rise once the Old One turns")
 	causeway.free()
-	_check(drowned[10].count("~") == Room.COLS - 2, "before the turn Causeway End is open sea")
+	_check(drowned[5].count("~") == Room.COLS - 2 and drowned[9].count("Q") == Room.COLS - 4, "before the turn Causeway End is open sea, deep past the shallows")
 	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(2, 10)), "the Causeway End channel can't be crossed on foot")
 	var frozen := rows.duplicate()
 	for y in range(3, 9):
