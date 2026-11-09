@@ -592,6 +592,14 @@ func _test_story() -> void:
 	_check(calf_pages == 3, "Murmur speaks three times (%d)" % calf_pages)
 	var calf_left: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is CalfOfLights or c is ChoirFigure)
 	_check(calf_left.is_empty(), "the lights scatter and Murmur leaves (%d left)" % calf_left.size())
+	# Fast scenes outrun the heart's last beats, which run in real time.
+	await _wait(4.0)
+	var moth_bell: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is Tidebell)
+	_check(moth_bell.size() == 1 and _child_of(mire.current_room, Doorway).size() == 1, "the Moth Bell and the way out are there after the scene")
+	if moth_bell.size() == 1:
+		moth_bell[0].interact()
+		_finish_talk(mire)
+		_check(GameState.has_flag(Tidebell.flag_for("mire")), "the Moth Bell rings after the scene")
 	mire.queue_free()
 	await _wait(0.1)
 

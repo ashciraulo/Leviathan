@@ -85,13 +85,19 @@ func flee_along(points: Array, seconds_per_leg: float) -> void:
 	visible = false
 
 
-## Walk along a path of points at an easy pace (no fading out).
-func walk_along(points: Array, speed: float = 30.0) -> void:
+## Walk along a path of points at an easy pace. fade: 1 fades in over the
+## first leg (arriving through a door), -1 fades out over the last one.
+func walk_along(points: Array, speed: float = 30.0, fade: int = 0) -> void:
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	if fade > 0:
+		modulate.a = 0.0
+		tween.tween_property(self, "modulate:a", 1.0, Cutscene.scaled(0.4))
 	var from := position
 	for point: Vector2 in points:
 		if absf(point.x - from.x) > 1.0:
 			tween.tween_callback(face.bind(point.x < from.x))
 		tween.tween_property(self, "position", point, Cutscene.scaled(from.distance_to(point) / speed))
 		from = point
+	if fade < 0:
+		tween.tween_property(self, "modulate:a", 0.0, Cutscene.scaled(0.4))
 	await tween.finished

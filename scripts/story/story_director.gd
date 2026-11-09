@@ -284,7 +284,7 @@ func the_calf() -> void:
 	var murmur := ChoirFigure.new("murmur")
 	murmur.position = MURMUR_IN[0]
 	room.add_child(murmur)
-	await murmur.walk_along(MURMUR_IN.slice(1))
+	await murmur.walk_along(MURMUR_IN.slice(1), 30.0, 1)
 	murmur.face(true)
 	await scene.wait(0.8)
 	murmur.talking = true
@@ -295,7 +295,7 @@ func the_calf() -> void:
 	await scene.speak("murmur", ["MURMUR_CALF_3"])
 	var out: Array = MURMUR_IN.duplicate()
 	out.reverse()
-	await murmur.walk_along(out.slice(1))
+	await murmur.walk_along(out.slice(1), 30.0, -1)
 	murmur.queue_free()
 	scene.finish()
 
