@@ -542,7 +542,7 @@ def _write(path, frames):
 
 
 def _same(path, frames):
-    """Equal within one step per sample (floating point can differ by a hair
+    """Equal within two steps per sample (floating point can differ by a hair
     between machines)."""
     if not os.path.exists(path):
         return False
@@ -589,7 +589,7 @@ def main():
             sys.exit(1)
         print("Sounds up to date (%d)." % len(jobs))
     else:
-        print("Wrote %d sounds." % (len(jobs) if not only else len(only)))
+        print("Wrote %d sounds." % sum(1 for j in jobs if not only or j[1] in only))
 
 
 if __name__ == "__main__":

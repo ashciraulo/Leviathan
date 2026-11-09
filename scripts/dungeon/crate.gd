@@ -45,21 +45,23 @@ func _physics_process(delta: float) -> void:
 		_push_time = 0.0
 
 
-func _slide(dir: Vector2) -> void:
+func _slide(dir: Vector2, gliding: bool = false) -> void:
 	var step := dir * Room.TILE
 	if test_move(global_transform, step) or _someone_in(step):
 		Feel.shake(0.4)
 		return
 	_sliding = true
 	var on_ice := _on_ice()
-	Audio.play_sfx("ice_slide" if on_ice else "block_push", global_position)
+	# One scrape per push; a glide across ice carries on under the first.
+	if not gliding:
+		Audio.play_sfx("ice_slide" if on_ice else "block_push", global_position)
 	var tween := create_tween()
 	# On ice it glides on, quicker, until something stops it.
 	tween.tween_property(self, "position", position + step, SLIDE_TIME * (0.5 if on_ice else 1.0))
 	tween.tween_callback(func() -> void:
 		_sliding = false
 		if _on_ice() and not test_move(global_transform, step) and not _someone_in(step):
-			_slide(dir))
+			_slide(dir, true))
 
 
 ## True when Wren or an enemy stands in the tile the crate would move into.

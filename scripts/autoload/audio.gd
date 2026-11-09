@@ -304,6 +304,10 @@ func play_ambience(id: String, fade: float = FADE_TIME) -> void:
 	if _ambience_tween:
 		_ambience_tween.kill()
 	_ambience_tween = create_tween()
+	# Back to the loop that is still fading out: bring it up, don't restart it.
+	if _ambience.playing and stream != null and _ambience.stream == _looping(stream):
+		_ambience_tween.tween_property(_ambience, "volume_db", 0.0, fade * 0.5)
+		return
 	if _ambience.playing:
 		_ambience_tween.tween_property(_ambience, "volume_db", -40.0, fade * 0.5)
 	if stream == null:
