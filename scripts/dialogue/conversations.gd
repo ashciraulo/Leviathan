@@ -65,13 +65,14 @@ const TALKS := {
 		{"lines": ["NETTLE_1", "NETTLE_2"]},
 	],
 	# Agna Holt, the last founder, outside the Kiln. After the Ember Bell she
-	# lights her forge again and gives Wren a Brinesteel sword.
+	# lights her forge again and gives Wren a Brinesteel sword. She always
+	# introduces herself first, even if Wren walked past her into the Kiln.
 	"agna": [
 		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
+		{"unless": ["met_agna"], "set": ["met_agna"], "lines": ["AGNA_1", "AGNA_2", "AGNA_3"]},
 		{"if": ["tidebell_kiln"], "set": ["agna_gave_sword"], "give": {"brinesteel_sword": 1}, "lines": ["AGNA_AFTER_1", "AGNA_AFTER_2", ["", "NARRATE_GOT_BRINESTEEL"], "AGNA_AFTER_3"]},
 		{"if": ["entered_kiln"], "lines": ["AGNA_KILN_1", "AGNA_KILN_2"]},
-		{"if": ["met_agna"], "lines": ["AGNA_AGAIN"]},
-		{"set": ["met_agna"], "lines": ["AGNA_1", "AGNA_2", "AGNA_3"]},
+		{"lines": ["AGNA_AGAIN"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
