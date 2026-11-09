@@ -31,6 +31,7 @@ import hull_dungeon_art
 import kiln_art
 import cinderreach_art
 import gloamfen_art
+import windmere_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -156,7 +157,9 @@ def lit(rows, seed=1, palette=None):
             for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
                 m = mat(x + dx, y + dy)
                 if m is not None:
-                    ramp = RAMPS.get(m)
+                    # The art file's own palette, so materials added by
+                    # other art files never change this sprite's outline.
+                    ramp = ramps.get(m)
                     out[y][x] = hex_color(ramp[4] if ramp else "#2A1E36")
                     break
     return out
@@ -481,6 +484,7 @@ def build_enemies():
     out["geyser"] = sheet([[lit(cinderreach_art.geyser(f), 27) for f in range(3)]], 16, 32)
     out["sporecap"] = sheet([[lit(gloamfen_art.sporecap(k), 28) for k in ("walk_a", "walk_b", "swell", "spent")]], 16, 16)
     out["spore_cloud"] = sheet([[lit(gloamfen_art.spore_cloud(f), 29) for f in range(3)]], 64, 64)
+    out["tumbleburr"] = sheet([[lit(windmere_art.tumbleburr(f), 43) for f in range(4)]], 16, 16)
     out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
@@ -636,6 +640,7 @@ def build_props():
         "hut": sheet([[lit(hut(), 15)]], 48, 48),
         "lighthouse": sheet([[lit(lighthouse(), 16)]], 32, 80),
         "mangrove": sheet([[lit(brinewood_art.mangrove(), 17)]], 48, 64),
+        "windmill": sheet([[lit(windmere_art.windmill(f), 42) for f in range(4)]], 32, 48),
         "wreck": sheet([[lit(brinewood_art.wreck(), 18)]], 48, 32),
         "lantern_post": sheet([[lit(brinewood_art.lantern_post(), 19)]], 16, 32),
         "hull": sheet([[lit(hull_art.beached_hull(), 20)]], 96, 72),
@@ -971,6 +976,15 @@ FLAT.update(gloamfen_art.FLAT)
 _names = {n for n, _ in TILE_LAYOUT}
 assert not _names & {n for n, _ in gloamfen_art.TILES}, "gloamfen_art reuses tile names"
 TILE_LAYOUT += gloamfen_art.TILES
+
+_taken = set(RAMPS) | set(FLAT)
+_clash = _taken & (set(windmere_art.RAMPS) | set(windmere_art.FLAT))
+assert not _clash, "windmere_art reuses material letters: %s" % sorted(_clash)
+RAMPS.update(windmere_art.RAMPS)
+FLAT.update(windmere_art.FLAT)
+_names = {n for n, _ in TILE_LAYOUT}
+assert not _names & {n for n, _ in windmere_art.TILES}, "windmere_art reuses tile names"
+TILE_LAYOUT += windmere_art.TILES
 
 
 def build_tiles():

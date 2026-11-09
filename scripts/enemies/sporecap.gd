@@ -80,12 +80,14 @@ func _think(delta: float) -> void:
 func _swell() -> void:
 	mode = Mode.SWELL
 	_timer = SWELL_TIME
+	Audio.play_sfx("spore_swell", global_position)
 	velocity = Vector2.ZERO
 
 
 func _burst() -> void:
 	mode = Mode.BURST
 	_timer = BURST_TIME
+	Audio.play_sfx("spore_burst", global_position)
 	_set_cloud(true)
 
 

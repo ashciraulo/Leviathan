@@ -19,6 +19,7 @@ const BIOME_COLORS := {
 	"kiln": [Color("#7a6264"), Color("#622a2a"), Color("#3e6476")],
 	"cinderreach": [Color("#86726f"), Color("#8a3428"), Color("#f2783a")],
 	"gloamfen": [Color("#655a78"), Color("#2a5458"), Color("#2e2650")],
+	"windmere": [Color("#8fb15a"), Color("#e8e2d0"), Color("#2f6e9e")],
 }
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 
