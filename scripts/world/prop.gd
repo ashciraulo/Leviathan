@@ -20,6 +20,8 @@ const KINDS := {
 	"J": [Art.WINDMILL, 46, Vector2(14, 8), true, 4],
 	"Z": [VergeSprites.COTTAGE, 44, Vector2(36, 14), true],
 	"B": [VergeSprites.BELFRY, 76, Vector2(24, 14), true],
+	"U": [OssuarySprites.RIB, 53, Vector2(10, 6), false],
+	"F": [OssuarySprites.SKULL, 45, Vector2(56, 14), true],
 }
 
 var kind := ""

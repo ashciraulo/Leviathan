@@ -409,6 +409,12 @@ ROOM_WRACK_SHORE,Wrack Shore
 ROOM_DROWNED_LANE,Drowned Lane
 ROOM_BELFRY_SQUARE,Belfry Square
 ROOM_WEIR_STEPS,Weir Steps
+ROOM_BLEACHED_STRAND,Bleached Strand
+ROOM_RIB_HOLLOW,Rib Hollow
+ROOM_SKULL_RISE,Skull Rise
+ROOM_SINKSAND_BASIN,Sinksand Basin
+ROOM_VERTEBRA_ROAD,Vertebra Road
+ROOM_HOLLOW_WIND,Hollow Wind Flats
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast
@@ -418,6 +424,7 @@ CAPTION_BLOCK,Clang
 CAPTION_TELL,Enemy winds up
 CAPTION_GUST,Wind gusts
 CAPTION_TIDE,Tide rushing in
+CAPTION_SAND,Sand hissing
 CAPTION_HISS,Steam hisses
 CAPTION_ROAR,Roar
 CAPTION_UNLOCK,Lock clicks open

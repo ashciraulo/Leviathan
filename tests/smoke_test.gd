@@ -42,6 +42,7 @@ func _ready() -> void:
 	await _test_windmere()
 	await _test_frostspine()
 	await _test_verge()
+	await _test_ossuary()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -2105,6 +2106,85 @@ func _test_verge() -> void:
 	_check(stranded.mode == Siltray.Mode.STRANDED and stranded.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "at low tide a Siltray is stranded and can be struck")
 	stranded.queue_free()
 	Tide.offset = 0.0
+	GameState.refill()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## The Ossuary Dunes: sealed off by the sea strait, sinking sand, Dunejaws.
+func _test_ossuary() -> void:
+	# Tangle Shore's sea runs east into the Bleached Strand: no way over
+	# on foot (the Diver's Helm's job).
+	var strand: Room = (load("res://rooms/room_7_0.tscn") as PackedScene).instantiate()
+	var deep := Room.parse_layout(strand.layout)
+	strand.free()
+	# Without the Diver's Helm, deep water (Q) is as closed as the sea.
+	var rows := PackedStringArray()
+	for row in deep:
+		rows.append(row.replace("Q", "~"))
+	_check(deep[9][0] == "Q" and not _walkable_from(rows, Vector2i(11, 12)).has(Vector2i(0, 9)), "the Ossuary is cut off by a deep-water strait")
+	var rise: Room = (load("res://rooms/room_9_0.tscn") as PackedScene).instantiate()
+	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[6][12] == "D", "the beast skull's throat leads into the Marrow Tomb")
+	rise.free()
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(7, 1), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var player: Player = game.player
+	await _calm(room)
+	var sink := room.get_node_or_null("SinkField") as SinkField
+	_check(sink != null, "Sinksand Basin has sinking sand")
+	if sink == null:
+		game.queue_free()
+		return
+	# Standing still on the edge of a patch, Wren is dragged in and
+	# swallowed, then comes back up on firm ground a breath down.
+	player.global_position = _tile_pos(room, Vector2i(10, 5))
+	await _wait(0.3)
+	GameState.refill()
+	var breath := GameState.bubbles
+	var middle := sink.middle_at(Vector2(8 * Room.TILE + 8, 3 * Room.TILE + 8))
+	player.global_position = room.global_position + middle + Vector2(Room.TILE + 4, 0)
+	var start := player.global_position
+	await _wait(0.25)
+	_check(player.global_position.distance_to(room.global_position + middle) < start.distance_to(room.global_position + middle), "sinking sand drags Wren toward its middle")
+	await _wait(1.2)
+	var local := player.global_position - room.global_position
+	_check(not sink.is_sand(local) and GameState.bubbles < breath, "the sand swallows Wren and they come back up on firm ground (at %s)" % local)
+	# Walking away gets them out.
+	GameState.refill()
+	await _wait(1.2)
+	player.global_position = room.global_position + middle + Vector2(Room.TILE + 4, 0)
+	Input.action_press("move_right")
+	await _wait(0.6)
+	Input.action_release("move_right")
+	_check(not sink.is_sand(player.global_position - room.global_position), "Wren can walk out of the sinking sand")
+	# A Dunejaw can't be cut under the sand; it spouts before it bites.
+	var jaw := Dunejaw.new()
+	jaw.position = Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12)
+	room.add_child(jaw)
+	player.global_position = _tile_pos(room, Vector2i(14, 9))
+	await _wait(0.1)
+	_check(jaw.take_hit(1, Vector2.LEFT) == Enemy.HitResult.IGNORED, "a buried Dunejaw can't be cut")
+	var spouted := false
+	var bit_after := false
+	for i in 60:
+		await _wait(0.05)
+		GameState.refill()
+		spouted = spouted or jaw.mode == Dunejaw.Mode.SPOUT
+		if jaw.mode == Dunejaw.Mode.BITE:
+			bit_after = spouted
+			break
+	_check(bit_after, "a Dunejaw spouts sand before it bites")
+	for i in 20:
+		await _wait(0.05)
+		if jaw.mode == Dunejaw.Mode.EXPOSED:
+			break
+	_check(jaw.mode == Dunejaw.Mode.EXPOSED and jaw.take_hit(1, Vector2.LEFT) == Enemy.HitResult.HIT, "after it bites, a Dunejaw lies exposed to the sword")
+	jaw.queue_free()
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)

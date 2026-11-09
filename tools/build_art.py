@@ -32,6 +32,7 @@ import kiln_art
 import cinderreach_art
 import mire_art
 import verge_art
+import ossuary_art
 import gloamfen_art
 import windmere_art
 import frostspine_art
@@ -1001,6 +1002,7 @@ FLAT.update(cinderreach_art.FLAT)
 TILE_LAYOUT += cinderreach_art.TILES
 TILE_LAYOUT += mire_art.TILES
 TILE_LAYOUT += verge_art.TILES
+TILE_LAYOUT += ossuary_art.TILES
 _names = [entry[0] for entry in TILE_LAYOUT if entry]
 assert len(_names) == len(set(_names)), "tile names used twice: %s" % sorted(n for n in set(_names) if _names.count(n) > 1)
 
@@ -1189,6 +1191,8 @@ def main():
         write_png(os.path.join(OUT, "mire", name + ".png"), px)
     for name, px in verge_art.build(_lit_with(verge_art), sheet).items():
         write_png(os.path.join(OUT, "verge", name + ".png"), px)
+    for name, px in ossuary_art.build(_lit_with(ossuary_art), sheet).items():
+        write_png(os.path.join(OUT, "ossuary", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())

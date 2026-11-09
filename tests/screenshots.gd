@@ -151,6 +151,12 @@ func _ready() -> void:
 		Vector2i(0, 3): ["70_drowned_lane", Vector2i(8, 4)],
 		Vector2i(1, 3): ["71_belfry_square", Vector2i(12, 8), Tide.Phase.RISING],
 		Vector2i(2, 3): ["72_weir_steps", Vector2i(17, 6), Tide.Phase.HIGH],
+		Vector2i(7, 0): ["73_bleached_strand", Vector2i(11, 11)],
+		Vector2i(8, 0): ["74_rib_hollow", Vector2i(3, 6)],
+		Vector2i(9, 0): ["75_skull_rise", Vector2i(12, 7)],
+		Vector2i(7, 1): ["76_sinksand_basin", Vector2i(11, 1)],
+		Vector2i(8, 1): ["77_vertebra_road", Vector2i(4, 6)],
+		Vector2i(9, 1): ["78_hollow_wind_flats", Vector2i(16, 6)],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
