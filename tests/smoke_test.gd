@@ -214,6 +214,25 @@ func _test_play() -> void:
 	shell.queue_free()
 	await _wait(0.1)
 
+	# Hold Sword to charge, release to spin: hits all around for 2.
+	var ring_crab := Scuttler.new()
+	ring_crab.ai_enabled = false
+	ring_crab.max_hp = 3
+	ring_crab.position = Vector2(100, row_y)
+	room.add_child(ring_crab)
+	player.global_position = room.global_position + Vector2(100, row_y + 22)
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	Input.action_press("attack")
+	await _wait(Player.ATTACK_TIME + Player.CHARGE_TIME + 0.2)
+	_check(player.is_charged(), "holding Sword charges a spin")
+	Input.action_release("attack")
+	await _wait(Player.SPIN_TIME + 0.2)
+	_check(ring_crab.hp == ring_crab.max_hp - Player.SPIN_DAMAGE, "spin attack hits an enemy behind Wren (hp %d)" % ring_crab.hp)
+	_check(player.state == Player.State.MOVE, "spin ends back in normal movement")
+	ring_crab.queue_free()
+	await _wait(0.1)
+
 	# Hum heals one bubble for a third of the meter.
 	GameState.bubbles = 2
 	GameState.resonance = GameState.resonance_max

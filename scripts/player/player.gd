@@ -5,7 +5,7 @@ extends CharacterBody2D
 ##
 ## The origin is at Wren's feet so y-sorting lines up with other objects.
 
-enum State { MOVE, ATTACK, HURT, HUM, DEAD }
+enum State { MOVE, ATTACK, CHARGE, SPIN, HURT, HUM, DEAD }
 
 const SPEED := 90.0
 const ATTACK_TIME := 0.24
@@ -13,6 +13,12 @@ const ATTACK_TIME := 0.24
 const SWORD_ACTIVE_FROM := 0.03
 const SWORD_ACTIVE_TO := 0.15
 const SWORD_DAMAGE := 1
+## Keep holding Sword after a slash to charge; release when charged to spin.
+const CHARGE_TIME := 0.8
+const CHARGE_SPEED_SCALE := 0.5
+const SPIN_TIME := 0.35
+const SPIN_RADIUS := 22.0
+const SPIN_DAMAGE := 2
 ## Wren is pushed back a little on every connect, more when a shell blocks.
 const RECOIL_SPEED := 60.0
 const BLOCKED_RECOIL_SPEED := 150.0
@@ -91,6 +97,10 @@ func _physics_process(delta: float) -> void:
 			_move_state()
 		State.ATTACK:
 			_attack_state(delta)
+		State.CHARGE:
+			_charge_state()
+		State.SPIN:
+			_spin_state(delta)
 		State.HURT:
 			_hurt_state(delta)
 		State.HUM:
@@ -128,6 +138,7 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	if _invuln > 0.0 or state == State.DEAD:
 		return
 	GameState.damage(amount)
+	_place_sword()
 	var away := global_position - from_position
 	_knockback = (away.normalized() if away.length() > 0.1 else -facing) * HURT_KNOCKBACK
 	_invuln = INVULN_TIME
@@ -166,6 +177,49 @@ func _attack_state(delta: float) -> void:
 			_hit_ids[enemy.get_instance_id()] = true
 			_on_sword_contact(enemy.take_hit(SWORD_DAMAGE, facing))
 	if _state_time >= ATTACK_TIME:
+		_enter(State.CHARGE if Input.is_action_pressed("attack") else State.MOVE)
+
+
+func is_charged() -> bool:
+	return state == State.CHARGE and _state_time >= CHARGE_TIME
+
+
+## Wren walks slowly with the sword held out, facing locked.
+func _charge_state() -> void:
+	velocity = _input_direction() * SPEED * CHARGE_SPEED_SCALE
+	if Input.is_action_pressed("attack"):
+		return
+	if is_charged():
+		_start_spin()
+	else:
+		_enter(State.MOVE)
+
+
+func _start_spin() -> void:
+	_enter(State.SPIN)
+	_hit_ids.clear()
+	_sword_shape.position = Vector2(0, -8)
+	var circle := CircleShape2D.new()
+	circle.radius = SPIN_RADIUS
+	_sword_shape.shape = circle
+	Feel.shake(1.0)
+
+
+func _spin_state(delta: float) -> void:
+	velocity = _knockback
+	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
+	for area in _sword.get_overlapping_areas():
+		var enemy := area.get_parent() as Enemy
+		if enemy == null or _hit_ids.has(enemy.get_instance_id()):
+			continue
+		_hit_ids[enemy.get_instance_id()] = true
+		var away := (enemy.global_position - global_position).normalized()
+		if enemy.take_hit(SPIN_DAMAGE, away) == Enemy.HitResult.HIT:
+			GameState.add_resonance(GameState.RESONANCE_PER_HIT)
+			Feel.hitstop(2)
+			Feel.shake(2.0)
+	if _state_time >= SPIN_TIME:
+		_place_sword()
 		_enter(State.MOVE)
 
 
@@ -250,8 +304,10 @@ func _update_facing(direction: Vector2) -> void:
 
 func _place_sword() -> void:
 	var rect := sword_rect()
+	var shape := RectangleShape2D.new()
+	shape.size = rect.size
+	_sword_shape.shape = shape
 	_sword_shape.position = rect.get_center()
-	(_sword_shape.shape as RectangleShape2D).size = rect.size
 
 
 func _update_sprite(delta: float) -> void:
@@ -269,7 +325,16 @@ func _update_sprite(delta: float) -> void:
 				column = FRAME_WALK[int(_anim_time / WALK_FRAME_TIME) % FRAME_WALK.size()]
 			else:
 				_anim_time = 0.0
-		State.ATTACK:
+		State.ATTACK, State.CHARGE:
+			column = FRAME_ATTACK
+			if state == State.CHARGE and velocity.length() > 1.0:
+				_anim_time += delta
+				column = FRAME_WALK[int(_anim_time / (WALK_FRAME_TIME * 2.0)) % FRAME_WALK.size()]
+		State.SPIN:
+			# Turn through down, side, up, side as the blade goes round.
+			var quarter := int(_state_time / SPIN_TIME * 4.0) % 4
+			row = [0, 2, 1, 2][quarter]
+			_body.flip_h = quarter == 3
 			column = FRAME_ATTACK
 		State.HUM:
 			column = FRAME_HUM
@@ -280,7 +345,7 @@ func _update_sprite(delta: float) -> void:
 	# Blink while invulnerable.
 	_body.visible = not (_invuln > 0.0 and state != State.DEAD and int(_invuln * 20.0) % 2 == 1)
 	Art.set_flash(_body, 1.0 if _flash > 0.0 else 0.0)
-	_front.z_index = -1 if (state == State.ATTACK and facing.y < 0.0) else 0
+	_front.z_index = -1 if (state in [State.ATTACK, State.CHARGE] and facing.y < 0.0) else 0
 	_front.queue_redraw()
 
 
@@ -289,6 +354,37 @@ func _draw_front() -> void:
 		_draw_hum_rings()
 	if state == State.ATTACK:
 		_draw_sword()
+	elif state == State.CHARGE:
+		_draw_held_sword()
+	elif state == State.SPIN:
+		_draw_spin()
+
+
+func _draw_blade(pivot: Vector2, angle: float) -> void:
+	_front.draw_set_transform(pivot, angle, Vector2.ONE)
+	_front.draw_texture(Art.SWORD, Vector2(-3, -3))
+	_front.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_held_sword() -> void:
+	var pivot := Vector2(0, -9) + facing * 3.0
+	_draw_blade(pivot, facing.angle())
+	if is_charged():
+		# A glint runs along the blade once the spin is ready.
+		var glint_at := pivot + facing * (4.0 + fmod(_state_time * 40.0, 10.0))
+		_front.draw_rect(Rect2(glint_at - Vector2(1, 1), Vector2(2, 2)), Palette.FLASH)
+		_front.draw_rect(Rect2(glint_at - Vector2(0, 3), Vector2(1, 7)), Palette.HUM)
+		_front.draw_rect(Rect2(glint_at - Vector2(3, 0), Vector2(7, 1)), Palette.HUM)
+
+
+func _draw_spin() -> void:
+	var t := clampf(_state_time / SPIN_TIME, 0.0, 1.0)
+	var start := facing.angle()
+	var angle := start + t * TAU
+	var trail := Palette.HUM
+	trail.a = 0.6
+	_front.draw_arc(Vector2(0, -8), 17.0, angle - 2.2, angle, 16, trail, 3.0)
+	_draw_blade(Vector2(0, -9), angle)
 
 
 ## The driftwood sword sweeps through a short arc during the swing.
@@ -304,9 +400,7 @@ func _draw_sword() -> void:
 		var trail := Palette.HUM
 		trail.a = 0.55
 		_front.draw_arc(pivot, 15.0, minf(start, angle), maxf(start, angle), 10, trail, 2.0)
-	_front.draw_set_transform(pivot, angle, Vector2.ONE)
-	_front.draw_texture(Art.SWORD, Vector2(-3, -3))
-	_front.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_draw_blade(pivot, angle)
 
 
 func _draw_hum_rings() -> void:
