@@ -450,8 +450,31 @@ TIDESTONE = [
 ]
 
 
+# Pell's three-clawed crab: the Scuttler's body in blue, its claws orange,
+# and a third claw on its right side. ( = shell, ) = claws (the letters
+# and digits are all taken).
+QUEST_CRAB_RAMPS = {
+    "(": ["#A8E4F5", "#62B4DE", "#3F86B0", "#285A80", "#16304A"],
+    ")": ["#FFD890", "#FFAA50", "#F08A3C", "#B85A26", "#5C2A1A"],
+}
+
+
+def quest_crab_frame(rows):
+    out = [list(r.replace("c", "(")) for r in rows]
+    # The two front claws.
+    for y in (3, 4, 5):
+        for x in list(range(0, 5)) + list(range(11, 16)):
+            if out[y][x] == "(":
+                out[y][x] = ")"
+    # The third claw, tucked against the right of the shell.
+    for x, y in ((14, 6), (14, 7), (15, 7), (15, 8)):
+        out[y][x] = ")"
+    return ["".join(r) for r in out]
+
+
 def build_enemies():
     out = {}
+    out["quest_crab"] = sheet([[lit(quest_crab_frame(SCUTTLER[k]), 3) for k in ("walk_a", "walk_b")]], 16, 14)
     out["scuttler"] = sheet([[lit(SCUTTLER[k], 3) for k in ("walk_a", "walk_b", "windup")]], 16, 14)
     out["spitter"] = sheet([[lit(SPITTER[k], 4) for k in ("idle", "windup")]], 16, 14)
     out["shellback"] = sheet([[lit(SHELLBACK[k], 5) for k in ("down", "up", "side")]], 16, 14)
@@ -924,6 +947,8 @@ RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
 FLAT.update(hull_art.FLAT)
+assert not set(QUEST_CRAB_RAMPS) & (set(RAMPS) | set(FLAT)), "quest crab material letters clash"
+RAMPS.update(QUEST_CRAB_RAMPS)
 assert not set(npc_art.RAMPS) & set(RAMPS), ("npc_art material letters clash", set(npc_art.RAMPS) & set(RAMPS))
 RAMPS.update(npc_art.RAMPS)
 FLAT.update(npc_art.FLAT)
