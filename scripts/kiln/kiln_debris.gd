@@ -4,11 +4,15 @@ extends Node2D
 
 var _bits: Array = []
 var _life := 0.5
+var _texture: Texture2D = KilnSprites.WYRM_SHARD
 
 
 ## Adds a burst of `count` chips at `at` (global) to `parent`.
-static func burst(parent: Node, at: Vector2, count: int) -> void:
+## `texture` is the chip (8x8); stone by default.
+static func burst(parent: Node, at: Vector2, count: int, texture: Texture2D = null) -> void:
 	var debris := KilnDebris.new()
+	if texture:
+		debris._texture = texture
 	debris.z_index = 3
 	for i in count:
 		var angle := TAU * i / count + randf_range(-0.3, 0.3)
@@ -31,4 +35,4 @@ func _physics_process(delta: float) -> void:
 func _draw() -> void:
 	for bit: Dictionary in _bits:
 		var at: Vector2 = (bit["pos"] as Vector2).round()
-		draw_texture(KilnSprites.WYRM_SHARD, at - Vector2(4, 4), Color(1, 1, 1, clampf(_life * 3.0, 0.0, 1.0)))
+		draw_texture(_texture, at - Vector2(4, 4), Color(1, 1, 1, clampf(_life * 3.0, 0.0, 1.0)))

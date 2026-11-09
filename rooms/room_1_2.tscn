@@ -6,7 +6,21 @@
 script = ExtResource("1_room")
 name_key = "ROOM_CAUSEWAY_END"
 biome = "sunken_verge"
+alt_flag = "old_one_turned"
 layout = "###########..###########
+#####.................##
+###...................##
+#~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
+###QQQQQQQQQQQQQQQQQQ###
+###QQQQQQQQQQQQQQQQQQ###
+..QQQQQQQQQQQQQQQQQQQQ..
+..QQQQQQQQ####QQQQQQQQ..
+..QQQQQQQQQ..QQQQQQQQQ..
+###########..###########"
+alt_layout = "###########..###########
 #####.................##
 ###...................##
 #~~~~~~~~~~~~~~~~~~~~~~#

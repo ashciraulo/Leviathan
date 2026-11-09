@@ -480,6 +480,7 @@ CAPTION_BLOCK,Clang
 CAPTION_TELL,Enemy winds up
 CAPTION_GUST,Wind gusts
 CAPTION_TIDE,Tide rushing in
+CAPTION_TIDE_EBB,Tide draining away
 CAPTION_SAND,Sand hissing
 CAPTION_HISS,Steam hisses
 CAPTION_ROAR,Roar
@@ -563,6 +564,29 @@ NAME_MURMUR,Murmur
 MURMUR_CALF_1,"Oh... look at them. Every light in the fen, dreaming the same shape."
 MURMUR_CALF_2,"That's a calf. The Old One isn't angry. It's grieving, and they're its dreams."
 MURMUR_CALF_3,"I sang them out of their lanterns for Vael. I won't do it again. Not for anyone."
+ROOM_TOMB_ENTRY,The Marrow Tomb
+ROOM_TOMB_HALL,The Marrow Tomb: Hall of Ribs
+ROOM_TOMB_CRYPT,The Marrow Tomb: Horn Crypt
+ROOM_TOMB_ECHO,The Marrow Tomb: Echo Chamber
+ROOM_TOMB_HIDDEN,The Marrow Tomb: Forgotten Ossuary
+ROOM_TOMB_PIT,The Marrow Tomb: Bone Pit
+ROOM_TOMB_BOSS,The Marrow Tomb: the Regent's Barrow
+DUNGEON_TOMB,The Marrow Tomb
+TOAST_GOT_ECHO_HORN,You found the Echo Horn!
+GOT_ECHO_HORN_1,"The Echo Horn! A curl of old bone bound in gold. Blow it, and the barrow answers."
+GOT_ECHO_HORN_2,"Press its item key (U or I) to blow one long note. Bone that hears it shatters, and things that hide are shown."
+BOSS_REGENT,The Hollow Regent
+BELL_TOMB_1,"You ring the Marrow Bell. Its note is soft, and it goes out over the dunes, over every bone lying in the sand."
+BELL_TOMB_2,"Your kin are sleeping too. Far away under the bay, the great sleeper breathes out, slow and easy, the way the tide goes out."
+BELL_TOMB_3,You learned the seventh phrase of the lullaby. Your Resonance grows.
+CAPTION_HORN,Horn sounds
+CAPTION_BONE_CRUMBLE,Bones crumble
+CAPTION_SKULL_SING,Skull sings
+CAPTION_BONE_RATTLE,Bones rattle
+CAPTION_ARMOUR_SHATTER,Bone armour shatters
+CAPTION_HUSH,Something unseen shivers
+CAPTION_REGENT,The Regent roars
+CAPTION_SCEPTRE,Sceptre slams
 NAME_VAEL,Vael
 VAEL_SPIRE_1,"So you carry Hessa's lamp now. I carried it once, before you were born."
 VAEL_SPIRE_2,"I was her first apprentice. She taught me the lullaby, just as she's teaching you."

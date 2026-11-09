@@ -15,37 +15,43 @@ func _ready() -> void:
 	# Slot 2 is File 3 on the file select: keep a real save safe.
 	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
-	_test_room_layouts()
-	_test_game_state()
-	_test_save_load()
-	_test_keys()
-	_test_items()
-	await _test_audio()
-	_test_text_fit()
-	await _test_menus()
-	await _test_play()
-	await _test_talk_and_dungeon()
-	await _test_hull_dungeon()
-	await _test_kiln_dungeon()
-	await _test_mire_dungeon()
-	await _test_gale_dungeon()
-	await _test_glacier_dungeon()
-	await _test_belfry_dungeon()
-	await _test_villagers()
-	await _test_story()
-	await _test_brinewood_pearl()
-	await _test_cinderreach()
-	await _test_gloamfen()
-	await _test_windmere()
-	await _test_frostspine()
-	await _test_verge()
-	await _test_ossuary()
-	await _test_maw_approach()
-	await _test_overworld_secrets()
-
-	await _test_fast_travel()
-	await _test_credits()
-	await _test_side_quests()
+	# SMOKE_ONLY=tomb runs just _test_tomb_dungeon (for quick local runs).
+	var only := OS.get_environment("SMOKE_ONLY")
+	if only != "":
+		await call("_test_%s_dungeon" % only)
+	else:
+		_test_room_layouts()
+		_test_game_state()
+		_test_save_load()
+		_test_keys()
+		_test_items()
+		await _test_audio()
+		_test_text_fit()
+		await _test_menus()
+		await _test_play()
+		await _test_talk_and_dungeon()
+		await _test_hull_dungeon()
+		await _test_kiln_dungeon()
+		await _test_mire_dungeon()
+		await _test_gale_dungeon()
+		await _test_glacier_dungeon()
+		await _test_belfry_dungeon()
+		await _test_tomb_dungeon()
+		await _test_villagers()
+		await _test_story()
+		await _test_brinewood_pearl()
+		await _test_cinderreach()
+		await _test_gloamfen()
+		await _test_windmere()
+		await _test_frostspine()
+		await _test_verge()
+		await _test_ossuary()
+		await _test_maw_approach()
+		await _test_overworld_secrets()
+		await _test_tide_turning()
+		await _test_fast_travel()
+		await _test_credits()
+		await _test_side_quests()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -1559,6 +1565,184 @@ func _test_belfry_dungeon() -> void:
 	await _wait(0.1)
 
 
+## The Marrow Tomb: the Echo Horn, bone walls (seen and hidden), singing
+## skulls, Marrowguards and the Hush, and the Hollow Regent.
+func _test_tomb_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_40_10.tscn"), "the Marrow Tomb has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(40, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	_check(GameState.dungeon == "tomb" and game.current_room.biome == "tomb", "Wren starts inside the Marrow Tomb")
+
+	# The Hall of Ribs: a barricade of bones blocks the way north.
+	var room := await _goto(game, Vector2i(40, 9), Vector2i(11, 11))
+	await _calm(room)
+	var walls := _child_of(room, BoneWall)
+	_check(walls.size() == 2, "a bone barricade blocks the Hall's north way")
+	player.global_position = _tile_pos(room, Vector2i(11, 2))
+	Input.action_press("move_up")
+	await _wait(0.8)
+	Input.action_release("move_up")
+	var local := player.global_position - room.global_position
+	_check(game.current_room == room and local.y > Room.TILE, "the barricade stops Wren (at %s)" % local)
+	_check(not player.use_item("echo_horn"), "no horn before it's found")
+
+	# The Horn Crypt: its Marrowguards turn the sword with their shields.
+	room = await _goto(game, Vector2i(39, 9), Vector2i(22, 6))
+	player.global_position = _tile_pos(room, Vector2i(11, 6))
+	await _wait(0.2)
+	var guards := _child_of(room, Marrowguard)
+	_check(guards.size() == 3, "Marrowguards stand in the Horn Crypt")
+	var guard: Marrowguard = guards[0]
+	guard.ai_enabled = false
+	guard.facing = Vector2.RIGHT
+	_check(guard.take_hit(1, Vector2.LEFT) == Enemy.HitResult.BLOCKED, "from the front, the shield turns the sword")
+	guard._stun = 0.0
+	_check(guard.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "from behind, the sword finds it")
+	for g: Marrowguard in guards:
+		g.shield = false
+		g._stun = 0.0
+		while not g.dying:
+			g._stun = 0.0
+			g.take_hit(1, Vector2.UP)
+	await _wait(0.6)
+	var chest: Chest = _child_of(room, Chest)[0]
+	_check(chest.visible, "with the Marrowguards beaten the Echo Horn's chest appears")
+	chest.interact()
+	for i in 30:
+		await _wait(0.2)
+		for child in game.get_children():
+			if child is DialogueBox and DialogueBox.is_open:
+				child.advance()
+		if not game.busy and not DialogueBox.is_open and i > 10:
+			break
+	_check(GameState.has_item("echo_horn"), "Wren has the Echo Horn")
+
+	# The horn shatters a Marrowguard's shield (one fresh from the Entry).
+	room = await _goto(game, Vector2i(40, 10), Vector2i(11, 1))
+	guards = _child_of(room, Marrowguard)
+	_check(guards.size() == 1, "a Marrowguard keeps the Entry")
+	if guards.size() == 1:
+		guard = guards[0]
+		guard.ai_enabled = false
+		player.global_position = guard.global_position + Vector2(0, 30)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(player.use_item("echo_horn"), "Wren blows the Echo Horn")
+		await _wait(0.6)
+		_check(not guard.shield, "the horn's note shatters its bone shield")
+
+	# Back in the Hall, the horn brings the barricade down.
+	room = await _goto(game, Vector2i(40, 9), Vector2i(11, 11))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(11, 3))
+	player.facing = Vector2.UP
+	await _wait(0.6)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(_child_of(room, BoneWall).is_empty(), "the horn brings the barricade down")
+
+	# The Echo Chamber: all three skulls singing at once.
+	room = await _goto(game, Vector2i(40, 8), Vector2i(11, 11))
+	await _calm(room)
+	var skulls := _child_of(room, SingingSkull)
+	_check(skulls.size() == 3, "three skulls sit in the Echo Chamber")
+	chest = _child_of(room, Chest)[0]
+	_check(not chest.visible, "its chest is hidden")
+	for spot in [Vector2i(11, 8), Vector2i(7, 4), Vector2i(16, 4)]:
+		player.global_position = _tile_pos(room, spot)
+		player.velocity = Vector2.ZERO
+		await _wait(0.15)
+		player.use_item("echo_horn")
+		await _wait(0.75)
+	_check(chest.visible, "with every skull singing at once, the chest appears")
+	# Its west wall is hidden bone: it looks like wall, and stops Wren.
+	_check(room.tile_at(0, 6) == "#", "the Chamber's west wall looks like any wall")
+	player.global_position = _tile_pos(room, Vector2i(2, 6))
+	player.velocity = Vector2.ZERO
+	player.facing = Vector2.LEFT
+	await _wait(0.6)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(room.tile_at(0, 6) == "." and _child_of(room, BoneWall).is_empty(), "the horn finds the hidden wall and brings it down")
+	Input.action_press("move_left")
+	await _wait(1.4)
+	Input.action_release("move_left")
+	_check(game.current_room.coord == Vector2i(39, 8), "behind it lies the Forgotten Ossuary")
+
+	# The Hush: unseen, the sword passes through it; an echo shows it.
+	room = game.current_room
+	var hushes := _child_of(room, Hush)
+	_check(hushes.size() == 2, "the Hush haunts the Forgotten Ossuary")
+	if hushes.size() == 2:
+		var hush: Hush = hushes[0]
+		hush.ai_enabled = false
+		_check(hush.take_hit(1, Vector2.UP) == Enemy.HitResult.IGNORED, "unseen, the sword passes through the Hush")
+		player.global_position = hush.global_position + Vector2(20, 0)
+		player.velocity = Vector2.ZERO
+		await _wait(0.2)
+		player.use_item("echo_horn")
+		await _wait(0.6)
+		_check(hush.shown > 0.0, "the horn's echo shows the Hush")
+		_check(hush.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "shown, the sword finds it")
+
+	# The Hollow Regent.
+	GameState.refill()
+	room = await _goto(game, Vector2i(40, 7), Vector2i(11, 11))
+	var bosses := _child_of(room, HollowRegent)
+	_check(bosses.size() == 1, "the Hollow Regent waits in his barrow")
+	if bosses.size() == 1:
+		var regent: HollowRegent = bosses[0]
+		await _wait(1.4)
+		_check(regent.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "armoured, the sword glances off him")
+		regent.ai_enabled = false
+		player.global_position = regent.global_position + Vector2(0, 40)
+		player.velocity = Vector2.ZERO
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		player.use_item("echo_horn")
+		await _wait(0.7)
+		_check(regent.armour_left() == 2, "one note of the horn shatters one piece of his armour")
+		for i in 2:
+			await _wait(0.2)
+			player.use_item("echo_horn")
+			await _wait(0.7)
+		_check(regent.armour_left() == 0 and regent.mode == HollowRegent.Mode.OPEN, "with all his armour gone, his ribs stand open")
+		_check(regent.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and regent.hp == 5, "open, the sword finds the marrow-light")
+		regent._stun = 0.0
+		regent.take_hit(1, Vector2.UP)
+		regent.ai_enabled = true
+		await _wait(HollowRegent.REBUILD_TIME + 0.3)
+		_check(regent.armour_left() == 3 and regent.mode != HollowRegent.Mode.OPEN, "after two hits he draws his armour back up from the bones")
+		regent.ai_enabled = false
+		regent.mode = HollowRegent.Mode.OPEN
+		while regent.hp > 0:
+			regent._stun = 0.0
+			regent._hits_this_open = 0
+			regent.take_hit(1, Vector2.UP)
+		_check(GameState.flags.get(HollowRegent.DEFEATED_FLAG, false), "enough hits bring the Regent down")
+		await _wait(3.2)
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "tomb", "the Marrow Bell rises in the barrow")
+		if bell:
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("tomb")), "ringing the Marrow Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+	game.queue_free()
+	await _wait(0.1)
+
+
 func _tile_pos(room: Room, tile: Vector2i) -> Vector2:
 	return room.global_position + Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
 
@@ -2779,8 +2963,12 @@ func _test_verge() -> void:
 	# tiles (Frostfang arrows) make a way over. Six rows of water is more
 	# than a Kite Cloak glide carries.
 	var causeway: Room = (load("res://rooms/room_1_2.tscn") as PackedScene).instantiate()
-	var rows := Room.parse_layout(causeway.layout)
+	# Until the Old One turns (the Gale Bell), the Verge is still under the sea.
+	var drowned := Room.parse_layout(causeway.layout)
+	var rows := Room.parse_layout(causeway.alt_layout)
+	_check(causeway.alt_flag == "old_one_turned" and not causeway.layout.contains("r") and rows[9].contains("r"), "the Verge's flats only rise once the Old One turns")
 	causeway.free()
+	_check(drowned[5].count("~") == Room.COLS - 2 and drowned[9].count("Q") == Room.COLS - 4, "before the turn Causeway End is open sea, deep past the shallows")
 	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(2, 10)), "the Causeway End channel can't be crossed on foot")
 	var frozen := rows.duplicate()
 	for y in range(3, 9):
@@ -2958,6 +3146,46 @@ func _test_ossuary() -> void:
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
+
+
+## After the Old One turns, a Tidestone turns the tide and holds it.
+func _test_tide_turning() -> void:
+	GameState.reset_new_game()
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	var stone := Tidestone.new()
+	stone.room_coord = Vector2i(0, 2)
+	add_child(stone)
+	stone.awake = true
+	stone.interact()
+	_check(Tide.held() == "" and not Tide.can_turn(), "before the Old One turns, a Tidestone leaves the tide alone")
+	GameState.set_flag("old_one_turned")
+	stone.interact()
+	_check(Tide.held() == "high" and is_equal_approx(Tide.level(), 1.0) and Tide.phase() == Tide.Phase.HIGH, "after the turn, a Tidestone brings the tide in (at once, with no flats in sight)")
+	# It holds: the clock moving on doesn't let it out again.
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	_check(is_equal_approx(Tide.level(), 1.0), "a held tide stays in")
+	stone.interact()
+	_check(Tide.held() == "low" and is_equal_approx(Tide.level(), 0.0), "the stone sends it out again")
+	stone.queue_free()
+	# In the Verge, the turned tide runs in at the flooding pace.
+	GameState.set_checkpoint(Vector2i(0, 2), Vector2(6 * Room.TILE + 8, 7 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var tide := room.get_node_or_null("Tide") as Tide
+	_check(tide != null and not tide.is_flooded(Vector2i(9, 4)), "held out, Cockle Flats are dry")
+	_check(Tide.turn(get_tree()) == "high" and Tide.phase() == Tide.Phase.RISING, "turned in the Verge, the tide starts rising")
+	await _wait(Tide.RISING_TIME + 0.6)
+	_check(Tide.phase() == Tide.Phase.HIGH and tide != null and tide.is_flooded(Vector2i(9, 4)), "and the flats go under")
+	_check(GameState.has_flag(Tide.HELD_FLAG) and GameState.has_flag(Tide.HELD_IN_FLAG), "the held tide is kept as plain flags")
+	# Turned and then left behind mid-ebb, it finishes while Wren is away.
+	Tide.turn(get_tree())
+	game.queue_free()
+	await _wait(0.1)
+	_check(Tide.held() == "low" and Tide.phase() == Tide.Phase.LOW, "a tide left mid-turn finishes running out")
+	Tide.offset = 0.0
+	GameState.reset_new_game()
 
 
 ## Overworld secrets: chests hold what their room says, a cache holds a
