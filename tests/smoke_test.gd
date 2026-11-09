@@ -16,7 +16,9 @@ func _ready() -> void:
 	_test_room_layouts()
 	_test_game_state()
 	_test_save_load()
+	_test_keys()
 	await _test_play()
+	await _test_talk_and_dungeon()
 	SaveManager.delete_save()
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
@@ -91,7 +93,8 @@ func _edge(rows: PackedStringArray, side: Vector2i) -> String:
 func _open_mask(edge: String) -> String:
 	var mask := ""
 	for tile in edge:
-		mask += "#" if Room.is_solid(tile) else "."
+		# A doorway (D) leads elsewhere by warp, not into the neighbour.
+		mask += "#" if Room.is_solid(tile) or tile == "D" else "."
 	return mask
 
 
@@ -128,6 +131,109 @@ func _test_save_load() -> void:
 	_check(GameState.flags.get("test_flag") == true, "load restores flags")
 	SaveManager.delete_save()
 	_check(not SaveManager.has_save(), "delete removes the save")
+
+
+func _test_keys() -> void:
+	GameState.reset_new_game()
+	_check(GameState.keys("hull") == 0, "no keys at the start")
+	_check(not GameState.use_key("hull"), "can't spend a key you don't have")
+	GameState.add_key("hull")
+	_check(GameState.keys("hull") == 1 and GameState.keys("kiln") == 0, "keys belong to one dungeon")
+	_check(GameState.use_key("hull") and GameState.keys("hull") == 0, "using a key spends it")
+
+
+## Hessa's talk, the doorway into the Rotting Hull, a chest key and a locked hatch.
+func _test_talk_and_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(0, -1), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	var hessa: Npc = null
+	for child in game.current_room.get_children():
+		if child is Npc:
+			hessa = child
+	_check(hessa != null, "Old Hessa stands in Saltmarrow")
+	if hessa == null:
+		game.queue_free()
+		return
+	# Stand below her, face up, press Interact.
+	player.global_position = hessa.global_position + Vector2(0, 14)
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	_check(player.try_interact(), "Wren can talk to Hessa")
+	await _wait(0.1)
+	_check(DialogueBox.is_open and get_tree().paused, "talking opens the box and pauses the game")
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	var pages := 0
+	while box and DialogueBox.is_open and pages < 20:
+		box.advance()
+		box.advance()
+		pages += 1
+	_check(not DialogueBox.is_open and not get_tree().paused, "the talk ends and the game resumes")
+	_check(pages == Npc.KINDS["hessa"]["first"].size(), "Hessa's first talk has every page (%d)" % pages)
+	_check(GameState.flags.get("met_hessa", false), "meeting Hessa is remembered")
+	_check(hessa.current_lines().size() == 1, "Hessa has a short reminder after that")
+	await _wait(0.4)
+
+	# The doorway in Hull Landing leads into the Rotting Hull.
+	Events.door_entered.emit(Vector2i(5, 0), Vector2i(11, 8))
+	await _wait(1.0)
+	_check(game.current_room.coord == Vector2i(5, 0), "a doorway warps to its room")
+	var door: Doorway = null
+	for child in game.current_room.get_children():
+		if child is Doorway:
+			door = child
+	_check(door != null and door.target_room == Vector2i(10, 10), "Hull Landing has the way into the Hull")
+	if door:
+		game.player.global_position = door.global_position + Vector2(0, 12)
+		Input.action_press("move_up")
+		await _wait(0.4)
+		Input.action_release("move_up")
+		await _wait(1.0)
+	_check(game.current_room.coord == Vector2i(10, 10), "walking into the hole enters the Rotting Hull (in %s)" % game.current_room.coord)
+	_check(GameState.dungeon == "hull", "GameState knows Wren is in the Hull")
+
+	# A chest in the Galley holds the key for the Bilge's hatch.
+	Events.door_entered.emit(Vector2i(9, 9), Vector2i(20, 6))
+	await _wait(1.0)
+	var chest: Chest = null
+	for child in game.current_room.get_children():
+		if child is Chest:
+			chest = child
+	_check(chest != null and not chest.opened, "the Galley has a closed chest")
+	if chest:
+		game.player.global_position = chest.global_position + Vector2(0, 14)
+		game.player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(game.player.try_interact(), "Wren can open the chest")
+		_check(chest.opened and GameState.keys("hull") == 1, "the chest gives a small key")
+		_check(GameState.flags.get(chest.flag_key(), false), "an opened chest stays open")
+
+	Events.door_entered.emit(Vector2i(10, 9), Vector2i(20, 6))
+	await _wait(1.0)
+	var hatches := 0
+	for child in game.current_room.get_children():
+		if child is LockedDoor:
+			hatches += 1
+	_check(hatches == 3, "the Bilge's east way is barred (%d hatches)" % hatches)
+	game.player.global_position = game.current_room.global_position + Vector2(21 * Room.TILE + 8, 6 * Room.TILE + 12)
+	Input.action_press("move_right")
+	await _wait(0.5)
+	Input.action_release("move_right")
+	await _wait(0.4)
+	_check(GameState.keys("hull") == 0, "the hatch uses the key")
+	_check(GameState.flags.get(LockedDoor.lock_flag(Vector2i(10, 9)), false), "the open hatch is remembered")
+	Input.action_press("move_right")
+	await _wait(1.0)
+	Input.action_release("move_right")
+	_check(game.current_room.coord == Vector2i(11, 9), "through the hatch to the Cargo Hold (in %s)" % game.current_room.coord)
+	game.queue_free()
+	await _wait(0.1)
 
 
 func _test_play() -> void:

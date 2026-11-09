@@ -19,6 +19,8 @@ var checkpoint_room := Vector2i.ZERO
 var checkpoint_pos := NO_POSITION
 ## The room Wren is in right now. Not saved: loading always uses the checkpoint.
 var room_coord := Vector2i.ZERO
+## The dungeon that room belongs to ("" on the overworld). Not saved.
+var dungeon := ""
 var flags: Dictionary = {}
 
 
@@ -30,6 +32,7 @@ func reset_new_game() -> void:
 	checkpoint_room = Vector2i.ZERO
 	checkpoint_pos = NO_POSITION
 	room_coord = Vector2i.ZERO
+	dungeon = ""
 	flags = {}
 
 
@@ -67,6 +70,23 @@ func can_hum() -> bool:
 func hum_heal() -> void:
 	resonance = maxf(resonance - hum_cost(), 0.0)
 	heal(1)
+
+
+## Small keys belong to one dungeon and only open doors there.
+func keys(dungeon: String) -> int:
+	return int(flags.get("keys_" + dungeon, 0))
+
+
+func add_key(dungeon: String) -> void:
+	flags["keys_" + dungeon] = keys(dungeon) + 1
+
+
+## Spends a key if there is one. Returns false when Wren has none.
+func use_key(dungeon: String) -> bool:
+	if keys(dungeon) <= 0:
+		return false
+	flags["keys_" + dungeon] = keys(dungeon) - 1
+	return true
 
 
 func set_checkpoint(room: Vector2i, pos: Vector2) -> void:

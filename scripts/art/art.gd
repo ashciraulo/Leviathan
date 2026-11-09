@@ -26,6 +26,11 @@ const WORLD_TILES := preload("res://assets/tiles/world.png")
 const MANGROVE := preload("res://assets/props/mangrove.png")
 const WRECK := preload("res://assets/props/wreck.png")
 const LANTERN_POST := preload("res://assets/props/lantern_post.png")
+const HULL := preload("res://assets/props/hull.png")
+const HESSA := preload("res://assets/sprites/hessa.png")
+const CHEST := preload("res://assets/sprites/chest.png")
+const LOCKED_HATCH := preload("res://assets/sprites/locked_hatch.png")
+const SMALL_KEY := preload("res://assets/sprites/small_key.png")
 
 const FLASH_SHADER := """
 shader_type canvas_item;

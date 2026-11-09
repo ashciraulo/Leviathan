@@ -15,6 +15,7 @@ const KINDS := {
 	"M": [Art.MANGROVE, 60, Vector2(20, 10), true],
 	"W": [Art.WRECK, 27, Vector2(40, 14), true],
 	"l": [Art.LANTERN_POST, 29, Vector2(6, 4), false],
+	"R": [Art.HULL, 69, Vector2(84, 18), true],
 }
 
 var kind := ""

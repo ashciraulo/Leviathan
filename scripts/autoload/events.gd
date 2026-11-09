@@ -8,3 +8,10 @@ signal player_died
 signal room_entered(coord: Vector2i)
 ## Show a short line of text at the bottom of the screen. Pass a translation key.
 signal toast(text_key: String)
+## Open the dialogue box. speaker_key names who is talking ("" for none);
+## lines are translation keys, shown one page each.
+signal dialogue_requested(speaker_key: String, lines: PackedStringArray)
+## The dialogue box closed.
+signal dialogue_finished
+## Wren stepped into a doorway: go to another room (a dungeon, a house).
+signal door_entered(target_room: Vector2i, target_tile: Vector2i)

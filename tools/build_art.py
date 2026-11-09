@@ -25,6 +25,7 @@ import sys
 import zlib
 
 import brinewood_art
+import hull_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -610,6 +611,17 @@ def build_props():
         "mangrove": sheet([[lit(brinewood_art.mangrove(), 17)]], 48, 64),
         "wreck": sheet([[lit(brinewood_art.wreck(), 18)]], 48, 32),
         "lantern_post": sheet([[lit(brinewood_art.lantern_post(), 19)]], 16, 32),
+        "hull": sheet([[lit(hull_art.beached_hull(), 20)]], 96, 72),
+    }
+
+
+def build_dungeon_objects():
+    """Old Hessa and the things Wren finds in dungeons."""
+    return {
+        "hessa": sheet([[lit(f, 21) for f in hull_art.hessa_frames()]], 16, 24),
+        "chest": sheet([[lit(hull_art.CHEST_CLOSED, 22), lit(hull_art.CHEST_OPEN, 22)]], 16, 16),
+        "locked_hatch": sheet([[lit(hull_art.LOCKED_HATCH, 23)]], 16, 16),
+        "small_key": sheet([[lit(hull_art.SMALL_KEY, 24)]], 16, 16),
     }
 
 
@@ -900,8 +912,11 @@ TILE_LAYOUT = [
 ]
 TILE_COLUMNS = 8
 TILE_LAYOUT += brinewood_art.TILES
+TILE_LAYOUT += hull_art.TILES
 RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
+RAMPS.update(hull_art.RAMPS)
+FLAT.update(hull_art.FLAT)
 
 
 def build_tiles():
@@ -1042,6 +1057,8 @@ def main():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     for name, px in build_props().items():
         write_png(os.path.join(OUT, "props", name + ".png"), px)
+    for name, px in build_dungeon_objects().items():
+        write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     bubbles, shots, shadows = build_round()
     write_png(os.path.join(OUT, "ui", "bubbles.png"), bubbles)
     write_png(os.path.join(OUT, "sprites", "shot.png"), shots)

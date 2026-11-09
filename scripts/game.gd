@@ -24,6 +24,7 @@ func _ready() -> void:
 	camera.make_current()
 	add_child(Hud.new())
 	add_child(PauseMenu.new())
+	add_child(DialogueBox.new())
 	var fade_layer := CanvasLayer.new()
 	fade_layer.layer = 30
 	add_child(fade_layer)
@@ -33,6 +34,7 @@ func _ready() -> void:
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade_layer.add_child(_fade)
 	Events.player_died.connect(_on_player_died)
+	Events.door_entered.connect(_on_door_entered)
 	_start()
 
 
@@ -65,6 +67,7 @@ func _start() -> void:
 		GameState.set_checkpoint(Vector2i.ZERO, GameState.NO_POSITION)
 		current_room = _spawn_room(Vector2i.ZERO)
 	GameState.room_coord = current_room.coord
+	GameState.dungeon = current_room.dungeon
 
 	player = Player.new()
 	player.name = "Wren"
@@ -118,9 +121,34 @@ func _change_room(direction: Vector2i) -> void:
 	current_room.process_mode = Node.PROCESS_MODE_INHERIT
 	player.frozen = false
 	GameState.room_coord = next.coord
+	GameState.dungeon = next.dungeon
 	busy = false
 	Events.room_entered.emit(next.coord)
 	Events.toast.emit(next.name_key)
+
+
+## Fade out, swap to the doorway's room, put Wren on its arrival tile, fade in.
+func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
+	if busy or not ResourceLoader.exists(ROOM_PATH % [target.x, target.y]):
+		return
+	busy = true
+	player.frozen = true
+	var tween := create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
+	await tween.finished
+	current_room.queue_free()
+	current_room = _spawn_room(target)
+	player.position = current_room.position + Vector2(tile.x * Room.TILE + Room.TILE / 2.0, tile.y * Room.TILE + 12)
+	camera.position = _room_center(current_room)
+	GameState.room_coord = target
+	GameState.dungeon = current_room.dungeon
+	Events.room_entered.emit(target)
+	Events.toast.emit(current_room.name_key)
+	tween = create_tween()
+	tween.tween_property(_fade, "color:a", 0.0, FADE_TIME)
+	await tween.finished
+	player.frozen = false
+	busy = false
 
 
 func _on_player_died() -> void:
