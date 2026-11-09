@@ -8,7 +8,7 @@ extends Object
 ## room-wide parts once every tile is placed: the gap field, the puzzle that
 ## opens the bars, and a listing deck.
 
-const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEaLR"
+const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEaLR%$ZMU"
 
 
 static func handles(letter: String) -> bool:
@@ -54,6 +54,17 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 			return Valve.new()
 		"r":
 			return LightningRod.new()
+		"%", "$":
+			var wall := BoneWall.new()
+			wall.concealed = letter == "$"
+			wall.tile = tile
+			return wall
+		"Z":
+			return SingingSkull.new()
+		"M":
+			return Marrowguard.new()
+		"U":
+			return Hush.new()
 		"O":
 			return HookPost.new()
 		"K":
@@ -86,6 +97,8 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 					return Rimeback.spawn_in(room, pos)
 				"belfry":
 					return Knell.spawn_in(room, pos)
+				"tomb":
+					return HollowRegent.spawn_in(room, pos)
 			return BarnacleMatriarch.spawn_in(room, pos)
 	return null
 
@@ -97,7 +110,7 @@ static func finish(room: Room) -> void:
 		for x in Room.COLS:
 			var letter := room.tile_at(x, y)
 			has_gap = has_gap or letter in ["_", "^"]
-			has_puzzle = has_puzzle or letter in ["=", "|", "j", "E"]
+			has_puzzle = has_puzzle or letter in ["=", "|", "j", "E", "Z"]
 	if has_gap or room.lava_rise > 0.0:
 		var field := PitField.new()
 		field.name = "PitField"
