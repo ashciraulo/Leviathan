@@ -55,8 +55,32 @@ const FLASH_SHADER := """
 shader_type canvas_item;
 uniform float flash : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 flash_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+// High contrast: a one-pixel outline around the sprite (alpha 0 = none).
+// frame is the current frame's UV rect, so the outline never picks up a
+// neighbouring frame of the sheet.
+uniform vec4 outline_color : source_color = vec4(0.0);
+uniform vec4 frame = vec4(0.0, 0.0, 1.0, 1.0);
+varying vec4 tint;
+void vertex() {
+	tint = COLOR;
+}
+float alpha_at(sampler2D tex, vec2 uv) {
+	if (uv.x < frame.x || uv.y < frame.y || uv.x > frame.z || uv.y > frame.w) {
+		return 0.0;
+	}
+	return texture(tex, uv).a;
+}
 void fragment() {
-	COLOR = vec4(mix(COLOR.rgb, flash_color.rgb, flash), COLOR.a);
+	if (outline_color.a > 0.0 && texture(TEXTURE, UV).a < 0.5) {
+		vec2 px = TEXTURE_PIXEL_SIZE;
+		float near = max(max(alpha_at(TEXTURE, UV + vec2(px.x, 0.0)), alpha_at(TEXTURE, UV - vec2(px.x, 0.0))),
+			max(alpha_at(TEXTURE, UV + vec2(0.0, px.y)), alpha_at(TEXTURE, UV - vec2(0.0, px.y))));
+		if (near > 0.5) {
+			COLOR = vec4(outline_color.rgb, outline_color.a * tint.a);
+		}
+	} else {
+		COLOR = vec4(mix(COLOR.rgb, flash_color.rgb, flash), COLOR.a);
+	}
 }
 """
 
@@ -94,10 +118,20 @@ static func flash_material() -> ShaderMaterial:
 	return material
 
 
-## Sets the flash on a sprite made by sprite(). Respects the soft-flash option.
+## Sets the flash on a sprite made by sprite(). Respects the soft-flash
+## option, and draws the high contrast outline when the sprite has one
+## (set_meta("contrast", colour)) and the option is on.
 static func set_flash(node: CanvasItem, amount: float) -> void:
 	var material := node.material as ShaderMaterial
 	if material == null:
 		return
 	material.set_shader_parameter("flash", amount)
 	material.set_shader_parameter("flash_color", Palette.FLASH if Settings.flashes else Palette.SOFT_FLASH)
+	var outline: Color = node.get_meta("contrast", Color.TRANSPARENT) if Settings.high_contrast else Color.TRANSPARENT
+	material.set_shader_parameter("outline_color", outline)
+	if outline.a > 0.0 and node is Sprite2D:
+		var sprite := node as Sprite2D
+		var w := 1.0 / sprite.hframes
+		var h := 1.0 / sprite.vframes
+		var at := Vector2(sprite.frame_coords) * Vector2(w, h)
+		material.set_shader_parameter("frame", Vector4(at.x, at.y, at.x + w, at.y + h))

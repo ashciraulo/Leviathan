@@ -1577,7 +1577,7 @@ func _test_audio() -> void:
 	_check(Audio.cue_for_room("brinewood", "") == "region_brinewood", "rooms play their region's music")
 	_check(Audio.cue_for_room("hull", "hull") == "dungeon_hull", "dungeon rooms play the dungeon's music")
 	var heard: Array[String] = []
-	var listen := func(key: String) -> void: heard.append(key)
+	var listen := func(key: String, _side: int) -> void: heard.append(key)
 	Events.caption.connect(listen)
 	var was := Settings.captions
 	Settings.captions = true
@@ -1588,6 +1588,29 @@ func _test_audio() -> void:
 	Settings.captions = was
 	Events.caption.disconnect(listen)
 	_check(heard == ["CAPTION_BELL"], "captions show only when the option is on")
+	var sides: Array[int] = []
+	var listen_side := func(_key: String, side: int) -> void: sides.append(side)
+	Events.caption.connect(listen_side)
+	Settings.captions = true
+	for at: Variant in [Vector2(-1000, 0), Vector2(100000, 0), null]:
+		Audio._last_played.clear()
+		Audio.play_sfx("bell_ring", at)
+	Settings.captions = was
+	Events.caption.disconnect(listen_side)
+	_check(sides == [-1, 1, 0], "captions say which side a sound came from (%s)" % [sides])
+	# High contrast outlines sprites that ask for one, only while it's on.
+	var outlined := Art.sprite(Art.WREN, 6, 3, 22)
+	outlined.set_meta("contrast", Palette.CONTRAST_WREN)
+	var contrast_was := Settings.high_contrast
+	Settings.high_contrast = true
+	Art.set_flash(outlined, 0.0)
+	var on: Color = (outlined.material as ShaderMaterial).get_shader_parameter("outline_color")
+	Settings.high_contrast = false
+	Art.set_flash(outlined, 0.0)
+	var off: Color = (outlined.material as ShaderMaterial).get_shader_parameter("outline_color")
+	Settings.high_contrast = contrast_was
+	outlined.free()
+	_check(on == Palette.CONTRAST_WREN and off.a == 0.0, "high contrast outlines Wren only when it's on")
 	Audio.play_music("region_saltmarrow")
 	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
 	Audio.stop_music(0.01)

@@ -168,7 +168,7 @@ OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
 OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
-OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
+OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up. An arrow points to sounds from one side."
 OPT_COLOR_FILTER,Colour filter
 OPT_COLOR_FILTER_DESC,"Shifts colours so they stay apart for red, green or blue colour blindness."
 OPT_PROTAN,Protan
@@ -178,6 +178,8 @@ OPT_SCREEN_SHAKE,Screen shake
 OPT_SCREEN_SHAKE_DESC,How hard the screen shakes on big hits.
 OPT_HITSTOP,Hit pause
 OPT_HITSTOP_DESC,The tiny freeze when a hit lands.
+OPT_HIGH_CONTRAST,High contrast
+OPT_HIGH_CONTRAST_DESC,"Outline Wren and enemies, and put solid backings behind the HUD and captions."
 OPT_FLASHES,Flashes
 OPT_FLASHES_DESC,"Full white flashes, or soft ones that are gentler on the eyes."
 OPT_FLASH_SOFT,Soft
@@ -382,6 +384,9 @@ CAPTION_BELL,A bell rings
 CAPTION_SECRET,Secret chime
 CAPTION_DOOR,Stone grinds
 CAPTION_PUZZLE,Something opened
+CAPTION_CHARGED,Sword charged
+CAPTION_LOCKED,Locked
+CAPTION_SHOT,Shot fired
 GAMEOVER_TITLE_TEXT,Out of breath
 GAMEOVER_WAKE,Wake at the Tidestone
 GAMEOVER_TITLE,Return to the title

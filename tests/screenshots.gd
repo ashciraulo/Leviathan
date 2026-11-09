@@ -50,6 +50,22 @@ func _ready() -> void:
 	Input.action_release("move_right")
 	await _wait(0.4)
 	await _capture("04_tidepools_scuttlers")
+	# Accessibility: high contrast outlines and a caption from each side,
+	# away from the crabs and not mid-blink from a pinch.
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.ai_enabled = false
+	player.global_position = game.current_room.global_position + Vector2(200, 7 * Room.TILE + 12)
+	await _wait(2.0)
+	var contrast_was := Settings.high_contrast
+	var captions_was := Settings.captions
+	Settings.high_contrast = true
+	Settings.captions = true
+	Audio.play_sfx("bell_ring", game.current_room.global_position + Vector2(8, 60))
+	Audio.play_sfx("door_locked", game.current_room.global_position + Vector2(370, 60))
+	await _wait(0.2)
+	await _capture("04b_high_contrast")
+	Settings.high_contrast = contrast_was
+	Settings.captions = captions_was
 
 	# 4. A sword swing connecting with a Scuttler.
 	var room: Room = game.current_room

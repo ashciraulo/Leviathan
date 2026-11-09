@@ -35,6 +35,7 @@ func _build_rows() -> void:
 		_toggle("OPT_CAPTIONS", "captions"),
 		_header("OPT_SECTION_ACCESS"),
 		_choice("OPT_COLOR_FILTER", ["OPT_OFF", "OPT_PROTAN", "OPT_DEUTAN", "OPT_TRITAN"], "color_filter"),
+		_toggle("OPT_HIGH_CONTRAST", "high_contrast"),
 		_percent("OPT_SCREEN_SHAKE", "screen_shake_scale"),
 		_percent("OPT_HITSTOP", "hitstop_scale"),
 		_choice("OPT_FLASHES", ["OPT_FLASH_SOFT", "OPT_FLASH_FULL"], "flashes"),
