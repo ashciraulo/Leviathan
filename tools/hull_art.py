@@ -33,32 +33,42 @@ def blank(color=CLEAR):
 
 
 def plank_tile(seed):
-    """Deck planks running across the room: four boards per tile, each with
-    a dark seam under it. Rare butt joints and nails, a little grain, and
-    patches of green-black rot creeping out of the seams."""
+    """Deck planks running across the room: three boards per tile of
+    slightly different widths and weathering, each with a dark seam under
+    it and a worn highlight on its top edge. Butt joints with a pair of
+    nail heads either side, long streaks of grain, and now and then green-
+    black rot creeping out of a seam."""
     rnd = random.Random(500 + seed)
     px = blank(PLANK[2])
-    for board in range(4):
-        y0 = board * 4
-        tone = rnd.choice((2, 2, 3, 2))
-        for y in range(y0, y0 + 3):
+    nail = hex_color("#86705C")
+    y0 = 0
+    for board, height in enumerate((5, 5, 6)):
+        tone = rnd.choice((1, 2, 2, 3))
+        for y in range(y0, y0 + height - 1):
             for x in range(T):
                 px[y][x] = PLANK[tone]
         for x in range(T):
-            px[y0][x] = PLANK[tone - 1]
-            px[y0 + 3][x] = PLANK[5]
-        if rnd.random() < 0.35:
-            jx = rnd.randrange(2, T - 2)
-            for y in range(y0, y0 + 3):
+            px[y0 + height - 1][x] = PLANK[5]
+            if rnd.random() < 0.7:
+                px[y0][x] = PLANK[tone - 1]
+        # Grain: long faint streaks along the board.
+        for _ in range(2):
+            gx, gy = rnd.randrange(T - 6), y0 + 1 + rnd.randrange(height - 2)
+            for dx in range(rnd.randrange(4, 9)):
+                if gx + dx < T:
+                    px[gy][gx + dx] = PLANK[min(tone + 1, 4)]
+        # A butt joint where one board ends and the next begins.
+        if rnd.random() < 0.3:
+            jx = rnd.randrange(3, T - 3)
+            for y in range(y0, y0 + height - 1):
                 px[y][jx] = PLANK[4]
-            px[y0 + 1][jx + 1] = hex_color("#6A4A3A")
-        gx, gy = rnd.randrange(T - 4), y0 + 1 + rnd.randrange(2)
-        for dx in range(rnd.randrange(2, 5)):
-            px[gy][gx + dx] = PLANK[tone + 1]
+            for nx in (jx - 2, jx + 2):
+                px[y0 + 1][nx] = nail
+        y0 += height
     # Rot: a soft patch bleeding out of a seam.
     if rnd.random() < 0.3:
-        cx, cy = rnd.randrange(2, T - 2), rnd.choice((3, 7, 11))
-        for _ in range(4):
+        cx, cy = rnd.randrange(2, T - 2), rnd.choice((4, 9))
+        for _ in range(5):
             x = min(max(cx + rnd.randrange(-2, 3), 0), T - 1)
             y = min(max(cy + rnd.randrange(-1, 2), 0), T - 1)
             px[y][x] = rnd.choice(ROT)
@@ -66,27 +76,27 @@ def plank_tile(seed):
 
 
 def hull_top(seed):
-    """Wall top: the hull's heavy timbers seen from above."""
+    """Wall top: the hull's heavy frames seen from above. They run the
+    other way from the deck, darker and broader, so walls read at a glance
+    against the floor: three thick timbers with black gaps between and an
+    iron bolt now and then."""
     rnd = random.Random(600 + seed)
-    px = blank(TIMBER[3])
-    for board in range(3):
-        y0 = board * 5 + 1
-        for y in range(y0, min(y0 + 4, T)):
-            for x in range(T):
-                px[y][x] = TIMBER[2] if y > y0 else TIMBER[1]
-        for x in range(T):
-            if y0 + 4 < T:
-                px[y0 + 4][x] = TIMBER[4]
-        if rnd.random() < 0.6:
-            bx = rnd.randrange(2, T - 2)
-            px[y0 + 1][bx] = IRON
-            px[y0][bx] = TIMBER[0]
-    for x in range(T):
-        px[0][x] = TIMBER[4]
-    for _ in range(5):
-        x, y = rnd.randrange(T), rnd.randrange(T)
-        if px[y][x] == TIMBER[2]:
-            px[y][x] = TIMBER[3]
+    px = blank(TIMBER[5])
+    for beam in range(3):
+        x0 = beam * 5 + (seed % 2)
+        for x in range(x0, min(x0 + 4, T)):
+            for y in range(T):
+                px[y][x] = TIMBER[2] if x == x0 else TIMBER[3]
+        # Grain down the beam.
+        gx = min(x0 + 1 + rnd.randrange(2), T - 1)
+        gy = rnd.randrange(T - 6)
+        for dy in range(rnd.randrange(3, 7)):
+            px[gy + dy][gx] = TIMBER[4]
+        if rnd.random() < 0.5:
+            by = rnd.randrange(2, T - 2)
+            bx = min(x0 + 2, T - 1)
+            px[by][bx] = IRON
+            px[by - 1][bx] = TIMBER[1]
     return px
 
 
