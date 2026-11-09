@@ -9,6 +9,10 @@ const LOGO_TOP := 18.0
 const LOGO_BOB := 2.0
 const FADE_IN := 0.8
 const FADE_OUT := 0.5
+## The leviathan's breath on the title: glow alpha and timings (seconds).
+const BREATH_LOW := 0.25
+const BREATH_IN := 2.4
+const BREATH_OUT := 3.4
 
 var _logo: TextureRect
 var _menu: VBoxContainer
@@ -29,6 +33,13 @@ func _ready() -> void:
 	background.stretch_mode = TextureRect.STRETCH_KEEP
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
+	# The leviathan's light, brightening and dimming as it breathes.
+	var glow := TextureRect.new()
+	glow.texture = Art.TITLE_GLOW
+	glow.stretch_mode = TextureRect.STRETCH_KEEP
+	glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(glow)
+	_breathe(glow)
 
 	_logo = TextureRect.new()
 	_logo.texture = Art.TITLE_LOGO
@@ -125,6 +136,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if MenuKit.cancel(event) or event.is_action_pressed("pause"):
 		_hide_page()
+
+
+## Slow breaths: the glow swells in, holds, and ebbs away.
+func _breathe(glow: CanvasItem) -> void:
+	glow.modulate.a = BREATH_LOW
+	var tween := create_tween().set_loops()
+	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(glow, "modulate:a", 1.0, BREATH_IN)
+	tween.tween_interval(0.6)
+	tween.tween_property(glow, "modulate:a", BREATH_LOW, BREATH_OUT)
 
 
 ## The logo rises and settles like a slow swell.

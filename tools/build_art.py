@@ -1164,6 +1164,7 @@ def main():
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())
     write_png(os.path.join(OUT, "ui", "title_bg.png"), title_art.build_title_bg())
+    write_png(os.path.join(OUT, "ui", "title_glow.png"), title_art.build_title_glow())
     import ui_art
     ui_art.build(sys.modules[__name__])
     import mantle_art
