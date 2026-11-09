@@ -248,7 +248,8 @@ func _sleep() -> void:
 	if not is_inside_tree():
 		return
 	Events.game_finished.emit()
-	if roll_credits:
+	# With the story running, the ending scene rolls the credits itself.
+	if roll_credits and get_tree().get_first_node_in_group("story_director") == null:
 		get_tree().change_scene_to_file.call_deferred(CREDITS_SCENE)
 
 
