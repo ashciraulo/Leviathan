@@ -57,6 +57,7 @@ func _ready() -> void:
 		await _test_equipment()
 		await _test_side_quests()
 		await _test_shop()
+		await _test_dream()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -3724,3 +3725,50 @@ func _test_shop() -> void:
 	_check(Conversations.branch_for("marlo")["lines"][0] == "MARLO_PUFFERS_1", "and Marlo says so")
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Home after the credits: the Old One dreams, and the lighthouse points
+## its beam out to sea, towards the Maw, until Wren has been back to the Heart.
+func _test_dream() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.DREAM_FLAG), "back home after the credits, the Old One dreams")
+	for child in home.get_children():
+		if child is DialogueBox:
+			for key in ["HESSA_DREAM_1", "HESSA_DREAM_2", "HESSA_AFTER_END"]:
+				_check(child.lines_for(key, true) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
+	var pages := await _play_scene(home, 20.0)
+	_check(pages == 2 and not Cutscene.active, "Hessa felt it too (%d pages)" % pages)
+	var beam := get_tree().get_first_node_in_group("lighthouse_beam") as LighthouseBeam
+	_check(beam != null and absf(beam.angle - LighthouseBeam.SEAWARD) < 0.01, "the lighthouse turns its beam out to sea, towards the Maw")
+	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_AFTER_END", "Hessa still feels it breathing")
+	home.queue_free()
+	await _wait(0.1)
+	home = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	await _wait(0.3)
+	_check(not Cutscene.active and get_tree().get_first_node_in_group("lighthouse_beam") != null, "the scene plays once; the beam stays lit")
+	home.queue_free()
+	await _wait(0.1)
+	# Down at the sleeping Heart again, the beam can rest.
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_checkpoint(Vector2i(44, 6), GameState.NO_POSITION)
+	var heart: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart)
+	await _wait(0.3)
+	_check(GameState.has_flag(StoryDirector.HEART_VISIT_FLAG) and not Cutscene.active, "Wren goes back down to the Heart")
+	heart.queue_free()
+	await _wait(0.1)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	home = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	await _wait(0.3)
+	_check(get_tree().get_first_node_in_group("lighthouse_beam") == null, "and the lighthouse rests")
+	home.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false

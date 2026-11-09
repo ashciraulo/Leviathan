@@ -57,6 +57,11 @@ const MURAL_FLAG := "seen_last_mural"
 const MURAL_WATCH := Vector2(16 * 16 + 8, 2 * 16 + 12)
 const DACE_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 7 * 16 + 12), Vector2(14 * 16 + 8, 3 * 16 + 12)]
 const ENDING_FLAG := "seen_ending"
+## Cutscene 21, back home after the credits: the Old One dreams, and the
+## lighthouse turns its beam towards the Maw.
+const DREAM_FLAG := "seen_old_one_dreams"
+## Wren has been back down to the Heart since the ending: the beam rests.
+const HEART_VISIT_FLAG := "visited_heart_after_end"
 ## The Heart's chamber: Wren stands below the sleeping Heart, Vael comes
 ## up from the Choir Loft and stops beside them.
 const ENDING_WATCH := Vector2(11 * 16 + 8, 7 * 16 + 12)
@@ -101,6 +106,14 @@ func _on_room_entered(coord: Vector2i) -> void:
 	if GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and not GameState.has_flag(ENDING_FLAG) and _heart_here():
 		the_ending()
 		return
+	if GameState.has_flag(ENDING_FLAG):
+		if _heart_here():
+			GameState.set_flag(HEART_VISIT_FLAG)
+		elif coord == SALTMARROW and not GameState.has_flag(HEART_VISIT_FLAG):
+			if not GameState.has_flag(DREAM_FLAG):
+				the_old_one_dreams()
+				return
+			LighthouseBeam.at_lighthouse(game.current_room)
 	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
@@ -557,6 +570,35 @@ func the_ending() -> void:
 
 func _heart_here() -> bool:
 	return game.current_room != null and game.current_room.get_children().any(func(c: Node) -> bool: return c is DreamingHeart)
+
+
+## Cutscene 21, "The Old One dreams": home after the credits, the Old One's
+## hum comes up through the ground and the lighthouse swings its beam out
+## out to sea through the village gate, towards the Maw. Hessa felt it too.
+func the_old_one_dreams() -> void:
+	GameState.set_flag(DREAM_FLAG)
+	var room: Node = game.current_room
+	var scene := _scene()
+	await scene.wait(1.2)
+	Audio.play_sfx("old_one_hum", null, 0.9)
+	Feel.shake(2.0)
+	await scene.wait(1.4)
+	var beam := LighthouseBeam.at_lighthouse(room)
+	if beam:
+		beam.strength = 0.0
+		var glow := beam.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		glow.tween_property(beam, "strength", 1.0, Cutscene.scaled(0.8))
+		await beam.turn(LighthouseBeam.START, Cutscene.scaled(3.0))
+	await scene.wait(1.0)
+	var hessa := _find_npc("hessa")
+	if hessa:
+		await scene.walk_around_to(hessa.global_position + HOME_FROM_HESSA)
+		scene.face(Vector2.UP)
+		await scene.lamp(hessa.global_position, Cutscene.LAMP_HERE)
+	await scene.speak("hessa", ["HESSA_DREAM_1", "HESSA_DREAM_2"])
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	Audio.play_sfx("mantle_wings")
+	scene.finish()
 
 
 ## Swap the room behind a veil, without the door fade.

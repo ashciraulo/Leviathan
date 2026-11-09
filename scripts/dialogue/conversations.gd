@@ -44,6 +44,7 @@ const TALKS := {
 		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
 	],
 	"hessa": [
+		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
 		{"if": ["seen_hessa_confession"], "lines": ["HESSA_AFTER_TURN"]},
 		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},
 		{"if": ["tidebell_hull"], "unless": ["freed_mantle"], "lines": ["HESSA_MANTLE_1", "HESSA_MANTLE_2"]},
