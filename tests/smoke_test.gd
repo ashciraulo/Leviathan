@@ -508,6 +508,12 @@ func _play_scene(game: Node, seconds: float) -> int:
 	return pages
 
 
+## Wait for any running scene (and its talk) to end, the way a player
+## would before ringing a bell.
+func _scene_over(game: Node) -> void:
+	await _play_scene(game, 20.0)
+
+
 ## Story scenes: the opening on a new file, and the Wayshell after the Hull.
 func _test_story() -> void:
 	Cutscene.fast = true
@@ -648,8 +654,10 @@ func _test_story() -> void:
 	var moth_bell: Array = mire.current_room.get_children().filter(func(c: Node) -> bool: return c is Tidebell)
 	_check(moth_bell.size() == 1 and _child_of(mire.current_room, Doorway).size() == 1, "the Moth Bell and the way out are there after the scene")
 	if moth_bell.size() == 1:
+		await _scene_over(mire)
 		moth_bell[0].interact()
-		_finish_talk(mire)
+		var moth_pages := await _play_scene(mire, 10.0)
+		_check(moth_pages == 2, "the Moth Bell's scene tells its ringing (%d pages)" % moth_pages)
 		_check(GameState.has_flag(Tidebell.flag_for("mire")), "the Moth Bell rings after the scene")
 	mire.queue_free()
 	await _wait(0.1)
@@ -692,9 +700,13 @@ func _test_story() -> void:
 	_check(storm_bell != null, "the Storm Bell is there to ring after Vael goes")
 	# Ringing it: far below, the Old One turns over in its sleep.
 	if storm_bell:
+		GameState.resonance = 0.0
 		storm_bell.interact()
+		_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is BellPhrase), "the phrase leaves the bell as notes")
+		_check(GameState.resonance == 0.0, "Resonance fills only when the notes reach Wren")
 		await _wait(0.2)
-		_check(DialogueBox.is_open and not Cutscene.active, "the turn waits for the bell's own words")
+		_check(GameState.resonance == GameState.resonance_max, "the notes land and Resonance fills")
+		_check(Cutscene.active and not GameState.has_flag(StoryDirector.TURNED_FLAG), "the bell's own scene plays before the turn")
 		var turn_pages := await _play_scene(crown, 20.0)
 		_check(GameState.has_flag(StoryDirector.TURNED_FLAG), "ringing the Storm Bell makes the Old One turn")
 		_check(not Cutscene.active and not crown.player.in_cutscene, "the turn hands Wren back")
@@ -1079,13 +1091,10 @@ func _test_mire_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "mire", "the Moth Bell rises in the Still Pool")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("mire")), "ringing the Moth Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 	if player.lantern_raised:
 		player.use_item("glowmoth_lantern")
@@ -1209,13 +1218,10 @@ func _test_gale_dungeon() -> void:
 		_check(bell != null and bell.bell == "gale", "the Storm Bell rises on the Crown")
 		if bell:
 			GameState.set_flag(StoryDirector.TURNED_FLAG)
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("gale")), "ringing the Storm Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1390,13 +1396,10 @@ func _test_glacier_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "glacier", "the Frost Bell rises in the Breathing Hall")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("glacier")), "ringing the Frost Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1555,13 +1558,10 @@ func _test_belfry_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "belfry", "the Drowned Bell rises in the hall")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("belfry")), "ringing the Drowned Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1733,13 +1733,10 @@ func _test_tomb_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "tomb", "the Marrow Bell rises in the barrow")
 		if bell:
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("tomb")), "ringing the Marrow Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 	game.queue_free()
 	await _wait(0.1)
 
@@ -2098,13 +2095,10 @@ func _test_hull_dungeon() -> void:
 			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
 			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Tidebell or Wren ringing it")
 			var resonance_before := GameState.resonance_max
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.resonance_max > resonance_before and GameState.flags.get(Tidebell.BELL_FLAG, false), "ringing the bell grows the Resonance meter")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 	game.queue_free()
 	await _wait(0.1)
@@ -2312,13 +2306,10 @@ func _test_kiln_dungeon() -> void:
 			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
 			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Ember Bell or Wren ringing it")
 			var bells_before := GameState.item_count("tidebell")
+			await _scene_over(game)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("kiln")) and GameState.item_count("tidebell") == bells_before + 1, "ringing the Ember Bell counts as a Tidebell")
-			for child in game.get_children():
-				if child is DialogueBox:
-					while DialogueBox.is_open:
-						child.advance()
-						child.advance()
+			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 
 	# The Bellows Room shuts Wren in; clearing it shows the mallet's chest.
