@@ -1,7 +1,7 @@
 class_name Stonebreaker
 extends Node2D
 ## The Stonebreaker Mallet, the Kiln's tool: Wren heaves it up and brings it
-## down on the tile in front of her. What it lands on decides what happens:
+## down on the tile in front of them. What it lands on decides what happens:
 ##   * anything with mallet_hit() (cracked boulders, pegs, a Clinker's shell,
 ##     the Slagwyrm's set crust): that thing decides
 ##   * any other enemy: a heavy blow
@@ -12,7 +12,7 @@ extends Node2D
 const WINDUP := 0.16
 const RECOVER := 0.24
 const DAMAGE := 2
-## Where the head lands, relative to Wren's feet, along her facing.
+## Where the head lands, relative to Wren's feet, along their facing.
 const REACH := 13.0
 const IMPACT_SIZE := Vector2(18, 16)
 

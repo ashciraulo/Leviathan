@@ -1,19 +1,19 @@
 class_name PitField
 extends Node2D
 ## Every gap (_) in a room's deck, and every pool of lava (^). Draws them,
-## keeps enemies and crates out of them, and drops Wren in when she walks
-## in: she loses a bubble and climbs back up where she last stood on solid
+## keeps enemies and crates out of them, and drops Wren in when they walk
+## in: they lose a bubble and climb back up where they last stood on solid
 ## ground.
 ##
 ## A room with lava_rise set also has rising lava: once Wren is inside, it
-## creeps up the room from the bottom row. If it catches her she's thrown
-## back to where she came in and it sinks to start again; once she reaches
+## creeps up the room from the bottom row. If it catches them they're thrown
+## back to where they came in and it sinks to start again; once they reach
 ## lava_safe_row it drains away for good.
 ##
 ## The Tide Hook carries Wren over both (Player.airborne).
 
 ## How often (seconds) Wren's footing is remembered, and how far back the
-## safe spot is taken from, so she doesn't land on the lip and fall again.
+## safe spot is taken from, so they don't land on the lip and fall again.
 const SAFE_EVERY := 0.1
 const SAFE_HISTORY := 8
 const SAFE_BACK := 4
@@ -100,7 +100,7 @@ func _physics_process(delta: float) -> void:
 	var local := player.global_position - _room.global_position
 	if local.x < 0.0 or local.y < 0.0 or local.x > Room.SIZE.x or local.y > Room.SIZE.y:
 		return
-	# Wren's feet are a little above her origin.
+	# Wren's feet are a little above their origin.
 	var feet := local + Vector2(0, -3)
 	_update_rise(delta, local)
 	if player.airborne:
@@ -165,7 +165,7 @@ func _safe_spot(fallback: Vector2) -> Vector2:
 	for i in range(_safe.size() - 1, -1, -1):
 		if not is_gap(_safe[i] + Vector2(0, -3)):
 			return _safe[i]
-	# Nothing remembered (she fell the moment she arrived): step back out.
+	# Nothing remembered (they fell the moment they arrived): step back out.
 	return fallback + Vector2(0, Room.TILE)
 
 

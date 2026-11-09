@@ -213,7 +213,7 @@ FLUKE_X = 52
 TAIL_END = 58
 
 
-def build_title_bg():
+def build_title_bg(creature=True):
     W, H = 384, 216
     rnd = random.Random(11)
     px = [[CLEAR] * W for _ in range(H)]
@@ -296,6 +296,8 @@ def build_title_bg():
         for d in range(ln):
             if x + d < W:
                 px[y][x + d] = hex_color("#2E5E7E")
+    if not creature:
+        return px
     # The leviathan asleep: one long body from the tail stalk on the left,
     # over the great humped back, dipping at the neck, up to a broad head
     # with a heavy brow, a closed eye and a long jaw resting on the water.

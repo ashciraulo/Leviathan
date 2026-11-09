@@ -1,6 +1,6 @@
 class_name GameOverScreen
 extends CanvasLayer
-## Shown when Wren runs out of breath: she drifts down through dark water
+## Shown when Wren runs out of breath: they drift down through dark water
 ## among rising bubbles, and the player picks Wake at the Tidestone (back
 ## to the last save) or Return to the title.
 

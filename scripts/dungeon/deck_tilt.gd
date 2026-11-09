@@ -1,6 +1,6 @@
 class_name DeckTilt
 extends Node2D
-## A listing deck: the wreck leans, so Wren slides downhill unless she walks
+## A listing deck: the wreck leans, so Wren slides downhill unless they walk
 ## against it. Loose grit drifts the same way so the slope reads at a glance.
 
 const MOTES := 26

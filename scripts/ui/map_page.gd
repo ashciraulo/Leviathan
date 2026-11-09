@@ -18,6 +18,7 @@ const BIOME_COLORS := {
 	"hull": [Color("#a07e5e"), Color("#38282c"), Color("#3e665e")],
 	"kiln": [Color("#7a6264"), Color("#622a2a"), Color("#3e6476")],
 	"cinderreach": [Color("#86726f"), Color("#8a3428"), Color("#f2783a")],
+	"gloamfen": [Color("#655a78"), Color("#2a5458"), Color("#2e2650")],
 }
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 
@@ -203,7 +204,7 @@ func _draw_view() -> void:
 				var flag := "chest_%d_%d_%d_%d" % [coord.x, coord.y, tile.x, tile.y]
 				if not GameState.flags.get(flag, false):
 					MenuKit.draw_marker(_view, MenuKit.Marker.CHEST, rect.position + Vector2(tile) * PX + Vector2(1, 1))
-	# Wren, blinking, where she stands now.
+	# Wren, blinking, where they stand now.
 	var here := _room_rect(GameState.room_coord)
 	if _rooms.has(GameState.room_coord) and blink:
 		var local := _player_local() / float(Room.TILE) * PX
