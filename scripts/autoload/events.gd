@@ -26,6 +26,8 @@ signal door_entered(target_room: Vector2i, target_tile: Vector2i)
 signal item_gained(id: String, count: int)
 ## The map asked to fly to a woken Tidestone in that room.
 signal fast_travel_requested(coord: Vector2i)
+## The game was saved (the HUD shows a small spinning shell).
+signal game_saved
 ## A sound with a caption played (only sent when captions are on). side is
 ## where it came from on screen: -1 left, 0 middle or flat, 1 right.
 signal caption(text_key: String, side: int)

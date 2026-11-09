@@ -15,6 +15,7 @@ func _ready() -> void:
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	SaveManager.current_slot = TEST_SLOT
+	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
 
 	# 1. Title screen.
@@ -40,6 +41,7 @@ func _ready() -> void:
 		else:
 			await _mire_shots(game)
 		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
 		return
 	await _capture("02_saltmarrow_shore")
@@ -70,6 +72,10 @@ func _ready() -> void:
 	await _capture("04b_high_contrast")
 	Settings.high_contrast = contrast_was
 	Settings.captions = captions_was
+	# The little ring of bubbles that turns after a save.
+	Events.game_saved.emit()
+	await _wait(0.5)
+	await _capture("04c_saved")
 
 	# 4. A sword swing connecting with a Scuttler.
 	var room: Room = game.current_room
@@ -332,6 +338,7 @@ func _ready() -> void:
 	_finish_talk(pools)
 
 	SaveManager.delete_save()
+	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	print("SCREENSHOTS DONE: " + _out_dir)
 	get_tree().quit(0)
 
