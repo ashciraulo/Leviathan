@@ -139,4 +139,4 @@ func _draw_chrome() -> void:
 	MenuKit.draw_text(_chrome, MenuKit.key_name("tab_next"), Vector2(x + 8, TAB_Y + 2), MenuKit.TEXT_DIM)
 	var hint := _pages[current].hint()
 	if hint != "":
-		MenuKit.draw_text(_chrome, hint, Vector2(0, 201), MenuKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER, 384)
+		MenuKit.draw_text(_chrome, hint, Vector2(0, 201), MenuKit.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER, 384, 376)

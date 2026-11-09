@@ -45,7 +45,7 @@ func _build_rows() -> void:
 		_volume("OPT_AMBIENCE", "ambience_volume"),
 		_header("OPT_SECTION_DISPLAY"),
 		_toggle("OPT_FULLSCREEN", "fullscreen"),
-		_choice("OPT_LANGUAGE", ["OPT_LANG_EN"], "locale_index"),
+		_choice("OPT_LANGUAGE", Settings.language_keys(), "locale_index"),
 		_header("OPT_SECTION_CONTROLS"),
 		{"kind": "action", "key": "OPT_CONTROLS", "desc": "OPT_CONTROLS_DESC"},
 	]
@@ -136,7 +136,7 @@ func _close_controls() -> void:
 func _get_value(row: Dictionary) -> int:
 	var prop: String = row["prop"]
 	if prop == "locale_index":
-		return 0
+		return maxi(Settings.languages().find(Settings.locale), 0)
 	var value = Settings.get(prop)
 	match row["kind"]:
 		"percent":
@@ -158,6 +158,9 @@ func _change(row: Dictionary, step: int, wrap: bool = false) -> void:
 	var value := _get_value(row) + step
 	value = posmod(value, count) if wrap or row["kind"] == "choice" else clampi(value, 0, count - 1)
 	if prop == "locale_index":
+		Settings.locale = Settings.languages()[value]
+		Settings.apply()
+		Settings.save_settings()
 		return
 	match row["kind"]:
 		"percent":
