@@ -18,7 +18,7 @@ jobs:
         with:
           lfs: true
 
-      - name: Check generated art is up to date
+      - name: Check generated art and text
         run: |
           python3 tools/build_art.py --check
           python3 tools/check_strings.py

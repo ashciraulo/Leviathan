@@ -30,8 +30,11 @@ def csv_keys():
         key = row[0]
         if key in keys:
             problems.append("line %d: %s is listed twice" % (n, key))
-        if len(row) < len(header) or not row[1].strip():
+        if len(row) < 2 or not row[1].strip():
             problems.append("line %d: %s has no English text" % (n, key))
+        for col in range(2, len(header)):
+            if col >= len(row) or not row[col].strip():
+                problems.append("line %d: %s has no %s text" % (n, key, header[col]))
         keys[key] = row[1] if len(row) > 1 else ""
     return keys, problems
 

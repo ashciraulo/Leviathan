@@ -14,7 +14,14 @@ func _ready() -> void:
 	Engine.max_fps = 0
 	OS.low_processor_usage_mode = false
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	# The game may save to slot 2: keep a real File 3 safe meanwhile.
 	SaveManager.current_slot = 2
+	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(2))
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.remove_absolute(real_save)
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
+	if FileAccess.file_exists(real_save):
+		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
 	var rows: Array = []
 	for coord: Vector2i in RoomInfo.all():
 		GameState.reset_new_game()
@@ -48,5 +55,7 @@ func _ready() -> void:
 	for r: Array in rows:
 		print("%-10s  %6.2f  %8.2f  %5d  %8.2f" % [str(r[0]), r[1], r[2], r[3], r[4]])
 	SaveManager.delete_save()
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
 	print("PERF ROOMS DONE")
 	get_tree().quit(0)

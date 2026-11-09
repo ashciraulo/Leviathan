@@ -160,6 +160,7 @@ func _change(row: Dictionary, step: int, wrap: bool = false) -> void:
 	if prop == "locale_index":
 		Settings.locale = Settings.languages()[value]
 		Settings.apply()
+		Settings.save_settings()
 		return
 	match row["kind"]:
 		"percent":
