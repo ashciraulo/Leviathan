@@ -71,7 +71,7 @@ func _physics_process(delta: float) -> void:
 		_stun -= delta
 		velocity = _knockback
 		_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
-	elif ai_enabled:
+	elif ai_enabled and not Cutscene.active:
 		_think(delta)
 	else:
 		velocity = Vector2.ZERO

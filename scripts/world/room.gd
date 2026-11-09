@@ -17,6 +17,7 @@ extends Node2D
 ##             (big props: put the letter where the base centre stands;
 ##             the art rises above)
 ##          h  Old Hessa      1 2 3 4  villagers (see Npc.LETTERS)
+##          k  Pell's three-clawed crab (shows once Pell asks for it)
 ##          C  chest (holds chest_item)
 ##          :  boardwalk over water (walkable; regions with "boardwalk" tiles)
 ##          X  locked hatch (all X in a room open with one small key)
@@ -227,6 +228,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			door.target_room = door_to
 			door.target_tile = door_spawn
 			node = door
+		"k":
+			node = QuestCrab.new()
 		_ when Npc.LETTERS.has(tile):
 			node = Npc.new(Npc.LETTERS[tile])
 		_ when Prop.is_prop(tile):
