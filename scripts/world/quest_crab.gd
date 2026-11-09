@@ -2,15 +2,18 @@ class_name QuestCrab
 extends Node2D
 ## Pell's three-clawed crab, hiding in the Tidepools (room letter k). It only
 ## turns up once Pell has asked for one, and Wren picks it up with Interact.
-## Drawn in code: a small pale crab with two claws on the left, one on the
-## right, that sidles back and forth.
+## Drawn in code: a small blue crab, outlined, with two orange claws on the
+## left and one on the right, that sidles back and forth.
 
 const SIDLE := 6.0
 const SIDLE_SPEED := 0.9
-const SHELL := Color("#e8b4a0")
-const SHELL_DARK := Color("#b9786a")
-const CLAW := Color("#9a7fc4")
+## Blue shell and bright orange claws: reads against sand, and never
+## mistaken for the red Scuttlers.
+const SHELL := Color("#3f86b0")
+const SHELL_DARK := Color("#285a80")
+const CLAW := Color("#f08a3c")
 const EYE := Color("#2a1e36")
+const OUTLINE := Color("#2a1e36")
 
 ## [x, y, w, h, colour] relative to the crab's feet.
 const PIXELS := [
@@ -57,6 +60,11 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var step := 1.0 if fmod(_time * 4.0, 2.0) < 1.0 else 0.0
+	# A dark outline first, one pixel round every part, then the colours.
+	for p: Array in PIXELS:
+		if p[4] != EYE:
+			var lift := step if p[4] == CLAW else 0.0
+			draw_rect(Rect2(p[0] - 1, p[1] - 1 - lift, p[2] + 2, p[3] + 2), OUTLINE)
 	for p: Array in PIXELS:
 		var lift := step if p[4] == CLAW else 0.0
 		draw_rect(Rect2(p[0], p[1] - lift, p[2], p[3]), p[4])
