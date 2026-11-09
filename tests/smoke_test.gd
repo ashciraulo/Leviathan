@@ -315,7 +315,7 @@ func _test_villagers() -> void:
 			people[child.kind] = child
 		elif child is Prop and child.kind == "n":
 			sign = child
-	for who in ["hessa", "pell", "marga", "dunstan"]:
+	for who in ["hessa", "pell", "marga", "dunstan", "nettle"]:
 		_check(people.has(who), "%s lives in Saltmarrow" % who)
 	# On screen, each of them, and Wren standing just below to talk, stays
 	# above the tallest the dialogue box (and its name tab) ever gets.
@@ -1638,6 +1638,15 @@ func _test_side_quests() -> void:
 	Conversations.talk("marga")
 	_finish_talk(game)
 	_check(GameState.item_count("jar") == 1, "Marga only gives one jar")
+
+	# Nettle learns the lamp signals once Wren has met Hessa.
+	GameState.reset_new_game()
+	_check(Conversations.branch_for("nettle")["lines"][0] == "NETTLE_1", "Nettle wants to come along at first")
+	GameState.set_flag("met_hessa")
+	Conversations.talk("nettle")
+	_finish_talk(game)
+	_check(GameState.has_flag("nettle_learned"), "Wren teaches Nettle the long glow")
+	_check(Conversations.branch_for("nettle")["lines"][0] == "NETTLE_AGAIN", "Nettle practises afterwards")
 	game.queue_free()
 	await _wait(0.1)
 

@@ -390,3 +390,16 @@ NARRATE_GOT_JAR,Wren got an empty jar.
 MARGA_AFTER,"Rack's holding. Dunstan even helped tie it, if you can believe it."
 HESSA_MANTLE_1,"The bell! Good. But from the gallery I saw something huge thrashing on the Wreck Strand."
 HESSA_MANTLE_2,"Choir nets, I'd wager. On the strand, just this side of the Hull. Go and see, then come back to me."
+NAME_NETTLE,Nettle
+NETTLE_1,"Are you going up to see Hessa? Can I come? ...She'll say no. She always says no."
+NETTLE_2,"One day I'll have a lamp like yours. A real one, not paper."
+NETTLE_LEARN_1,Will you teach me the signals? I know some. One flash is yes. Two is no.
+NETTLE_LEARN_2,"And the long one is... I always forget the long one."
+NARRATE_WREN_LONG_GLOW,"Wren holds up the lamp in a long, steady glow."
+NETTLE_LEARN_3,"I'm here! The long one means I'm here. I won't forget again."
+NETTLE_AGAIN,"Yes, no, I'm here. Yes, no, I'm here. I'm practising."
+NETTLE_BELL_1,I saw you coming home with the bell! I flashed my lantern at you. Did you see?
+NARRATE_WREN_FLASH_ONCE,Wren flashes the lamp once.
+NETTLE_BELL_2,Yes! I knew you saw.
+NETTLE_WAYSHELL_1,"Hessa gave you the old keepers' shell? Then you're a proper keeper now."
+NETTLE_WAYSHELL_2,"When you're old, I'll take over. That's the plan."
