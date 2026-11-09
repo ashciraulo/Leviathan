@@ -152,6 +152,18 @@ func _ready() -> void:
 		await _wait(2.5)
 		await _capture("25_marga_asks")
 		await _finish_talk(game)
+		# Large text: same box, one big line per page.
+		var was_large := Settings.large_text
+		Settings.large_text = true
+		var big := _dialogue_box(game)
+		if big:
+			big.open_pages(Conversations.pages("marga", Conversations.TALKS["marga"][-1]))
+			big.advance()
+			big.advance()
+			await _wait(1.5)
+			await _capture("28_large_text")
+			await _finish_talk(game)
+		Settings.large_text = was_large
 		game.player.global_position = people["dunstan"].global_position + Vector2(-4, 20)
 		await _wait(0.2)
 		game.player.try_interact()
@@ -198,6 +210,33 @@ func _ready() -> void:
 		await _wait(0.2)
 		await _capture("09_pause")
 		pause.close()
+
+	# 10. Story scenes: the opening, then the Wayshell after the Hull.
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.play_opening = true
+	var story: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(story)
+	await _wait(1.6)
+	await _capture("30_opening")
+	# The veil lifts after the three lines; then Hessa's lamp glows.
+	await _wait(12.4)
+	await _capture("31_hessa_calls")
+	await _skip_scene(story)
+	story.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	# Coming in from the shore path at the bottom of the village.
+	GameState.set_checkpoint(Vector2i(0, -1), Vector2(12 * Room.TILE, 11 * Room.TILE + 12))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(2.0)
+	await _capture("32_wayshell")
+	await _skip_scene(home)
 
 	SaveManager.delete_save()
 	print("SCREENSHOTS DONE: " + _out_dir)
@@ -386,6 +425,17 @@ func _finish_talk(game: Node) -> void:
 		box.advance()
 		box.advance()
 	await _wait(0.4)
+
+
+func _skip_scene(game: Node) -> void:
+	var waited := 0.0
+	while Cutscene.active and waited < 20.0:
+		var box := _dialogue_box(game)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+		waited += 0.1
 
 
 func _wait(seconds: float) -> void:

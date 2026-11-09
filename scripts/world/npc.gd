@@ -90,7 +90,7 @@ func _process(delta: float) -> void:
 		_sprite.flip_h = player.global_position.x < global_position.x - 4.0
 	elif not _wander(delta):
 		_sprite.frame = FRAME_BREATHE if int(_time / BREATHE_TIME) % 2 == 1 else FRAME_IDLE
-	_mark.visible = _can_talk and not DialogueBox.is_open
+	_mark.visible = _can_talk and not DialogueBox.is_open and not Cutscene.active
 	_mark.position.y = -30 + (1 if int(_time * 2.0) % 2 == 0 else 0)
 	_mark.queue_redraw()
 

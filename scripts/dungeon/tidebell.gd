@@ -1,8 +1,8 @@
 class_name Tidebell
 extends StaticBody2D
 ## One of the seven Tidebells. Ringing it teaches Wren a phrase of the
-## lullaby: her Resonance meter grows, her breath fills, and the bell joins
-## the satchel's count.
+## lullaby: their Resonance meter grows, their breath fills, and the bell
+## joins the satchel's count.
 
 const RESONANCE_GAIN := 10.0
 ## The Point Bell's flag (kept for older saves and tests).
