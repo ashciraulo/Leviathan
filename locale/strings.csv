@@ -591,3 +591,29 @@ VAEL_SPIRE_1,"So you carry Hessa's lamp now. I carried it once, before you were 
 VAEL_SPIRE_2,"I was her first apprentice. She taught me the lullaby, just as she's teaching you."
 VAEL_SPIRE_3,"But I listened too closely. Under every phrase, the Old One is weeping."
 VAEL_SPIRE_4,"Ring the bell, and listen. Then tell me we should keep singing it to sleep."
+ROOM_MAW_THROAT,The Maw
+ROOM_MAW_PALATE,The Maw: the Palate
+ROOM_MAW_HOLLOWS,The Maw: Wind Hollows
+ROOM_MAW_LANTERNS,The Maw: Dim Gallery
+ROOM_MAW_GALLERY,The Maw: the Veins
+ROOM_MAW_VAEL,The Maw: the Choir Loft
+ROOM_MAW_HEART,The Maw: the Dreaming Heart
+DUNGEON_MAW,The Maw
+BOSS_VAEL,Cantor Vael
+BOSS_HEART,The Dreaming Heart
+VAEL_MAW_1,"Seven bells, and Hessa's lamp. You came all this way to sing it back under."
+VAEL_MAW_2,"Listen to it, keeper. Then let the Choir finish its song."
+VAEL_MAW_END_1,"...Wait. Your notes. All seven, in order. I never heard them like that."
+VAEL_MAW_END_2,"It isn't weeping. It's dreaming badly, and nobody has sat with it."
+VAEL_MAW_END_3,"I was right that it suffers. I was wrong about the cure. Go on. Its heart is waking."
+MAW_HUMS_BACK_1,"Wren hums the last line: ""Sleep, old heart, sleep."""
+MAW_HUMS_BACK_2,"Deep below, the Old One hums back. For the first time, it sleeps in peace."
+CAPTION_MAW_BREATH_IN,The Old One breathes in
+CAPTION_MAW_BREATH_OUT,The Old One breathes out
+CAPTION_VAEL_SING,Vael sings
+CAPTION_VAEL_FALTER,Vael's song falters
+CAPTION_CHANT,The Choir chants
+CAPTION_HEART_ROAR,The Heart roars
+CAPTION_ECHO_RISE,An echo rises
+CAPTION_ECHO_CALM,An echo sighs
+CAPTION_OLD_ONE_HUM,The Old One hums

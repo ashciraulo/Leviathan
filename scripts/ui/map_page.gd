@@ -24,6 +24,7 @@ const BIOME_COLORS := {
 	"glacier": [Color("#d2e0ec"), Color("#2e6c9a"), Color("#12283a")],
 	"belfry": [Color("#72a092"), Color("#34564c"), Color("#1c4a5c")],
 	"tomb": [Color("#c8a878"), Color("#4a3428"), Color("#9a3a2e")],
+	"maw": [Color("#b8606a"), Color("#5a2434"), Color("#246860")],
 	"windmere": [Color("#8fb15a"), Color("#e8e2d0"), Color("#2f6e9e")],
 	"frostspine": [Color("#dce6f2"), Color("#5a98cc"), Color("#365e84")],
 	"sunken_verge": [Color("#a89c82"), Color("#6e6656"), Color("#3a585e")],
@@ -32,7 +33,7 @@ const BIOME_COLORS := {
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 
 ## Area names: "" is the overworld.
-const AREA_KEYS := {"": "MAP_OVERWORLD", "hull": "DUNGEON_HULL", "kiln": "DUNGEON_KILN", "mire": "DUNGEON_MIRE", "gale": "DUNGEON_GALE", "glacier": "DUNGEON_GLACIER", "belfry": "DUNGEON_BELFRY", "tomb": "DUNGEON_TOMB"}
+const AREA_KEYS := {"": "MAP_OVERWORLD", "hull": "DUNGEON_HULL", "kiln": "DUNGEON_KILN", "mire": "DUNGEON_MIRE", "gale": "DUNGEON_GALE", "glacier": "DUNGEON_GLACIER", "belfry": "DUNGEON_BELFRY", "tomb": "DUNGEON_TOMB", "maw": "DUNGEON_MAW"}
 
 var _view: Control
 var _area := ""
