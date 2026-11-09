@@ -208,6 +208,9 @@ SKY = [hex_color(c) for c in ("#1A1430", "#241A3E", "#2E2050", "#3E2C5E", "#5E3E
 SEA = [hex_color(c) for c in ("#2A4A6E", "#1F3A5E", "#18324A", "#142A40", "#102236")]
 CREATURE = [hex_color(c) for c in ("#3A3058", "#2A2448", "#1E1A36", "#140F24")]
 HORIZON = 150
+# Where the tail stalk leaves the water and where the body begins.
+FLUKE_X = 52
+TAIL_END = 58
 
 
 def build_title_bg():
@@ -293,15 +296,31 @@ def build_title_bg():
         for d in range(ln):
             if x + d < W:
                 px[y][x + d] = hex_color("#2E5E7E")
-    # The leviathan asleep: a long back, a resting head with a closed eye,
-    # and the tail fluke breaking the water to the left.
+    # The leviathan asleep: one long body from the tail stalk on the left,
+    # over the great humped back, dipping at the neck, up to a broad head
+    # with a heavy brow, a closed eye and a long jaw resting on the water.
     water = HORIZON + 9
 
     def back(x):
-        body = math.exp(-((x - 160) / 62.0) ** 2) * 42
-        head = math.exp(-((x - 286) / 26.0) ** 2) * 26
-        snout = math.exp(-((x - 314) / 14.0) ** 2) * 13
-        return water - max(body, head, snout)
+        if x < TAIL_END:
+            return water
+        # The tail rises out of the water and thickens into the body.
+        tail = min((x - TAIL_END) / 56.0, 1.0) ** 0.8 * 17
+        body = math.exp(-((x - 165) / 70.0) ** 2) * 42
+        return water - max(tail if x < 140 else 0, body, head_height(x))
+
+    def head_height(x):
+        # Skull: rises steeply from the neck to a domed crown...
+        if x < 248 or x > 342:
+            return 0.0
+        if x <= 284:
+            return 30 * math.sin((x - 248) / 36.0 * math.pi / 2) ** 1.4
+        # ...then a long snout slopes gently down to a rounded nose.
+        t = (x - 284) / 58.0
+        h = 30 - 20 * t ** 1.2
+        if x > 330:
+            h *= math.sqrt(max(0.0, 1 - ((x - 330) / 12.0) ** 2))
+        return h
 
     def fill_column(x, top, bottom):
         for y in range(max(top, 0), min(bottom, H)):
@@ -313,7 +332,7 @@ def build_title_bg():
         if 0 < top < H:
             px[top - 1][x] = hex_color("#120C22")
 
-    for x in range(70, 340):
+    for x in range(TAIL_END, 344):
         top = round(back(x))
         if top < water:
             fill_column(x, top, water + 2)
@@ -321,12 +340,12 @@ def build_title_bg():
     fluke = set()
     for y in range(water - 14, water + 2):
         half = 2 + (y - (water - 14)) // 6
-        for x in range(54 - half, 55 + half):
+        for x in range(FLUKE_X - half, FLUKE_X + 1 + half):
             fluke.add((x, y))
     for side in (-1, 1):
         for i in range(40):
             t = i / 39.0
-            cx = 54 + side * (4 + 16 * t)
+            cx = FLUKE_X + side * (4 + 16 * t)
             cy = water - 13 - 18 * t + 8 * t * t
             r = 3.2 * (1 - t) + 0.6
             for y in range(int(cy - r) - 1, int(cy + r) + 2):
@@ -349,7 +368,7 @@ def build_title_bg():
                 px[y + dy][x + dx] = hex_color("#120C22")
     # Scales: little arcs in rows across the back.
     for row in range(3):
-        for sx in range(96, 232, 8):
+        for sx in range(80, 240, 8):
             x = sx + (4 if row % 2 else 0)
             top = round(back(x))
             y = top + 6 + row * 6
@@ -358,9 +377,11 @@ def build_title_bg():
             for dx, dy in ((-2, 0), (-1, 1), (0, 1), (1, 1), (2, 0)):
                 px[y + dy][x + dx] = CREATURE[0]
     # Dorsal ridge spines.
-    for sx in range(112, 214, 9):
+    for sx in range(84, 236, 9):
         top = round(back(sx))
-        h = 6 + round(2 * math.sin(sx / 13.0))
+        h = round((6 + 2 * math.sin(sx / 13.0)) * min(1.0, (sx - 76) / 40.0, (240 - sx) / 26.0))
+        if h < 2:
+            continue
         for d in range(h):
             for w in range(-(h - d) // 3, (h - d) // 3 + 1):
                 px[top - d][sx + w] = CREATURE[0] if w <= 0 else CREATURE[1]
@@ -373,22 +394,56 @@ def build_title_bg():
         if back(x + 1) - back(x - 1) > 0.2:
             px[top][x] = hex_color("#8E84A8")
             px[top + 1][x] = hex_color("#5E5088")
-    # The closed eye: a heavy lid curve with a soft glint, and a brow ridge.
-    ex, ey = 284, round(back(284)) + 9
+    # The head. Brow ridge: a lighter bulge over the eye.
+    ex = 296
+    ey = round(back(ex)) + 9
+    for dx in range(-7, 7):
+        y = ey - 4 + (1 if abs(dx) > 4 else 0)
+        px[y][ex + dx] = hex_color("#4A3E72")
+        px[y + 1][ex + dx] = CREATURE[0]
+    # The closed eye: a lid line curving down with lashes beneath.
     for dx in range(-4, 5):
-        y = ey + (1 if abs(dx) < 3 else 0)
-        px[y][ex + dx] = hex_color("#8E84A8")
-    for dx in (-3, -1, 1, 3):
-        px[ey + 2 + (0 if abs(dx) < 3 else -1)][ex + dx] = hex_color("#5E5088")
-    for dx in range(-6, 6):
-        px[ey - 4 + (1 if abs(dx) > 3 else 0)][ex + dx] = CREATURE[0]
+        y = ey + round(1.5 * (1 - (dx / 4.5) ** 2))
+        px[y][ex + dx] = hex_color("#B8A8E0")
+    for dx in (-3, 0, 3):
+        y = ey + round(1.5 * (1 - (dx / 4.5) ** 2)) + 1
+        px[y][ex + dx] = hex_color("#120C22")
+    # Jaw: a long mouth line from the nose back under the eye, with a
+    # faint lip of light above it.
+    for x in range(270, 340):
+        t = (x - 270) / 69.0
+        y = water - 4 - round(4 * t) + round(2 * t * t)
+        if y > round(back(x)) + 2:
+            px[y][x] = hex_color("#120C22")
+            px[y - 1][x] = CREATURE[1]
+    # Nostril near the end of the snout.
+    nx = 332
+    ny = round(back(nx)) + 2
+    for dx in range(3):
+        px[ny + (dx == 2)][nx + dx] = hex_color("#120C22")
+    # Gill ridges behind the head: three curved folds.
+    for gx in (256, 262, 268):
+        top = round(back(gx))
+        for y in range(top + 6, min(top + 17, water - 3)):
+            bend = round(2.0 * math.sin((y - top - 6) / 10.0 * math.pi))
+            px[y][gx + bend] = CREATURE[0]
+            px[y][gx + bend + 1] = hex_color("#120C22")
+    # A small frill of spines at the back of the skull.
+    for i, sx in enumerate((262, 268, 274)):
+        top = round(back(sx))
+        h = 3 + i
+        for d in range(h):
+            px[top - d][sx] = CREATURE[0]
+            if d < h - 1:
+                px[top - d][sx + 1] = CREATURE[1]
+        px[top - h][sx] = hex_color("#120C22")
     # Glowing runes along the back, pulsing with the lullaby.
     for rx in (138, 172, 206):
         y = round(back(rx)) + 4
         for (dx, dy) in ((0, 0), (1, -1), (2, 0), (3, 1), (4, 0)):
             px[y + dy][rx + dx] = hex_color("#6EF0E0")
     # Breath bubbles rising from the snout.
-    for (bx, by, r) in ((326, water - 10, 1), (330, water - 18, 1.5), (325, water - 28, 2)):
+    for (bx, by, r) in ((344, water - 8, 1), (348, water - 16, 1.5), (343, water - 26, 2)):
         for y in range(int(by - r) - 1, int(by + r) + 2):
             for x in range(int(bx - r) - 1, int(bx + r) + 2):
                 d = math.hypot(x - bx, y - by)
@@ -397,8 +452,8 @@ def build_title_bg():
         px[int(by - r)][int(bx)] = hex_color("#FFFFFF")
     # Foam and ripples where the creature meets the water.
     for x in range(30, 346):
-        top = round(back(x)) if x >= 70 else water
-        touching = top < water or 49 <= x < 60
+        top = round(back(x))
+        touching = top < water or FLUKE_X - 5 <= x < FLUKE_X + 6
         if touching and rnd.random() < 0.8:
             y = water + rnd.choice((0, 0, 1))
             px[y][x] = hex_color("#FFF4D6") if rnd.random() < 0.4 else hex_color("#A8E6CF")
