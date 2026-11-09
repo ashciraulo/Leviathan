@@ -3421,7 +3421,7 @@ func _test_equipment() -> void:
 	_check(Player.sword_damage() == 3 and Player.sword_damage(null, true) == 6, "the tidecaller hits for 3, a spin for 6")
 	var boss := Node.new()
 	boss.add_to_group("boss")
-	_check(Player.sword_damage(boss, true) == Player.BOSS_HIT_CAP, "a boss takes at most %d from one blow" % Player.BOSS_HIT_CAP)
+	_check(Player.sword_damage(boss) == 1 and Player.sword_damage(boss, true) == 2, "a boss takes 1 from a slash and 2 from a spin, whatever the sword")
 	boss.free()
 
 	# Tunics: of four one-bubble hits, oilskin pops 4, scaleweave 3, abyssal 2.
@@ -3437,6 +3437,16 @@ func _test_equipment() -> void:
 	GameState.equip("abyssal")
 	GameState._hurt_owed = 0.0
 	_check(GameState.hurt(2) == 1, "the abyssal tunic halves a heavy hit")
+
+	# A file from before shields mattered gets the cork buckler on load.
+	GameState.reset_new_game()
+	var old := GameState.to_dict()
+	old["inventory"].erase("cork_buckler")
+	old["equipped"].erase(Items.SHIELD)
+	GameState._hurt_owed = 0.4
+	GameState.from_dict(old)
+	_check(GameState.equipped_item(Items.SHIELD) == "cork_buckler", "an older file is given the cork buckler")
+	_check(GameState._hurt_owed == 0.0, "loading a file forgets a part-paid hit")
 
 	# Shields, in play.
 	GameState.reset_new_game()
@@ -3484,6 +3494,20 @@ func _test_equipment() -> void:
 	slag.global_position = player.global_position + Vector2(0, -10)
 	await _wait(0.15)
 	_check(GameState.bubbles == bubbles - 1, "molten slag gets through coral")
+
+	# A soaked hit still breaks a hum and makes Wren reel, but pops nothing.
+	await _wait(0.5)
+	GameState.give_item("abyssal", 1, false)
+	GameState.refill()
+	GameState._hurt_owed = 0.0
+	player._invuln = 0.0
+	player.take_damage(1, player.global_position + Vector2(10, 0))
+	_check(GameState.bubbles == GameState.max_bubbles - 1, "abyssal: the first hit pops a bubble")
+	await _wait(0.6)
+	player._invuln = 0.0
+	player._enter(Player.State.HUM)
+	player.take_damage(1, player.global_position + Vector2(10, 0))
+	_check(GameState.bubbles == GameState.max_bubbles - 1 and player.state == Player.State.HURT, "the next is soaked up, but it breaks the hum")
 	game.queue_free()
 	await _wait(0.1)
 

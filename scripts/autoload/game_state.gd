@@ -86,7 +86,8 @@ var _hurt_owed := 0.0
 ## A hit on Wren, through the tunic: it lets a share of the damage through
 ## and keeps the rest of a bubble owing, so bubbles only ever pop whole.
 ## With the abyssal tunic every other one-bubble hit pops nothing. Returns
-## the bubbles popped.
+## the bubbles popped. Falling into a gap isn't a hit: it costs a whole
+## bubble whatever Wren wears (Player.fall).
 func hurt(amount: int) -> int:
 	var tier := clampi(Items.tier(equipped_item(Items.TUNIC)), 1, 3)
 	_hurt_owed += amount * TUNIC_TAKES[tier]
@@ -363,6 +364,10 @@ func from_dict(data: Dictionary) -> void:
 	if saved_equipped is Dictionary:
 		for kind in saved_equipped:
 			equip(str(saved_equipped[kind]))
+	# Files from before shields mattered never got the cork buckler.
+	if not inventory.keys().any(func(id: String) -> bool: return Items.kind(id) == Items.SHIELD):
+		inventory["cork_buckler"] = 1
+	_hurt_owed = 0.0
 	# Saves from before equipment: wear the best of each kind owned.
 	for kind: String in Items.EQUIPMENT_KINDS:
 		if equipped_item(kind) == "":

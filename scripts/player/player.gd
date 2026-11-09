@@ -17,9 +17,10 @@ const SWORD_DAMAGE := 1
 ## A slash's damage by the equipped sword's tier (driftwood, brinesteel,
 ## tidecaller); the spin does twice that.
 const SWORD_DAMAGE_BY_TIER := [1, 1, 2, 3]
-## Bosses take at most this from one blow, so a strong sword can't skip
-## a fight's phases.
-const BOSS_HIT_CAP := 2
+## Bosses take at most this from a slash (twice it from a spin), whatever
+## the sword: their fights are paced by openings, and a strong sword
+## mustn't skip one.
+const BOSS_HIT_CAP := 1
 ## A shot is turned aside when it comes at Wren from within this of the way
 ## they face (a dot product: 0.5 is 60 degrees either side).
 const SHIELD_ARC := 0.5
@@ -187,17 +188,21 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	if frozen or in_cutscene or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
-	# A better tunic soaks up some hits: no bubble pops, only a dull thud.
-	if GameState.hurt(amount) == 0:
-		_knockback = (global_position - from_position).normalized() * HURT_KNOCKBACK * 0.5
-		_invuln = INVULN_TIME
-		_flash = FLASH_TIME
-		Feel.shake(1.5)
-		Audio.play_sfx("hit_shell", global_position, 0.8)
-		return
+	# A better tunic soaks up some hits: Wren still reels (a hum is broken,
+	# a swing cut short) but no bubble pops, only a dull thud.
+	var popped := GameState.hurt(amount)
 	_place_sword()
 	var away := global_position - from_position
 	_knockback = (away.normalized() if away.length() > 0.1 else -facing) * HURT_KNOCKBACK
+	if popped == 0:
+		_knockback *= 0.6
+		_invuln = INVULN_TIME
+		_flash = FLASH_TIME
+		_hum_latched = false
+		Feel.shake(1.5)
+		Audio.play_sfx("hit_shell", global_position, 0.8)
+		_enter(State.HURT)
+		return
 	_invuln = INVULN_TIME
 	_flash = FLASH_TIME
 	_hum_latched = false
@@ -475,7 +480,7 @@ static func sword_damage(target: Node = null, spin: bool = false) -> int:
 	var tier := clampi(Items.tier(GameState.equipped_item(Items.SWORD)), 1, 3)
 	var amount: int = SWORD_DAMAGE_BY_TIER[tier] * (2 if spin else 1)
 	if target and target.is_in_group("boss"):
-		amount = mini(amount, BOSS_HIT_CAP)
+		amount = mini(amount, BOSS_HIT_CAP * (2 if spin else 1))
 	return amount
 
 
@@ -501,6 +506,7 @@ func _charge_state() -> void:
 func _start_spin() -> void:
 	_enter(State.SPIN)
 	_hit_ids.clear()
+	_knockback = Vector2.ZERO
 	_sword_shape.position = Vector2(0, -8)
 	var circle := CircleShape2D.new()
 	circle.radius = SPIN_RADIUS
@@ -584,19 +590,25 @@ func shield_blocks(hazard: DamageArea) -> bool:
 	var needed = hazard.get("shield_tier")
 	if needed == null or int(needed) <= 0:
 		return false
-	if state not in [State.MOVE, State.CHARGE] or diving:
+	if state not in [State.MOVE, State.CHARGE] or diving or in_cutscene or frozen:
 		return false
 	if Items.tier(GameState.equipped_item(Items.SHIELD)) < int(needed):
 		return false
-	var to_shot := hazard.global_position - (global_position + Vector2(0, -6))
-	return to_shot.length() < 0.1 or facing.dot(to_shot.normalized()) >= SHIELD_ARC
+	# Where the shot is coming from: against the way it flies, or (one at
+	# rest) from the middle of Wren's body out to it.
+	var flying = hazard.get("velocity")
+	var from: Vector2
+	if flying is Vector2 and flying.length() > 1.0:
+		from = -flying.normalized()
+	else:
+		from = (hazard.global_position - (global_position + Vector2(0, -8))).normalized()
+	return from != Vector2.ZERO and facing.dot(from) >= SHIELD_ARC
 
 
 ## The shield's clack and spark; the shot is gone.
 func _deflect(hazard: DamageArea) -> void:
 	Audio.play_sfx("block", global_position, 1.3)
 	_flash = FLASH_TIME * 0.5
-	_knockback = -facing * RECOIL_SPEED
 	hazard.notify_hit()
 
 
