@@ -22,7 +22,15 @@ const LOWE_HULL_FLAG := "seen_lowe_hull"
 const LOWE_FROM_BOSS := Vector2(-36, 40)
 const SINGERS_FROM_BOSS := [Vector2(-30, 4), Vector2(30, 4)]
 const HULL_HOLES := [Vector2(3 * 16 + 16, 2 * 16 + 16), Vector2(19 * 16 + 16, 2 * 16 + 16)]
-## Where Wren stops to watch, in the chamber.
+## The Kiln's crucible chamber, where Lowe's smiths melt the Ember Bell.
+const KILN_BOSS := Vector2i(21, 7)
+const CRUCIBLE_FLAG := "seen_crucible"
+const SMITHS_FROM_CRUCIBLE := [Vector2(-30, 6), Vector2(30, 6)]
+## The way out for the Kiln's Choir: round Wren and down through the door.
+## Points: down between the pools and Wren, across to the door, and out.
+## Figures on the right mirror the first two.
+const KILN_EXIT := [Vector2(140, 120), Vector2(140, 176), Vector2(192, 176), Vector2(192, 216)]
+## Where Wren stops to watch, in either chamber.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
 var game: Node
@@ -52,13 +60,20 @@ func _on_room_entered(coord: Vector2i) -> void:
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		the_wayshell()
 	elif lowe_waits(coord):
-		lowe_at_the_hull()
+		if coord == HULL_BOSS:
+			lowe_at_the_hull()
+		else:
+			the_crucible()
 
 
-## True while Lowe's scene is still to play in this room: the Matriarch
+## True while one of Lowe's scenes is still to play in this room: the boss
 ## sleeps until it does.
 static func lowe_waits(coord: Vector2i) -> bool:
-	return coord == HULL_BOSS and not GameState.has_flag(LOWE_HULL_FLAG) and not GameState.has_flag(BarnacleMatriarch.DEFEATED_FLAG)
+	if coord == HULL_BOSS:
+		return not GameState.has_flag(LOWE_HULL_FLAG) and not GameState.has_flag(BarnacleMatriarch.DEFEATED_FLAG)
+	if coord == KILN_BOSS:
+		return not GameState.has_flag(CRUCIBLE_FLAG) and not GameState.has_flag(Slagwyrm.DEFEATED_FLAG)
+	return false
 
 
 func _scene() -> Cutscene:
@@ -171,6 +186,65 @@ func lowe_at_the_hull() -> void:
 	for i in runs.size():
 		runs[i].flee_into(holes[i], 0.7 + 0.25 * i)
 	await scene.wait(1.5)
+	for figure in runs:
+		if is_instance_valid(figure):
+			figure.queue_free()
+	scene.finish()
+
+
+## Cutscene 8, "The crucible": Sister Lowe's smiths are stoking the Kiln's
+## crucible to melt the Ember Bell into a Waking Bell. Lowe brushes Wren
+## off, the slag comes alive as the Slagwyrm, and the Choir runs for it.
+func the_crucible() -> void:
+	GameState.set_flag(CRUCIBLE_FLAG)
+	var room: Node2D = game.current_room
+	var boss := get_tree().get_first_node_in_group("boss") as Slagwyrm
+	var at: Vector2 = boss.position if boss else Vector2(11 * 16 + 8, 4 * 16 + 12)
+	var crucible := Crucible.new()
+	crucible.position = at
+	room.add_child(crucible)
+	var smiths: Array[ChoirFigure] = []
+	for i in SMITHS_FROM_CRUCIBLE.size():
+		var smith := ChoirFigure.new("singer")
+		smith.position = at + SMITHS_FROM_CRUCIBLE[i]
+		smith.prying = true
+		smith.face(i == 1)
+		room.add_child(smith)
+		smiths.append(smith)
+	var lowe := ChoirFigure.new("lowe")
+	lowe.position = at + LOWE_FROM_BOSS
+	room.add_child(lowe)
+	var scene := _scene()
+	await scene.wait(0.6)
+	await scene.walk_route(room.global_position + WATCH_FROM)
+	scene.face(Vector2.UP)
+	await scene.wait(0.6)
+	lowe.talking = true
+	await scene.speak("lowe", ["LOWE_KILN_1"])
+	lowe.talking = false
+	await scene.wait(0.5)
+	lowe.talking = true
+	await scene.speak("lowe", ["LOWE_KILN_2"])
+	lowe.talking = false
+	Feel.shake(2.0)
+	await crucible.boil()
+	await scene.wait(0.4)
+	crucible.shatter()
+	if boss:
+		boss.wake()
+	await scene.wait(0.6)
+	await scene.speak("lowe", ["LOWE_KILN_3"])
+	var runs: Array[ChoirFigure] = [lowe, smiths[0], smiths[1]]
+	for i in runs.size():
+		var path: Array = KILN_EXIT.duplicate()
+		if runs[i].position.x > at.x:
+			for p in 2:
+				path[p] = Vector2(Room.SIZE.x - path[p].x, path[p].y)
+		if i < runs.size() - 1:
+			runs[i].flee_along(path, 0.45 + 0.1 * i)
+		else:
+			# The last (slowest) runner: the scene ends once they're out.
+			await runs[i].flee_along(path, 0.45 + 0.1 * i)
 	for figure in runs:
 		if is_instance_valid(figure):
 			figure.queue_free()

@@ -15,6 +15,7 @@ func _ready() -> void:
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	SaveManager.current_slot = TEST_SLOT
+	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
 
 	# 1. Title screen.
@@ -30,7 +31,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle", "lowe"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle", "lowe", "crucible"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -46,7 +47,12 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _lowe_shots()
+			"crucible":
+				game.queue_free()
+				await _wait(0.2)
+				await _crucible_shots()
 		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
 		return
 	await _capture("02_saltmarrow_shore")
@@ -77,6 +83,10 @@ func _ready() -> void:
 	await _capture("04b_high_contrast")
 	Settings.high_contrast = contrast_was
 	Settings.captions = captions_was
+	# The little ring of bubbles that turns after a save.
+	Events.game_saved.emit()
+	await _wait(0.5)
+	await _capture("04c_saved")
 
 	# 4. A sword swing connecting with a Scuttler.
 	var room: Room = game.current_room
@@ -284,6 +294,7 @@ func _ready() -> void:
 	await _wait(0.2)
 	await _mantle_shots()
 	await _lowe_shots()
+	await _crucible_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -343,6 +354,7 @@ func _ready() -> void:
 	_finish_talk(pools)
 
 	SaveManager.delete_save()
+	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	print("SCREENSHOTS DONE: " + _out_dir)
 	get_tree().quit(0)
 
@@ -481,6 +493,7 @@ func _kiln_shots(game: Node) -> void:
 	await _capture("56_kiln_riser")
 
 	# The Slagwyrm: chasing, plates set hard by a pool, then the wake.
+	GameState.set_flag(StoryDirector.CRUCIBLE_FLAG)
 	room = await _jump(game, Vector2i(21, 7), Vector2i(11, 10))
 	await _wait(1.6)
 	var boss: Slagwyrm = null
@@ -728,4 +741,29 @@ func _lowe_shots() -> void:
 	await _capture("40_choir_scatters")
 	await _skip_scene(hold)
 	hold.queue_free()
+	await _wait(0.2)
+
+
+## The crucible at the Kiln: Lowe's smiths stoke it, then the Slagwyrm
+## bursts out of the melt and the Choir runs.
+func _crucible_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var kiln: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	for page in 3:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.2)
+		if page == 0:
+			await _capture("41_the_crucible")
+		var box := _dialogue_box(kiln)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _wait(0.6)
+	await _capture("42_slagwyrm_wakes")
+	await _skip_scene(kiln)
+	kiln.queue_free()
 	await _wait(0.2)

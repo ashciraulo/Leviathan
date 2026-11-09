@@ -13,13 +13,7 @@ var _checks := 0
 func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
 	# Slot 2 is File 3 on the file select: keep a real save safe.
-	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
-	# A run that crashed left the real save in the backup: never overwrite it.
-	if FileAccess.file_exists(real_save + ".testbackup"):
-		DirAccess.remove_absolute(real_save)
-		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
-	if FileAccess.file_exists(real_save):
-		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
+	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
 	_test_room_layouts()
 	_test_game_state()
@@ -47,8 +41,7 @@ func _ready() -> void:
 	await _test_credits()
 	await _test_side_quests()
 	SaveManager.delete_save()
-	if FileAccess.file_exists(real_save + ".testbackup"):
-		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
+	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
 		print("SMOKE TEST PASSED (%d checks)" % _checks)
@@ -164,8 +157,33 @@ func _test_save_load() -> void:
 	_check(GameState.checkpoint_room == Vector2i(1, 1), "load restores the checkpoint room")
 	_check(GameState.checkpoint_pos == Vector2(40, 60), "load restores the checkpoint position")
 	_check(GameState.flags.get("test_flag") == true, "load restores flags")
+	# A damaged save falls back to the one before it.
+	var saved_signal := [0]
+	var count_saves := func() -> void: saved_signal[0] += 1
+	Events.game_saved.connect(count_saves)
+	GameState.flags["test_flag"] = false
+	SaveManager.save_game()
+	Events.game_saved.disconnect(count_saves)
+	_check(saved_signal[0] == 1, "saving tells the HUD")
+	var path := SaveManager.slot_path()
+	_check(FileAccess.file_exists(path + ".bak") and not FileAccess.file_exists(path + ".tmp"),
+		"saving keeps the previous save as a backup and leaves no temp file")
+	var broken := FileAccess.open(path, FileAccess.WRITE)
+	broken.store_string("{\"state\": ")
+	broken.close()
+	GameState.reset_new_game()
+	_check(SaveManager.load_game() and GameState.flags.get("test_flag") == true,
+		"a damaged save loads the backup instead")
+	_check(not SaveManager.read_summary(SaveManager.current_slot).get("damaged", false),
+		"the file select reads the backup of a damaged save")
+	# Saving over a damaged file keeps the good backup rather than the damage.
+	SaveManager.save_game()
+	var bak_data = JSON.parse_string(FileAccess.get_file_as_string(path + ".bak"))
+	_check(bak_data is Dictionary and bak_data.get("state") is Dictionary,
+		"saving over a damaged save keeps a good backup")
 	SaveManager.delete_save()
-	_check(not SaveManager.has_save(), "delete removes the save")
+	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
+		"delete removes the save and its backup")
 
 
 func _test_keys() -> void:
@@ -547,6 +565,43 @@ func _test_story() -> void:
 		if child is BarnacleMatriarch:
 			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
 	back.queue_free()
+	await _wait(0.1)
+
+	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var kiln: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	await _wait(0.2)
+	_check(Cutscene.active, "the crucible chamber starts the crucible scene")
+	var pot: Array = kiln.current_room.get_children().filter(func(c: Node) -> bool: return c is Crucible)
+	var smiths: Array = kiln.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(pot.size() == 1 and smiths.size() == 3, "Lowe's smiths stoke the crucible (%d, %d)" % [pot.size(), smiths.size()])
+	var wyrm: Slagwyrm = null
+	for child in kiln.current_room.get_children():
+		if child is Slagwyrm:
+			wyrm = child
+	_check(wyrm != null and wyrm.mode == Slagwyrm.Mode.INTRO and wyrm._sprite.modulate.a == 0.0, "the Slagwyrm sleeps hidden in the melt")
+	var kiln_pages := await _play_scene(kiln, 12.0)
+	_check(not Cutscene.active and not kiln.player.in_cutscene, "the crucible scene hands Wren back")
+	_check(kiln_pages == 3 and GameState.has_flag(StoryDirector.CRUCIBLE_FLAG), "Lowe speaks three times at the Kiln (%d)" % kiln_pages)
+	var kiln_left := 0
+	for figure: Variant in smiths + pot:
+		if is_instance_valid(figure):
+			kiln_left += 1
+	_check(kiln_left == 0, "the Choir runs and the crucible bursts (%d left)" % kiln_left)
+	await _wait(1.8)
+	_check(is_instance_valid(wyrm) and wyrm.mode != Slagwyrm.Mode.INTRO, "the Slagwyrm wakes and fights")
+	kiln.queue_free()
+	await _wait(0.1)
+	var kiln_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln_again)
+	await _wait(1.0)
+	_check(not Cutscene.active, "the crucible scene only plays once")
+	for child in kiln_again.current_room.get_children():
+		if child is Slagwyrm:
+			_check(child._sprite.modulate.a > 0.5, "the Slagwyrm rises at once when Wren comes back")
+	kiln_again.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
 
@@ -1363,6 +1418,7 @@ func _test_kiln_dungeon() -> void:
 	# The Slagwyrm.
 	GameState.refill()
 	GameState.set_flag(BigDoor.flag_for(Vector2i(21, 8)))
+	GameState.set_flag(StoryDirector.CRUCIBLE_FLAG)
 	room = await _goto(game, Vector2i(21, 7), Vector2i(11, 10))
 	await _wait(0.2)
 	var bosses := _child_of(room, Slagwyrm)

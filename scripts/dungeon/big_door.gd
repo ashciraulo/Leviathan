@@ -41,14 +41,15 @@ func _on_touch(body: Node2D) -> void:
 		return
 	if GameState.has_dungeon_item(dungeon, "big_key"):
 		GameState.flags[flag_for(room_coord)] = true
-		Events.toast.emit("TOAST_BIG_DOOR_OPEN")
+		Audio.play_sfx("door_unlock", global_position)
+		Audio.play_sfx("door_slide", global_position)
 		Feel.shake(3.0)
 		for door in get_tree().get_nodes_in_group("big_doors"):
 			if door is BigDoor and door.room_coord == room_coord:
 				door._vanish()
 	elif Time.get_ticks_msec() - _last_toast > TOAST_COOLDOWN * 1000.0:
 		_last_toast = Time.get_ticks_msec()
-		Events.toast.emit("TOAST_BIG_DOOR_LOCKED")
+		Audio.play_sfx("door_locked", global_position)
 
 
 func _vanish() -> void:

@@ -74,6 +74,7 @@ func _volume(key: String, prop: String) -> Dictionary:
 
 func on_open() -> void:
 	_close_controls()
+	Settings.sync_fullscreen()
 	if _rows[_cursor]["kind"] == "header":
 		_cursor = _next_row(_cursor, 1)
 

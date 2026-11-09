@@ -109,7 +109,16 @@ func _ready() -> void:
 		get_parent().add_child.call_deferred(segment)
 	_trail = PackedVector2Array([global_position])
 	_sprite.modulate.a = 0.0
-	var tween := create_tween()
+	# The first time, it sleeps in the crucible while Sister Lowe's smiths
+	# stoke it (StoryDirector.the_crucible), and wakes when they're done.
+	if _room and get_tree().get_first_node_in_group("story_director") and StoryDirector.lowe_waits(_room.coord):
+		return
+	wake()
+
+
+## It heaves up out of the melt. The fight starts once any scene ends.
+func wake() -> void:
+	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(_sprite, "modulate:a", 1.0, 0.8)
 	Events.toast.emit("BOSS_SLAGWYRM")
 	Audio.play_sfx("boss_roar", global_position)
