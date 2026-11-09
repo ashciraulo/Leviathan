@@ -32,6 +32,8 @@ func _ready() -> void:
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
 	await _test_villagers()
+	await _test_brinewood_pearl()
+	await _test_cinderreach()
 	await _test_fast_travel()
 	await _test_credits()
 	SaveManager.delete_save()
@@ -603,6 +605,19 @@ func _goto(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
 	return game.current_room
 
 
+## Clears a room's enemies and any shots in the air, and fills Wren's
+## breath, so a stray hit can't end the run (and free the room) mid-test.
+## Spitters add their shots a frame late, so it waits and sweeps again.
+func _calm(room: Room) -> void:
+	for enemy in _child_of(room, Enemy):
+		if not enemy.is_in_group("boss"):
+			enemy.queue_free()
+	await _wait(0.2)
+	for shot in _child_of(room, Projectile):
+		shot.queue_free()
+	GameState.refill()
+
+
 func _child_of(room: Room, type: Variant) -> Array:
 	return room.get_children().filter(func(n: Node) -> bool: return is_instance_of(n, type))
 
@@ -617,9 +632,12 @@ func _test_hull_dungeon() -> void:
 	await _wait(0.6)
 	var player: Player = game.player
 
-	# The Orlop's broken deck: walking into a gap costs a bubble.
+	# The Orlop's broken deck: walking into a gap costs a bubble. (Its
+	# crabs and Spitters go first: a stray hit on top of the fall could
+	# empty Wren's breath and reload the room under the test.)
 	var room := await _goto(game, Vector2i(11, 8), Vector2i(11, 11))
 	_check(room.coord == Vector2i(11, 8) and room.has_node("PitField"), "the Orlop has gaps in its deck")
+	await _calm(room)
 	var before := GameState.bubbles
 	Input.action_press("move_up")
 	await _wait(0.6)
@@ -630,15 +648,8 @@ func _test_hull_dungeon() -> void:
 	_check(local.y > 10 * Room.TILE and player.state == Player.State.MOVE, "Wren climbs back onto the deck (at %s)" % local)
 	await _wait(1.1)
 
-	# The Tide Hook carries Wren over the gap to the hook post. (Clear the
-	# crabs out first so none wanders into the chain's path.)
-	for enemy in _child_of(room, Enemy):
-		enemy.queue_free()
-	# ...and any shot still in the air (Spitters add theirs a frame late):
-	# a hit mid-flight drops the hook.
-	await _wait(0.2)
-	for shot in _child_of(room, Projectile):
-		shot.queue_free()
+	# The Tide Hook carries Wren over the gap to the hook post.
+	await _calm(room)
 	await _wait(1.1)
 	_check(not player.use_item("tide_hook"), "no hook before it's found")
 	GameState.give_item("tide_hook")
@@ -656,6 +667,7 @@ func _test_hull_dungeon() -> void:
 	# The Flooded Hold: a sideways throw from the middle of a row still bites
 	# the post, and carries Wren over the water to the big key's island.
 	room = await _goto(game, Vector2i(9, 10), Vector2i(12, 11))
+	await _calm(room)
 	player.global_position = _tile_pos(room, Vector2i(12, 11))
 	player.facing = Vector2.RIGHT
 	await _wait(0.1)
@@ -666,6 +678,7 @@ func _test_hull_dungeon() -> void:
 
 	# The Cargo Hold: shove the crate onto the plate to open the bars.
 	room = await _goto(game, Vector2i(11, 9), Vector2i(8, 6))
+	await _calm(room)
 	var crate: Crate = _child_of(room, Crate)[0]
 	var start := crate.position
 	player.global_position = crate.global_position + Vector2(-15, 0)
@@ -688,6 +701,7 @@ func _test_hull_dungeon() -> void:
 
 	# The Captain's Cabin: the hook drags a crate out of its nook.
 	room = await _goto(game, Vector2i(9, 8), Vector2i(12, 3))
+	await _calm(room)
 	var nook: Crate = null
 	for c in _child_of(room, Crate):
 		if c.position.x < Room.SIZE.x / 2.0:
@@ -729,6 +743,7 @@ func _test_hull_dungeon() -> void:
 
 	# The great door needs the big key.
 	room = await _goto(game, Vector2i(10, 8), Vector2i(11, 2))
+	await _calm(room)
 	var doors: Array = _child_of(room, BigDoor)
 	_check(doors.size() == 2, "the Listing Deck has the great door")
 	player.global_position = (doors[0] as Node2D).global_position + Vector2(0, 8)
@@ -895,6 +910,174 @@ func _pad_event(button: JoyButton) -> InputEventJoypadButton:
 	event.pressed = true
 	return event
 
+
+## Tiles reachable on foot from a tile, by flood fill over a room layout.
+static func _walkable_from(rows: PackedStringArray, start: Vector2i) -> Dictionary:
+	var seen := {start: true}
+	var queue: Array[Vector2i] = [start]
+	while not queue.is_empty():
+		var at: Vector2i = queue.pop_front()
+		for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next := at + step
+			if next.x < 0 or next.y < 0 or next.x >= Room.COLS or next.y >= Room.ROWS or seen.has(next):
+				continue
+			var tile := rows[next.y][next.x]
+			if Room.is_solid(tile) or Prop.is_prop(tile) or tile in ["O", "C", "T"]:
+				continue
+			seen[next] = true
+			queue.append(next)
+	return seen
+
+
+## Brinewood's Breath Pearl sits on an island in Heron Shallows that only
+## the Tide Hook reaches: a reason to come back after the Rotting Hull.
+func _test_brinewood_pearl() -> void:
+	var scene := load("res://rooms/room_5_-1.tscn") as PackedScene
+	var probe := scene.instantiate() as Room
+	var rows := Room.parse_layout(probe.layout)
+	_check(probe.chest_item == "breath_pearl", "Heron Shallows' chest holds a Breath Pearl")
+	probe.free()
+	var on_foot := _walkable_from(rows, Vector2i(0, 6))
+	_check(not on_foot.has(Vector2i(12, 3)), "the pearl island can't be reached on foot")
+	_check(on_foot.has(Vector2i(13, 7)), "the hook spot south of the island is reachable")
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(5, -1), Vector2(13 * Room.TILE + 8, 7 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var player: Player = game.player
+	var room: Room = game.current_room
+	GameState.give_item("tide_hook")
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	_check(player.use_item("tide_hook"), "Wren throws the hook at the island's post")
+	await _wait(1.6)
+	var local := player.global_position - room.global_position
+	_check(local.y < 5 * Room.TILE, "the hook carries Wren onto the island (at %s)" % local)
+	var chest: Chest = null
+	for child in room.get_children():
+		if child is Chest:
+			chest = child
+	_check(chest != null, "the island has a chest")
+	if chest:
+		var bubbles := GameState.max_bubbles
+		player.global_position = chest.global_position + Vector2(0, 14)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(player.try_interact(), "Wren opens the pearl chest")
+		_check(GameState.max_bubbles == bubbles + 1, "the Breath Pearl adds a bubble")
+		await _wait(2.0)
+		for child in game.get_children():
+			if child is DialogueBox and DialogueBox.is_open:
+				child.close()
+		# And back again: the island has to have a way off.
+		await _wait(0.3)
+		player.global_position = room.global_position + Vector2(9 * Room.TILE + 8, 4 * Room.TILE + 12)
+		player.facing = Vector2.DOWN
+		await _wait(0.1)
+		_check(player.use_item("tide_hook"), "Wren hooks the mainland post from the island")
+		await _wait(1.6)
+		# Feet rest against the post's base, so look just above them.
+		var back := Vector2i((player.global_position - room.global_position - Vector2(0, 4)) / Room.TILE)
+		_check(on_foot.has(back), "the hook brings Wren back to the shore (tile %s)" % back)
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Cinderreach: the Tide Hook gate at Ashfall Gate, the Slagbeetle's charge
+## and flip, and a geyser's cycle.
+func _test_cinderreach() -> void:
+	var probe := (load("res://rooms/room_7_-2.tscn") as PackedScene).instantiate() as Room
+	var rows := Room.parse_layout(probe.layout)
+	probe.free()
+	var on_foot := _walkable_from(rows, Vector2i(0, 6))
+	_check(not on_foot.has(Vector2i(15, 6)), "Cinderreach is cut off by lava until the Tide Hook")
+	var mouth := (load("res://rooms/room_10_-2.tscn") as PackedScene).instantiate() as Room
+	_check(mouth.door_to == Vector2i(21, 10), "the Kiln's Mouth door points at the Kiln's entry room")
+	if ResourceLoader.exists("res://rooms/room_21_10.tscn"):
+		var kiln := Room.parse_layout(((load("res://rooms/room_21_10.tscn") as PackedScene).instantiate() as Room).layout)
+		_check(not Room.is_solid(kiln[mouth.door_spawn.y][mouth.door_spawn.x]), "the Kiln's Mouth arrives on open floor")
+	mouth.free()
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(7, -2), Vector2(9 * Room.TILE + 8, 5 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var player: Player = game.player
+	var room: Room = game.current_room
+	GameState.give_item("tide_hook")
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	_check(player.use_item("tide_hook"), "Wren hooks the post across the lava")
+	await _wait(1.6)
+	var local := player.global_position - room.global_position
+	_check(local.x > 13 * Room.TILE, "the hook carries Wren over the lava (at %s)" % local)
+
+	# Slagbeetle: shell blocks, cracks when lined up, charges, flips on a wall.
+	var row_y := 8 * Room.TILE + 12
+	var beetle := Slagbeetle.new()
+	beetle.position = Vector2(15 * Room.TILE, row_y)
+	room.add_child(beetle)
+	player.global_position = room.global_position + Vector2(21 * Room.TILE, 2 * Room.TILE + 12)
+	await _wait(0.2)
+	_check(beetle.take_hit(1, Vector2.LEFT) == Enemy.HitResult.BLOCKED, "the slag shell turns the sword")
+	await _wait(0.4)
+	player.global_position = room.global_position + Vector2(21 * Room.TILE, row_y)
+	var cracked := false
+	for i in 20:
+		await _wait(0.05)
+		if beetle.mode == Slagbeetle.Mode.CRACK:
+			cracked = true
+			break
+	_check(cracked, "the Slagbeetle cracks open when Wren lines up with it")
+	# Step aside so it charges past into the wall.
+	player.global_position = room.global_position + Vector2(18 * Room.TILE, 3 * Room.TILE + 12)
+	var flipped := false
+	for i in 40:
+		await _wait(0.05)
+		if beetle.is_flipped():
+			flipped = true
+			break
+	_check(flipped, "a charging Slagbeetle flips when it hits a wall")
+	_check(beetle.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a flipped Slagbeetle can be hit")
+	beetle.queue_free()
+	GameState.refill()
+
+	# Geyser: idle, hiss, blow, and the steam only hurts while blowing.
+	var vent := Geyser.new()
+	vent.position = Vector2(4 * Room.TILE, 3 * Room.TILE)
+	room.add_child(vent)
+	var seen_hiss := false
+	var seen_blow := false
+	var steam_safe := true
+	for i in 80:
+		await _wait(0.05)
+		seen_hiss = seen_hiss or vent.phase == Geyser.Phase.HISS
+		if not vent.is_blowing():
+			steam_safe = steam_safe and not vent._steam.active
+		if vent.is_blowing():
+			seen_blow = seen_hiss
+			break
+	_check(seen_blow, "a geyser hisses before it blows")
+	_check(steam_safe, "a geyser's steam is harmless until it blows")
+	_check(vent._steam.active, "the blowing column hurts")
+	var beetle_flip := Slagbeetle.new()
+	beetle_flip.position = Vector2(4 * Room.TILE, 9 * Room.TILE)
+	room.add_child(beetle_flip)
+	await _wait(0.05)
+	beetle_flip.mode = Slagbeetle.Mode.FLIPPED
+	beetle_flip._timer = 5.0
+	beetle_flip.take_hit(0, Vector2.LEFT)
+	_check(beetle_flip.is_flipped(), "the Tide Hook doesn't right a flipped Slagbeetle")
+	beetle_flip.queue_free()
+	game.queue_free()
+	await _wait(0.1)
 
 ## Every effect has a sound, captions follow the option, music picks a cue.
 func _test_audio() -> void:
