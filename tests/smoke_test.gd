@@ -565,6 +565,43 @@ func _test_story() -> void:
 			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
 	back.queue_free()
 	await _wait(0.1)
+
+	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var kiln: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	await _wait(0.2)
+	_check(Cutscene.active, "the crucible chamber starts the crucible scene")
+	var pot: Array = kiln.current_room.get_children().filter(func(c: Node) -> bool: return c is Crucible)
+	var smiths: Array = kiln.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(pot.size() == 1 and smiths.size() == 3, "Lowe's smiths stoke the crucible (%d, %d)" % [pot.size(), smiths.size()])
+	var wyrm: Slagwyrm = null
+	for child in kiln.current_room.get_children():
+		if child is Slagwyrm:
+			wyrm = child
+	_check(wyrm != null and wyrm.mode == Slagwyrm.Mode.INTRO and wyrm._sprite.modulate.a == 0.0, "the Slagwyrm sleeps hidden in the melt")
+	var kiln_pages := await _play_scene(kiln, 12.0)
+	_check(not Cutscene.active and not kiln.player.in_cutscene, "the crucible scene hands Wren back")
+	_check(kiln_pages == 3 and GameState.has_flag(StoryDirector.CRUCIBLE_FLAG), "Lowe speaks three times at the Kiln (%d)" % kiln_pages)
+	var kiln_left := 0
+	for figure: Variant in smiths + pot:
+		if is_instance_valid(figure):
+			kiln_left += 1
+	_check(kiln_left == 0, "the Choir runs and the crucible bursts (%d left)" % kiln_left)
+	await _wait(1.8)
+	_check(is_instance_valid(wyrm) and wyrm.mode != Slagwyrm.Mode.INTRO, "the Slagwyrm wakes and fights")
+	kiln.queue_free()
+	await _wait(0.1)
+	var kiln_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(kiln_again)
+	await _wait(1.0)
+	_check(not Cutscene.active, "the crucible scene only plays once")
+	for child in kiln_again.current_room.get_children():
+		if child is Slagwyrm:
+			_check(child._sprite.modulate.a > 0.5, "the Slagwyrm rises at once when Wren comes back")
+	kiln_again.queue_free()
+	await _wait(0.1)
 	Cutscene.fast = false
 
 
@@ -1255,6 +1292,7 @@ func _test_kiln_dungeon() -> void:
 	# The Slagwyrm.
 	GameState.refill()
 	GameState.set_flag(BigDoor.flag_for(Vector2i(21, 8)))
+	GameState.set_flag(StoryDirector.CRUCIBLE_FLAG)
 	room = await _goto(game, Vector2i(21, 7), Vector2i(11, 10))
 	await _wait(0.2)
 	var bosses := _child_of(room, Slagwyrm)
