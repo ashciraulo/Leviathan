@@ -44,6 +44,11 @@ const VAEL_FLAG := "seen_vael_spire"
 ## Vael steps out onto the top ledge, across the open sky from Wren.
 const VAEL_FROM := Vector2(10 * 16 + 8, 1 * 16 + 4)
 const VAEL_AT := Vector2(10 * 16 + 8, 2 * 16 + 12)
+## Ringing the Gale Bell (the Turning Verse) wakes the Old One enough to
+## roll over; Hessa owns up about Vael the next time Wren is home.
+const GALE_BELL_FLAG := "tidebell_" + "gale"
+const TURNED_FLAG := "old_one_turned"
+const CONFESSION_FLAG := "seen_hessa_confession"
 ## Where Wren stops to watch, in any of these chambers.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
@@ -70,10 +75,16 @@ func _on_game_started() -> void:
 func _on_room_entered(coord: Vector2i) -> void:
 	if Cutscene.active:
 		return
+	# Saves from before the turn existed rang the Storm Bell without it; the
+	# Old One has turned all the same, so Hessa still has her say at home.
+	if GameState.has_flag(GALE_BELL_FLAG) and not GameState.has_flag(TURNED_FLAG):
+		GameState.set_flag(TURNED_FLAG)
 	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		the_wayshell()
+	elif coord == SALTMARROW and GameState.has_flag(TURNED_FLAG) and not GameState.has_flag(CONFESSION_FLAG):
+		hessas_confession()
 	elif lowe_waits(coord):
 		if coord == HULL_BOSS:
 			lowe_at_the_hull()
@@ -88,6 +99,8 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		the_calf()
 	elif flag == Stormheron.DEFEATED_FLAG and GameState.room_coord == GALE_BOSS and not GameState.has_flag(VAEL_FLAG):
 		vael_at_the_spire()
+	elif flag == GALE_BELL_FLAG and not GameState.has_flag(TURNED_FLAG):
+		the_old_one_turns()
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -337,6 +350,60 @@ func vael_at_the_spire() -> void:
 	await scene.wait(0.6)
 	await vael.walk_along([VAEL_FROM], 18.0, -1)
 	vael.queue_free()
+	scene.finish()
+
+
+## Cutscene 11, "The Old One turns": the Gale Bell rings out the Turning
+## Verse. Out on the bay, Vael's Choir answers with the Waking Song, sung by
+## voice alone, and far below the Old One rolls over. Told in sound, shaking
+## and one vast shape under the sea: no text.
+func the_old_one_turns() -> void:
+	GameState.set_flag(TURNED_FLAG)
+	# The bell sets its flag before it opens its own words, so give it a
+	# frame, then let those words finish first.
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	var scene := _scene()
+	await scene.wait(1.2)
+	Audio.play_sfx("choir_waking")
+	await scene.wait(2.6)
+	Audio.play_sfx("choir_waking", null, 0.84)
+	await scene.wait(1.6)
+	var shadow := OldOneShadow.new()
+	shadow.room = game.current_room
+	game.current_room.add_child(shadow)
+	Audio.play_sfx("old_one_rumble")
+	Feel.shake(6.0)
+	var rolling := shadow.roll()
+	for i in 4:
+		await scene.wait(1.2)
+		Feel.shake(6.0 - i)
+		if i == 1:
+			Audio.play_sfx("old_one_rumble", null, 0.8)
+	if rolling.is_running():
+		await rolling.finished
+	shadow.queue_free()
+	await scene.wait(0.8)
+	scene.finish()
+
+
+## Cutscene 12, "Hessa's confession": the first time Wren comes home after
+## the turn, Hessa owns up about Vael, and asks Wren not to hate him.
+func hessas_confession() -> void:
+	GameState.set_flag(CONFESSION_FLAG)
+	var hessa := _find_npc("hessa")
+	var scene := _scene()
+	await scene.wait(0.3)
+	if hessa:
+		await scene.walk_around_to(hessa.global_position + Vector2(0, 22))
+		scene.face(Vector2.UP)
+		await scene.lamp(hessa.global_position, Cutscene.LAMP_HERE)
+	await scene.speak("hessa", ["HESSA_CONFESS_1", "HESSA_CONFESS_2", "HESSA_CONFESS_3", "HESSA_CONFESS_4"])
+	await scene.wait(0.6)
+	await scene.speak("hessa", ["HESSA_CONFESS_5"])
+	# Wren answers: one flash, yes.
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
 	scene.finish()
 
 

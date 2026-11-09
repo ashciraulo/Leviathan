@@ -672,8 +672,39 @@ func _test_story() -> void:
 	var vael_left: Array = crown.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
 	_check(vael_left.is_empty(), "Vael leaves the Crown")
 	await _wait(3.0)
-	_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is Tidebell), "the Storm Bell is there to ring after Vael goes")
+	var storm_bell: Tidebell = null
+	for child in crown.current_room.get_children():
+		if child is Tidebell:
+			storm_bell = child
+	_check(storm_bell != null, "the Storm Bell is there to ring after Vael goes")
+	# Ringing it: far below, the Old One turns over in its sleep.
+	if storm_bell:
+		storm_bell.interact()
+		await _wait(0.2)
+		_check(DialogueBox.is_open and not Cutscene.active, "the turn waits for the bell's own words")
+		var turn_pages := await _play_scene(crown, 20.0)
+		_check(GameState.has_flag(StoryDirector.TURNED_FLAG), "ringing the Storm Bell makes the Old One turn")
+		_check(not Cutscene.active and not crown.player.in_cutscene, "the turn hands Wren back")
+		_check(turn_pages <= 3, "only the bell speaks; the turn itself has no words (%d pages)" % turn_pages)
+		await _wait(0.3)
+		_check(not crown.current_room.get_children().any(func(c: Node) -> bool: return c is OldOneShadow), "the shadow sinks away after the turn")
 	crown.queue_free()
+	await _wait(0.1)
+
+	# Home again after the turn: Hessa owns up about Vael. (An old save that
+	# rang the Storm Bell before the turn existed gets it too.)
+	GameState.reset_new_game()
+	GameState.flags[StoryDirector.GALE_BELL_FLAG] = true
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(9 * Room.TILE + 8, 9 * Room.TILE + 8))
+	var turned_home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(turned_home)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.CONFESSION_FLAG), "coming turned_home after the turn starts Hessa's confession")
+	var confess_pages := await _play_scene(turned_home, 20.0)
+	_check(confess_pages == 5, "Hessa confesses in five pages (%d)" % confess_pages)
+	_check(not Cutscene.active and not turned_home.player.in_cutscene, "the confession hands Wren back")
+	_check((Conversations.branch_for("hessa").get("lines", []) as Array).has("HESSA_AFTER_TURN"), "afterwards Hessa has something new to say")
+	turned_home.queue_free()
 	await _wait(0.1)
 
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
@@ -1164,6 +1195,7 @@ func _test_gale_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "gale", "the Storm Bell rises on the Crown")
 		if bell:
+			GameState.set_flag(StoryDirector.TURNED_FLAG)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("gale")), "ringing the Storm Bell counts as a Tidebell")
 			for child in game.get_children():

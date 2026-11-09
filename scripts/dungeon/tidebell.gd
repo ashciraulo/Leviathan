@@ -64,7 +64,8 @@ func interact() -> void:
 	_rung = true
 	_sprite.frame = 1
 	_glow = 2.0
-	GameState.flags[flag()] = true
+	# Through set_flag, so the story can answer (StoryDirector).
+	GameState.set_flag(flag())
 	GameState.give_item("tidebell", 1, false)
 	GameState.resonance_max += RESONANCE_GAIN
 	GameState.refill()
