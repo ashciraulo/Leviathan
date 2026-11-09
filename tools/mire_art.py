@@ -60,26 +60,52 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Old shrine flagstones in bog violet, moss in the joins."""
+    """Old shrine flagstones in bog violet: big uneven slabs that run across
+    tiles (only some tiles have a join on an edge, and now and then a crack
+    wanders through one), moss in the joins and, here and there, a cushion
+    of it on the stone."""
     rnd = random.Random(2400 + seed)
-    px = blank(SLAB[2] if seed != 2 else SLAB[3])
-    for i in range(T):
-        px[0][i] = SLAB[1]
-        px[i][0] = SLAB[1]
-        px[T - 1][i] = SLAB[4]
-        px[i][T - 1] = SLAB[4]
-    if seed % 2:
-        for x in range(1, T - 1):
-            px[8][x] = SLAB[4]
-            px[9][x] = SLAB[1]
+    base = SLAB[2]
+    px = blank(base)
+    join = SLAB[4]
+    if seed in (0, 1):
+        for x in range(T):
+            px[T - 1][x] = join
+    if seed == 2:
+        for y in range(T):
+            px[y][T - 1] = join
+    if seed == 1:
+        y = rnd.randrange(5, 10)
+        for x in range(rnd.randrange(2, 5), rnd.randrange(11, 14)):
+            if rnd.random() < 0.3:
+                y = max(3, min(T - 4, y + rnd.choice((-1, 1))))
+            px[y][x] = join
+            if rnd.random() < 0.35:
+                px[y - 1][x] = rnd.choice(MOSS)
     # Moss creeping out of the joins.
+    for y in range(T):
+        for x in range(T):
+            if px[y][x] == join and rnd.random() < 0.2:
+                px[y][x] = rnd.choice(MOSS)
+    # Worn, lighter patches and dark pits in the stone.
+    for _ in range(3):
+        cx, cy = rnd.randrange(2, T - 5), rnd.randrange(2, T - 3)
+        for dx in range(rnd.randrange(2, 4)):
+            if px[cy][cx + dx] == base:
+                px[cy][cx + dx] = SLAB[1]
     for _ in range(5):
-        x = rnd.randrange(T)
-        y = rnd.choice((T - 1, T - 2, 0))
-        px[y][x] = rnd.choice(MOSS)
-    for _ in range(6):
-        x, y = rnd.randrange(2, T - 2), rnd.randrange(2, T - 2)
-        px[y][x] = rnd.choice((SLAB[1], SLAB[3], SLAB[3]))
+        x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
+        if px[y][x] == base:
+            px[y][x] = SLAB[3]
+    # A low cushion of moss grown over the stone.
+    if seed == 3:
+        cx, cy = rnd.randrange(4, 11), rnd.randrange(4, 11)
+        for y in range(T):
+            for x in range(T):
+                d = ((x - cx) / 2.6) ** 2 + ((y - cy) / 1.6) ** 2
+                if d <= 1.0 and rnd.random() < 0.8:
+                    px[y][x] = MOSS[2] if d > 0.5 else MOSS[1]
+        px[cy - 1][cx] = MOSS[0]
     return px
 
 
