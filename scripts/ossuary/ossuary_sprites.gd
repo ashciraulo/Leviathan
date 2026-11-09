@@ -1,0 +1,7 @@
+class_name OssuarySprites
+extends Object
+## The Ossuary Dunes' sprites (built by tools/ossuary_art.py).
+
+const DUNEJAW := preload("res://assets/ossuary/dunejaw.png")
+const RIB := preload("res://assets/ossuary/rib.png")
+const SKULL := preload("res://assets/ossuary/skull.png")

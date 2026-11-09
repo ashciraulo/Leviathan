@@ -266,6 +266,7 @@ JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps ever
 FILES_TITLE,Choose a journey
 FILES_EMPTY,New journey
 FILES_DAMAGED,This file is damaged.
+FILES_NEWER,Saved by a newer version.
 FILES_COPY,Copy
 FILES_ERASE,Erase
 FILES_BACK,Back
@@ -437,6 +438,19 @@ ROOM_GLACIER_FOOT,Glacier Foot
 ROOM_SHIVER_COAST,Shiver Coast
 ROOM_FLOE_STRAND,Floe Strand
 ROOM_STILL_COVE,Still Cove
+ROOM_CAUSEWAY_END,Causeway End
+ROOM_COCKLE_FLATS,Cockle Flats
+ROOM_WRACK_SHORE,Wrack Shore
+ROOM_DROWNED_LANE,Drowned Lane
+ROOM_BELFRY_SQUARE,Belfry Square
+ROOM_WEIR_STEPS,Weir Steps
+ROOM_BLEACHED_STRAND,Bleached Strand
+ROOM_RIB_HOLLOW,Rib Hollow
+ROOM_SKULL_RISE,Skull Rise
+ROOM_SINKSAND_BASIN,Sinksand Basin
+ROOM_VERTEBRA_ROAD,Vertebra Road
+ROOM_HOLLOW_WIND,Hollow Wind Flats
+ROOM_LULLABY_POINT,Lullaby Point
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast
@@ -445,6 +459,8 @@ CAPTION_WINGS,Great wings beat
 CAPTION_BLOCK,Clang
 CAPTION_TELL,Enemy winds up
 CAPTION_GUST,Wind gusts
+CAPTION_TIDE,Tide rushing in
+CAPTION_SAND,Sand hissing
 CAPTION_HISS,Steam hisses
 CAPTION_ROAR,Roar
 CAPTION_UNLOCK,Lock clicks open
@@ -458,6 +474,14 @@ CAPTION_PUZZLE,Something opened
 CAPTION_CHARGED,Sword charged
 CAPTION_LOCKED,Locked
 CAPTION_SHOT,Shot fired
+CAPTION_SLAM,Mallet slams
+CAPTION_SCRAPE,Stone scrapes
+CAPTION_SNAP,Claws snap
+CAPTION_CLACK,Shell clacks
+CAPTION_CROAK,Croak from the mud
+CAPTION_GULP,Gulping breath
+CAPTION_RUMBLE,Rumble below
+CAPTION_BOSS_FALL,A great cry fades
 GAMEOVER_TITLE_TEXT,Out of breath
 GAMEOVER_WAKE,Wake at the Tidestone
 GAMEOVER_TITLE,Return to the title

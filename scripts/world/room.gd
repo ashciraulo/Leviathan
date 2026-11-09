@@ -14,6 +14,12 @@ extends Node2D
 ##          t  Tumbleburr (rolls with the wind)   J  windmill
 ##          x  slick ice (Wren slides; regions with "ice" tiles)
 ##          g  Sledgeseal (rears, then slides at Wren)
+##          r  tide flat (sand at low tide, water at high; see Tide)
+##          d  Siltray (swims the flooded flats; stranded when the tide's out)
+##          Z  drowned cottage   B  the Drowned Belfry
+##          p  the Old One's back (walkable)   N  the Old One's lip (the Maw)
+##          S  sinking sand (drags Wren to its middle; see SinkField)
+##          A  Dunejaw (burrows, spouts, bites)   U  great rib   F  beast skull (fossil)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)
@@ -59,6 +65,10 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Which region's tiles to draw with: a key of BIOMES.
 @export var biome := "saltmarrow"
 @export_multiline var layout := ""
+## A second layout the room switches to once a story flag is set (the
+## bay at Lullaby Point after the seventh bell). Same size as layout.
+@export_multiline var alt_layout := ""
+@export var alt_flag := ""
 ## Dungeon this room belongs to ("" for the overworld). Small keys found
 ## here only open doors in the same dungeon.
 @export var dungeon := ""
@@ -149,6 +159,18 @@ const BIOMES := {
 		"wet_deco": "ice_shards_%d", "dry_deco": "frost_rock_%d",
 		"floor_overlay": ["snowfall_%d", 7], "ice": "slick_ice_%d", "door": "exit_glow",
 	},
+	"sunken_verge": {
+		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
+		"water": "shallows_%d", "water_edge": "tideline_%s_%d", "damp": "seep_%s",
+		"wet_deco": "wrack_%d", "dry_deco": "cockle_%d",
+		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d", "door": "exit_glow",
+	},
+	"ossuary": {
+		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
+		"water": "bitter_sea_%d", "water_edge": "salt_crust_%s_%d", "damp": "sandshade_%s",
+		"wet_deco": "thornbush_%d", "dry_deco": "bone_shards_%d",
+		"floor_overlay": ["sanddrift_%d", 7], "door": "exit_glow",
+	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
 		"water": "bilge_%d", "water_edge": "brine_%s_%d", "damp": "soak_%s",
@@ -184,6 +206,8 @@ const BIOMES := {
 
 func _ready() -> void:
 	y_sort_enabled = true
+	if alt_flag != "" and alt_layout != "" and GameState.has_flag(alt_flag):
+		layout = alt_layout
 	add_to_group("rooms")
 	_rows = parse_layout(layout)
 	_has_ice_tiles = "I" in "".join(_rows)
@@ -228,6 +252,11 @@ static func is_solid(tile: String) -> bool:
 func _build() -> void:
 	var walls := _make_static(Layers.WORLD, "Walls")
 	_water_body = _make_static(Layers.WATER, "Water")
+	# Tide flats (r): the tide comes first, so swimmers can find it.
+	if dungeon == "" and (layout.contains("r") or layout.contains("d")):
+		var tide := Tide.new()
+		tide.name = "Tide"
+		add_child(tide)
 	for y in _rows.size():
 		var row := _rows[y]
 		var x := 0
@@ -254,6 +283,10 @@ func _build() -> void:
 		var ice := IceField.new()
 		ice.name = "IceField"
 		add_child(ice)
+	if dungeon == "" and layout.contains("S"):
+		var sink := SinkField.new()
+		sink.name = "SinkField"
+		add_child(sink)
 	if wind != Vector2.ZERO:
 		var gust := Gust.new()
 		gust.name = "Gust"
@@ -357,7 +390,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			add_child(node)
 		return
 	match tile:
-		".", ":", "x", "I":
+		".", ":", "x", "I", "r", "S", "p":
 			pass
 		"P":
 			player_spawn = pos
@@ -383,6 +416,10 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Tumbleburr.new()
 		"g":
 			node = Sledgeseal.new()
+		"d":
+			node = Siltray.new()
+		"A":
+			node = Dunejaw.new()
 		"b":
 			node = Shellback.new()
 		"C":
@@ -498,6 +535,10 @@ func _draw_ground() -> void:
 				var wet := _near_water(x, y)
 				if tile == "x" and tiles.has("ice"):
 					_draw_tile(tiles["ice"] % (h % 2), x, y)
+				elif Tide.is_flat(tile) and tiles.has("tidal"):
+					_draw_tile(tiles["tidal"] % (h % 2), x, y)
+				elif tile == "p":
+					_draw_tile("hide_%d" % (h % 2), x, y)
 				else:
 					_draw_tile(tiles["floor"] % (h % 4), x, y)
 				# Damp ground fades out from any water alongside.

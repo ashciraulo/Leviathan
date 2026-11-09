@@ -37,6 +37,9 @@ func _ready() -> void:
 	await _test_gloamfen()
 	await _test_windmere()
 	await _test_frostspine()
+	await _test_verge()
+	await _test_ossuary()
+	await _test_maw_approach()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -185,6 +188,39 @@ func _test_save_load() -> void:
 	SaveManager.delete_save()
 	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
 		"delete removes the save and its backup")
+	# Versions: an unversioned (old) save is brought up to date and loads; a
+	# save from a newer version is shown as such and never loaded.
+	GameState.reset_new_game()
+	GameState.flags["test_flag"] = true
+	SaveManager.save_game()
+	var old_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	old_data.erase("format_version")
+	old_data.erase("summary")
+	_write_json(path, old_data)
+	GameState.reset_new_game()
+	_check(SaveManager.load_game() and GameState.flags.get("test_flag") == true,
+		"a save from before versioning still loads")
+	_check(SaveManager._migrate(old_data).get("format_version") == SaveManager.FORMAT_VERSION,
+		"migrating an old save brings it to the current version")
+	var newer_data := old_data.duplicate(true)
+	newer_data["format_version"] = SaveManager.FORMAT_VERSION + 1
+	_write_json(path, newer_data)
+	GameState.reset_new_game()
+	_check(not SaveManager.load_game() and GameState.flags.get("test_flag") != true,
+		"a save from a newer version is not loaded")
+	_check(SaveManager.read_summary(SaveManager.current_slot).get("newer", false),
+		"the file select shows a newer save as such")
+	_check(SaveManager.latest_slot() != SaveManager.current_slot, "Continue skips a newer save")
+	_check(not SaveManager.save_game(), "saving never writes over a newer save")
+	_check(SaveManager.is_newer(JSON.parse_string(FileAccess.get_file_as_string(path))),
+		"the newer save is still there")
+	SaveManager.delete_save()
+
+
+func _write_json(path: String, data: Dictionary) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(data))
+	file.close()
 
 
 func _test_keys() -> void:
@@ -2401,6 +2437,9 @@ func _test_windmere() -> void:
 		lit.append(row.replace("v", "."))
 	_check(not _walkable_from(dark, Vector2i(8, 12)).has(Vector2i(8, 3)), "the Gullwatch chasm can't be crossed on foot")
 	_check(steps[5].contains("v") and _walkable_from(lit, Vector2i(8, 12)).has(Vector2i(8, 3)), "lantern planks bridge the Gullwatch chasm")
+	# The way west to Frostspine is over a sea inlet: a Kite Cloak glide, not a walk.
+	_check(not _walkable_from(lit, Vector2i(8, 3)).has(Vector2i(0, 3)), "the inlet below Frostspine can't be walked across")
+	_check(steps[3].substr(2, 3) == "~~~" and _walkable_from(lit, Vector2i(1, 3)).has(Vector2i(0, 3)), "a three-tile inlet to glide over, with a landing on the far side")
 
 	GameState.reset_new_game()
 	GameState.set_checkpoint(Vector2i(4, -3), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
@@ -2530,3 +2569,215 @@ func _test_frostspine() -> void:
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
+
+
+## The Sunken Verge: the frozen-channel entrance, the tide that floods the
+## flats, and Siltrays.
+func _test_verge() -> void:
+	# Causeway End: the channel can't be crossed on foot, but six frozen
+	# tiles (Frostfang arrows) make a way over. Six rows of water is more
+	# than a Kite Cloak glide carries.
+	var causeway: Room = (load("res://rooms/room_1_2.tscn") as PackedScene).instantiate()
+	var rows := Room.parse_layout(causeway.layout)
+	causeway.free()
+	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(2, 10)), "the Causeway End channel can't be crossed on foot")
+	var frozen := rows.duplicate()
+	for y in range(3, 9):
+		_check(rows[y][7] == "~", "the channel is water on row %d" % y)
+		frozen[y] = frozen[y].substr(0, 7) + "." + frozen[y].substr(8)
+	_check(_walkable_from(frozen, Vector2i(11, 1)).has(Vector2i(2, 10)), "a line of frozen tiles bridges the channel")
+	var square: Room = (load("res://rooms/room_1_3.tscn") as PackedScene).instantiate()
+	_check(square.door_to == Vector2i(36, 10) and Room.parse_layout(square.layout)[7][12] == "D", "Belfry Square's doorway leads into the Drowned Belfry")
+	square.free()
+
+	GameState.reset_new_game()
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	GameState.set_checkpoint(Vector2i(0, 2), Vector2(6 * Room.TILE + 8, 7 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var player: Player = game.player
+	await _calm(room)
+	var tide := room.get_node_or_null("Tide") as Tide
+	_check(tide != null, "Cockle Flats has a tide")
+	if tide == null:
+		Tide.offset = 0.0
+		game.queue_free()
+		return
+	# Low tide: the flats are sand to walk on.
+	player.global_position = _tile_pos(room, Vector2i(9, 8))
+	await _wait(0.3)
+	_check(not tide.is_flooded(Vector2i(9, 8)) and player.global_position.distance_to(_tile_pos(room, Vector2i(9, 8))) < 4.0, "at low tide Wren can stand on the flats")
+	# It floods from the sea inward: the tell.
+	Tide.offset = Tide.offset_for(Tide.Phase.RISING, Tide.RISING_TIME * 0.3)
+	await _wait(0.1)
+	_check(tide.cover(Vector2i(2, 4)) > tide.cover(Vector2i(9, 4)), "the tide reaches the flats by the sea first")
+	# Paused, the tide holds still.
+	var held := Tide.clock()
+	get_tree().paused = true
+	await get_tree().create_timer(0.3, true).timeout
+	get_tree().paused = false
+	_check(absf(Tide.clock() - held) < 0.1, "the tide doesn't run while the game is paused")
+	# High tide: whoever is still out there is swept back and loses a breath.
+	GameState.refill()
+	var breath := GameState.bubbles
+	Tide.offset = Tide.offset_for(Tide.Phase.HIGH, 0.2)
+	await _wait(0.2)
+	var at := player.global_position - room.global_position
+	var tile := Vector2i(floori(at.x / Room.TILE), floori(at.y / Room.TILE))
+	var landed := room.tile_at(tile.x, tile.y)
+	_check(Rect2i(0, 0, Room.COLS, Room.ROWS).has_point(tile) and not Tide.is_flat(landed) and not Room.is_solid(landed) and not Prop.is_prop(landed), "the flood sweeps Wren off the flats onto open ground (to %s)" % tile)
+	_check(GameState.bubbles < breath, "being swept costs a breath")
+	# And the flooded flats block the way.
+	await _wait(1.2)
+	GameState.refill()
+	player.global_position = _tile_pos(room, Vector2i(7, 8))
+	Input.action_press("move_right")
+	await _wait(0.5)
+	Input.action_release("move_right")
+	_check(player.global_position.x - room.global_position.x < 8 * Room.TILE, "Wren can't walk into the flood")
+	# A Siltray under the water can't be cut; it rears before it leaps.
+	var ray := Siltray.new()
+	ray.position = Vector2(9 * Room.TILE + 8, 5 * Room.TILE + 12)
+	room.add_child(ray)
+	await _wait(0.05)
+	_check(ray.mode == Siltray.Mode.SWIM and not ray._contact.active, "a Siltray placed in the flood starts swimming, harmless")
+	_check(ray.take_hit(1, Vector2.UP) == Enemy.HitResult.IGNORED, "a swimming Siltray can't be cut")
+	player.global_position = _tile_pos(room, Vector2i(8, 6))
+	var reared := false
+	var leapt_after := false
+	for i in 30:
+		await _wait(0.05)
+		reared = reared or ray.mode == Siltray.Mode.REAR
+		if ray.mode == Siltray.Mode.LEAP:
+			leapt_after = reared
+			break
+	_check(leapt_after, "a Siltray's fin rears before it leaps")
+	ray.queue_free()
+	# When the tide goes out it's stranded, and the sword finds it.
+	var stranded := Siltray.new()
+	stranded.position = Vector2(12 * Room.TILE + 8, 5 * Room.TILE + 12)
+	room.add_child(stranded)
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	await _wait(0.3)
+	_check(stranded.mode == Siltray.Mode.STRANDED and stranded.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "at low tide a Siltray is stranded and can be struck")
+	stranded.queue_free()
+	Tide.offset = 0.0
+	GameState.refill()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## The Ossuary Dunes: sealed off by the sea strait, sinking sand, Dunejaws.
+func _test_ossuary() -> void:
+	# Tangle Shore's sea runs east into the Bleached Strand: no way over
+	# on foot (the Diver's Helm's job).
+	var strand: Room = (load("res://rooms/room_7_0.tscn") as PackedScene).instantiate()
+	var deep := Room.parse_layout(strand.layout)
+	strand.free()
+	# Without the Diver's Helm, deep water (Q) is as closed as the sea.
+	var rows := PackedStringArray()
+	for row in deep:
+		rows.append(row.replace("Q", "~"))
+	_check(deep[9][0] == "Q" and deep[8][3] == "Q" and not _walkable_from(rows, Vector2i(11, 12)).has(Vector2i(0, 9)), "the Ossuary's west shore is deep water")
+	# With the Helm the strait is a way through, shore to shore.
+	var swum := PackedStringArray()
+	for row in deep:
+		swum.append(row.replace("Q", "."))
+	var tangle: Room = (load("res://rooms/room_6_0.tscn") as PackedScene).instantiate()
+	var shore := PackedStringArray()
+	for row in Room.parse_layout(tangle.layout):
+		shore.append(row.replace("Q", "."))
+	tangle.free()
+	_check(_walkable_from(swum, Vector2i(11, 12)).has(Vector2i(0, 9)) and _walkable_from(shore, Vector2i(11, 1)).has(Vector2i(23, 9)), "the Diver's Helm swims the strait from Tangle Shore into the dunes")
+	var rise: Room = (load("res://rooms/room_9_0.tscn") as PackedScene).instantiate()
+	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[6][12] == "D", "the beast skull's throat leads into the Marrow Tomb")
+	rise.free()
+
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(7, 1), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var player: Player = game.player
+	await _calm(room)
+	var sink := room.get_node_or_null("SinkField") as SinkField
+	_check(sink != null, "Sinksand Basin has sinking sand")
+	if sink == null:
+		game.queue_free()
+		return
+	# Standing still on the edge of a patch, Wren is dragged in and
+	# swallowed, then comes back up on firm ground a breath down.
+	player.global_position = _tile_pos(room, Vector2i(10, 5))
+	await _wait(0.3)
+	GameState.refill()
+	var breath := GameState.bubbles
+	var middle := sink.middle_at(Vector2(8 * Room.TILE + 8, 3 * Room.TILE + 8))
+	player.global_position = room.global_position + middle + Vector2(Room.TILE + 4, 0)
+	var start := player.global_position
+	await _wait(0.25)
+	_check(player.global_position.distance_to(room.global_position + middle) < start.distance_to(room.global_position + middle), "sinking sand drags Wren toward its middle")
+	await _wait(1.2)
+	var local := player.global_position - room.global_position
+	_check(not sink.is_sand(local) and GameState.bubbles < breath, "the sand swallows Wren and they come back up on firm ground (at %s)" % local)
+	# Walking away gets them out.
+	GameState.refill()
+	await _wait(1.2)
+	player.global_position = room.global_position + middle - Vector2(Room.TILE + 4, 0)
+	Input.action_press("move_left")
+	await _wait(0.9)
+	Input.action_release("move_left")
+	_check(not sink.is_sand(player.global_position - room.global_position), "Wren can walk out of the sinking sand (at %s, state %s)" % [player.global_position - room.global_position, player.state])
+	# A Dunejaw can't be cut under the sand; it spouts before it bites.
+	var jaw := Dunejaw.new()
+	jaw.position = Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12)
+	room.add_child(jaw)
+	player.global_position = _tile_pos(room, Vector2i(14, 9))
+	await _wait(0.1)
+	_check(jaw.take_hit(1, Vector2.LEFT) == Enemy.HitResult.IGNORED, "a buried Dunejaw can't be cut")
+	var spouted := false
+	var bit_after := false
+	for i in 60:
+		await _wait(0.05)
+		GameState.refill()
+		spouted = spouted or jaw.mode == Dunejaw.Mode.SPOUT
+		if jaw.mode == Dunejaw.Mode.BITE:
+			bit_after = spouted
+			break
+	_check(bit_after, "a Dunejaw spouts sand before it bites")
+	_check(jaw.global_position.distance_to(player.global_position) < 12.0, "a Dunejaw comes up right under Wren")
+	for i in 20:
+		await _wait(0.05)
+		if jaw.mode == Dunejaw.Mode.EXPOSED:
+			break
+	_check(jaw.mode == Dunejaw.Mode.EXPOSED and jaw.take_hit(1, Vector2.LEFT) == Enemy.HitResult.HIT, "after it bites, a Dunejaw lies exposed to the sword")
+	jaw.queue_free()
+	GameState.refill()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Lullaby Point: open sea until the seventh bell; then the Old One's back
+## and lip rise from the bay and its mouth leads into the Maw.
+func _test_maw_approach() -> void:
+	var flag := Tidebell.flag_for("tomb")
+	GameState.reset_new_game()
+	var scene := load("res://rooms/room_2_1.tscn") as PackedScene
+	var calm: Room = scene.instantiate()
+	add_child(calm)
+	var rows := Room.parse_layout(calm.layout)
+	_check(not calm.layout.contains("D") and not _walkable_from(rows, Vector2i(2, 9)).has(Vector2i(11, 5)), "before the seventh bell the bay at Lullaby Point is open sea")
+	calm.free()
+	GameState.set_flag(flag)
+	var risen: Room = scene.instantiate()
+	add_child(risen)
+	rows = PackedStringArray()
+	for row in Room.parse_layout(risen.layout):
+		rows.append(row.replace("N", "p"))
+	var lip := _child_of(risen, Prop).filter(func(p: Prop) -> bool: return p.kind == "N")
+	_check(lip.size() == 1 and rows[4][11] == "D" and risen.door_to == Vector2i(44, 10), "after it, the Old One's lip rises with the Maw's door in its mouth")
+	_check(_walkable_from(rows, Vector2i(2, 9)).has(Vector2i(11, 5)) and _walkable_from(rows, Vector2i(2, 9)).has(Vector2i(10, 5)), "its back makes a path out to the mouth")
+	risen.free()
+	GameState.clear_flag(flag)

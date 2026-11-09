@@ -18,6 +18,11 @@ const KINDS := {
 	"l": [Art.LANTERN_POST, 29, Vector2(6, 4), false],
 	"R": [Art.HULL, 69, Vector2(84, 18), true],
 	"J": [Art.WINDMILL, 46, Vector2(14, 8), true, 4],
+	"Z": [VergeSprites.COTTAGE, 44, Vector2(36, 14), true],
+	"B": [VergeSprites.BELFRY, 76, Vector2(24, 14), true],
+	"N": [VergeSprites.MAW_LIP, 53, Vector2.ZERO, false],
+	"U": [OssuarySprites.RIB, 53, Vector2(10, 6), false],
+	"F": [OssuarySprites.SKULL, 45, Vector2(56, 14), true],
 }
 
 var kind := ""
@@ -39,7 +44,9 @@ func _ready() -> void:
 	var spec: Array = KINDS[kind]
 	var footprint: Vector2 = spec[2]
 	Layers.assign(self, Layers.WORLD, [])
-	add_child(Layers.rect_shape(footprint, Vector2(0, -footprint.y / 2.0)))
+	# A zero footprint is scenery Wren can walk into (the Maw's lip).
+	if footprint != Vector2.ZERO:
+		add_child(Layers.rect_shape(footprint, Vector2(0, -footprint.y / 2.0)))
 	if spec[3]:
 		var shade := Art.shadow(true)
 		shade.scale = Vector2(footprint.x / 14.0, 1.5)

@@ -42,6 +42,7 @@ func _think(delta: float) -> void:
 				mode = Mode.RISE
 				_timer = RISE_TIME
 				_set_exposed(true)
+				Audio.play_sfx("skipper_croak", global_position)
 		Mode.RISE:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
@@ -61,6 +62,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0:
 				mode = Mode.BURROW
 				_timer = BURROW_TIME
+				Audio.play_sfx("skipper_burrow", global_position)
 		Mode.BURROW:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:

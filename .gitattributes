@@ -9,3 +9,8 @@
 *.flp filter=lfs diff=lfs merge=lfs -text
 *.pxo filter=lfs diff=lfs merge=lfs -text
 *.aseprite filter=lfs diff=lfs merge=lfs -text
+
+# Sound effects and ambience made by tools/sfx_gen.py are small and rebuilt
+# from code, so they stay in plain git (no LFS bandwidth on every CI run).
+audio/sfx/*.wav -filter -diff -merge -text
+audio/ambience/*.wav -filter -diff -merge -text
