@@ -469,29 +469,29 @@ TIDESTONE = [
 
 
 # Pell's three-clawed crab: the Scuttler's body in blue, its claws orange,
-# and a third claw on its right side. ( = shell, ) = claws (the letters
+# and a third claw on its right side. ! = shell, ; = claws (the letters
 # and digits are all taken).
 QUEST_CRAB_RAMPS = {
-    "(": ["#A8E4F5", "#62B4DE", "#3F86B0", "#285A80", "#16304A"],
-    ")": ["#FFD890", "#FFAA50", "#F08A3C", "#B85A26", "#5C2A1A"],
+    "!": ["#A8E4F5", "#62B4DE", "#3F86B0", "#285A80", "#16304A"],
+    ";": ["#FFD890", "#FFAA50", "#F08A3C", "#B85A26", "#5C2A1A"],
 }
 
 
 def quest_crab_frame(rows):
     # Two columns of room each side, so the third claw can stand clear.
-    out = [list(".." + r.replace("c", "(") + "..") for r in rows]
+    out = [list(".." + r.replace("c", "!") + "..") for r in rows]
     # The two front claws.
     for y in (3, 4, 5):
         for x in list(range(2, 7)) + list(range(13, 18)):
-            if out[y][x] == "(":
-                out[y][x] = ")"
+            if out[y][x] == "!":
+                out[y][x] = ";"
     # The third claw: a full pincer reaching out from the right of the shell.
     # The third claw: a copy of the left front claw, lower down and further
     # out, held clear of the others so it reads at a glance.
     for y in (3, 4, 5):
         for x in range(2, 7):
-            if out[y][x] == ")":
-                out[y + 4][x - 3] = ")"
+            if out[y][x] == ";":
+                out[y + 4][x - 3] = ";"
     return ["".join(r) for r in out]
 
 
