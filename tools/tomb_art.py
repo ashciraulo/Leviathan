@@ -415,28 +415,28 @@ def regent(pose):
 
 
 def armour(piece):
-    """One piece of the Regent's bone armour. 32x24.
-    'left', 'right' (pauldrons of whale vertebra), 'breast' (a breastplate
-    of fused skull-plates)."""
-    c = canvas(32, 24)
+    """One piece of the Regent's bone armour. 28x22.
+    'left', 'right' (pauldrons of whale vertebra, on his shoulders), 'breast'
+    (a breastplate of fused skull-plates over his ribs)."""
+    c = canvas(28, 22)
     if piece == "breast":
-        fill_ellipse(c, 16, 12, 13, 10, "o")
-        fill_ellipse(c, 16, 11, 11, 8, "b")
-        for x in (9, 16, 23):
-            line(c, x, 4, x, 20, "o")
-        line(c, 5, 12, 27, 12, "o")
-        fill_ellipse(c, 16, 12, 2, 2, "g")
-        put(c, 11, 6, "!")
+        fill_ellipse(c, 13.5, 11, 11, 9.5, "o")
+        fill_ellipse(c, 13.5, 10, 9, 7.5, "b")
+        for x in (7, 14, 20):
+            line(c, x, 3, x, 19, "o")
+        line(c, 4, 11, 23, 11, "o")
+        fill_ellipse(c, 13.5, 11, 2, 2, "g")
+        put(c, 9, 5, "!")
         return rows_of(c)
     flip = piece == "right"
-    fill_ellipse(c, 16, 12, 12, 8, "o")
-    fill_ellipse(c, 16, 11, 10, 6, "b")
+    fill_ellipse(c, 14, 14, 8, 5.5, "o")
+    fill_ellipse(c, 14, 13, 6.5, 4, "b")
     # Spines along it.
-    for i in range(5):
-        x = 8 + i * 4
-        line(c, x, 6, x + (2 if flip else -2), 1, "b")
-        put(c, x + (2 if flip else -2), 1, "!")
-    line(c, 6, 14, 26, 14, "o")
+    for i in range(4):
+        x = 9 + i * 3
+        line(c, x, 10, x + (2 if flip else -2), 6, "b")
+        put(c, x + (2 if flip else -2), 6, "!")
+    line(c, 7, 15, 21, 15, "o")
     if flip:
         c = [list(reversed(r)) for r in c]
     return rows_of(c)
@@ -490,7 +490,7 @@ def build(lit, sheet):
         "marrowguard": sheet([[lit(marrowguard(s, f), 123) for s in (True, False) for f in (0, 1)]], 16, 24),
         "hush": sheet([[lit(hush(0), 124), lit(hush(1), 124)]], 16, 20),
         "regent": sheet([[lit(regent(p), 125) for p in ("stand", "raise", "slam", "open")]], 64, 64),
-        "regent_armour": sheet([[lit(armour(p), 126) for p in ("left", "right", "breast")]], 32, 24),
+        "regent_armour": sheet([[lit(armour(p), 126) for p in ("left", "right", "breast")]], 28, 22),
         "bone_shard": sheet([[lit(bone_shard(), 127)]], 8, 8),
         "marrow_bell": sheet([[lit(marrow_bell(False), 128), lit(marrow_bell(True), 128)]], 32, 40),
     }

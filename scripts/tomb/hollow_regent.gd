@@ -32,8 +32,8 @@ const HITS_PER_OPEN := 2
 const PLATE_COOLDOWN := 0.5
 ## Pieces of armour (frames of the armour sheet) and where they sit.
 const PLATES := [
-	{"frame": 0, "at": Vector2(-14, -40)},
-	{"frame": 1, "at": Vector2(14, -40)},
+	{"frame": 0, "at": Vector2(-15, -38)},
+	{"frame": 1, "at": Vector2(15, -38)},
 	{"frame": 2, "at": Vector2(0, -30)},
 ]
 
@@ -90,7 +90,6 @@ func _ready() -> void:
 
 func _think(delta: float) -> void:
 	_timer -= delta
-	_plate_cool -= delta
 	var wren := get_player()
 	if wren == null:
 		velocity = Vector2.ZERO
@@ -140,6 +139,11 @@ func _think(delta: float) -> void:
 				_throw_timer = 1.0
 				mode = Mode.WALK
 				Feel.shake(2.0)
+
+
+func _physics_process(delta: float) -> void:
+	_plate_cool -= delta
+	super._physics_process(delta)
 
 
 func _enter(new_mode: Mode, time: float) -> void:

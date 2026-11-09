@@ -198,8 +198,8 @@ const BIOMES := {
 	"tomb": {
 		"floor": "tomb_floor_%d", "wall_top": "tomb_top_%d", "wall_face": "tomb_face_%d",
 		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
-		"wet_deco": "bonechips_%d", "dry_deco": "ribs_%d",
-		"floor_overlay": ["bonechips_%d", 17], "door": "exit_glow",
+		"wet_deco": "bonechips_%d", "dry_deco": "bonechips_%d",
+		"floor_overlay": ["ribs_%d", 37], "door": "exit_glow",
 	},
 }
 
