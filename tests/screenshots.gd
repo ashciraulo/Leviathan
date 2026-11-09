@@ -314,6 +314,16 @@ func _ready() -> void:
 	await _wait(1.5)
 	await _capture("37_nettle")
 	_finish_talk(pools)
+	# Agna Holt, the last founder, outside the Kiln.
+	GameState.set_checkpoint(Vector2i(10, -2), Vector2(14 * Room.TILE + 8, 6 * Room.TILE + 12))
+	SaveManager.save_game()
+	pools.respawn()
+	await _wait(2.4)
+	pools.player.facing = Vector2.UP
+	Conversations.talk("agna")
+	await _wait(1.5)
+	await _capture("38_agna")
+	_finish_talk(pools)
 
 	SaveManager.delete_save()
 	print("SCREENSHOTS DONE: " + _out_dir)

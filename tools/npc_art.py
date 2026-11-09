@@ -272,7 +272,50 @@ def nettle_frames():
     return [idle, breathe, NETTLE_TALK]
 
 
+# --------------------------------------------------------------------------
+# Agna Holt, the last bell-founder of Cinderreach. Grey hair in a bun,
+# founder's goggles pushed up on her brow, a long leather apron over rolled
+# sleeves and strong arms. Points with one arm when she talks.
+# --------------------------------------------------------------------------
+AGNA = [
+    "................",
+    "......ZZZZ......",
+    ".....ZZZZZZ.....",
+    "....ZZZZZZZZ....",
+    "...ZQeQQQQeQZ...",
+    "...ZAAAAAAAAZ...",
+    "...AAeAAAAeAA...",
+    "...AAeAAAAeAA...",
+    "...AA%AAAA%AA...",
+    "....AAAAAAAA....",
+    ".....AAAAAA.....",
+    "...qqqqqqqqqq...",
+    "..qqbbbbbbbbqq..",
+    ".AqqbbbbbbbbqqA.",
+    ".AAqbbbbbbbbqAA.",
+    ".AA.bbbbbbbb.AA.",
+    ".AA.bbbbbbbb.AA.",
+    "..A.bbbbbbbb.A..",
+    "....bbbbbbbb....",
+    "....bbbbbbbb....",
+    "....pppppppp....",
+    "....ppp..ppp....",
+    "....bbb..bbb....",
+    "................",
+]
+
+
+def agna_frames():
+    idle = AGNA
+    breathe = settle(idle, 11)
+    # Talking: her right arm comes up, pointing the way to the Kiln.
+    talk = paint(idle, [(15, 13, ".."), (16, 13, ".."), (17, 13, "."), (14, 13, "q."),
+                        (12, 14, "AA"), (11, 14, "AA"), (10, 15, "A")])
+    return [idle, breathe, talk]
+
+
 SPRITES = {
+    "agna": agna_frames,
     "nettle": nettle_frames,
     "corrin": corrin_frames,
     "pell": pell_frames,
@@ -424,7 +467,24 @@ def portrait_nettle():
     return _rows(c)
 
 
+def portrait_agna():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "q")                    # rolled-up shirt
+    _box(c, 10, 25, 12, 7, "b")                        # leather apron bib
+    _dots(c, [(9, 24), (22, 24)], "b")                 # straps
+    _ellipse(c, 16, 14, 10, 8, "Z")                    # grey hair
+    _ellipse(c, 16, 5, 5, 3, "Z")                      # the bun
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8)
+    # Founder's goggles pushed up on her brow.
+    _box(c, 8, 11, 16, 2, "Q")
+    _box(c, 10, 10, 3, 3, "e")
+    _box(c, 19, 10, 3, 3, "e")
+    _dots(c, [(21, 20), (22, 21)], "-")                # a smudge of soot
+    return _rows(c)
+
+
 PORTRAITS = {
+    "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),
     "corrin": portrait_corrin(),

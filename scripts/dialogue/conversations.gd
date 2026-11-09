@@ -24,6 +24,7 @@ const SPEAKERS := {
 	"corrin": ["NAME_CORRIN", Art.PORTRAIT_CORRIN],
 	"pell": ["NAME_PELL", Art.PORTRAIT_PELL],
 	"nettle": ["NAME_NETTLE", Art.PORTRAIT_NETTLE],
+	"agna": ["NAME_AGNA", Art.PORTRAIT_AGNA],
 	"marga": ["NAME_MARGA", Art.PORTRAIT_MARGA],
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 }
@@ -62,6 +63,15 @@ const TALKS := {
 		{"if": ["nettle_learned"], "lines": ["NETTLE_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
 		{"lines": ["NETTLE_1", "NETTLE_2"]},
+	],
+	# Agna Holt, the last founder, outside the Kiln. After the Ember Bell she
+	# lights her forge again and gives Wren a Brinesteel sword.
+	"agna": [
+		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
+		{"if": ["tidebell_kiln"], "set": ["agna_gave_sword"], "give": {"brinesteel_sword": 1}, "lines": ["AGNA_AFTER_1", "AGNA_AFTER_2", ["", "NARRATE_GOT_BRINESTEEL"], "AGNA_AFTER_3"]},
+		{"if": ["entered_kiln"], "lines": ["AGNA_KILN_1", "AGNA_KILN_2"]},
+		{"if": ["met_agna"], "lines": ["AGNA_AGAIN"]},
+		{"set": ["met_agna"], "lines": ["AGNA_1", "AGNA_2", "AGNA_3"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
