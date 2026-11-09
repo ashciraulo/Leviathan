@@ -90,14 +90,12 @@ def floor_tile(seed):
         x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
         if px[y][x] == base:
             px[y][x] = STONE[3]
-    # Silt settled in a hollow.
+    # A dusting of silt settled in the hollows: loose specks, not a stamp.
     if seed == 3:
-        cx, cy = rnd.randrange(4, 11), rnd.randrange(4, 11)
-        for y in range(T):
-            for x in range(T):
-                d = ((x - cx) / 3.0) ** 2 + ((y - cy) / 1.7) ** 2
-                if d <= 1.0 and rnd.random() < 0.85:
-                    px[y][x] = SILT[1] if d < 0.5 else SILT[0]
+        for _ in range(7):
+            x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
+            if px[y][x] == base:
+                px[y][x] = rnd.choice(SILT)
     return px
 
 

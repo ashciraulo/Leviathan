@@ -54,7 +54,7 @@ def floor_tile(seed):
     px = blank(GUM[2])
     for y in range(T):
         for x in range(T):
-            ridge = (y + int(round(1.5 * math.sin(x * math.pi / 8)))) % 6
+            ridge = (y + int(round(1.5 * math.sin(x * math.pi / 8)))) % 8
             if ridge == 0:
                 px[y][x] = GUM[3]
             elif ridge == 1:
