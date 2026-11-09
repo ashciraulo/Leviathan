@@ -72,8 +72,8 @@ jobs:
           "$RUNNER_TEMP/godot" --headless --path . --export-release "Windows Desktop" export/windows/Leviathan.exe
           "$RUNNER_TEMP/godot" --headless --path . --export-release "Linux" export/linux/Leviathan.x86_64
           test -s export/windows/Leviathan.exe
-          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web" export/web/index.html
           test -s export/linux/Leviathan.x86_64
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web" export/web/index.html
           test -s export/web/index.wasm
           test -s export/web/index.pck
           ls -la export/*

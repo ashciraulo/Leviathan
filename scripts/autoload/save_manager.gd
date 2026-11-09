@@ -139,6 +139,17 @@ func delete_save(slot: int = -1) -> void:
 	for file in [path, path + ".bak", path + ".tmp"]:
 		if FileAccess.file_exists(file):
 			DirAccess.remove_absolute(_abs(file))
+	_flush_web()
+
+
+## In a browser, user:// is copied to the browser's storage only after a file
+## written to it is closed. Removing files doesn't count, so write a small
+## one to make a deleted save stay deleted.
+func _flush_web() -> void:
+	if OS.has_feature("web"):
+		var file := FileAccess.open("user://.sync", FileAccess.WRITE)
+		if file:
+			file.store_string(Time.get_datetime_string_from_system())
 
 
 ## A slot's save data: the main file, or if that is missing or damaged, a
