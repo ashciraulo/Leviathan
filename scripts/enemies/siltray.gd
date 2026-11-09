@@ -47,6 +47,8 @@ func _in_water(local: Vector2) -> bool:
 func _set_mode(next: Mode) -> void:
 	mode = next
 	_contact.active = mode in [Mode.LEAP, Mode.STRANDED]
+	# Under the water nothing can catch or cut it (the Tide Hook included).
+	_hurtbox.set_deferred("monitorable", mode != Mode.SWIM)
 	match mode:
 		Mode.REAR:
 			_timer = REAR_TIME

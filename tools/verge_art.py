@@ -196,7 +196,43 @@ def tidewater(frame):
     return px
 
 
+OLD_ONE = [hex_color(c) for c in ("#F4F0EA", "#DAD6CE", "#BDB8B0", "#9E9890", "#7A746E", "#56504C")]
+
+
+def hide(seed):
+    """The Old One's back, risen just clear of the bay after the seventh
+    bell: pale, wet, crossed with old scars and barnacle rings."""
+    rnd = random.Random(5700 + seed)
+    px = blank(OLD_ONE[2])
+    for y in range(T):
+        for x in range(T):
+            v = math.sin(x * 0.35 + y * 0.12 + seed) + math.sin(y * 0.5 - x * 0.1)
+            if v > 1.2:
+                px[y][x] = OLD_ONE[1]
+            elif v < -1.3:
+                px[y][x] = OLD_ONE[3]
+    # A long healed scar.
+    x0, y0 = rnd.randrange(0, 6), rnd.randrange(3, 13)
+    for i in range(rnd.randrange(7, 12)):
+        x, y = x0 + i, y0 - i // 3
+        if 0 <= x < T and 0 <= y < T:
+            px[y][x] = OLD_ONE[4]
+            if y + 1 < T:
+                px[y + 1][x] = OLD_ONE[0]
+    # A barnacle ring.
+    cx, cy = rnd.randrange(3, 13), rnd.randrange(3, 13)
+    for (dx, dy) in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+        px[cy + dy][cx + dx] = OLD_ONE[4]
+    px[cy][cx] = OLD_ONE[5]
+    # Wet sheen.
+    for _ in range(4):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = OLD_ONE[0]
+    return px
+
+
 TILES = [
+    ("hide_0", lambda: hide(0)), ("hide_1", lambda: hide(1)),
     ("silt_0", lambda: silt_tile(0)), ("silt_1", lambda: silt_tile(1)),
     ("silt_2", lambda: silt_tile(2)), ("silt_3", lambda: silt_tile(3)),
     ("flat_0", lambda: flat_tile(0)), ("flat_1", lambda: flat_tile(1)),
@@ -226,6 +262,8 @@ RAMPS = {
     "t": ["#9A8A74", "#7A6A58", "#5A4C40", "#3E342E", "#1E1818"],   # sodden timber
     "b": ["#D8B070", "#B08A4E", "#8A6A3A", "#5E4628", "#3A2A18"],   # bell bronze
     "v": ["#C8E0D8", "#94BCB0", "#6E9A8E", "#4E7468", "#2E4A42"],   # verdigris
+    "l": ["#F4F0EA", "#DAD6CE", "#BDB8B0", "#9E9890", "#56504C"],   # the Old One's pale hide
+    "g": ["#B0A8A4", "#948C88", "#7A726E", "#5E5652", "#3E3836"],   # its scars
 }
 FLAT = {
     "e": "#141210",   # eyes
@@ -368,10 +406,56 @@ def belfry():
     return _rows(c)
 
 
+# The Old One's lip (layout N): the edge of its vast mouth breaking the
+# bay's surface, a pale scarred arch round the dark of its throat. Wren
+# walks into the dark (the room's D sits in it). 96x56, foot row 53.
+def maw_lip():
+    w, h = 96, 56
+    c = _grid(w, h)
+    for y in range(4, 54):
+        for x in range(1, 95):
+            # A long low hump, higher on the left, like a lip curling up.
+            ry = 46.0 + (48 - x) * 0.12
+            outer = ((x - 48) / 47.0) ** 2 + ((y - 54) / ry) ** 2
+            inner = ((x - 50) / 21.0) ** 2 + ((y - 54) / 27.0) ** 2
+            rim = ((x - 50) / 24.0) ** 2 + ((y - 54) / 30.0) ** 2
+            if inner <= 1.0:
+                c[y][x] = "k"
+            elif rim <= 1.0:
+                c[y][x] = "g"
+            elif outer <= 1.0:
+                c[y][x] = "l"
+    # Great blunt teeth: hanging from the arch, rising from the jaw.
+    for (tx, top, length, down) in ((36, 33, 9, True), (50, 28, 10, True), (64, 33, 8, True),
+                                    (42, 53, 8, False), (58, 53, 9, False)):
+        for i in range(length):
+            half = max(0, 2 - i // 3)
+            y = top + i if down else top - i
+            for x in range(tx - half, tx + half + 1):
+                if c[y][x] == "k":
+                    c[y][x] = "l"
+    # Scars and barnacle crusts along the hide.
+    for (x0, y0, n) in ((8, 36, 10), (70, 26, 12), (22, 16, 8), (80, 44, 6)):
+        for i in range(n):
+            y = y0 + i // 3
+            if c[y][x0 + i] == "l":
+                c[y][x0 + i] = "g"
+    for (bx, by) in ((6, 46), (18, 26), (78, 36), (88, 48), (64, 14), (30, 40)):
+        for (dx, dy) in ((0, 0), (1, 0), (0, 1), (1, 1), (2, 1)):
+            if c[by + dy][bx + dx] == "l":
+                c[by + dy][bx + dx] = "s"
+    # Water lapping at its foot.
+    for x in range(0, 96):
+        if c[53][x] not in ("k", "s"):
+            c[53][x] = "f" if x % 3 else "."
+    return _rows(c)
+
+
 def build(lit, sheet):
     """Everything in assets/verge/, as {file name: pixels}."""
     return {
         "siltray": sheet([[lit(siltray(f), 90) for f in ("fin", "rear", "leap", "stranded_0", "stranded_1")]], 24, 14),
         "cottage": sheet([[lit(cottage(), 91)]], 48, 48),
         "belfry": sheet([[lit(belfry(), 92)]], 48, 80),
+        "maw_lip": sheet([[lit(maw_lip(), 93)]], 96, 56),
     }

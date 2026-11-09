@@ -9,7 +9,8 @@ extends Enemy
 enum Mode { BURROW, SPOUT, BITE, EXPOSED }
 
 const BURROW_SPEED := 40.0
-const STRIKE_RANGE := 30.0
+## It comes up right under Wren: they have the spout to step away.
+const STRIKE_RANGE := 8.0
 const SPOUT_TIME := 0.6
 const BITE_TIME := 0.35
 const EXPOSED_TIME := 1.1
@@ -34,7 +35,10 @@ func _set_mode(next: Mode) -> void:
 	mode = next
 	_contact.active = mode == Mode.BITE
 	# Under the sand it's no obstacle; up, it's in the way like any enemy.
-	set_deferred("collision_layer", 0 if mode in [Mode.BURROW, Mode.SPOUT] else 1 << (Layers.ENEMY - 1))
+	var buried := mode in [Mode.BURROW, Mode.SPOUT]
+	set_deferred("collision_layer", 0 if buried else 1 << (Layers.ENEMY - 1))
+	# Nothing to catch or cut under the sand (the Tide Hook included).
+	_hurtbox.set_deferred("monitorable", not buried)
 	match mode:
 		Mode.SPOUT:
 			_timer = SPOUT_TIME

@@ -17,6 +17,7 @@ extends Node2D
 ##          r  tide flat (sand at low tide, water at high; see Tide)
 ##          d  Siltray (swims the flooded flats; stranded when the tide's out)
 ##          Z  drowned cottage   B  the Drowned Belfry
+##          p  the Old One's back (walkable)   N  the Old One's lip (the Maw)
 ##          S  sinking sand (drags Wren to its middle; see SinkField)
 ##          A  Dunejaw (burrows, spouts, bites)   U  great rib   F  beast skull (fossil)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
@@ -58,6 +59,10 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Which region's tiles to draw with: a key of BIOMES.
 @export var biome := "saltmarrow"
 @export_multiline var layout := ""
+## A second layout the room switches to once a story flag is set (the
+## bay at Lullaby Point after the seventh bell). Same size as layout.
+@export_multiline var alt_layout := ""
+@export var alt_flag := ""
 ## Dungeon this room belongs to ("" for the overworld). Small keys found
 ## here only open doors in the same dungeon.
 @export var dungeon := ""
@@ -172,6 +177,8 @@ const BIOMES := {
 
 func _ready() -> void:
 	y_sort_enabled = true
+	if alt_flag != "" and alt_layout != "" and GameState.has_flag(alt_flag):
+		layout = alt_layout
 	_rows = parse_layout(layout)
 	var problem := validate_layout(_rows)
 	if problem != "":
@@ -264,7 +271,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			add_child(node)
 		return
 	match tile:
-		".", ":", "x", "r", "S":
+		".", ":", "x", "r", "S", "p":
 			pass
 		"P":
 			player_spawn = pos
@@ -407,6 +414,8 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["ice"] % (h % 2), x, y)
 				elif Tide.is_flat(tile) and tiles.has("tidal"):
 					_draw_tile(tiles["tidal"] % (h % 2), x, y)
+				elif tile == "p":
+					_draw_tile("hide_%d" % (h % 2), x, y)
 				else:
 					_draw_tile(tiles["floor"] % (h % 4), x, y)
 				# Damp ground fades out from any water alongside.

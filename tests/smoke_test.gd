@@ -43,6 +43,7 @@ func _ready() -> void:
 	await _test_frostspine()
 	await _test_verge()
 	await _test_ossuary()
+	await _test_maw_approach()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -2131,7 +2132,17 @@ func _test_ossuary() -> void:
 	var rows := PackedStringArray()
 	for row in deep:
 		rows.append(row.replace("Q", "~"))
-	_check(deep[9][0] == "Q" and not _walkable_from(rows, Vector2i(11, 12)).has(Vector2i(0, 9)), "the Ossuary is cut off by a deep-water strait")
+	_check(deep[9][0] == "Q" and deep[8][3] == "Q" and not _walkable_from(rows, Vector2i(11, 12)).has(Vector2i(0, 9)), "the Ossuary's west shore is deep water")
+	# With the Helm the strait is a way through, shore to shore.
+	var swum := PackedStringArray()
+	for row in deep:
+		swum.append(row.replace("Q", "."))
+	var tangle: Room = (load("res://rooms/room_6_0.tscn") as PackedScene).instantiate()
+	var shore := PackedStringArray()
+	for row in Room.parse_layout(tangle.layout):
+		shore.append(row.replace("Q", "."))
+	tangle.free()
+	_check(_walkable_from(swum, Vector2i(11, 12)).has(Vector2i(0, 9)) and _walkable_from(shore, Vector2i(11, 1)).has(Vector2i(23, 9)), "the Diver's Helm swims the strait from Tangle Shore into the dunes")
 	var rise: Room = (load("res://rooms/room_9_0.tscn") as PackedScene).instantiate()
 	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[6][12] == "D", "the beast skull's throat leads into the Marrow Tomb")
 	rise.free()
@@ -2166,11 +2177,11 @@ func _test_ossuary() -> void:
 	# Walking away gets them out.
 	GameState.refill()
 	await _wait(1.2)
-	player.global_position = room.global_position + middle + Vector2(Room.TILE + 4, 0)
-	Input.action_press("move_right")
-	await _wait(0.6)
-	Input.action_release("move_right")
-	_check(not sink.is_sand(player.global_position - room.global_position), "Wren can walk out of the sinking sand")
+	player.global_position = room.global_position + middle - Vector2(Room.TILE + 4, 0)
+	Input.action_press("move_left")
+	await _wait(0.9)
+	Input.action_release("move_left")
+	_check(not sink.is_sand(player.global_position - room.global_position), "Wren can walk out of the sinking sand (at %s, state %s)" % [player.global_position - room.global_position, player.state])
 	# A Dunejaw can't be cut under the sand; it spouts before it bites.
 	var jaw := Dunejaw.new()
 	jaw.position = Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12)
@@ -2188,6 +2199,7 @@ func _test_ossuary() -> void:
 			bit_after = spouted
 			break
 	_check(bit_after, "a Dunejaw spouts sand before it bites")
+	_check(jaw.global_position.distance_to(player.global_position) < 12.0, "a Dunejaw comes up right under Wren")
 	for i in 20:
 		await _wait(0.05)
 		if jaw.mode == Dunejaw.Mode.EXPOSED:
@@ -2197,3 +2209,27 @@ func _test_ossuary() -> void:
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Lullaby Point: open sea until the seventh bell; then the Old One's back
+## and lip rise from the bay and its mouth leads into the Maw.
+func _test_maw_approach() -> void:
+	var flag := Tidebell.flag_for("tomb")
+	GameState.reset_new_game()
+	var scene := load("res://rooms/room_2_1.tscn") as PackedScene
+	var calm: Room = scene.instantiate()
+	add_child(calm)
+	var rows := Room.parse_layout(calm.layout)
+	_check(not calm.layout.contains("D") and not _walkable_from(rows, Vector2i(2, 9)).has(Vector2i(11, 5)), "before the seventh bell the bay at Lullaby Point is open sea")
+	calm.free()
+	GameState.set_flag(flag)
+	var risen: Room = scene.instantiate()
+	add_child(risen)
+	rows = PackedStringArray()
+	for row in Room.parse_layout(risen.layout):
+		rows.append(row.replace("N", "p"))
+	var lip := _child_of(risen, Prop).filter(func(p: Prop) -> bool: return p.kind == "N")
+	_check(lip.size() == 1 and rows[4][11] == "D" and risen.door_to == Vector2i(44, 10), "after it, the Old One's lip rises with the Maw's door in its mouth")
+	_check(_walkable_from(rows, Vector2i(2, 9)).has(Vector2i(11, 5)) and _walkable_from(rows, Vector2i(2, 9)).has(Vector2i(10, 5)), "its back makes a path out to the mouth")
+	risen.free()
+	GameState.clear_flag(flag)

@@ -157,11 +157,16 @@ func _ready() -> void:
 		Vector2i(7, 1): ["76_sinksand_basin", Vector2i(11, 1)],
 		Vector2i(8, 1): ["77_vertebra_road", Vector2i(4, 6)],
 		Vector2i(9, 1): ["78_hollow_wind_flats", Vector2i(16, 6)],
+		# After the seventh bell, the Old One's lip breaks the bay.
+		Vector2i(2, 1): ["79_lullaby_point", Vector2i(11, 9), Tide.Phase.LOW, Tidebell.flag_for("tomb")],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		var story_flag: String = shots[coord][3] if shots[coord].size() > 3 else ""
+		if story_flag != "":
+			GameState.set_flag(story_flag)
 		SaveManager.save_game()
 		# The Sunken Verge's tide: out, unless the shot asks for it in.
 		var tide: Tide.Phase = shots[coord][2] if shots[coord].size() > 2 else Tide.Phase.LOW
@@ -171,6 +176,9 @@ func _ready() -> void:
 		game.respawn()
 		await _wait(2.2)
 		await _capture(shots[coord][0])
+		if story_flag != "":
+			GameState.clear_flag(story_flag)
+			SaveManager.save_game()
 
 	# 7. Talking to Old Hessa (we're in the village now).
 	var hessa: Npc = null

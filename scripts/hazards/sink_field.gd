@@ -48,7 +48,14 @@ func _ready() -> void:
 			var sum := Vector2.ZERO
 			for tile in patch:
 				sum += Vector2(tile) + Vector2(0.5, 0.5)
-			var middle := sum / patch.size() * Room.TILE
+			# The middle of the patch tile nearest its centre, so an odd-shaped
+			# patch still pulls Wren onto sand.
+			var centre := sum / patch.size()
+			var best := patch[0]
+			for tile in patch:
+				if (Vector2(tile) + Vector2(0.5, 0.5)).distance_to(centre) < (Vector2(best) + Vector2(0.5, 0.5)).distance_to(centre):
+					best = tile
+			var middle := (Vector2(best) + Vector2(0.5, 0.5)) * Room.TILE
 			for tile in patch:
 				_middle[tile] = middle
 
@@ -91,10 +98,29 @@ func _physics_process(delta: float) -> void:
 		_was_on = true
 	var to := middle - local
 	if to.length() <= SWALLOW:
-		var back := _safe if _safe != Vector2.INF else _room.global_position + _room.player_spawn
+		var back := _safe if _safe != Vector2.INF else _room.global_position + _firm_near(local)
 		wren.fall(back)
 		return
 	wren.move_and_collide(to.normalized() * minf(PULL * delta, to.length()))
+
+
+## The nearest firm, open ground to a point (room-local), for when Wren
+## hasn't stood anywhere firm in this room yet.
+func _firm_near(local: Vector2) -> Vector2:
+	var start := Vector2i(floori(local.x / Room.TILE), floori(local.y / Room.TILE))
+	var seen := {start: true}
+	var queue: Array[Vector2i] = [start]
+	while not queue.is_empty():
+		var at: Vector2i = queue.pop_front()
+		var tile := _room.tile_at(at.x, at.y)
+		if not _middle.has(at) and not Room.is_solid(tile) and not Prop.is_prop(tile):
+			return Vector2(at * Room.TILE) + Vector2(Room.TILE / 2.0, Room.TILE - 4.0)
+		for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next := at + step
+			if Rect2i(0, 0, Room.COLS, Room.ROWS).has_point(next) and not seen.has(next) and not Room.is_solid(_room.tile_at(next.x, next.y)):
+				seen[next] = true
+				queue.append(next)
+	return local
 
 
 func _draw() -> void:
