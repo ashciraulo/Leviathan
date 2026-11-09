@@ -17,7 +17,7 @@ var _pull_to := Vector2.INF
 func _ready() -> void:
 	add_to_group("crates")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	Layers.assign(self, Layers.WORLD, [Layers.WORLD, Layers.WATER, Layers.PIT])
+	Layers.assign(self, Layers.WORLD, [Layers.WORLD, Layers.WATER, Layers.PIT, Layers.DEEP, Layers.GRATE])
 	add_child(Layers.rect_shape(Vector2(14, 13), Vector2(0, -5.5)))
 	add_child(Art.shadow(true))
 	add_child(Art.sprite(HullSprites.CRATE, 1, 1, 17))

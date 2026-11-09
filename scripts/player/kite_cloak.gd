@@ -38,7 +38,7 @@ func _ready() -> void:
 	_from = _player.global_position
 	_player.airborne = true
 	# Over water and holes alike: only walls stop Wren.
-	_player.collision_mask = 1 << (Layers.WORLD - 1)
+	_player.collision_mask = Player.AIR_MASK
 	z_index = 2
 	Audio.play_sfx("cloak_open", _player.global_position)
 
@@ -80,13 +80,14 @@ func _over_water() -> bool:
 	if room == null:
 		return false
 	var local := at - room.global_position
-	return room.tile_at(floori(local.x / Room.TILE), floori(local.y / Room.TILE)) == "~"
+	var tile := room.tile_at(floori(local.x / Room.TILE), floori(local.y / Room.TILE))
+	return tile == "~" or (tile == "Q" and not GameState.has_item("divers_helm"))
 
 
 func _land() -> void:
 	if _player and is_instance_valid(_player):
 		_player.airborne = false
-		_player.collision_mask = (1 << (Layers.WORLD - 1)) | (1 << (Layers.WATER - 1))
+		_player.collision_mask = _player.ground_mask()
 		if _player.is_using_item():
 			_player.end_item()
 	queue_free()

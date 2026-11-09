@@ -13,6 +13,10 @@ const PLAYER_HURTBOX := 7
 const WATER := 8
 ## Holes in a deck: they stop enemies and crates, but Wren can fall in.
 const PIT := 9
+## Deep water (Q, and flooded floor): only Wren with the Diver's Helm swims it.
+const DEEP := 10
+## Sunken grates in deep water: Wren swims under them only when diving.
+const GRATE := 11
 
 
 ## Put a body or area on exactly one layer (0 for none) and the given masks.
