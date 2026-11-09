@@ -417,13 +417,25 @@ func hessas_confession() -> void:
 func bell_rung(bell: Tidebell) -> void:
 	var words := bell.words()
 	var which := bell.bell
+	var from := bell.position
+	var parent := bell.get_parent()
+	# Never two scenes at once: let one already running finish first.
+	while Cutscene.active:
+		await get_tree().process_frame
+	if not is_instance_valid(parent) or not is_instance_valid(game.player):
+		return
 	var scene := _scene()
 	var phrase := BellPhrase.new()
 	phrase.notes = 3 + 2 * maxi(GameState.item_count("tidebell"), 1)
 	phrase.target = game.player
-	phrase.position = bell.position
-	bell.get_parent().add_child(phrase)
-	scene.face((bell.global_position - game.player.global_position).normalized())
+	phrase.position = from
+	parent.add_child(phrase)
+	# Face the bell, along one of the four ways Wren can face.
+	var to_bell: Vector2 = phrase.global_position - game.player.global_position
+	if absf(to_bell.x) > absf(to_bell.y):
+		scene.face(Vector2(signf(to_bell.x), 0))
+	else:
+		scene.face(Vector2.DOWN if to_bell.y > 0.0 else Vector2.UP)
 	await get_tree().create_timer(phrase.duration() - Cutscene.scaled(PHRASE_PULSE), true, false, true).timeout
 	# The bell itself may be gone by now (a test, or the room unloading).
 	GameState.refill()
