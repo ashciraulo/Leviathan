@@ -479,7 +479,52 @@ def vael_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# Mother Dace, who walks the Ossuary Dunes: very old, small and bent, in
+# sand-coloured wraps with a dusk-purple scarf over grey hair, leaning on a
+# long staff of pale bone. Lifts the staff to point when she speaks.
+# --------------------------------------------------------------------------
+DACE = [
+    "................",
+    "................",
+    "................",
+    "......pppp......",
+    ".....pppppp...s.",
+    "....ppZZZZpp..s.",
+    "....pVVVVVVp..s.",
+    "....pVeVVeVp..s.",
+    "....pVVVVVVp..s.",
+    ".....pV--Vp...s.",
+    "......pppp....s.",
+    "....jjjjjjjj.Vs.",
+    "...jjjjjjjjjjVs.",
+    "...jjjjjjjjjjjs.",
+    "...jjjjjjjjjjjs.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "....jjjjjjjj..s.",
+    ".....VV..VV...s.",
+]
+
+
+def dace_frames():
+    # A purple sash, its end hanging, and a string of small bones at the neck.
+    idle = paint(DACE, [(15, 3, "pppppppppp"), (16, 9, "p"), (17, 9, "p"),
+                        (11, 6, "s.s.s")])
+    breathe = settle(idle, 11)
+    # Talking: the staff comes up off the sand to point.
+    talk = [r[:13] + "..." for r in idle]
+    talk = paint(talk, [(r, 14, "s") for r in range(1, 21)] + [(11, 13, "V"), (12, 13, "V")])
+    return [idle, breathe, talk]
+
+
 SPRITES = {
+    "dace": dace_frames,
     "vael": vael_frames,
     "murmur": murmur_frames,
     "lowe": lowe_frames,
@@ -690,7 +735,21 @@ def portrait_vael():
     return _rows(c)
 
 
+def portrait_dace():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "j")                    # sand wraps
+    _ellipse(c, 16, 15, 12, 11, "p")                   # dusk-purple scarf
+    _box(c, 4, 15, 24, 13, "p")
+    _ellipse(c, 16, 12, 8, 3, "Z")                     # grey hair under it
+    _face(c, "V", eye_row=17, cy=18, rx=7, ry=8, cheeks=False)
+    _box(c, 10, 21, 2, 1, "-")                         # deep lines by the mouth
+    _box(c, 20, 21, 2, 1, "-")
+    _box(c, 27, 4, 2, 28, "s")                         # the bone staff
+    return _rows(c)
+
+
 PORTRAITS = {
+    "dace": portrait_dace(),
     "vael": portrait_vael(),
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),

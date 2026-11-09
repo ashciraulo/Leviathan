@@ -11,6 +11,8 @@ const KINDS := {
 	"singer": {"texture": Art.VILLAGER_SINGER, "frames": 4},
 	"murmur": {"texture": Art.VILLAGER_MURMUR, "frames": 3},
 	"vael": {"texture": Art.VILLAGER_VAEL, "frames": 3},
+	# Not of the Choir, but walks into scenes the same way.
+	"dace": {"texture": Art.VILLAGER_DACE, "frames": 3},
 }
 const FRAME_IDLE := 0
 const FRAME_BREATHE := 1
