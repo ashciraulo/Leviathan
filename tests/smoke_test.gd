@@ -27,14 +27,20 @@ func _ready() -> void:
 	_test_keys()
 	_test_items()
 	_test_audio()
+	_test_text_fit()
 	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
 	await _test_hull_dungeon()
+	await _test_kiln_dungeon()
 	await _test_villagers()
+	await _test_story()
 	await _test_brinewood_pearl()
 	await _test_cinderreach()
 	await _test_gloamfen()
+
+	await _test_fast_travel()
+	await _test_credits()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -334,6 +340,31 @@ func _test_villagers() -> void:
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
 	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	# Large text: the same box, one big line per page, long pages split.
+	var was_large := Settings.large_text
+	Settings.large_text = true
+	fit_box.open_pages(Conversations.pages("marga", Conversations.TALKS["marga"][-1]))
+	var split_pages := fit_box.page_count()
+	var all_fit := true
+	while DialogueBox.is_open:
+		if fit_box.lines_for(fit_box.current_page()["text"], fit_box.current_portrait() != null) > DialogueBox.LARGE_MAX_LINES:
+			all_fit = false
+		fit_box.advance()
+		fit_box.advance()
+	Settings.large_text = was_large
+	_check(split_pages > Conversations.TALKS["marga"][-1]["lines"].size(), "large text splits long pages (%d pages)" % split_pages)
+	_check(all_fit, "every large-text page fits on one line")
+	Settings.large_text = true
+	fit_box.open_pages([{"name": "", "portrait": null, "text": "Underwaterbelltowerkeeperlanternlighterassociationofsaltmarrow"}])
+	var long_word_fits := true
+	while DialogueBox.is_open:
+		if fit_box.lines_for(fit_box.current_page()["text"], false) > DialogueBox.LARGE_MAX_LINES:
+			long_word_fits = false
+		fit_box.advance()
+		fit_box.advance()
+	Settings.large_text = was_large
+	_check(long_word_fits, "a word too long for one line is cut to fit")
+	_check(GameState.has_flag("asked_for_rope") == false, "opening the box directly doesn't set story flags")
 	var player: Player = game.player
 
 	# Dunstan grunts until Marga sends Wren over.
@@ -385,6 +416,69 @@ func _test_villagers() -> void:
 		_finish_talk(game)
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Plays story scenes fast, turning every dialogue page, until the scene is
+## over or the time runs out. Returns how many pages were shown.
+func _play_scene(game: Node, seconds: float) -> int:
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	var pages := 0
+	var waited := 0.0
+	while waited < seconds:
+		await _wait(0.05)
+		waited += 0.05
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+			pages += 1
+		elif not Cutscene.active and waited > 0.3:
+			break
+	return pages
+
+
+## Story scenes: the opening on a new file, and the Wayshell after the Hull.
+func _test_story() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.play_opening = true
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	_check(Cutscene.active and game.player.in_cutscene, "a new file opens with the opening scene")
+	var pages := await _play_scene(game, 8.0)
+	_check(not Cutscene.active and not game.player.in_cutscene, "the opening ends and hands Wren back")
+	_check(GameState.has_flag("seen_opening") and pages == 0, "the opening plays without dialogue pages (%d)" % pages)
+	_check(not GameState.play_opening, "the opening only plays once")
+	game.queue_free()
+	await _wait(0.1)
+
+	# Loading a file never replays it.
+	var again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(again)
+	await _wait(0.2)
+	_check(not Cutscene.active, "loading a file doesn't replay the opening")
+	again.queue_free()
+	await _wait(0.1)
+
+	# Back in Saltmarrow with the Point Bell: Hessa gives Wren the Wayshell.
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	# Coming in from the shore path at the bottom of the village.
+	GameState.set_checkpoint(Vector2i(0, -1), Vector2(12 * Room.TILE, 11 * Room.TILE + 12))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	await _wait(0.2)
+	_check(Cutscene.active, "coming home with the bell starts the Wayshell scene")
+	await _play_scene(home, 10.0)
+	_check(not Cutscene.active and not home.player.in_cutscene, "the Wayshell scene hands Wren back")
+	_check(GameState.has_item("wayshell"), "Hessa gives Wren the Wayshell")
+	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_AFTER_BELL", "Hessa points Wren to the Kiln afterwards")
+	home.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
 
 
 func _test_play() -> void:
@@ -551,10 +645,34 @@ func _test_play() -> void:
 	# Let any invulnerability from a Spitter hit run out first.
 	await _wait(Player.INVULN_TIME + 0.2)
 
-	# Dying returns Wren to the last Tidestone with full breath.
+	# Dying shows the game over screen; waking returns Wren to the last
+	# Tidestone with full breath.
 	GameState.bubbles = 1
 	game.player.take_damage(1, game.player.global_position + Vector2(10, 0))
-	await _wait(2.0)
+	var over: GameOverScreen = null
+	for i in 40:
+		await _wait(0.1)
+		for child in game.get_children():
+			if child is GameOverScreen:
+				over = child
+		if over:
+			break
+	_check(over != null, "running out of breath shows the game over screen")
+	if over:
+		while over._time < GameOverScreen.INPUT_DELAY + 0.05:
+			await _wait(0.05)
+	var press := InputEventAction.new()
+	press.action = "interact"
+	press.pressed = true
+	Input.parse_input_event(press)
+	await _wait(0.05)
+	var release := InputEventAction.new()
+	release.action = "interact"
+	Input.parse_input_event(release)
+	for i in 40:
+		await _wait(0.1)
+		if game.player != null and not game.busy:
+			break
 	_check(GameState.bubbles == GameState.max_bubbles, "respawn refills breath")
 	_check(game.current_room != null and game.current_room.coord == Vector2i.ZERO, "respawn at the Tidestone's room")
 	_check(game.player != null and game.player.state != Player.State.DEAD, "Wren is back on their feet")
@@ -767,6 +885,243 @@ func _test_hull_dungeon() -> void:
 						child.advance()
 						child.advance()
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
+	game.queue_free()
+	await _wait(0.1)
+
+
+## The Kiln: lava, the Stonebreaker Mallet (boulders, pegs, Clinkers), drop
+## hammers, rising lava and the Slagwyrm.
+func _test_kiln_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_21_10.tscn"), "the Kiln has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(21, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	_check(GameState.dungeon == "kiln" and game.current_room.biome == "kiln", "Wren starts inside the Kiln")
+
+	# Lava burns like a gap: a bubble, and back on solid ground.
+	var room := await _goto(game, Vector2i(21, 9), Vector2i(5, 6))
+	await _calm(room)
+	_check(room.has_node("PitField"), "the Casting Floor's lava is handled like the Hull's gaps")
+	var field: PitField = room.get_node("PitField")
+	_check(field.is_gap(Vector2(5 * Room.TILE + 8, 3 * Room.TILE + 8)), "a lava tile counts as somewhere Wren can't stand")
+	var before := GameState.bubbles
+	player.global_position = _tile_pos(room, Vector2i(5, 5))
+	await _wait(0.4)
+	Input.action_press("move_up")
+	await _wait(0.5)
+	Input.action_release("move_up")
+	await _wait(0.8)
+	_check(GameState.bubbles == before - 1, "walking into lava pops a bubble (%d -> %d)" % [before, GameState.bubbles])
+	var local := player.global_position - room.global_position
+	_check(local.y > 5 * Room.TILE and player.state == Player.State.MOVE, "Wren climbs back out of the lava (at %s)" % local)
+	await _wait(1.1)
+
+	# The Tide Hook carries Wren over the lava to the locked hatch's side.
+	GameState.refill()
+	GameState.give_item("tide_hook")
+	player.global_position = _tile_pos(room, Vector2i(8, 7))
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(local.y < 3 * Room.TILE and player.state == Player.State.MOVE and GameState.bubbles == GameState.max_bubbles, "the hook crosses the lava (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(15, 2))
+	player.facing = Vector2.DOWN
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(local.y > 5 * Room.TILE and GameState.bubbles == GameState.max_bubbles, "and a post on the far side brings Wren back (at %s)" % local)
+
+	# The Stonebreaker Mallet bursts the boulders blocking the east way.
+	_check(not player.use_item("stonebreaker"), "no mallet before it's found")
+	GameState.give_item("stonebreaker")
+	_check(GameState.item_slots.has("stonebreaker"), "the mallet goes in an item slot")
+	var boulders := _child_of(room, Boulder)
+	_check(boulders.size() == 3, "three boulders block the Casting Floor's east side")
+	player.global_position = _tile_pos(room, Vector2i(20, 6))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.start_attack()
+	await _wait(0.4)
+	_check(_child_of(room, Boulder).size() == 3, "the sword can't break a boulder")
+	_check(player.use_item("stonebreaker"), "Wren swings the mallet")
+	await _wait(0.5)
+	_check(_child_of(room, Boulder).size() == 2 and player.state == Player.State.MOVE, "the mallet bursts the boulder in front (%d left)" % _child_of(room, Boulder).size())
+
+	# Slag Pits: a peg hammered flush lets Wren reach the key.
+	room = await _goto(game, Vector2i(22, 9), Vector2i(20, 3))
+	await _calm(room)
+	var peg: Peg = _child_of(room, Peg)[0]
+	player.global_position = _tile_pos(room, Vector2i(18, 3))
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.try_interact()
+	_check(GameState.keys("kiln") == 0, "the chest can't be opened through the wall")
+	player.global_position = _tile_pos(room, Vector2i(20, 3))
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.use_item("stonebreaker")
+	await _wait(0.5)
+	_check(peg.down, "the mallet drives the peg into the floor")
+	Input.action_press("move_up")
+	await _wait(0.35)
+	Input.action_release("move_up")
+	local = player.global_position - room.global_position
+	_check(local.y < 3 * Room.TILE, "Wren walks over the hammered peg (at %s)" % local)
+	player.facing = Vector2.LEFT
+	player.global_position = _tile_pos(room, Vector2i(19, 1))
+	await _wait(0.1)
+	player.try_interact()
+	_check(GameState.keys("kiln") == 1, "the Slag Pits' chest holds a small key")
+	await _wait(0.6)
+
+	# A Clinker: the sword glances off; the mallet flips it; then it's soft.
+	var clinker := Clinker.new()
+	clinker.position = Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 12)
+	room.add_child(clinker)
+	await _wait(0.1)
+	clinker.ai_enabled = false
+	_check(clinker.take_hit(1, Vector2.DOWN) == Enemy.HitResult.BLOCKED, "the sword glances off a Clinker's shell")
+	player.global_position = clinker.global_position + Vector2(0, -15)
+	player.facing = Vector2.DOWN
+	await _wait(0.1)
+	player.use_item("stonebreaker")
+	await _wait(0.5)
+	_check(clinker.mode == Clinker.Mode.FLIPPED, "the mallet flips a Clinker onto its back")
+	_check(clinker.take_hit(1, Vector2.DOWN) == Enemy.HitResult.HIT, "a flipped Clinker takes the sword")
+	clinker.take_hit(9, Vector2.DOWN)
+	var hooked := Clinker.new()
+	hooked.position = Vector2(4 * Room.TILE + 8, 7 * Room.TILE + 12)
+	room.add_child(hooked)
+	await _wait(0.1)
+	hooked.ai_enabled = false
+	_check(hooked.hook_hit(Vector2.LEFT) and hooked.mode == Clinker.Mode.FLIPPED, "the Tide Hook flips a Clinker too")
+	hooked.queue_free()
+
+	# Drop hammers hurt whatever is under them when they land.
+	room = await _goto(game, Vector2i(21, 8), Vector2i(11, 8))
+	await _calm(room)
+	var hammer: DropHammer = _child_of(room, DropHammer)[0]
+	var waited := 0.0
+	while not hammer.is_down() and waited < 4.0:
+		await _wait(0.05)
+		waited += 0.05
+	before = GameState.bubbles
+	player.global_position = hammer.global_position
+	await _wait(0.15)
+	_check(GameState.bubbles < before, "a drop hammer landing on Wren hurts (%d -> %d)" % [before, GameState.bubbles])
+	player.global_position = _tile_pos(room, Vector2i(11, 8))
+	await _wait(1.2)
+
+	# The Riser: lava climbs from the bottom; caught, Wren goes back to the
+	# way in; reaching the top drains it for good.
+	GameState.refill()
+	room = await _goto(game, Vector2i(22, 8), Vector2i(11, 11))
+	field = room.get_node("PitField")
+	_check(field.rising, "the Riser's lava starts to climb")
+	await _wait(2.4)
+	_check(field.level < Room.ROWS, "the lava has risen (level %.1f)" % field.level)
+	before = GameState.bubbles
+	var waited_rise := 0.0
+	while GameState.bubbles == before and waited_rise < 6.0:
+		await _wait(0.1)
+		waited_rise += 0.1
+	await _wait(0.6)
+	local = player.global_position - room.global_position
+	_check(GameState.bubbles == before - 1 and int(local.y) / Room.TILE == 11, "the lava catches Wren and she's back at the way in (at %s)" % local)
+	_check(field.level >= Room.ROWS - 0.5, "and the lava sinks to start again (level %.1f)" % field.level)
+	player.global_position = _tile_pos(room, Vector2i(11, 1))
+	await _wait(0.3)
+	_check(not field.rising and GameState.has_flag(PitField.rise_flag(room.coord)), "reaching the top drains the lava for good")
+
+	# The Slagwyrm.
+	GameState.refill()
+	GameState.set_flag(BigDoor.flag_for(Vector2i(21, 8)))
+	room = await _goto(game, Vector2i(21, 7), Vector2i(11, 10))
+	await _wait(0.2)
+	var bosses := _child_of(room, Slagwyrm)
+	_check(bosses.size() == 1, "the Slagwyrm waits in the Crucible")
+	if bosses.size() == 1:
+		var wyrm: Slagwyrm = bosses[0]
+		wyrm.ai_enabled = false
+		player._invuln = 999.0
+		_check(wyrm.segments.size() == Slagwyrm.SEGMENTS and wyrm.hp == Slagwyrm.SEGMENTS, "it has six plates, one for each part of its strength")
+		_check(wyrm.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "the sword glances off its head")
+		var plate: WyrmSegment = wyrm.segments[0]
+		plate.global_position = _tile_pos(room, Vector2i(11, 8))
+		plate.set_surfaced(true)
+		_check(not plate.mallet_hit(Vector2.UP) and wyrm.hp == Slagwyrm.SEGMENTS, "a molten plate shrugs off the mallet")
+		# Dragged through a quench pool, a plate sets hard.
+		wyrm.mode = Slagwyrm.Mode.SURFACE
+		plate.global_position = _tile_pos(room, Vector2i(6, 8))
+		wyrm._cool_in_pools()
+		_check(plate.is_hard(), "a plate passing through a pool sets into crust")
+		_check(wyrm.hardened_count() == 1, "the wyrm knows how stiff it is")
+		player.global_position = plate.global_position + Vector2(0, 16)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		player.use_item("stonebreaker")
+		await _wait(0.5)
+		_check(wyrm.hp == Slagwyrm.SEGMENTS - 1 and wyrm.segments.size() == Slagwyrm.SEGMENTS - 1, "the mallet cracks a crusted plate off (hp %d)" % wyrm.hp)
+		# Diving melts every plate soft again.
+		wyrm.segments[0].harden(5.0)
+		wyrm._go_under()
+		_check(wyrm.hardened_count() == 0 and not wyrm.visible, "diving under the floor melts it soft again")
+		wyrm._target = _tile_pos(room, Vector2i(11, 6))
+		wyrm._erupt()
+		_check(wyrm.visible and wyrm.mode == Slagwyrm.Mode.ERUPT, "it bursts back up through the floor")
+		while wyrm.segments.size() > 0:
+			wyrm.segment_smashed(wyrm.segments[0])
+		_check(GameState.flags.get(Slagwyrm.DEFEATED_FLAG, false), "breaking every plate beats the Slagwyrm")
+		await _wait(3.4)
+		player._invuln = 0.0
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "kiln", "the Ember Bell rises in the Crucible")
+		if bell:
+			var view_top: float = game.camera.position.y - 216.0 / 2.0
+			var below: float = room.position.y + bell.position.y + Room.TILE - view_top
+			_check(below < DialogueBox.BOX.position.y - 4.0, "the talk box can't cover the Ember Bell or Wren ringing it")
+			var bells_before := GameState.item_count("tidebell")
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("kiln")) and GameState.item_count("tidebell") == bells_before + 1, "ringing the Ember Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
+
+	# The Bellows Room shuts Wren in; clearing it shows the mallet's chest.
+	GameState.inventory.erase("stonebreaker")
+	GameState.item_slots = ["", ""]
+	room = await _goto(game, Vector2i(20, 10), Vector2i(11, 6))
+	await _wait(0.3)
+	var shut: Array = _child_of(room, Bars)
+	_check(shut.size() == 2 and shut.all(func(b: Bars) -> bool: return not b.is_open), "the Bellows Room's bars slam shut")
+	var chest: Chest = _child_of(room, Chest)[0]
+	for enemy in _child_of(room, Enemy):
+		enemy.queue_free()
+	await _wait(0.6)
+	_check(chest.visible, "clearing the Bellows Room shows its chest")
+	player.global_position = chest.global_position + Vector2(0, 14)
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.try_interact()
+	_check(GameState.has_item("stonebreaker"), "the chest holds the Stonebreaker Mallet")
+	await _wait(1.0)
+	for child in game.get_children():
+		if child is DialogueBox:
+			while DialogueBox.is_open:
+				child.advance()
+				child.advance()
 	game.queue_free()
 	await _wait(0.1)
 
@@ -1095,6 +1450,13 @@ func _test_gloamfen() -> void:
 		var tile: String = Room.BIOMES[biome]["floor"]
 		_check(not floors.has(tile), "%s has its own floor tiles (not %s's)" % [biome, floors.get(tile, "")])
 		floors[tile] = biome
+	var gate := Room.parse_layout(((load("res://rooms/room_4_0.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(gate[11].substr(11, 2) == "YY" and gate[12].substr(11, 2) == "..", "Mallet boulders seal the way from Brinewood into Gloamfen")
+	var edge := (load("res://rooms/room_5_2.tscn") as PackedScene).instantiate() as Room
+	_check(edge.door_to == Vector2i(25, 10), "Mirelight Edge's doorway leads into the Lantern Mire")
+	var edge_rows := Room.parse_layout(edge.layout)
+	_check(edge_rows[1][11] == "D" and not Room.is_solid(edge_rows[2][11]), "the Mire doorway has open ground below it")
+	edge.free()
 	var reach := Room.parse_layout(((load("res://rooms/room_5_1.tscn") as PackedScene).instantiate() as Room).layout)
 	var on_foot := _walkable_from(reach, Vector2i(0, 6))
 	_check(not on_foot.has(Vector2i(23, 5)), "Stillwater Reach's far bank needs the Tide Hook")
@@ -1154,3 +1516,64 @@ func _test_gloamfen() -> void:
 	cap.queue_free()
 	game.queue_free()
 	await _wait(0.1)
+
+func _test_fast_travel() -> void:
+	GameState.reset_new_game()
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	Engine.time_scale = 3.0
+	var wren: Player = game.player
+	game._on_fast_travel(Vector2i.ZERO)
+	await _wait(0.1)
+	_check(game.busy and wren.frozen, "Wren waits while Mantle swoops in")
+	await _wait(0.3)
+	_check(not is_instance_valid(wren) or not wren.visible, "Mantle carries Wren off")
+	var flight: FlightScene = null
+	for i in 20:
+		await _wait(0.1)
+		for child in game.get_children():
+			if child is FlightScene:
+				flight = child
+		if flight:
+			break
+	_check(flight != null, "the flight over the sea plays")
+	await _wait(1.6)
+	var arrived := false
+	for i in 30:
+		await _wait(0.1)
+		if game.player and game.player.visible and not game.player.frozen and not game.busy:
+			arrived = true
+			break
+	_check(arrived, "Mantle sets Wren down and play resumes")
+	_check(GameState.room_coord == Vector2i.ZERO, "fast travel lands at the chosen Tidestone")
+	Engine.time_scale = 1.0
+	game.queue_free()
+	await _wait(0.1)
+
+
+func _test_credits() -> void:
+	var credits: Control = (load("res://scenes/credits.tscn") as PackedScene).instantiate()
+	add_child(credits)
+	await _wait(0.3)
+	_check(credits._scroll > 0.0, "the credits roll")
+	_check(credits._height > 216.0, "the credits have something to roll")
+	for key in ["CREDITS_DIRECTION", "CREDITS_END", "MENU_CREDITS", "GAMEOVER_WAKE"]:
+		_check(tr(key) != key, "%s is translated" % key)
+	# Leaving would change scene and end the test: don't let it.
+	credits._leaving = true
+	credits.queue_free()
+	await _wait(0.1)
+
+
+func _test_text_fit() -> void:
+	var canvas := Control.new()
+	add_child(canvas)
+	var long := "A very long line of text that cannot possibly fit in forty pixels"
+	var cut := MenuKit.fit(canvas, long, 40.0)
+	_check(cut.ends_with("..") and MenuKit.text_width(canvas, cut) <= 40.0, "long text is cut to fit its box")
+	_check(MenuKit.fit(canvas, "Hi", 40.0) == "Hi", "short text is left alone")
+	_check(Settings.languages()[0] == "en", "English is the first language")
+	for key: String in Settings.language_keys():
+		_check(tr(key) != key, "%s names its language" % key)
+	canvas.queue_free()

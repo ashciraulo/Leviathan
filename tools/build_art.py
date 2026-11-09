@@ -28,6 +28,7 @@ import brinewood_art
 import hull_art
 import npc_art
 import hull_dungeon_art
+import kiln_art
 import cinderreach_art
 import gloamfen_art
 
@@ -88,8 +89,25 @@ CASTS_SHADOW = {"y", "r", "s", "x", "C"}
 SHADOW = hex_color("#3E2C4A", 90)
 
 
-def lit(rows, seed=1):
-    """Turn a material silhouette into lit RGBA pixels with outlines."""
+def _lit_with(module):
+    """lit(), using a dungeon art file's own materials."""
+    palette = (module.RAMPS, module.FLAT)
+    return lambda rows, seed=1: lit(rows, seed, palette)
+
+
+def lit(rows, seed=1, palette=None):
+    """Turn a material silhouette into lit RGBA pixels with outlines.
+    `palette` is an art file's own (ramps, flat) materials: they win over
+    the shared ones, so dungeon art files don't run out of letters."""
+    ramps, flat = RAMPS, FLAT
+    if palette:
+        ramps, flat = dict(RAMPS), dict(FLAT)
+        for letter in palette[0]:
+            flat.pop(letter, None)
+        for letter in palette[1]:
+            ramps.pop(letter, None)
+        ramps.update(palette[0])
+        flat.update(palette[1])
     h, w = len(rows), len(rows[0])
     for r in rows:
         assert len(r) == w, ("ragged sprite row", r)
@@ -107,10 +125,10 @@ def lit(rows, seed=1):
             m = mat(x, y)
             if m is None:
                 continue
-            if m in FLAT:
-                px[y][x] = hex_color(FLAT[m])
+            if m in flat:
+                px[y][x] = hex_color(flat[m])
                 continue
-            ramp = RAMPS[m]
+            ramp = ramps[m]
             up = mat(x, y - 1)
             # Lighting follows the whole silhouette, not each material, so
             # a tunic under a scarf still reads as one rounded body.
@@ -923,6 +941,7 @@ TILE_COLUMNS = 8
 TILE_LAYOUT += brinewood_art.TILES
 TILE_LAYOUT += hull_art.TILES
 TILE_LAYOUT += hull_dungeon_art.TILES
+TILE_LAYOUT += kiln_art.TILES
 RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
@@ -941,6 +960,8 @@ assert not _clash, "cinderreach_art reuses material letters: %s" % sorted(_clash
 RAMPS.update(cinderreach_art.RAMPS)
 FLAT.update(cinderreach_art.FLAT)
 TILE_LAYOUT += cinderreach_art.TILES
+_names = [entry[0] for entry in TILE_LAYOUT if entry]
+assert len(_names) == len(set(_names)), "tile names used twice: %s" % sorted(n for n in set(_names) if _names.count(n) > 1)
 
 _taken = set(RAMPS) | set(FLAT)
 _clash = _taken & (set(gloamfen_art.RAMPS) | set(gloamfen_art.FLAT))
@@ -1103,12 +1124,16 @@ def main():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
     for name, px in hull_dungeon_art.build(lit, sheet).items():
         write_png(os.path.join(OUT, "dungeon", name + ".png"), px)
+    for name, px in kiln_art.build(_lit_with(kiln_art), sheet).items():
+        write_png(os.path.join(OUT, "kiln", name + ".png"), px)
     write_png(os.path.join(OUT, "tiles", "world.png"), build_tiles())
     import title_art
     write_png(os.path.join(OUT, "ui", "title_logo.png"), title_art.build_logo())
     write_png(os.path.join(OUT, "ui", "title_bg.png"), title_art.build_title_bg())
     import ui_art
     ui_art.build(sys.modules[__name__])
+    import mantle_art
+    mantle_art.build(sys.modules[__name__])
     font_px, font_fnt = build_font()
     write_png(os.path.join(OUT, "fonts", "tide.png"), font_px)
     write_text(os.path.join(OUT, "fonts", "tide.fnt"), font_fnt)

@@ -37,6 +37,10 @@ var state := State.MOVE
 var facing := Vector2.DOWN
 ## Set while the camera slides between rooms; Wren ignores input.
 var frozen := false
+## During a cutscene the player has no control; the story walks Wren with
+## script_move (a direction, or zero to stand still).
+var in_cutscene := false
+var script_move := Vector2.ZERO
 var hum_progress := 0.0
 ## Set by the item in use (State.ITEM): how Wren moves while using it.
 var item_velocity := Vector2.ZERO
@@ -147,7 +151,9 @@ func is_sword_active() -> bool:
 
 
 func take_damage(amount: int, from_position: Vector2) -> void:
-	if _invuln > 0.0 or state in [State.DEAD, State.FALL]:
+	# Frozen means a cutscene or a room slide. Hazards are checked again once
+	# she can move, so this only guards callers outside _check_damage.
+	if frozen or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
 	GameState.damage(amount)
@@ -173,7 +179,7 @@ func _move_state() -> void:
 	velocity = direction * SPEED
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
-	if DialogueBox.recently_closed():
+	if in_cutscene or DialogueBox.recently_closed():
 		return
 	if Input.is_action_just_pressed("interact") and try_interact():
 		velocity = Vector2.ZERO
@@ -205,13 +211,25 @@ func try_interact() -> bool:
 		if node.get("opened") == true:
 			continue
 		var distance := (node as Node2D).global_position.distance_to(interact_point())
-		if distance < best_distance:
+		if distance < best_distance and _can_see(node as Node2D):
 			best = node
 			best_distance = distance
 	if best == null:
 		return false
 	best.interact()
 	return true
+
+
+## Nothing solid (a wall, a peg) stands between Wren and `node`: no
+## opening chests through the wall.
+func _can_see(node: Node2D) -> bool:
+	var from := global_position + Vector2(0, -4)
+	var query := PhysicsRayQueryParameters2D.create(from, node.global_position + Vector2(0, -4), 1 << (Layers.WORLD - 1))
+	var skip: Array[RID] = [get_rid()]
+	if node is CollisionObject2D:
+		skip.append((node as CollisionObject2D).get_rid())
+	query.exclude = skip
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 ## Uses an equipped item. False if it can't be used now.
@@ -223,6 +241,13 @@ func use_item(id: String) -> bool:
 			var hook := TideHook.new()
 			hook.name = "TideHook"
 			add_child(hook)
+			_enter(State.ITEM)
+			item_velocity = Vector2.ZERO
+			return true
+		"stonebreaker":
+			var mallet := Stonebreaker.new()
+			mallet.name = "Stonebreaker"
+			add_child(mallet)
 			_enter(State.ITEM)
 			item_velocity = Vector2.ZERO
 			return true
@@ -399,6 +424,8 @@ func _hum_requested() -> bool:
 
 ## Analog or digital input, snapped to 8 directions at a constant speed.
 func _input_direction() -> Vector2:
+	if in_cutscene:
+		return script_move
 	var raw := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if raw.length() < 0.3:
 		return Vector2.ZERO

@@ -26,6 +26,9 @@ extends Node2D
 ##          K  crate (push it, or hook it)   =  pressure plate
 ##          |  bars (open when the room's gate is solved)   !  fixed bars
 ##          G  big-key door   V  the dungeon's boss
+##          ^  lava (like a gap, but it burns)   Y  cracked boulder (mallet)
+##          i  peg (mallet drives it down)   z  drop hammer
+##          k  Clinker (slag-shelled beetle: flip it with the mallet)
 ##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
@@ -59,6 +62,10 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## A listing deck: Wren drifts this way (pixels per second) unless she walks
 ## against it.
 @export var tilt := Vector2.ZERO
+## Rising lava: rows per second it climbs from the bottom of the room once
+## Wren is inside (0 for none), and the row where she's safe from it.
+@export var lava_rise := 0.0
+@export var lava_safe_row := 2
 ## What signposts (n) in this room say: a translation key.
 @export var sign_key := ""
 
@@ -99,13 +106,19 @@ const BIOMES := {
 		"floor": "fen_%d", "wall_top": "canopy_top_%d", "wall_face": "root_face_%d",
 		"water": "gloom_%d", "water_edge": "reed_%s_%d", "damp": "mirk_%s",
 		"wet_deco": "glowcap_%d", "dry_deco": "frond_%d",
-		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s",
+		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s", "door": "exit_glow",
 	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
 		"water": "bilge_%d", "water_edge": "brine_%s_%d", "damp": "soak_%s",
 		"wet_deco": "barnacles_%d", "dry_deco": "rope_%d",
 		"floor_overlay": ["shaft_%d", 9], "door": "exit_glow",
+	},
+	"kiln": {
+		"floor": "kiln_floor_%d", "wall_top": "kiln_top_%d", "wall_face": "kiln_face_%d",
+		"water": "quench_%d", "water_edge": "kerb_%s_%d", "damp": "kiln_scorch_%s",
+		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
+		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
 	},
 }
 

@@ -1,10 +1,20 @@
 class_name Tidebell
 extends StaticBody2D
 ## One of the seven Tidebells. Ringing it teaches Wren a phrase of the
-## lullaby: her Resonance meter grows and her breath fills.
+## lullaby: their Resonance meter grows, their breath fills, and the bell
+## joins the satchel's count.
 
 const RESONANCE_GAIN := 10.0
+## The Point Bell's flag (kept for older saves and tests).
 const BELL_FLAG := "tidebell_hull"
+## Which bell, by the dungeon it hangs in: [sprite sheet, what it says].
+const BELLS := {
+	"hull": [HullSprites.TIDEBELL, ["BELL_HULL_1", "BELL_HULL_2", "BELL_HULL_3"]],
+	"kiln": [KilnSprites.EMBER_BELL, ["BELL_KILN_1", "BELL_KILN_2", "BELL_KILN_3"]],
+}
+
+## The dungeon this bell belongs to (a key of BELLS).
+var bell := "hull"
 
 ## True when it should rise from the deck (right after the boss falls).
 var rise := false
@@ -18,9 +28,9 @@ func _ready() -> void:
 	Layers.assign(self, Layers.WORLD, [])
 	add_child(Layers.rect_shape(Vector2(22, 8), Vector2(0, -4)))
 	add_child(Art.shadow(true))
-	_sprite = Art.sprite(HullSprites.TIDEBELL, 2, 1, 37)
+	_sprite = Art.sprite(BELLS[bell][0], 2, 1, 37)
 	add_child(_sprite)
-	_rung = bool(GameState.flags.get(BELL_FLAG, false))
+	_rung = bool(GameState.flags.get(flag(), false))
 	_sprite.frame = 1 if _rung else 0
 	if rise:
 		_sprite.position.y += 30
@@ -28,6 +38,14 @@ func _ready() -> void:
 		var tween := create_tween().set_parallel(true)
 		tween.tween_property(_sprite, "position:y", _sprite.position.y - 30, 1.6).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(_sprite, "modulate:a", 1.0, 1.0)
+
+
+static func flag_for(bell_id: String) -> String:
+	return "tidebell_" + bell_id
+
+
+func flag() -> String:
+	return Tidebell.flag_for(bell)
 
 
 func _process(delta: float) -> void:
@@ -43,14 +61,15 @@ func interact() -> void:
 	_rung = true
 	_sprite.frame = 1
 	_glow = 2.0
-	GameState.flags[BELL_FLAG] = true
+	GameState.flags[flag()] = true
+	GameState.give_item("tidebell", 1, false)
 	GameState.resonance_max += RESONANCE_GAIN
 	GameState.refill()
 	GameState.add_resonance(GameState.resonance_max)
 	Feel.shake(2.0)
 	Audio.play_sfx("bell_ring", global_position)
 	Audio.play_jingle("jingle_bell")
-	Events.dialogue_requested.emit("", PackedStringArray(["BELL_HULL_1", "BELL_HULL_2", "BELL_HULL_3"]))
+	Events.dialogue_requested.emit("", PackedStringArray(BELLS[bell][1]))
 
 
 func _draw() -> void:

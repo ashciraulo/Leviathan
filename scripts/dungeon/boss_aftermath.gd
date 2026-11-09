@@ -1,8 +1,8 @@
 class_name BossAftermath
 extends Node2D
-## What's left in the boss room once the Matriarch is beaten: the Tidebell
-## she was guarding, and a shaft of daylight that leads back outside
-## (to the room's door_to, arriving on door_spawn).
+## What's left in a boss room once the boss is beaten: the Tidebell it was
+## guarding (the room's dungeon says which), and a shaft of daylight that
+## leads back outside (to the room's door_to, arriving on door_spawn).
 
 ## The ceiling tile the way out drops from.
 const EXIT_TILE := Vector2i(11, 1)
@@ -18,6 +18,8 @@ func _ready() -> void:
 	var bell := Tidebell.new()
 	bell.position = boss_spot
 	bell.rise = fresh
+	if Tidebell.BELLS.has(room.dungeon):
+		bell.bell = room.dungeon
 	room.add_child.call_deferred(bell)
 	var door := Doorway.new()
 	door.target_room = room.door_to
@@ -25,8 +27,6 @@ func _ready() -> void:
 	door.position = Vector2(EXIT_TILE.x * Room.TILE + Room.TILE / 2.0, EXIT_TILE.y * Room.TILE + 12)
 	room.add_child.call_deferred(door)
 	z_index = -9
-	if fresh:
-		Events.toast.emit("TOAST_BOSS_DOWN")
 
 
 func _draw() -> void:

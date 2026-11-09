@@ -22,8 +22,8 @@ var locale := "en"
 var text_speed := 1
 ## Bigger text for dialogue and toasts.
 var large_text := false
-## Show captions for important sounds.
-var captions := true
+## Show captions for important sounds (accessibility; off by default).
+var captions := false
 ## Colour filter: 0 off, 1 protanopia, 2 deuteranopia, 3 tritanopia.
 var color_filter := 0
 ## Volumes, 0 to 10.
@@ -261,3 +261,24 @@ static func _axis(axis: JoyAxis, value: float) -> InputEventJoypadMotion:
 	event.axis = axis
 	event.axis_value = value
 	return event
+
+
+## The languages the game has text for: every column of locale/strings.csv
+## registered under Project Settings > Localization. English first.
+static func languages() -> PackedStringArray:
+	var found := PackedStringArray(["en"])
+	var others := Array(TranslationServer.get_loaded_locales())
+	others.sort()
+	for code: String in others:
+		if not code in found:
+			found.append(code)
+	return found
+
+
+## Option labels for languages(): OPT_LANG_<CODE>, each written in its own
+## language (English, Français, ...).
+static func language_keys() -> Array:
+	var keys := []
+	for code in languages():
+		keys.append("OPT_LANG_" + code.to_upper())
+	return keys

@@ -20,7 +20,7 @@ func _ready() -> void:
 	# 1. Title screen.
 	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
 	add_child(title)
-	await _wait(0.3)
+	await _wait(1.6)
 	await _capture("01_title")
 	title.queue_free()
 
@@ -29,6 +29,12 @@ func _ready() -> void:
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.6)
+	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
+	if OS.get_environment("SHOTS_ONLY") == "kiln":
+		await _kiln_shots(game)
+		SaveManager.delete_save()
+		get_tree().quit(0)
+		return
 	await _capture("02_saltmarrow_shore")
 
 	# 3. Tidepools: walk east into the Scuttlers.
@@ -110,7 +116,7 @@ func _ready() -> void:
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
 		SaveManager.save_game()
 		# Reuse the respawn path to jump straight to that room.
-		game._on_player_died()
+		game.respawn()
 		await _wait(2.2)
 		await _capture(shots[coord][0])
 
@@ -153,6 +159,18 @@ func _ready() -> void:
 		await _wait(2.5)
 		await _capture("25_marga_asks")
 		await _finish_talk(game)
+		# Large text: same box, one big line per page.
+		var was_large := Settings.large_text
+		Settings.large_text = true
+		var big := _dialogue_box(game)
+		if big:
+			big.open_pages(Conversations.pages("marga", Conversations.TALKS["marga"][-1]))
+			big.advance()
+			big.advance()
+			await _wait(1.5)
+			await _capture("28_large_text")
+			await _finish_talk(game)
+		Settings.large_text = was_large
 		game.player.global_position = people["dunstan"].global_position + Vector2(-4, 20)
 		await _wait(0.2)
 		game.player.try_interact()
@@ -171,7 +189,7 @@ func _ready() -> void:
 	# 8. Opening a chest in the Hull's galley.
 	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))
 	SaveManager.save_game()
-	game._on_player_died()
+	game.respawn()
 	await _wait(2.2)
 	await _capture("19_hull_galley")
 	for child in game.current_room.get_children():
@@ -186,6 +204,9 @@ func _ready() -> void:
 	# 8b. The rest of the Rotting Hull, and the fight at its heart.
 	await _hull_shots(game)
 
+	# 8c. The Kiln.
+	await _kiln_shots(game)
+
 	# 9. Pause menu.
 	var pause: PauseMenu = null
 	for child in game.get_children():
@@ -197,6 +218,33 @@ func _ready() -> void:
 		await _capture("09_pause")
 		pause.close()
 
+	# 10. Story scenes: the opening, then the Wayshell after the Hull.
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.play_opening = true
+	var story: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(story)
+	await _wait(1.6)
+	await _capture("30_opening")
+	# The veil lifts after the three lines; then Hessa's lamp glows.
+	await _wait(12.4)
+	await _capture("31_hessa_calls")
+	await _skip_scene(story)
+	story.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	# Coming in from the shore path at the bottom of the village.
+	GameState.set_checkpoint(Vector2i(0, -1), Vector2(12 * Room.TILE, 11 * Room.TILE + 12))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(2.0)
+	await _capture("32_wayshell")
+	await _skip_scene(home)
+
 	SaveManager.delete_save()
 	print("SCREENSHOTS DONE: " + _out_dir)
 	get_tree().quit(0)
@@ -205,7 +253,7 @@ func _ready() -> void:
 func _jump(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
 	GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
 	SaveManager.save_game()
-	game._on_player_died()
+	game.respawn()
 	await _wait(2.2)
 	return game.current_room
 
@@ -279,6 +327,98 @@ func _hull_shots(game: Node) -> void:
 						box.close()
 
 
+func _kiln_shots(game: Node) -> void:
+	GameState.give_item("tide_hook")
+	GameState.give_item("stonebreaker")
+	# coord: [file name, spawn tile]
+	var rooms := {
+		Vector2i(21, 10): ["50_kiln_entry", Vector2i(11, 10)],
+		Vector2i(21, 9): ["51_kiln_casting_floor", Vector2i(18, 6)],
+		Vector2i(20, 9): ["52_kiln_mould_store", Vector2i(11, 7)],
+		Vector2i(20, 10): ["53_kiln_bellows", Vector2i(11, 9)],
+		Vector2i(22, 9): ["54_kiln_slag_pits", Vector2i(11, 3)],
+		Vector2i(22, 10): ["55_kiln_quench_room", Vector2i(11, 4)],
+		Vector2i(21, 8): ["57_kiln_gallery", Vector2i(11, 5)],
+		Vector2i(20, 8): ["58_kiln_pattern_shop", Vector2i(20, 6)],
+		Vector2i(22, 7): ["59_kiln_bell_loft", Vector2i(11, 10)],
+	}
+	for coord: Vector2i in rooms:
+		await _jump(game, coord, rooms[coord][1])
+		await _wait(0.4)
+		await _capture(rooms[coord][0])
+
+	# The mallet coming down on a boulder in the Slag Pits.
+	var room := await _jump(game, Vector2i(22, 9), Vector2i(11, 3))
+	for enemy in room.get_children():
+		if enemy is Enemy:
+			enemy.queue_free()
+	game.player.facing = Vector2.UP
+	await _wait(0.2)
+	game.player.use_item("stonebreaker")
+	await _wait(0.1)
+	await _capture("54b_kiln_mallet_raise")
+	await _wait(0.1)
+	await _capture("54c_kiln_mallet_smash")
+	await _wait(0.5)
+
+	# A Clinker flipped onto its back.
+	for child in room.get_children():
+		if child is Clinker:
+			child.queue_free()
+	var clinker := Clinker.new()
+	clinker.position = Vector2(11 * Room.TILE + 8, 5 * Room.TILE + 12)
+	room.add_child(clinker)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 3 * Room.TILE + 12)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	clinker.ai_enabled = false
+	clinker.mallet_hit(Vector2.DOWN)
+	await _wait(0.4)
+	await _capture("54d_kiln_clinker_flipped")
+
+	# The Riser: lava climbing behind Wren.
+	room = await _jump(game, Vector2i(22, 8), Vector2i(11, 11))
+	game.player.global_position = room.global_position + Vector2(20 * Room.TILE + 8, 8 * Room.TILE + 12)
+	await _wait(5.0)
+	await _capture("56_kiln_riser")
+
+	# The Slagwyrm: chasing, plates set hard by a pool, then the wake.
+	room = await _jump(game, Vector2i(21, 7), Vector2i(11, 10))
+	await _wait(1.6)
+	var boss: Slagwyrm = null
+	for child in room.get_children():
+		if child is Slagwyrm:
+			boss = child
+	if boss:
+		# Wren can't be hurt during these shots: a death would reload the room.
+		game.player._invuln = 999.0
+		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12)
+		await _wait(1.6)
+		await _capture("60_slagwyrm")
+		for i in boss.segments.size():
+			if i % 2 == 0:
+				boss.segments[i].harden(6.0)
+		boss.ai_enabled = false
+		await _wait(0.3)
+		await _capture("61_slagwyrm_crusted")
+		boss.ai_enabled = true
+		boss._go_under()
+		await _wait(0.6)
+		await _capture("62_slagwyrm_wake")
+		await _wait(1.4)
+		await _capture("63_slagwyrm_tell")
+		await _wait(1.0)
+		while boss and is_instance_valid(boss) and boss.segments.size() > 0:
+			boss.segment_smashed(boss.segments[0])
+		await _wait(1.6)
+		await _capture("64_slagwyrm_stone")
+		await _wait(2.5)
+		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 12)
+		await _wait(0.3)
+		await _capture("65_ember_bell")
+		game.player._invuln = 0.0
+
+
 func _dialogue_box(game: Node) -> DialogueBox:
 	for child in game.get_children():
 		if child is DialogueBox:
@@ -292,6 +432,17 @@ func _finish_talk(game: Node) -> void:
 		box.advance()
 		box.advance()
 	await _wait(0.4)
+
+
+func _skip_scene(game: Node) -> void:
+	var waited := 0.0
+	while Cutscene.active and waited < 20.0:
+		var box := _dialogue_box(game)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+		waited += 0.1
 
 
 func _wait(seconds: float) -> void:
