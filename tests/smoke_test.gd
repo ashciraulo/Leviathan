@@ -41,6 +41,7 @@ func _ready() -> void:
 	await _test_verge()
 	await _test_ossuary()
 	await _test_maw_approach()
+	await _test_overworld_secrets()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -673,8 +674,39 @@ func _test_story() -> void:
 	var vael_left: Array = crown.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
 	_check(vael_left.is_empty(), "Vael leaves the Crown")
 	await _wait(3.0)
-	_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is Tidebell), "the Storm Bell is there to ring after Vael goes")
+	var storm_bell: Tidebell = null
+	for child in crown.current_room.get_children():
+		if child is Tidebell:
+			storm_bell = child
+	_check(storm_bell != null, "the Storm Bell is there to ring after Vael goes")
+	# Ringing it: far below, the Old One turns over in its sleep.
+	if storm_bell:
+		storm_bell.interact()
+		await _wait(0.2)
+		_check(DialogueBox.is_open and not Cutscene.active, "the turn waits for the bell's own words")
+		var turn_pages := await _play_scene(crown, 20.0)
+		_check(GameState.has_flag(StoryDirector.TURNED_FLAG), "ringing the Storm Bell makes the Old One turn")
+		_check(not Cutscene.active and not crown.player.in_cutscene, "the turn hands Wren back")
+		_check(turn_pages <= 3, "only the bell speaks; the turn itself has no words (%d pages)" % turn_pages)
+		await _wait(0.3)
+		_check(not crown.current_room.get_children().any(func(c: Node) -> bool: return c is OldOneShadow), "the shadow sinks away after the turn")
 	crown.queue_free()
+	await _wait(0.1)
+
+	# Home again after the turn: Hessa owns up about Vael. (An old save that
+	# rang the Storm Bell before the turn existed gets it too.)
+	GameState.reset_new_game()
+	GameState.flags[StoryDirector.GALE_BELL_FLAG] = true
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(9 * Room.TILE + 8, 9 * Room.TILE + 8))
+	var turned_home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(turned_home)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.CONFESSION_FLAG), "coming turned_home after the turn starts Hessa's confession")
+	var confess_pages := await _play_scene(turned_home, 20.0)
+	_check(confess_pages == 5, "Hessa confesses in five pages (%d)" % confess_pages)
+	_check(not Cutscene.active and not turned_home.player.in_cutscene, "the confession hands Wren back")
+	_check((Conversations.branch_for("hessa").get("lines", []) as Array).has("HESSA_AFTER_TURN"), "afterwards Hessa has something new to say")
+	turned_home.queue_free()
 	await _wait(0.1)
 
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
@@ -1165,6 +1197,7 @@ func _test_gale_dungeon() -> void:
 				bell = child
 		_check(bell != null and bell.bell == "gale", "the Storm Bell rises on the Crown")
 		if bell:
+			GameState.set_flag(StoryDirector.TURNED_FLAG)
 			bell.interact()
 			_check(GameState.has_flag(Tidebell.flag_for("gale")), "ringing the Storm Bell counts as a Tidebell")
 			for child in game.get_children():
@@ -2894,6 +2927,43 @@ func _test_ossuary() -> void:
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Overworld secrets: chests hold what their room says, a cache holds a
+## count, and the Ember Ridge jar sits behind a cracked boulder.
+func _test_overworld_secrets() -> void:
+	var expect := {
+		Vector2i(8, -3): "jar", Vector2i(7, 1): "jar", Vector2i(4, 2): "coral_buckler",
+		Vector2i(0, 3): "scaleweave", Vector2i(6, -4): "glint", Vector2i(1, -3): "glint",
+	}
+	for coord: Vector2i in expect:
+		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
+		_check(room.chest_item == expect[coord] and room.layout.contains("C"), "room %s hides a chest of %s" % [coord, expect[coord]])
+		if coord == Vector2i(8, -3):
+			var rows := Room.parse_layout(room.layout)
+			var sealed := rows.duplicate()
+			sealed[2] = sealed[2].replace("Y", "#")
+			_check(rows[2][4] == "Y" and not _walkable_from(sealed, Vector2i(10, 7)).has(Vector2i(2, 2)), "the Ember Ridge nook is sealed by a cracked boulder")
+			var broken := rows.duplicate()
+			broken[2] = broken[2].substr(0, 4) + "." + broken[2].substr(5)
+			_check(_walkable_from(broken, Vector2i(10, 7)).has(Vector2i(2, 2)), "breaking the boulder opens the nook")
+		if coord == Vector2i(6, -4):
+			_check(room.chest_count == 30, "the Windmere sea stack holds 30 glints")
+		room.free()
+	# A cache gives its whole count at once.
+	GameState.reset_new_game()
+	var chest := Chest.new()
+	chest.room_coord = Vector2i(6, -4)
+	chest.tile = Vector2i(21, 6)
+	chest.item = "glint"
+	chest.count = 30
+	add_child(chest)
+	var before := GameState.item_count("glint")
+	chest.interact()
+	_check(GameState.item_count("glint") == before + 30, "a glint cache gives all 30 glints")
+	await _wait(0.1)
+	chest.queue_free()
+	GameState.reset_new_game()
 
 
 ## Lullaby Point: open sea until the seventh bell; then the Old One's back

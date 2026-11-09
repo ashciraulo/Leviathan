@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "mantle", "lowe", "crucible"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "mantle", "lowe", "crucible", "turn"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -64,6 +64,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _crucible_shots()
+			"turn":
+				game.queue_free()
+				await _wait(0.2)
+				await _turn_shots()
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -353,6 +357,7 @@ func _ready() -> void:
 	await _mantle_shots()
 	await _lowe_shots()
 	await _crucible_shots()
+	await _turn_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -982,6 +987,59 @@ func _lowe_shots() -> void:
 	await _capture("40_choir_scatters")
 	await _skip_scene(hold)
 	hold.queue_free()
+	await _wait(0.2)
+
+
+## The Old One turns after the Storm Bell rings, then Hessa's confession at
+## home.
+func _turn_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.VAEL_FLAG)
+	GameState.set_flag(Stormheron.DEFEATED_FLAG)
+	GameState.set_checkpoint(StoryDirector.GALE_BOSS, Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12))
+	var crown: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(crown)
+	await _wait(3.5)
+	for child in crown.current_room.get_children():
+		if child is Tidebell:
+			child.interact()
+	var waited := 0.0
+	while waited < 20.0 and not crown.current_room.get_children().any(func(c: Node) -> bool: return c is OldOneShadow):
+		var box := _dialogue_box(crown)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+		waited += 0.1
+	await _wait(1.4)
+	await _capture("45_old_one_turns")
+	await _wait(1.6)
+	await _capture("45b_old_one_rolls_on")
+	await _skip_scene(crown)
+	crown.queue_free()
+	await _wait(0.2)
+
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(9 * Room.TILE + 8, 9 * Room.TILE + 8))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	for page in 5:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(1.2)
+		if page == 0:
+			await _capture("46_hessas_confession")
+		elif page == 4:
+			await _wait(1.4)
+			await _capture("46b_dont_hate_him")
+		var box := _dialogue_box(home)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _skip_scene(home)
+	home.queue_free()
 	await _wait(0.2)
 
 

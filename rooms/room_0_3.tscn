@@ -6,6 +6,7 @@
 script = ExtResource("1_room")
 name_key = "ROOM_DROWNED_LANE"
 biome = "sunken_verge"
+chest_item = "scaleweave"
 layout = "####..##################
 ####..........##########
 ##.....................#
@@ -16,6 +17,6 @@ layout = "####..##################
 #rrrrrrrrrrrrrrrrrrrrrrr
 #~~~drrrrrrrrrrrrrrr~~~#
 #~~~~~rr.......rr~~~~~~#
-#~~~~~~....Z....~~~~~~~#
+#~C.~~~....Z....~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~#
 ########################"
