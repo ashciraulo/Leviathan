@@ -320,7 +320,9 @@ func vael_at_the_spire() -> void:
 	var scene := _scene()
 	# The heron lifts away on the wind and the Storm Bell rises first.
 	await scene.wait(3.0)
-	await scene.walk_route(room.global_position + WATCH_FROM)
+	# The Crown is ringed with open sky: if Wren is out on a side ledge
+	# there's no safe way across, so they stay put and look up.
+	await scene.walk_route(room.global_position + WATCH_FROM, false)
 	scene.face(Vector2.UP)
 	var vael := ChoirFigure.new("vael")
 	vael.position = VAEL_FROM

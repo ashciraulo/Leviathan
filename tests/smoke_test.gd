@@ -611,6 +611,9 @@ func _test_story() -> void:
 	add_child(crown)
 	await _wait(0.3)
 	_check(not Cutscene.active, "nothing plays on the Crown before the fight")
+	# Wren lands the last blow from a side ledge, cut off by open sky.
+	crown.player.global_position = crown.current_room.global_position + Vector2(3 * Room.TILE + 8, 6 * Room.TILE + 12)
+	var crown_health := GameState.bubbles
 	crown.player._invuln = 60.0
 	for child in crown.current_room.get_children():
 		if child is Stormheron:
@@ -626,7 +629,9 @@ func _test_story() -> void:
 	var vael_pages := await _play_scene(crown, 15.0)
 	_check(not Cutscene.active and not crown.player.in_cutscene, "Vael's scene hands Wren back")
 	_check(vael_pages == 4, "Vael speaks four times (%d)" % vael_pages)
-	_check(StoryDirector.VAEL_AT.y < 9 * Room.TILE, "Vael stands clear of the dialogue box")
+	_check(GameState.bubbles == crown_health, "Wren stays safe on the ledge through the scene (%d)" % GameState.bubbles)
+	var ledge: Vector2 = crown.player.global_position - crown.current_room.global_position
+	_check(ledge.distance_to(Vector2(3 * Room.TILE + 8, 6 * Room.TILE + 12)) < 4.0, "with no way across the sky, Wren stays on the ledge (%s)" % ledge)
 	var vael_left: Array = crown.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
 	_check(vael_left.is_empty(), "Vael leaves the Crown")
 	await _wait(3.0)
