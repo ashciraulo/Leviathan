@@ -27,9 +27,12 @@ static func button(key: String, on_pressed: Callable) -> Button:
 	node.add_theme_color_override("font_color", Palette.MENU_IDLE)
 	for state in ["font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
 		node.add_theme_color_override(state, Palette.MENU_ACTIVE)
-	node.focus_entered.connect(func() -> void: node.text = "~ %s ~" % node.tr(key))
+	node.focus_entered.connect(func() -> void:
+		node.text = "~ %s ~" % node.tr(key)
+		Audio.play_sfx("ui_move"))
 	node.focus_exited.connect(func() -> void: node.text = key)
 	node.mouse_entered.connect(node.grab_focus)
+	node.pressed.connect(func() -> void: Audio.play_sfx("ui_select"))
 	node.pressed.connect(on_pressed)
 	return node
 

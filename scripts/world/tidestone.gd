@@ -35,6 +35,7 @@ func flag_key() -> String:
 func _on_body_entered(body: Node2D) -> void:
 	if not (body is Player):
 		return
+	Audio.play_sfx("tidestone_wake" if not awake else "save", global_position)
 	awake = true
 	GameState.flags[flag_key()] = true
 	GameState.wake_tidestone(room_coord, position + CHECKPOINT_OFFSET)
