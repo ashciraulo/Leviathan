@@ -155,7 +155,12 @@ func _ready() -> void:
 		_flat_voices.append(flat)
 	# Building a placeholder takes up to ~15 ms: do them all off the main
 	# thread now, so the first sword swing or bell doesn't hitch a frame.
-	_prewarm_task = WorkerThreadPool.add_task(_prewarm)
+	if OS.has_feature("web"):
+		# The browser build has no worker threads, so the task would run
+		# here and hold up the first frame: build a few sounds per frame.
+		_prewarm_gradually()
+	else:
+		_prewarm_task = WorkerThreadPool.add_task(_prewarm)
 
 
 func _exit_tree() -> void:
@@ -171,6 +176,17 @@ func _prewarm() -> void:
 		if not (ResourceLoader.exists(SFX_DIR + id + ".ogg") or ResourceLoader.exists(SFX_DIR + id + ".wav")):
 			built[id] = synth(SFX[id])
 	_take_prewarmed.call_deferred(built)
+
+
+func _prewarm_gradually() -> void:
+	var count := 0
+	for id: String in SFX:
+		if _streams.has(id) or ResourceLoader.exists(SFX_DIR + id + ".ogg") or ResourceLoader.exists(SFX_DIR + id + ".wav"):
+			continue
+		_streams[id] = synth(SFX[id])
+		count += 1
+		if count % 3 == 0:
+			await get_tree().process_frame
 
 
 func _take_prewarmed(built: Dictionary) -> void:
