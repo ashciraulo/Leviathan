@@ -26,6 +26,7 @@ func _ready() -> void:
 	_test_save_load()
 	_test_keys()
 	_test_items()
+	_test_audio()
 	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
@@ -867,3 +868,29 @@ func _pad_event(button: JoyButton) -> InputEventJoypadButton:
 	event.button_index = button
 	event.pressed = true
 	return event
+
+
+## Every effect has a sound, captions follow the option, music picks a cue.
+func _test_audio() -> void:
+	for id: String in Audio.SFX:
+		var stream := Audio.synth(Audio.SFX[id])
+		_check(stream.data.size() > 100, "effect %s synthesises" % id)
+		var caption := str(Audio.SFX[id].get("caption", ""))
+		_check(caption == "" or tr(caption) != caption, "caption for %s is translated" % id)
+	_check(Audio.cue_for_room("brinewood", "") == "region_brinewood", "rooms play their region's music")
+	_check(Audio.cue_for_room("hull", "hull") == "dungeon_hull", "dungeon rooms play the dungeon's music")
+	var heard: Array[String] = []
+	var listen := func(key: String) -> void: heard.append(key)
+	Events.caption.connect(listen)
+	var was := Settings.captions
+	Settings.captions = true
+	Audio.play_sfx("bell_ring")
+	Settings.captions = false
+	Audio._last_played.clear()
+	Audio.play_sfx("bell_ring")
+	Settings.captions = was
+	Events.caption.disconnect(listen)
+	_check(heard == ["CAPTION_BELL"], "captions show only when the option is on")
+	Audio.play_music("region_saltmarrow")
+	_check(Audio.music_cue == "region_saltmarrow", "music cues switch even before the track exists")
+	Audio.stop_music(0.01)

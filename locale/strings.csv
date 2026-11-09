@@ -171,7 +171,7 @@ OPT_NORMAL,Normal
 OPT_FAST,Fast
 OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
-OPT_LARGE_TEXT_DESC,Bigger letters for talk and messages.
+OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
 OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up."
 OPT_COLOR_FILTER,Colour filter
@@ -308,3 +308,18 @@ DUNSTAN_2,Bell's quiet. Sea's quiet. Even the gulls are quiet. Whole coast's hol
 DUNSTAN_ROPE_1,Marga sent you? Was she asking nicely?
 DUNSTAN_ROPE_2,...Hm. Tell her she'll have it by supper.
 DUNSTAN_AGAIN,Rope's coming. Rope's always coming.
+CAPTION_HUM,Wren hums
+CAPTION_FUSE,Fuse hissing
+CAPTION_BLAST,Blast
+CAPTION_WAYSHELL,Wayshell call
+CAPTION_WINGS,Great wings beat
+CAPTION_BLOCK,Clang
+CAPTION_TELL,Enemy winds up
+CAPTION_ROAR,Roar
+CAPTION_UNLOCK,Lock clicks open
+CAPTION_SWITCH,Switch clicks
+CAPTION_TIDESTONE,Tidestone hums awake
+CAPTION_BELL,A bell rings
+CAPTION_SECRET,Secret chime
+CAPTION_DOOR,Stone grinds
+CAPTION_PUZZLE,Something opened
