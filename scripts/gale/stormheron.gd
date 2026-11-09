@@ -236,6 +236,7 @@ func _die() -> void:
 	set_deferred("collision_layer", 0)
 	# Through set_flag, so the story can answer (StoryDirector.vael_at_the_spire).
 	GameState.set_flag(DEFEATED_FLAG)
+	Events.boss_defeated.emit()
 	for r: LightningRod in _rods():
 		r.set_charged(false)
 	_sprite.position = _sprite_origin

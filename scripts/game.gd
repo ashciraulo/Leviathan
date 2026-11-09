@@ -42,6 +42,7 @@ func _ready() -> void:
 	Events.player_died.connect(_on_player_died)
 	Events.door_entered.connect(_on_door_entered)
 	Events.room_entered.connect(_on_room_entered)
+	Events.boss_defeated.connect(_on_boss_defeated)
 	Events.fast_travel_requested.connect(_on_fast_travel)
 	_start()
 
@@ -68,10 +69,24 @@ func _on_room_entered(coord: Vector2i) -> void:
 	_play_room_music()
 
 
+## The room's track, or the boss theme while a boss is still up in it.
 func _play_room_music() -> void:
 	if current_room:
-		Audio.play_music(Audio.cue_for_room(current_room.biome, current_room.dungeon))
+		var cue := "boss" if _room_has_boss() else Audio.cue_for_room(current_room.biome, current_room.dungeon)
+		Audio.play_music(cue)
 		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon))
+
+
+func _room_has_boss() -> bool:
+	for boss in get_tree().get_nodes_in_group("boss"):
+		if current_room.is_ancestor_of(boss) and not bool(boss.get("dying")):
+			return true
+	return false
+
+
+func _on_boss_defeated() -> void:
+	if current_room and not _game_over:
+		Audio.play_music(Audio.cue_for_room(current_room.biome, current_room.dungeon), 2.5)
 
 
 func _process(delta: float) -> void:

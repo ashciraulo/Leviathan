@@ -36,6 +36,11 @@ const MUSIC_CUES := [
 	"place_village", "place_shop", "place_house", "place_cave", "place_spring", "place_choir",
 	"story_danger", "story_sorrow", "story_choir", "story_flight",
 ]
+## Music cues that play once (the lullaby phrases); every other cue loops.
+const ONE_SHOT_MUSIC := ["lullaby", "bell_1", "bell_2", "bell_3", "bell_4", "bell_5", "bell_6", "bell_7"]
+## The seven Tidebells in lullaby order: bell_1.ogg is the Hull's phrase.
+## tools/music_gen.py weaves the same phrase into each dungeon's track.
+const BELL_ORDER := ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb"]
 ## Short jingles: they duck the music and don't loop.
 const JINGLES := ["jingle_item", "jingle_pearl", "jingle_secret", "jingle_clear",
 	"jingle_bell", "jingle_game_over", "jingle_puzzle"]
@@ -168,6 +173,8 @@ var _last_played: Dictionary = {}
 var _warned: Dictionary = {}
 var _duck_tween: Tween
 var _music_tween: Tween
+## Plays the lullaby phrases over the (ducked) music.
+var _phrase: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -177,6 +184,9 @@ func _ready() -> void:
 		player.bus = "Music"
 		add_child(player)
 		_music.append(player)
+	_phrase = AudioStreamPlayer.new()
+	_phrase.bus = "Music"
+	add_child(_phrase)
 	_ambience = AudioStreamPlayer.new()
 	_ambience.bus = "Ambience"
 	add_child(_ambience)
@@ -259,7 +269,7 @@ func play_music(cue: String, fade: float = FADE_TIME) -> void:
 		_music_tween.tween_property(old, "volume_db", -60.0, fade)
 		_music_tween.tween_callback(old.stop).set_delay(fade)
 	if stream:
-		new.stream = stream
+		new.stream = stream if cue in ONE_SHOT_MUSIC else _looping(stream)
 		new.volume_db = -60.0
 		new.play()
 		_music_tween.tween_property(new, "volume_db", 0.0, fade)
@@ -272,7 +282,50 @@ func stop_music(fade: float = FADE_TIME) -> void:
 ## A jingle: the music dips while it plays, then comes back.
 func play_jingle(id: String) -> void:
 	play_sfx(id)
-	var length := _stream_length(id)
+	_duck(_stream_length(id))
+
+
+## A Tidebell's phrase of the lullaby (bell_N.ogg) over the dipped music.
+## Falls back to the bell jingle while the phrase has no file.
+func play_bell_phrase(bell_id: String) -> void:
+	var index := BELL_ORDER.find(bell_id)
+	if index < 0 or not _play_phrases([index]):
+		play_jingle("jingle_bell")
+
+
+## The lullaby as far as Wren knows it: the first `count` phrases in a row.
+func play_lullaby(count: int) -> void:
+	var phrases: Array[int] = []
+	for i in clampi(count, 0, BELL_ORDER.size()):
+		phrases.append(i)
+	_play_phrases(phrases)
+
+
+## Plays lullaby phrases (0-based) back to back. False when none has a file.
+func _play_phrases(phrases: Array) -> bool:
+	var playlist := AudioStreamPlaylist.new()
+	playlist.loop = false
+	playlist.fade_time = 0.0
+	var count := 0
+	var length := 0.0
+	for i: int in phrases:
+		var stream := _load(MUSIC_DIR, "bell_%d" % (i + 1))
+		if stream == null or count >= AudioStreamPlaylist.MAX_STREAMS:
+			continue
+		playlist.set_list_stream(count, stream)
+		length += stream.get_length()
+		count += 1
+	if count == 0:
+		return false
+	playlist.stream_count = count
+	_phrase.stream = playlist
+	_phrase.play()
+	_duck(length)
+	return true
+
+
+## Dips the playing music for `length` seconds, then brings it back.
+func _duck(length: float) -> void:
 	var current := _music[_music_index]
 	if not current.playing:
 		return
@@ -326,9 +379,17 @@ func play_ambience(id: String, fade: float = FADE_TIME) -> void:
 	_ambience_tween.tween_property(_ambience, "volume_db", 0.0, fade * 0.5)
 
 
-## A WAV set to loop end to end. (The ambience files already loop through
-## their import settings; this covers a file dropped in without them.)
+## A stream set to loop: an OGG from its loop offset, a WAV end to end.
+## (Files whose import settings already loop are left as they are; this
+## covers a file dropped in without them.)
 static func _looping(stream: AudioStream) -> AudioStream:
+	var ogg := stream as AudioStreamOggVorbis
+	if ogg:
+		if ogg.loop:
+			return stream
+		ogg = ogg.duplicate() as AudioStreamOggVorbis
+		ogg.loop = true
+		return ogg
 	var wav := stream as AudioStreamWAV
 	if wav == null or wav.loop_mode != AudioStreamWAV.LOOP_DISABLED:
 		return stream

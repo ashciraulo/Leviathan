@@ -249,6 +249,7 @@ func _die() -> void:
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	_update_plates(0)
 	# A long shudder, then she breaks apart and sinks.
 	for i in 8:

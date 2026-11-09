@@ -1,6 +1,19 @@
 # Music
 
-Drop finished tracks here as `<cue>.ogg` (OGG Vorbis, 44.1 kHz stereo, about -14 LUFS). The game picks them up by name; no code changes needed. Set loop points in Godot's import dock (Loop + Loop Offset) for looping cues.
+Drop finished tracks here as `<cue>.ogg` (OGG Vorbis, 44.1 kHz stereo, about -14 LUFS). The game picks them up by name; no code changes needed. Every cue loops except the lullaby phrases (`bell_1`..`bell_7`, `lullaby`); set Loop Offset in Godot's import dock when a track has an intro.
+
+## Placeholders
+
+The tracks here now are placeholders made in code by `tools/music_gen.py` (numpy and ffmpeg): `python3 tools/music_gen.py` rebuilds them all, `--only title,boss` just those. Each region and dungeon has its own key, mode, tempo and instruments, and each dungeon's track carries its Tidebell's phrase of the lullaby as a leitmotif. A finished track simply replaces its placeholder file.
+
+## The lullaby
+
+`lullaby.json` holds the seven phrases (MIDI note, beats) in D, 3/4. Bell order is `Audio.BELL_ORDER`: Hull, Kiln, Mire, Gale, Glacier, Belfry, Tomb, so `bell_1.ogg` is the Hull's phrase. Ringing a Tidebell plays its phrase over the dipped music (`Audio.play_bell_phrase`); `Audio.play_lullaby(n)` plays the first n phrases back to back for story scenes. The generator reads the same file, so changing a phrase there changes both the bell and the dungeon track that quotes it.
+
+## When each cue plays
+
+- A room plays `dungeon_<id>` inside a dungeon, otherwise `region_<biome>`, with a cross-fade on every change.
+- A room with a living boss plays `boss`; when it falls (`Events.boss_defeated`) the room's own track fades back in.
 
 Cues the game asks for:
 

@@ -354,6 +354,7 @@ func _die() -> void:
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
 	GameState.flags[DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
 	# It may have been sinking into a dive: bring it back up to die.
 	_sprite.position = _sprite_origin
 	_sprite.modulate.a = 1.0
