@@ -58,7 +58,7 @@ func _draw_gauge() -> void:
 			_gauge.draw_circle(center, 4.0, Palette.BUBBLE)
 			_gauge.draw_rect(Rect2(center + Vector2(-2, -2), Vector2(2, 2)), Palette.FLASH)
 		else:
-			_gauge.draw_arc(center, 4.0, 0.0, TAU, 16, Palette.BUBBLE_EMPTY, 1.0)
+			_gauge.draw_circle(center, 4.0, Palette.BUBBLE_EMPTY, false, 1.0)
 	# Resonance meter, marked in thirds: each third is one Hum.
 	var bar := Rect2(5, 19, count * BUBBLE_SPACING, 4)
 	_gauge.draw_rect(bar, Palette.OUTLINE)
