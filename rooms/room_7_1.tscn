@@ -6,15 +6,16 @@
 script = ExtResource("1_room")
 name_key = "ROOM_SINKSAND_BASIN"
 biome = "ossuary"
+chest_item = "jar"
 layout = "###########..###########
 ######.............#####
 ####...SSS....SSS....###
 ###...SSSSS..SSSSS....##
 ##.....SSS....SSS.....##
-#.........A............#
-#.....SSS........SSS....
-#....SSSSS......SSSSS...
-##....SSS........SSS..##
+#.........A....SSSSS...#
+#.....SSS......SS.SS....
+#....SSSSS.....SSCSS....
+##....SSS......SSSSS..##
 ###...................##
 ####.......A........####
 ######............######
