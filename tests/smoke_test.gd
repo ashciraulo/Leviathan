@@ -40,6 +40,7 @@ func _ready() -> void:
 	await _test_cinderreach()
 	await _test_gloamfen()
 	await _test_windmere()
+	await _test_frostspine()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -1911,5 +1912,55 @@ func _test_windmere() -> void:
 		await _wait(0.05)
 	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(stray.position), "a Tumbleburr stays in its own room (at %s)" % stray.position)
 	stray.queue_free()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Frostspine: Wren keeps sliding on slick ice after letting go, and a
+## Sledgeseal rears (its tell) before it toboggans, glancing off blows to
+## its face while it slides.
+func _test_frostspine() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(1, -3), Vector2(4 * Room.TILE + 8, 5 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var room: Room = game.current_room
+	var player: Player = game.player
+	var ice := room.get_node_or_null("IceField") as IceField
+	_check(ice != null, "Frostbite Shelf has slick ice")
+	if ice != null:
+		# Run onto the ice heading right, then let go.
+		player.global_position = room.global_position + Vector2(10 * Room.TILE + 8, 6 * Room.TILE + 8)
+		ice.momentum = Vector2(Player.SPEED, 0)
+		var start_x := player.global_position.x
+		await _wait(0.4)
+		_check(player.global_position.x > start_x + 12.0, "Wren keeps sliding on the ice with no input (moved %.1f)" % (player.global_position.x - start_x))
+		# Off the ice, Wren stops at once.
+		player.global_position = room.global_position + Vector2(4 * Room.TILE + 8, 3 * Room.TILE + 12)
+		await _wait(0.1)
+		var still := player.global_position
+		await _wait(0.3)
+		_check(player.global_position.distance_to(still) < 1.0, "on snow Wren has their footing")
+	var seal := Sledgeseal.new()
+	seal.position = Vector2(4 * Room.TILE, 9 * Room.TILE - 4)
+	room.add_child(seal)
+	player.global_position = room.global_position + Vector2(11 * Room.TILE, 9 * Room.TILE - 4)
+	var reared := false
+	var slid_after := false
+	for i in 40:
+		await _wait(0.05)
+		reared = reared or seal.mode == Sledgeseal.Mode.REAR
+		if seal.is_sliding():
+			slid_after = reared
+			break
+	_check(slid_after, "a Sledgeseal rears before it slides")
+	if seal.is_sliding():
+		_check(seal.take_hit(1, Vector2.LEFT) == Enemy.HitResult.BLOCKED, "a blow to a sliding seal's face glances off")
+		_check(seal.take_hit(1, Vector2.DOWN) == Enemy.HitResult.HIT, "its flank can be struck")
+	seal.queue_free()
+	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
