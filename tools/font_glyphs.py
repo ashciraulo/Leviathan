@@ -98,3 +98,121 @@ GLYPHS = {
 "}": ["#..", ".#.", ".#.", "..#", ".#.", ".#.", "#..", "...", "..."],
 "|": ["#", "#", "#", "#", "#", "#", "#", "#", "."],
 }
+
+
+# --------------------------------------------------------------------------
+# Accented letters for translations (French, German, Spanish, Italian,
+# Portuguese, Dutch, Nordic...). Built from the base letter plus a two-row
+# mark. Lowercase letters get one extra row above the cell, capitals two
+# (they are squashed by a row so the mark fits). The font builder reads the
+# extra rows from the glyph height: 9 rows is a plain glyph.
+# --------------------------------------------------------------------------
+MARKS = {
+    "grave": ["#..", ".#."],
+    "acute": ["..#", ".#."],
+    "circumflex": [".#.", "#.#"],
+    "tilde": [".#.#", "#.#."],
+    "diaeresis": ["...", "#.#"],
+    "ring": ["##", "##"],
+}
+
+
+def _centre(mark, width):
+    assert len(mark[0]) <= width, "mark wider than its letter"
+    pad = (width - len(mark[0])) // 2
+    return ["." * pad + row + "." * (width - pad - len(row)) for row in mark]
+
+
+def _squash(glyph):
+    """Drop one cap row that repeats its neighbour, nearest the middle."""
+    for i in (2, 3, 1, 4, 5):
+        if glyph[i] == glyph[i + 1]:
+            return glyph[:i] + glyph[i + 1:]
+    return glyph[:1] + glyph[2:]
+
+
+def _accented_i(glyph, mark):
+    """i and j: the dot gives way to the mark, and the letter widens to 3."""
+    width = len(glyph[0])
+    pad = (3 - width) // 2
+    body = ["." * pad + r + "." * (3 - width - pad) for r in glyph]
+    top = _centre(MARKS[mark], 3)
+    if mark == "diaeresis":
+        return [top[1]] + body[1:]
+    return [top[0], top[1]] + body[1:]
+
+
+def _accented(base, mark):
+    glyph = GLYPHS[base]
+    width = len(glyph[0])
+    if base in ("i", "j"):
+        return _accented_i(glyph, mark)
+    top = _centre(MARKS[mark], width)
+    if mark == "diaeresis":
+        # One-row dots: the capital keeps its full height, and the
+        # lowercase letter fits its usual cell.
+        if base.isupper():
+            return [top[1], "." * width] + glyph
+        return [top[1]] + glyph[1:]
+    if base.isupper():
+        # Mark, a gap row, then the six-row capital and its descender rows.
+        return top + ["." * width] + _squash(glyph)
+    # Lowercase: the mark sits in rows -1 and 0, row 1 is the gap.
+    return [top[0], top[1]] + glyph[1:]
+
+
+ACCENTED = {
+    "À": ("A", "grave"), "Á": ("A", "acute"), "Â": ("A", "circumflex"), "Ã": ("A", "tilde"),
+    "Ä": ("A", "diaeresis"), "Å": ("A", "ring"), "È": ("E", "grave"), "É": ("E", "acute"),
+    "Ê": ("E", "circumflex"), "Ë": ("E", "diaeresis"), "Ì": ("I", "grave"), "Í": ("I", "acute"),
+    "Î": ("I", "circumflex"), "Ï": ("I", "diaeresis"), "Ñ": ("N", "tilde"), "Ò": ("O", "grave"),
+    "Ó": ("O", "acute"), "Ô": ("O", "circumflex"), "Õ": ("O", "tilde"), "Ö": ("O", "diaeresis"),
+    "Ù": ("U", "grave"), "Ú": ("U", "acute"), "Û": ("U", "circumflex"), "Ü": ("U", "diaeresis"),
+    "Ý": ("Y", "acute"), "Ÿ": ("Y", "diaeresis"),
+    "à": ("a", "grave"), "á": ("a", "acute"), "â": ("a", "circumflex"), "ã": ("a", "tilde"),
+    "ä": ("a", "diaeresis"), "å": ("a", "ring"), "è": ("e", "grave"), "é": ("e", "acute"),
+    "ê": ("e", "circumflex"), "ë": ("e", "diaeresis"), "ì": ("i", "grave"), "í": ("i", "acute"),
+    "î": ("i", "circumflex"), "ï": ("i", "diaeresis"), "ñ": ("n", "tilde"), "ò": ("o", "grave"),
+    "ó": ("o", "acute"), "ô": ("o", "circumflex"), "õ": ("o", "tilde"), "ö": ("o", "diaeresis"),
+    "ù": ("u", "grave"), "ú": ("u", "acute"), "û": ("u", "circumflex"), "ü": ("u", "diaeresis"),
+    "ý": ("y", "acute"), "ÿ": ("y", "diaeresis"),
+}
+
+# Letters and marks drawn by hand.
+EXTRA = {
+    "Ç": [".###.", "#...#", "#....", "#....", "#...#", ".###.", "..#..", ".#...", "....."],
+    "ç": [".....", ".....", ".####", "#....", "#....", "#....", ".####", "..#..", ".#..."],
+    "ß": [".##..", "#..#.", "#..#.", "#.#..", "#..#.", "#...#", "#.##.", "#....", "....."],
+    "Æ": [".####", "#.#..", "#.#..", "####.", "#.#..", "#.#..", "#.###", ".....", "....."],
+    "æ": [".....", ".....", "##.#.", "..#.#", ".####", "#.#..", ".#.##", ".....", "....."],
+    "Ø": [".###.", "#..##", "#.#.#", "#.#.#", "#.#.#", "##..#", ".###.", ".....", "....."],
+    "ø": [".....", ".....", ".###.", "#..##", "#.#.#", "##..#", ".###.", ".....", "....."],
+    "Œ": [".####", "#.#..", "#.#..", "#.##.", "#.#..", "#.#..", ".####", ".....", "....."],
+    "œ": [".....", ".....", ".#.#.", "#.#.#", "#.###", "#.#..", ".#.##", ".....", "....."],
+    "¡": ["#", ".", "#", "#", "#", "#", "#", ".", "."],
+    "¿": ["..#..", ".....", "..#..", ".##..", "#....", "#...#", ".###.", ".....", "....."],
+    "«": [".....", ".....", "..#.#", ".#.#.", "#.#..", ".#.#.", "..#.#", ".....", "....."],
+    "»": [".....", ".....", "#.#..", ".#.#.", "..#.#", ".#.#.", "#.#..", ".....", "....."],
+    "‘": ["#.", ".#", "..", "..", "..", "..", "..", "..", ".."],
+    "’": [".#", "#.", "..", "..", "..", "..", "..", "..", ".."],
+    "“": ["#.#.", ".#.#", "....", "....", "....", "....", "....", "....", "...."],
+    "”": [".#.#", "#.#.", "....", "....", "....", "....", "....", "....", "...."],
+    "„": ["....", "....", "....", "....", "....", "....", ".#.#", "#.#.", "...."],
+    "…": [".....", ".....", ".....", ".....", ".....", ".....", "#.#.#", ".....", "....."],
+    "–": [".....", ".....", ".....", "#####", ".....", ".....", ".....", ".....", "....."],
+    "—": ["......", "......", "......", "######", "......", "......", "......", "......", "......"],
+    "°": [".#.", "#.#", ".#.", "...", "...", "...", "...", "...", "..."],
+    "‚": ["..", "..", "..", "..", "..", "..", ".#", "#.", ".."],
+    # No-break spaces (French puts them before ; : ! ? and inside « »).
+    "\u00a0": ["...", "...", "...", "...", "...", "...", "...", "...", "..."],
+    "\u202f": ["..", "..", "..", "..", "..", "..", "..", "..", ".."],
+    # Icelandic.
+    "Ð": [".###.", ".#..#", ".#..#", "###.#", ".#..#", ".#..#", ".###.", ".....", "....."],
+    "ð": [".#.#.", "..#..", ".#.#.", "....#", ".####", "#...#", ".###.", ".....", "....."],
+    "Þ": ["#....", "####.", "#...#", "#...#", "####.", "#....", "#....", ".....", "....."],
+    "þ": ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
+}
+
+for _ch, (_base, _mark) in ACCENTED.items():
+    GLYPHS[_ch] = _accented(_base, _mark)
+GLYPHS.update(EXTRA)

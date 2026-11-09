@@ -17,8 +17,14 @@ file on import.
    `res://locale/strings.<code>.translation` under
    **Project Settings > Localization > Translations** (this edits
    `project.godot`). The Options > Language setting picks it up by itself.
-4. Check the font has every letter the language needs (`tools/build_art.py`
-   draws the Tide font; accented and non-Latin letters need adding there).
+4. Run `python3 tools/check_strings.py`: it fails on any letter the Tide
+   font can't draw. The font covers English plus the accented letters of
+   French, German, Spanish, Italian, Portuguese, Dutch, Danish, Norwegian,
+   Swedish, Finnish and Icelandic (with ß, æ, ø, œ, ç, ð, þ, ¡, ¿, « »,
+   „ ‚ “ ” ‘ ’, …, dashes and no-break spaces).
+   Other letters go in `tools/font_glyphs.py` (`ACCENTED` for a base
+   letter plus a mark, `EXTRA` for hand-drawn ones); then run
+   `python3 tools/build_art.py`.
 
 ## Checks
 
