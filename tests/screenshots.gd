@@ -47,7 +47,12 @@ func _ready() -> void:
 	Input.action_release("move_right")
 	await _wait(0.4)
 	await _capture("04_tidepools_scuttlers")
-	# Accessibility: high contrast outlines and a caption from the left.
+	# Accessibility: high contrast outlines and a caption from each side,
+	# away from the crabs and not mid-blink from a pinch.
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.ai_enabled = false
+	player.global_position = game.current_room.global_position + Vector2(200, 7 * Room.TILE + 12)
+	await _wait(2.0)
 	var contrast_was := Settings.high_contrast
 	var captions_was := Settings.captions
 	Settings.high_contrast = true

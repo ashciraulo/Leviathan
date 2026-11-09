@@ -102,6 +102,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if frozen:
+		Art.set_flash(_body, 0.0)
 		return
 	_state_time += delta
 	_invuln = maxf(_invuln - delta, 0.0)
