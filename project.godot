@@ -31,6 +31,7 @@ window/stretch/scale_mode="integer"
 
 [gui]
 
+theme/custom_font="res://assets/fonts/tide.fnt"
 theme/default_font_antialiasing=0
 theme/default_font_hinting=0
 

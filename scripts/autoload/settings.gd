@@ -74,9 +74,9 @@ func _set_default_font() -> void:
 	var font := load(FONT_PATH) as FontFile
 	if font == null:
 		return
+	# Project Settings > GUI > Theme > Custom Font makes Tide the default.
 	# Letters Tide doesn't have (accents, CJK) come from the system font.
 	font.fallbacks = [SystemFont.new()]
-	ThemeDB.fallback_font = font
 	ThemeDB.fallback_font_size = UI.FONT_SIZE
 
 

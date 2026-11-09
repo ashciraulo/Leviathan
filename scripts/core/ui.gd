@@ -18,6 +18,7 @@ static func label(key: String, font_size: int = UI.FONT_SIZE) -> Label:
 static func button(key: String, on_pressed: Callable) -> Button:
 	var node := Button.new()
 	node.text = key
+	node.add_theme_font_size_override("font_size", FONT_SIZE)
 	node.pressed.connect(on_pressed)
 	return node
 
