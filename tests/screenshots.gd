@@ -1279,7 +1279,7 @@ func _crucible_shots() -> void:
 
 
 func _echoes_shots(game: Node) -> void:
-	for flag in ["boss_hull", "boss_kiln", "boss_mire", "boss_gale", "boss_glacier", "boss_belfry", "boss_tomb", "boss_maw_vael", "the_end"]:
+	for flag in ["boss_hull", "boss_kiln", "boss_mire", "boss_gale", "boss_glacier", "boss_belfry", "boss_tomb", "boss_maw_vael", "the_end", StoryDirector.ENDING_FLAG]:
 		GameState.set_flag(flag)
 	GameState.clear_flag(EchoTrial.WOKEN_FLAG)
 	var room := await _jump(game, EchoTrial.HEART_ROOM, Vector2i(11, 11))

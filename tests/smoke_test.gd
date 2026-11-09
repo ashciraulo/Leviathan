@@ -2064,6 +2064,7 @@ func _test_echoes_dungeon() -> void:
 	for id: String in EchoTrial.BOSSES:
 		GameState.set_flag(EchoTrial.BOSSES[id][1])
 	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
 	GameState.set_checkpoint(EchoTrial.HEART_ROOM, GameState.NO_POSITION)
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
