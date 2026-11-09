@@ -39,6 +39,9 @@ func _physics_process(delta: float) -> void:
 		momentum = player.velocity if player.state in [Player.State.MOVE, Player.State.HURT] else Vector2.ZERO
 		_last = Vector2.INF
 		return
+	if _last == Vector2.INF and momentum.length() > 20.0:
+		# A hiss underfoot as Wren slides onto the ice.
+		Audio.play_sfx("ice_slide", player.global_position)
 	# The player script has already set velocity from the stick this frame
 	# and moved them by it; replace that step with the slide.
 	var steer := player.velocity

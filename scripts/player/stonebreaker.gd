@@ -75,6 +75,7 @@ func _strike() -> void:
 				GameState.add_resonance(GameState.RESONANCE_PER_HIT)
 				landed = true
 	Audio.play_sfx("hit_shell" if landed else "block", impact_point(), 0.55)
+	Audio.play_sfx("stonebreaker_slam", impact_point())
 	Feel.hitstop(4 if landed else 2)
 	Feel.shake(3.0 if landed else 1.5)
 	if not landed:

@@ -31,6 +31,8 @@ import hull_dungeon_art
 import kiln_art
 import cinderreach_art
 import mire_art
+import verge_art
+import ossuary_art
 import gloamfen_art
 import gale_art
 import glacier_art
@@ -1003,6 +1005,8 @@ RAMPS.update(cinderreach_art.RAMPS)
 FLAT.update(cinderreach_art.FLAT)
 TILE_LAYOUT += cinderreach_art.TILES
 TILE_LAYOUT += mire_art.TILES
+TILE_LAYOUT += verge_art.TILES
+TILE_LAYOUT += ossuary_art.TILES
 TILE_LAYOUT += gale_art.TILES
 TILE_LAYOUT += glacier_art.TILES
 TILE_LAYOUT += belfry_art.TILES
@@ -1199,6 +1203,10 @@ def main():
         write_png(os.path.join(OUT, "kiln", name + ".png"), px)
     for name, px in mire_art.build(_lit_with(mire_art), sheet).items():
         write_png(os.path.join(OUT, "mire", name + ".png"), px)
+    for name, px in verge_art.build(_lit_with(verge_art), sheet).items():
+        write_png(os.path.join(OUT, "verge", name + ".png"), px)
+    for name, px in ossuary_art.build(_lit_with(ossuary_art), sheet).items():
+        write_png(os.path.join(OUT, "ossuary", name + ".png"), px)
     for name, px in gale_art.build(_lit_with(gale_art), sheet).items():
         write_png(os.path.join(OUT, "gale", name + ".png"), px)
     for name, px in glacier_art.build(_lit_with(glacier_art), sheet).items():

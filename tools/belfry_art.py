@@ -176,7 +176,7 @@ TILES = [
     ("belfry_top_0", lambda: wall_top(0)), ("belfry_top_1", lambda: wall_top(1)),
     ("belfry_face_0", lambda: wall_face(0)), ("belfry_face_1", lambda: wall_face(1)),
     ("deepwater_0", lambda: deep_tile(0)), ("deepwater_1", lambda: deep_tile(1)),
-    ("silt_0", lambda: silt(0)), ("silt_1", lambda: silt(1)),
+    ("lowwater_silt_0", lambda: silt(0)), ("lowwater_silt_1", lambda: silt(1)),
     ("seaweed_0", lambda: weed(0)), ("seaweed_1", lambda: weed(1)),
     ("seashell_0", lambda: shells(0)), ("seashell_1", lambda: shells(1)),
 ]

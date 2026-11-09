@@ -36,11 +36,13 @@ func _think(delta: float) -> void:
 				mode = Mode.WINDUP
 				_timer = WINDUP_TIME
 				velocity = Vector2.ZERO
+				Audio.play_sfx("scuttler_snap", global_position)
 		Mode.WINDUP:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
 				mode = Mode.DASH
 				_timer = DASH_TIME
+				Audio.play_sfx("scuttler_skitter", global_position)
 				_direction = (player.global_position - global_position).normalized() if player else Vector2.DOWN
 		Mode.DASH:
 			velocity = _direction * DASH_SPEED

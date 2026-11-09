@@ -165,7 +165,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0 or _wake.distance_to(goal) < 2.0:
 				_target = _clamp_to_arena(_wake)
 				_enter(Mode.TELL, TELL_TIME)
-				Audio.play_sfx("enemy_tell", _wake)
+				Audio.play_sfx("wyrm_tell", _wake)
 				Feel.shake(1.5)
 		Mode.TELL:
 			velocity = Vector2.ZERO
@@ -346,6 +346,7 @@ func mallet_hit(_direction: Vector2) -> bool:
 func _die() -> void:
 	dying = true
 	mode = Mode.DYING
+	Audio.play_sfx("boss_fall", global_position, 0.8)
 	visible = true
 	_contact.active = false
 	_burst.active = false
