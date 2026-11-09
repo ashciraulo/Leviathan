@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room.gd" id="1_room"]
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1_room")
+name_key = "ROOM_GLACIER_POND"
+biome = "glacier"
+dungeon = "glacier"
+chest_item = "compass"
+layout = "########################
+#......................#
+#.C....................#
+#...IIIIIIIIIIIIIIII...#
+#...IIIIIIIIIIIIIIII...#
+#...II__IIIIII__IIII....
+#...II__IIaIII__IIII....
+#...IIIIIIIIIIIIIIII....
+#...IIIIIIIIIIIIIIII...#
+#...IIII__IIIIIIaIII...#
+#...IIII__IIIIIIIIII...#
+#......................#
+########################"

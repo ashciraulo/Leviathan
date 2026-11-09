@@ -12,6 +12,7 @@ const ITEMS := {
 	"stonebreaker": ["TOAST_GOT_STONEBREAKER", KilnSprites.STONEBREAKER],
 	"glowmoth_lantern": ["TOAST_GOT_GLOWMOTH_LANTERN", MireSprites.GLOWMOTH_LANTERN],
 	"kite_cloak": ["TOAST_GOT_KITE_CLOAK", GaleSprites.KITE_CLOAK],
+	"frostfang_bow": ["TOAST_GOT_FROSTFANG_BOW", GlacierSprites.FROSTFANG_BOW],
 	"map": ["TOAST_GOT_MAP", HullSprites.MAP],
 	"compass": ["TOAST_GOT_COMPASS", HullSprites.COMPASS],
 	"big_key": ["TOAST_GOT_BIG_KEY", HullSprites.BIG_KEY],
@@ -23,6 +24,7 @@ const ITEM_TALK := {
 	"stonebreaker": ["GOT_STONEBREAKER_1", "GOT_STONEBREAKER_2"],
 	"glowmoth_lantern": ["GOT_GLOWMOTH_LANTERN_1", "GOT_GLOWMOTH_LANTERN_2"],
 	"kite_cloak": ["GOT_KITE_CLOAK_1", "GOT_KITE_CLOAK_2"],
+	"frostfang_bow": ["GOT_FROSTFANG_BOW_1", "GOT_FROSTFANG_BOW_2"],
 }
 
 var room_coord := Vector2i.ZERO

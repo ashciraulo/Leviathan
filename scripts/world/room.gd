@@ -38,6 +38,10 @@ extends Node2D
 ##          q  Shade (only hurt in lantern light)   x  wisp
 ##          > < N S  wind fan blowing east, west, north, south
 ##          r  lightning rod
+##          I  ice (Wren slides on it)   E  ice eye (shoot it)
+##          a  Rimeling (skates across the room)
+##          Q  deep water (blocks like ~; with the Diver's Helm, Wren dives
+##             under and swims through)
 ##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
@@ -95,6 +99,12 @@ var player_spawn := SIZE / 2.0
 var _rows := PackedStringArray()
 var _ground: Node2D
 var _water_frame := 0
+## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
+## ice (I) until it thaws, and goes back to water when the room reloads.
+var _frozen: Dictionary = {}
+## Whether the layout has any I tiles (so ice checks can skip other rooms).
+var _has_ice_tiles := false
+var _water_body: StaticBody2D
 var _water_time := 0.0
 
 const WATER_FRAME_TIME := 0.6
@@ -163,6 +173,12 @@ const BIOMES := {
 		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
 		"floor_overlay": ["lichen_%d", 17], "door": "exit_glow", "gap": "galesky",
 	},
+	"glacier": {
+		"floor": "glacier_floor_%d", "wall_top": "icecave_top_%d", "wall_face": "icecave_face_%d",
+		"water": "icewater_%d", "water_edge": "foam_%s_%d", "damp": "rime_%s",
+		"wet_deco": "frostcrack_%d", "dry_deco": "snowdrift_%d",
+		"floor_overlay": ["snowdrift_%d", 19], "door": "exit_glow", "gap": "crevasse",
+	},
 }
 
 
@@ -170,6 +186,7 @@ func _ready() -> void:
 	y_sort_enabled = true
 	add_to_group("rooms")
 	_rows = parse_layout(layout)
+	_has_ice_tiles = "I" in "".join(_rows)
 	var problem := validate_layout(_rows)
 	if problem != "":
 		push_error("Room %s: %s" % [scene_file_path, problem])
@@ -205,29 +222,32 @@ static func validate_layout(rows: PackedStringArray) -> String:
 
 
 static func is_solid(tile: String) -> bool:
-	return tile == "#" or tile == "~"
+	return tile == "#" or tile == "~" or tile == "Q"
 
 
 func _build() -> void:
 	var walls := _make_static(Layers.WORLD, "Walls")
-	var water := _make_static(Layers.WATER, "Water")
+	_water_body = _make_static(Layers.WATER, "Water")
 	for y in _rows.size():
 		var row := _rows[y]
 		var x := 0
 		while x < row.length():
 			var tile := row[x]
-			if is_solid(tile):
-				# Merge a run of the same tile into one collision box.
+			if tile == "#":
+				# Merge a run of wall into one collision box.
 				var start := x
 				while x < row.length() and row[x] == tile:
 					x += 1
-				var body := walls if tile == "#" else water
 				var size := Vector2((x - start) * TILE, TILE)
 				var center := Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)
-				body.add_child(Layers.rect_shape(size, center))
+				walls.add_child(Layers.rect_shape(size, center))
+				continue
+			if tile == "~" or tile == "Q":
+				x += 1
 				continue
 			_spawn(tile, Vector2(x * TILE + TILE / 2.0, y * TILE + TILE - 4))
 			x += 1
+	_build_water()
 	DungeonTiles.finish(self)
 	# In a dungeon, x is a wisp, not ice.
 	if dungeon == "" and layout.contains("x"):
@@ -241,6 +261,91 @@ func _build() -> void:
 		add_child(gust)
 
 
+## Water's collision, one box per run of water that isn't frozen.
+func _build_water() -> void:
+	for shape in _water_body.get_children():
+		_water_body.remove_child(shape)
+		shape.queue_free()
+	for y in _rows.size():
+		var x := 0
+		while x < COLS:
+			var wet := _tile_at(x, y)
+			if wet != "~" and wet != "Q":
+				x += 1
+				continue
+			var start := x
+			while x < COLS and _tile_at(x, y) == wet:
+				x += 1
+			var size := Vector2((x - start) * TILE, TILE)
+			_water_body.add_child(Layers.rect_shape(size, Vector2((start + x) * TILE / 2.0, y * TILE + TILE / 2.0)))
+
+
+## True when the tile is water a frost arrow froze.
+## True when the room has any ice at all: I tiles or frozen water.
+func has_ice() -> bool:
+	return _has_ice_tiles or not _frozen.is_empty()
+
+
+func is_frozen(tile: Vector2i) -> bool:
+	return _frozen.has(tile)
+
+
+## Freezes water: the tile, or the whole pool when it's a small one (four
+## tiles or fewer). Returns the tiles that froze.
+func freeze(tile: Vector2i) -> Array[Vector2i]:
+	var pool := water_pool(tile)
+	var froze: Array[Vector2i] = []
+	if pool.is_empty():
+		return froze
+	if pool.size() > 4:
+		pool = [tile]
+	for t in pool:
+		if not _frozen.has(t):
+			_frozen[t] = true
+			froze.append(t)
+	if not froze.is_empty():
+		_build_water()
+		_ground.queue_redraw()
+	return froze
+
+
+## Lets frozen water go back to water.
+func thaw(tiles: Array) -> void:
+	var changed := false
+	for t: Vector2i in tiles:
+		changed = _frozen.erase(t) or changed
+	if changed:
+		_build_water()
+		_ground.queue_redraw()
+
+
+## The open water joined to `tile` (empty when it isn't water).
+func water_pool(tile: Vector2i) -> Array[Vector2i]:
+	var pool: Array[Vector2i] = []
+	if _tile_at(tile.x, tile.y) != "~":
+		return pool
+	var todo: Array[Vector2i] = [tile]
+	var seen := {tile: true}
+	while not todo.is_empty() and pool.size() <= 8:
+		var t: Vector2i = todo.pop_back()
+		pool.append(t)
+		for d: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var n := t + d
+			if not seen.has(n) and _tile_at(n.x, n.y) == "~":
+				seen[n] = true
+				todo.append(n)
+	return pool
+
+
+## The room under a point (global), or null.
+static func under(tree: SceneTree, at: Vector2) -> Room:
+	for node in tree.get_nodes_in_group("rooms"):
+		var room := node as Room
+		if room and not room.is_queued_for_deletion() and Rect2(room.global_position, SIZE).has_point(at):
+			return room
+	return null
+
+
 func _spawn(tile: String, pos: Vector2) -> void:
 	var node: Node2D = null
 	# Dungeon pieces win in a dungeon: some of their letters (k q x) mean
@@ -252,7 +357,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			add_child(node)
 		return
 	match tile:
-		".", ":", "x":
+		".", ":", "x", "I":
 			pass
 		"P":
 			player_spawn = pos
@@ -331,15 +436,6 @@ func _process(delta: float) -> void:
 		_ground.queue_redraw()
 
 
-## The room under a point (global), or null.
-static func under(tree: SceneTree, at: Vector2) -> Room:
-	for node in tree.get_nodes_in_group("rooms"):
-		var room := node as Room
-		if room and not room.is_queued_for_deletion() and Rect2(room.global_position, SIZE).has_point(at):
-			return room
-	return null
-
-
 ## The layout letter at a tile (walls outside the room).
 func tile_at(x: int, y: int) -> String:
 	return _tile_at(x, y)
@@ -348,6 +444,8 @@ func tile_at(x: int, y: int) -> String:
 func _tile_at(x: int, y: int) -> String:
 	if y < 0 or y >= _rows.size() or x < 0 or x >= _rows[y].length():
 		return "#"
+	if not _frozen.is_empty() and _frozen.has(Vector2i(x, y)):
+		return "I"
 	return _rows[y][x]
 
 
@@ -359,7 +457,7 @@ func _hash(x: int, y: int) -> int:
 func _near_water(x: int, y: int) -> bool:
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
-			if _tile_at(x + dx, y + dy) in ["~", "v"]:
+			if _tile_at(x + dx, y + dy) in ["~", "v", "Q"]:
 				return true
 	return false
 
@@ -386,13 +484,15 @@ func _draw_ground() -> void:
 				var runs_vertical := (_tile_at(x, y - 1) == ":" or _tile_at(x, y + 1) == ":") \
 						and _tile_at(x - 1, y) != ":" and _tile_at(x + 1, y) != ":"
 				_draw_tile(tiles["boardwalk"] % ("v" if runs_vertical else "h"), x, y)
-			elif tile == "~" or tile == "v":
+			elif tile == "I" and _frozen.has(Vector2i(x, y)):
+				_draw_tile("floe_%d" % (h % 2), x, y)
+			elif tile == "~" or tile == "v" or tile == "Q":
 				_draw_tile(tiles["water"] % _water_frame, x, y)
 				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					# Boardwalks sit on the water, so no bank line against them.
-					if not _tile_at(x + side[1], y + side[2]) in ["~", ":", "v"]:
+					if not _tile_at(x + side[1], y + side[2]) in ["~", ":", "v", "Q"]:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
@@ -402,17 +502,19 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["floor"] % (h % 4), x, y)
 				# Damp ground fades out from any water alongside.
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
-					if _tile_at(x + side[1], y + side[2]) in ["~", "v"]:
+					if _tile_at(x + side[1], y + side[2]) in ["~", "v", "Q"]:
 						_draw_tile(tiles["damp"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
 				if _tile_at(x - 1, y) == "#":
 					_draw_tile("shade_left", x, y)
+				if tile == "I":
+					_draw_tile("glacier_ice_%d" % (h % 2), x, y)
 				if tile == "D" and tiles.has("door"):
 					_draw_tile(tiles["door"], x, y)
-				elif tiles.has("floor_overlay") and h % int(tiles["floor_overlay"][1]) == 1:
+				elif tile != "I" and tiles.has("floor_overlay") and h % int(tiles["floor_overlay"][1]) == 1:
 					_draw_tile(tiles["floor_overlay"][0] % (h % 2), x, y)
-				if tile == "D":
+				if tile == "D" or tile == "I":
 					pass
 				elif wet and h % 11 == 0:
 					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
