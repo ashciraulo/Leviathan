@@ -11,6 +11,7 @@ const BELL_FLAG := "tidebell_hull"
 const BELLS := {
 	"hull": [HullSprites.TIDEBELL, ["BELL_HULL_1", "BELL_HULL_2", "BELL_HULL_3"]],
 	"kiln": [KilnSprites.EMBER_BELL, ["BELL_KILN_1", "BELL_KILN_2", "BELL_KILN_3"]],
+	"mire": [MireSprites.MOTH_BELL, ["BELL_MIRE_1", "BELL_MIRE_2", "BELL_MIRE_3"]],
 }
 
 ## The dungeon this bell belongs to (a key of BELLS).

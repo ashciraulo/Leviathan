@@ -46,13 +46,11 @@ ROOM_HULL_BOSS,The Rotting Hull: Figurehead Hold
 TOAST_GOT_TIDE_HOOK,You found the Tide Hook!
 GOT_TIDE_HOOK_1,"The Tide Hook! A barbed iron hook on a long chain, still cold from the sea."
 GOT_TIDE_HOOK_2,"Press U to throw it. It bites into iron rings and carries you across, and it drags crates and small creatures back to you."
-TOAST_GOT_MAP,You found the Hull's map.
+TOAST_GOT_MAP,You found the map.
 TOAST_GOT_COMPASS,You found the compass.
 TOAST_GOT_BIG_KEY,You found the big key!
 TOAST_BIG_DOOR_LOCKED,The great door won't move. It needs the big key.
 TOAST_BIG_DOOR_OPEN,The big key turns. The great door groans open.
-TOAST_CHEST_APPEARS,A chest appears!
-TOAST_GATE_OPENS,Something unlocks with a clank.
 BOSS_MATRIARCH,The Barnacle Matriarch
 TOAST_BELL_QUIET,The Tidebell hums softly.
 BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
@@ -87,7 +85,7 @@ ITEM_TIDE_HOOK_DESC,A barbed hook on a long line. Pulls small things in and Wren
 ITEM_STONEBREAKER,Stonebreaker Mallet
 ITEM_STONEBREAKER_DESC,Heavy enough to crack boulders and flip armoured shells.
 ITEM_GLOWMOTH_LANTERN,Glowmoth Lantern
-ITEM_GLOWMOTH_LANTERN_DESC,Moths that glow in the dark. Shows what hides from light and burns oil.
+ITEM_GLOWMOTH_LANTERN_DESC,Moths that glow in the dark. Raise it to show what hides from light.
 ITEM_KITE_CLOAK,Kite Cloak
 ITEM_KITE_CLOAK_DESC,Catch the wind and glide from high places.
 ITEM_FROSTFANG_BOW,Frostfang Bow
@@ -343,6 +341,25 @@ ROOM_SLAG_FIELDS,Slag Fields
 ROOM_KILN_MOUTH,The Kiln's Mouth
 ROOM_GEYSER_BASIN,Geyser Basin
 ROOM_SCORCHED_PASS,Scorched Pass
+ROOM_MIRE_ENTRY,Lantern Mire
+ROOM_MIRE_HUB,Lantern Mire: Mourners' Walk
+ROOM_MIRE_CANDLES,Lantern Mire: Candle Store
+ROOM_MIRE_CHAPEL,Lantern Mire: Moth Chapel
+ROOM_MIRE_DROWNED,Lantern Mire: Drowned Walk
+ROOM_MIRE_BRAZIERS,Lantern Mire: Hall of Braziers
+ROOM_MIRE_GRAVES,Lantern Mire: Grave Lamps
+ROOM_MIRE_OSSUARY,Lantern Mire: Ossuary
+ROOM_MIRE_BOSS,Lantern Mire: the Still Pool
+DUNGEON_MIRE,Lantern Mire
+TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!
+GOT_GLOWMOTH_LANTERN_1,"The Glowmoth Lantern! Pale moths stir inside the glass, and the dark around you thins."
+GOT_GLOWMOTH_LANTERN_2,"Press its item key (U or I) to raise it, and again to lower it. Things that hide from the light can't hide from it."
+BOSS_PALE_CONGREGATION,The Pale Congregation
+BELL_MIRE_1,"You ring the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
+BELL_MIRE_2,"The wisps drift down and settle like snow. Far away, something huge turns over in its sleep, and lies still."
+BELL_MIRE_3,You learned the third phrase of the lullaby. Your Resonance grows.
+CAPTION_FLAME,Flame catches
+CAPTION_HEARTBEAT,Heartbeat
 ROOM_FENMOUTH,Fenmouth
 ROOM_GLOWCAP_GROVE,Glowcap Grove
 ROOM_STILLWATER_REACH,Stillwater Reach

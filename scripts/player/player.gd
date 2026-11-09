@@ -46,6 +46,8 @@ var hum_progress := 0.0
 var item_velocity := Vector2.ZERO
 ## True while the Tide Hook carries Wren: gaps and water pass underneath.
 var airborne := false
+## True while Wren holds the Glowmoth Lantern up (see Lantern).
+var lantern_raised := false
 
 var _state_time := 0.0
 var _knockback := Vector2.ZERO
@@ -102,6 +104,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if frozen:
 		return
+	# Put away in the satchel, the lantern comes down.
+	if lantern_raised and not GameState.item_slots.has("glowmoth_lantern"):
+		lantern_raised = false
 	_state_time += delta
 	_invuln = maxf(_invuln - delta, 0.0)
 	_flash = maxf(_flash - delta, 0.0)
@@ -250,6 +255,11 @@ func use_item(id: String) -> bool:
 			add_child(mallet)
 			_enter(State.ITEM)
 			item_velocity = Vector2.ZERO
+			return true
+		"glowmoth_lantern":
+			# Up or down; Wren keeps walking either way.
+			lantern_raised = not lantern_raised
+			Audio.play_sfx("lantern_up" if lantern_raised else "lantern_down", global_position)
 			return true
 	return false
 
@@ -494,6 +504,8 @@ func _update_sprite(delta: float) -> void:
 
 
 func _draw_front() -> void:
+	if lantern_raised and state != State.DEAD:
+		_draw_lantern()
 	if state == State.HUM:
 		_draw_hum_rings()
 	if state == State.ATTACK:
@@ -545,6 +557,17 @@ func _draw_sword() -> void:
 		trail.a = 0.55
 		_front.draw_arc(pivot, 15.0, minf(start, angle), maxf(start, angle), 10, trail, 2.0)
 	_draw_blade(pivot, angle)
+
+
+## The Glowmoth Lantern held up beside Wren, its moths drifting round it.
+func _draw_lantern() -> void:
+	var side := -1.0 if facing.x < 0.0 else 1.0
+	var at := Vector2(6.0 * side, -24.0 + sin(_anim_time * 6.0) * 0.5)
+	_front.draw_texture(MireSprites.LANTERN_HELD, at - Vector2(4, 5))
+	var t := Time.get_ticks_msec() / 1000.0
+	for i in 2:
+		var orbit := Vector2.from_angle(t * 2.4 + i * PI) * Vector2(7, 4)
+		_front.draw_rect(Rect2(at + orbit, Vector2(1, 1)), Palette.HUM)
 
 
 func _draw_hum_rings() -> void:

@@ -30,8 +30,11 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") == "kiln":
-		await _kiln_shots(game)
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire"]:
+		if OS.get_environment("SHOTS_ONLY") == "kiln":
+			await _kiln_shots(game)
+		else:
+			await _mire_shots(game)
 		SaveManager.delete_save()
 		get_tree().quit(0)
 		return
@@ -206,6 +209,9 @@ func _ready() -> void:
 
 	# 8c. The Kiln.
 	await _kiln_shots(game)
+
+	# 8d. Lantern Mire.
+	await _mire_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -456,6 +462,74 @@ func _kiln_shots(game: Node) -> void:
 		await _wait(0.3)
 		await _capture("65_ember_bell")
 		game.player._invuln = 0.0
+
+
+func _mire_shots(game: Node) -> void:
+	GameState.give_item("glowmoth_lantern")
+	# coord: [file name, spawn tile, lantern raised]
+	var rooms := [
+		[Vector2i(25, 10), "70_mire_entry", Vector2i(11, 10), false],
+		[Vector2i(25, 9), "71_mire_mourners_walk", Vector2i(11, 7), false],
+		[Vector2i(24, 9), "72_mire_candle_store", Vector2i(12, 8), false],
+		[Vector2i(25, 8), "73_mire_moth_chapel", Vector2i(11, 9), false],
+		[Vector2i(26, 9), "74_mire_drowned_walk_dark", Vector2i(3, 6), false],
+		[Vector2i(26, 9), "75_mire_drowned_walk_lantern", Vector2i(3, 6), true],
+		[Vector2i(26, 8), "76_mire_brazier_hall", Vector2i(11, 10), true],
+		[Vector2i(26, 10), "77_mire_grave_lamps", Vector2i(11, 4), true],
+		[Vector2i(24, 8), "78_mire_ossuary", Vector2i(20, 7), true],
+	]
+	for shot: Array in rooms:
+		await _jump(game, shot[0], shot[2])
+		_mire_lantern(game, shot[3])
+		await _wait(0.5)
+		await _capture(shot[1])
+
+	# A brazier catching, and a Shade cringing from the light.
+	var room := await _jump(game, Vector2i(26, 8), Vector2i(4, 10))
+	_mire_lantern(game, true)
+	var shade := Shade.new()
+	shade.position = Vector2(7 * Room.TILE + 8, 9 * Room.TILE + 12)
+	room.add_child(shade)
+	await _wait(0.4)
+	await _capture("79_mire_brazier_and_shade")
+
+	# The Pale Congregation.
+	room = await _jump(game, Vector2i(25, 7), Vector2i(11, 10))
+	_mire_lantern(game, false)
+	await _wait(3.0)
+	await _capture("80_pale_congregation")
+	var boss: PaleCongregation = null
+	for child in room.get_children():
+		if child is PaleCongregation:
+			boss = child
+	_mire_lantern(game, true)
+	await _wait(1.0)
+	await _capture("81_congregation_drawn_to_lantern")
+	_mire_lantern(game, false)
+	await _wait(0.6)
+	await _capture("82_congregation_heart_bare")
+	if boss:
+		while is_instance_valid(boss) and boss.hp > 0:
+			boss._stun = 0.0
+			for wisp: Dictionary in boss.wisps:
+				wisp["home"] = false
+			boss.take_hit(1, Vector2.UP)
+	await _wait(1.2)
+	await _capture("83_congregation_released")
+	await _wait(4.0)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 8 * Room.TILE + 12)
+	await _wait(0.3)
+	await _capture("84_moth_bell")
+	game.player._invuln = 0.0
+
+
+## Wren (after a respawn, a new Wren) with the lantern up or down, and no
+## harm coming to them mid-shot.
+func _mire_lantern(game: Node, raised: bool) -> void:
+	var player: Player = game.player
+	player._invuln = 600.0
+	if player.lantern_raised != raised:
+		player.use_item("glowmoth_lantern")
 
 
 func _dialogue_box(game: Node) -> DialogueBox:

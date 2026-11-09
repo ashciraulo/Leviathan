@@ -60,6 +60,11 @@ const SFX := {
 	"bomb_fuse": {"wave": "noise", "f0": 5000.0, "f1": 5000.0, "dur": 0.3, "vol": 0.15, "caption": "CAPTION_FUSE"},
 	"bomb_blast": {"wave": "noise", "f0": 400.0, "f1": 60.0, "dur": 0.5, "vol": 0.7, "caption": "CAPTION_BLAST"},
 	"wayshell": {"wave": "triangle", "f0": 392.0, "f1": 392.0, "dur": 0.8, "vol": 0.45, "steps": 3, "caption": "CAPTION_WAYSHELL"},
+	"lantern_up": {"wave": "triangle", "f0": 660.0, "f1": 990.0, "dur": 0.18, "vol": 0.3, "steps": 2},
+	"lantern_down": {"wave": "triangle", "f0": 660.0, "f1": 440.0, "dur": 0.14, "vol": 0.25},
+	"brazier_catch": {"wave": "noise", "f0": 900.0, "f1": 2400.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_FLAME"},
+	"wisp_chime": {"wave": "triangle", "f0": 1568.0, "f1": 1568.0, "dur": 0.25, "vol": 0.2, "steps": 2},
+	"heart_beat": {"wave": "triangle", "f0": 110.0, "f1": 70.0, "dur": 0.22, "vol": 0.5, "caption": "CAPTION_HEARTBEAT"},
 	"mantle_wings": {"wave": "noise", "f0": 300.0, "f1": 150.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_WINGS"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},
