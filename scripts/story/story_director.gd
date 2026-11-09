@@ -75,6 +75,10 @@ func _on_game_started() -> void:
 func _on_room_entered(coord: Vector2i) -> void:
 	if Cutscene.active:
 		return
+	# Saves from before the turn existed rang the Storm Bell without it; the
+	# Old One has turned all the same, so Hessa still has her say at home.
+	if GameState.has_flag(GALE_BELL_FLAG) and not GameState.has_flag(TURNED_FLAG):
+		GameState.set_flag(TURNED_FLAG)
 	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
@@ -355,7 +359,9 @@ func vael_at_the_spire() -> void:
 ## and one vast shape under the sea: no text.
 func the_old_one_turns() -> void:
 	GameState.set_flag(TURNED_FLAG)
-	# Let the bell's own words finish first.
+	# The bell sets its flag before it opens its own words, so give it a
+	# frame, then let those words finish first.
+	await get_tree().process_frame
 	if DialogueBox.is_open:
 		await Events.dialogue_finished
 	var scene := _scene()

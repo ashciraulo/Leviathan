@@ -680,6 +680,8 @@ func _test_story() -> void:
 	# Ringing it: far below, the Old One turns over in its sleep.
 	if storm_bell:
 		storm_bell.interact()
+		await _wait(0.2)
+		_check(DialogueBox.is_open and not Cutscene.active, "the turn waits for the bell's own words")
 		var turn_pages := await _play_scene(crown, 20.0)
 		_check(GameState.has_flag(StoryDirector.TURNED_FLAG), "ringing the Storm Bell makes the Old One turn")
 		_check(not Cutscene.active and not crown.player.in_cutscene, "the turn hands Wren back")
@@ -689,9 +691,10 @@ func _test_story() -> void:
 	crown.queue_free()
 	await _wait(0.1)
 
-	# Home again after the turn: Hessa owns up about Vael.
+	# Home again after the turn: Hessa owns up about Vael. (An old save that
+	# rang the Storm Bell before the turn existed gets it too.)
 	GameState.reset_new_game()
-	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	GameState.flags[StoryDirector.GALE_BELL_FLAG] = true
 	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(9 * Room.TILE + 8, 9 * Room.TILE + 8))
 	var turned_home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(turned_home)

@@ -134,7 +134,7 @@ const SFX := {
 	"bell_quiet": {"wave": "triangle", "f0": 392.0, "f1": 390.0, "dur": 0.6, "vol": 0.2, "caption": "CAPTION_BELL_QUIET"},
 	"bell_ring": {"wave": "triangle", "f0": 784.0, "f1": 780.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_BELL"},
 	"choir_waking": {"wave": "sine", "f0": 220.0, "f1": 330.0, "dur": 2.4, "vol": 0.35, "steps": 4, "caption": "CAPTION_CHOIR"},
-	"old_one_rumble": {"wave": "noise", "f0": 90.0, "f1": 35.0, "dur": 2.5, "vol": 0.6, "caption": "CAPTION_RUMBLE"},
+	"old_one_rumble": {"wave": "noise", "f0": 90.0, "f1": 35.0, "dur": 2.5, "vol": 0.6, "caption": "CAPTION_DEEP_RUMBLE"},
 	"secret": {"wave": "square", "f0": 523.0, "f1": 523.0, "dur": 0.5, "vol": 0.3, "steps": 4, "caption": "CAPTION_SECRET"},
 	"door_slide": {"wave": "noise", "f0": 200.0, "f1": 120.0, "dur": 0.4, "vol": 0.4, "caption": "CAPTION_DOOR"},
 	# Interface
