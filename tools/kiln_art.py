@@ -62,30 +62,42 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Foundry flagstones: big square slabs worn smooth, a soft dark join
-    along the bottom and right, scuffs and soot, and now and then a slab
-    split in two or a fleck of slag still glowing."""
+    """Foundry flagstones: big irregular slabs worn smooth by carts. The
+    joins are soft and don't all line up with the tiles (some tiles have
+    no join on an edge, some split across by a wandering crack), so the floor reads as
+    paving, not as a grid or as brick. Soot, scuffs, and now and then a
+    fleck of slag still glowing."""
     rnd = random.Random(1200 + seed)
-    base = (STONE[2], STONE[2], hex_color("#4C3B39"), STONE[2])[seed % 4]
+    base = (STONE[2], hex_color("#4E3D3B"), STONE[2], hex_color("#584543"))[seed % 4]
     px = blank(base)
-    for i in range(T):
-        px[0][i] = STONE[1]
-        px[i][0] = STONE[1]
-        px[T - 1][i] = STONE[4]
-        px[i][T - 1] = STONE[4]
-    px[T - 1][0] = STONE[3]
-    px[0][T - 1] = STONE[3]
-    if seed % 2 == 1:
-        # A slab split across the middle.
-        for x in range(1, T - 1):
-            px[7][x] = STONE[4]
-            px[8][x] = STONE[1]
-    # Scuffs and soot.
-    for _ in range(7):
-        x, y = rnd.randrange(2, T - 2), rnd.randrange(2, T - 2)
-        px[y][x] = rnd.choice((STONE[1], STONE[3], STONE[3], STONE[4]))
-    if seed == 2:
-        x, y = rnd.randrange(3, T - 3), rnd.randrange(3, T - 3)
+    join = STONE[3]
+    # Bottom and right joins on only some tiles, so slabs span tiles.
+    if seed in (0, 1):
+        for x in range(T):
+            px[T - 1][x] = join
+    if seed in (0, 2):
+        for y in range(T):
+            px[y][T - 1] = join
+    # A slab split across: an uneven join wandering from side to side.
+    if seed in (1, 3):
+        y = rnd.randrange(5, 11)
+        for x in range(T):
+            if rnd.random() < 0.25:
+                y = max(3, min(T - 4, y + rnd.choice((-1, 1))))
+            px[y][x] = join
+            px[y + 1][x] = STONE[1] if rnd.random() < 0.5 else px[y + 1][x]
+    # Wear: lighter, smoothed patches and darker scuffs.
+    for _ in range(3):
+        cx, cy = rnd.randrange(2, T - 4), rnd.randrange(2, T - 3)
+        for dx in range(rnd.randrange(2, 4)):
+            if px[cy][cx + dx] == base:
+                px[cy][cx + dx] = STONE[1]
+    for _ in range(6):
+        x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
+        if px[y][x] == base:
+            px[y][x] = rnd.choice((STONE[3], STONE[3], STONE[4]))
+    if seed == 3:
+        x, y = rnd.randrange(3, T - 3), rnd.randrange(2, 6)
         px[y][x] = EMBER_DIM
     return px
 
