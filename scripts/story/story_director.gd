@@ -52,6 +52,11 @@ const PHRASE_PULSE := BellPhrase.PULSE
 const TURNED_FLAG := "old_one_turned"
 const CONFESSION_FLAG := "seen_hessa_confession"
 ## Where Wren stops to watch, in any of these chambers.
+const TOMB_BOSS := Vector2i(40, 7)
+const MURAL_FLAG := "seen_last_mural"
+## Wren stands under the slab; Dace comes up from the way in at the south.
+const MURAL_WATCH := Vector2(16 * 16 + 8, 2 * 16 + 12)
+const DACE_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 7 * 16 + 12), Vector2(14 * 16 + 8, 3 * 16 + 12)]
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
 var game: Node
@@ -81,6 +86,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 	# Old One has turned all the same, so Hessa still has her say at home.
 	if GameState.has_flag(GALE_BELL_FLAG) and not GameState.has_flag(TURNED_FLAG):
 		GameState.set_flag(TURNED_FLAG)
+	if coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG):
+		_put_up_mural()
 	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
@@ -103,6 +110,8 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		vael_at_the_spire()
 	elif flag == GALE_BELL_FLAG and not GameState.has_flag(TURNED_FLAG):
 		the_old_one_turns()
+	elif flag == HollowRegent.DEFEATED_FLAG and GameState.room_coord == TOMB_BOSS and not GameState.has_flag(MURAL_FLAG):
+		the_last_mural()
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -409,6 +418,60 @@ func hessas_confession() -> void:
 	# Wren answers: one flash, yes.
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
 	scene.finish()
+
+
+## Cutscene 15, "The last mural": with the Hollow Regent gone to bones,
+## the wall he sealed falls open on the last carving. Mother Dace comes down
+## into the tomb and shows Wren what it is: the Old One lying down beside its
+## dead family. Then she leaves Wren to ring the Marrow Bell.
+func the_last_mural() -> void:
+	GameState.set_flag(MURAL_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# The Regent crumbles and the Marrow Bell rises first.
+	await scene.wait(3.4)
+	Audio.play_sfx("old_one_rumble", null, 1.4)
+	Feel.shake(3.0)
+	for i in 3:
+		KilnDebris.burst(room, room.global_position + LastMural.SLAB.get_center() + Vector2(-24 + 24 * i, 6), 5, TombSprites.BONE_SHARD)
+	var mural := _put_up_mural()
+	await scene.wait(1.2)
+	await scene.walk_route(room.global_position + MURAL_WATCH, false)
+	scene.face(Vector2.UP)
+	var dace := ChoirFigure.new("dace")
+	dace.position = DACE_IN[0]
+	room.add_child(dace)
+	await dace.walk_along(DACE_IN.slice(1), 26.0, 1)
+	dace.face(false)
+	scene.face(Vector2.LEFT)
+	dace.talking = true
+	await scene.speak("dace", ["DACE_MURAL_1"])
+	dace.talking = false
+	scene.face(Vector2.UP)
+	await mural.show_close()
+	await scene.wait(1.6)
+	await scene.speak("dace", ["DACE_MURAL_2", "DACE_MURAL_3"])
+	await mural.hide_close()
+	scene.face(Vector2.LEFT)
+	dace.talking = true
+	await scene.speak("dace", ["DACE_MURAL_4"])
+	dace.talking = false
+	var out: Array = DACE_IN.duplicate()
+	out.reverse()
+	await dace.walk_along(out.slice(1), 26.0, -1)
+	dace.queue_free()
+	scene.finish()
+
+
+## The carved slab on the tomb's north wall, once the Regent has fallen.
+func _put_up_mural() -> LastMural:
+	var room: Node = game.current_room
+	for child in room.get_children():
+		if child is LastMural:
+			return child
+	var mural := LastMural.new()
+	room.add_child(mural)
+	return mural
 
 
 ## Cutscene 5, "Bell rung": the phrase leaves the bell as a stream of notes
