@@ -21,11 +21,27 @@ jobs:
         with:
           lfs: true
 
+      # Cached: GitHub's release downloads sometimes time out (504).
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
       - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
         run: |
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip
-          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$RUNNER_TEMP/godot"
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
+          "$RUNNER_TEMP/godot" --version
 
       - name: Cache export templates
         id: templates
@@ -39,7 +55,7 @@ jobs:
         run: |
           dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mkdir -p "$dir"
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
           # Only the PC templates; the full set is over a gigabyte.
           unzip -q -o -j templates.tpz templates/version.txt templates/linux_release.x86_64 \
             templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe -d "$dir"
