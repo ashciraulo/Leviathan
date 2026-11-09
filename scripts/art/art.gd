@@ -21,7 +21,10 @@ const FENCE := preload("res://assets/props/fence.png")
 const SIGN := preload("res://assets/props/sign.png")
 const HUT := preload("res://assets/props/hut.png")
 const LIGHTHOUSE := preload("res://assets/props/lighthouse.png")
-const SALTMARROW_TILES := preload("res://assets/tiles/saltmarrow.png")
+const WORLD_TILES := preload("res://assets/tiles/world.png")
+const MANGROVE := preload("res://assets/props/mangrove.png")
+const WRECK := preload("res://assets/props/wreck.png")
+const LANTERN_POST := preload("res://assets/props/lantern_post.png")
 
 const FLASH_SHADER := """
 shader_type canvas_item;

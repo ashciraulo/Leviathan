@@ -8,8 +8,9 @@ extends Node2D
 ##          T  Tidestone      c  Scuttler (chaser)
 ##          s  Spitter (shooter)    b  Shellback (blocker)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
-##          H  hut   L  lighthouse   (big props: put the letter where the
-##             building's base centre stands; its art rises above)
+##          H  hut   L  lighthouse   M  mangrove   W  wreck
+##          l  lantern post   (big props: put the letter where the
+##             base centre stands; the art rises above)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
 ## neighbouring room joins, at the same rows or columns on both sides.
@@ -23,6 +24,8 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 
 ## Translation key for the room's name, shown on entry.
 @export var name_key := ""
+## Which region's tiles to draw with: a key of BIOMES.
+@export var biome := "saltmarrow"
 @export_multiline var layout := ""
 
 ## Set by the game before the room enters the tree.
@@ -35,6 +38,21 @@ var _water_frame := 0
 var _water_time := 0.0
 
 const WATER_FRAME_TIME := 0.6
+
+## Tile names per region, for the same layout letters. %d is a variant or
+## animation frame; %s is a side (top, bottom, left, right).
+const BIOMES := {
+	"saltmarrow": {
+		"floor": "sand_%d", "wall_top": "cliff_top_%d", "wall_face": "cliff_face_%d",
+		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
+		"wet_deco": "shell_%d", "dry_deco": "grass_%d",
+	},
+	"brinewood": {
+		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
+		"water": "bog_%d", "water_edge": "bank_%s_%d", "damp": "mire_%s",
+		"wet_deco": "reeds_%d", "dry_deco": "fern_%d",
+	},
+}
 
 
 func _ready() -> void:
@@ -158,10 +176,11 @@ func _near_water(x: int, y: int) -> bool:
 
 
 func _draw_tile(tile_name: String, x: int, y: int) -> void:
-	_ground.draw_texture_rect_region(Art.SALTMARROW_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
+	_ground.draw_texture_rect_region(Art.WORLD_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
 
 
 func _draw_ground() -> void:
+	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
 	for y in _rows.size():
 		for x in _rows[y].length():
 			var tile := _tile_at(x, y)
@@ -169,26 +188,30 @@ func _draw_ground() -> void:
 			if tile == "#":
 				# 3/4 view: a wall shows its face when open ground is below it.
 				if _tile_at(x, y + 1) == "#":
-					_draw_tile("cliff_top_%d" % (h % 2), x, y)
+					_draw_tile(tiles["wall_top"] % (h % 2), x, y)
 				else:
-					_draw_tile("cliff_face_%d" % (h % 2), x, y)
+					_draw_tile(tiles["wall_face"] % (h % 2), x, y)
 			elif tile == "~":
-				_draw_tile("water_%d" % _water_frame, x, y)
+				_draw_tile(tiles["water"] % _water_frame, x, y)
+				if biome == "brinewood" and h % 4 == 0:
+					_draw_tile("lily_%d" % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					if _tile_at(x + side[1], y + side[2]) != "~":
-						_draw_tile("foam_%s_%d" % [side[0], _water_frame], x, y)
+						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
-				_draw_tile("sand_%d" % (h % 4), x, y)
-				# Damp sand fades out from any water alongside.
+				_draw_tile(tiles["floor"] % (h % 4), x, y)
+				# Damp ground fades out from any water alongside.
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					if _tile_at(x + side[1], y + side[2]) == "~":
-						_draw_tile("damp_%s" % side[0], x, y)
+						_draw_tile(tiles["damp"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
 				if _tile_at(x - 1, y) == "#":
 					_draw_tile("shade_left", x, y)
+				if biome == "brinewood" and h % 5 == 1:
+					_draw_tile("dapple_%d" % (h % 2), x, y)
 				if wet and h % 11 == 0:
-					_draw_tile("shell_%d" % (h % 2), x, y)
+					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
 				elif not wet and h % 13 == 0:
-					_draw_tile("grass_%d" % (h % 2), x, y)
+					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)

@@ -12,6 +12,9 @@ const KINDS := {
 	"n": [Art.SIGN, 11, Vector2(6, 6), false],
 	"H": [Art.HUT, 44, Vector2(38, 20), true],
 	"L": [Art.LIGHTHOUSE, 76, Vector2(22, 12), true],
+	"M": [Art.MANGROVE, 60, Vector2(20, 10), true],
+	"W": [Art.WRECK, 27, Vector2(40, 14), true],
+	"l": [Art.LANTERN_POST, 29, Vector2(6, 4), false],
 }
 
 var kind := ""

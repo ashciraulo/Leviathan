@@ -70,14 +70,23 @@ func _ready() -> void:
 	crab.queue_free()
 
 	# 6. Other rooms, enemies live.
-	var names := {Vector2i(2, 0): "07_barnacle_wall", Vector2i(1, 1): "08_wreck_hollow", Vector2i(0, -1): "10_saltmarrow_village"}
-	for coord: Vector2i in names:
-		GameState.set_checkpoint(coord, Vector2(5 * Room.TILE, 11 * Room.TILE + 12))
+	# coord: [file name, spawn tile]
+	var shots := {
+		Vector2i(2, 0): ["07_barnacle_wall", Vector2i(5, 11)],
+		Vector2i(1, 1): ["08_wreck_hollow", Vector2i(5, 11)],
+		Vector2i(3, 0): ["11_brinewood_edge", Vector2i(7, 6)],
+		Vector2i(3, -1): ["12_mangrove_deep", Vector2i(8, 11)],
+		Vector2i(4, 0): ["13_wreck_strand", Vector2i(3, 7)],
+		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
+	}
+	for coord: Vector2i in shots:
+		var tile: Vector2i = shots[coord][1]
+		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
 		SaveManager.save_game()
 		# Reuse the respawn path to jump straight to that room.
 		game._on_player_died()
 		await _wait(2.2)
-		await _capture(names[coord])
+		await _capture(shots[coord][0])
 
 	# 7. Pause menu.
 	var pause: PauseMenu = null
