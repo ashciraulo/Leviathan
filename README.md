@@ -18,6 +18,17 @@ and test the Saltmarrow art style before the vertical slice.
 
 The first open imports the translation file, which takes a few seconds.
 
+## Playable builds (Windows, Linux)
+
+No Godot needed: on GitHub, open **Actions > Build PC > Run workflow**. When
+it finishes (about five minutes), download **Leviathan-windows** or
+**Leviathan-linux** from the run's page and unzip it. Pushing a tag like
+`v0.2.0` builds them too.
+
+To export locally, install the export templates from the editor
+(**Editor > Manage Export Templates**) and use **Project > Export**; the
+presets are in `export_presets.cfg`.
+
 ## Controls
 
 | Action | Keyboard | Gamepad |

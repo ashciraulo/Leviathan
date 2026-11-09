@@ -22,7 +22,7 @@ func _ready() -> void:
 	# Title, then the file select with one new file, a copy, and an empty one.
 	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
 	add_child(title)
-	await _wait(0.3)
+	await _wait(1.6)
 	await _capture("30_title_menu")
 	GameState.reset_new_game()
 	GameState.play_time = 760.0
