@@ -109,6 +109,7 @@ func _process(delta: float) -> void:
 ## Build the world at the checkpoint in GameState. With by_mantle, Mantle
 ## swoops in and sets Wren down there.
 func _start(by_mantle: bool = false) -> void:
+	_hatch_blocked = [Vector2i.ZERO, 0]
 	world = Node2D.new()
 	world.name = "World"
 	world.y_sort_enabled = true
@@ -215,14 +216,17 @@ func _change_room(direction: Vector2i) -> void:
 ## The closed hatch in `next` that Wren would slide into crossing the edge
 ## that way, or null.
 func _hatch_ahead(next: Room, direction: Vector2i) -> LockedDoor:
-	var arrival := player.global_position + Vector2(direction) * ENTRY_STEP
-	var across := Vector2(absf(direction.y), absf(direction.x))
+	var dir := Vector2(direction)
+	var across := Vector2(absf(dir.y), absf(dir.x))
+	# The edge Wren comes in by, as a distance into `next` (0 at the edge).
+	var edge := 0.0 if direction.x + direction.y > 0 else -Room.SIZE.dot(-dir)
 	for door in get_tree().get_nodes_in_group("locked_doors"):
 		if not (door is LockedDoor) or not next.is_ancestor_of(door):
 			continue
-		var gap: Vector2 = door.global_position + Vector2(0, -4) - arrival
-		# Within a tile across the edge, and between the edge and where Wren lands.
-		if absf(gap.dot(across)) < 14.0 and absf(gap.dot(Vector2(direction))) < ENTRY_STEP + 8.0:
+		var centre: Vector2 = door.global_position + Vector2(0, -4)
+		var depth := (centre - next.global_position).dot(dir) - edge
+		# The first row or column in, and in line with Wren across the edge.
+		if depth >= 0.0 and depth < Room.TILE and absf((centre - player.global_position).dot(across)) < 12.0:
 			return door
 	return null
 
@@ -232,6 +236,7 @@ func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 	if busy or not ResourceLoader.exists(ROOM_PATH % [target.x, target.y]):
 		return
 	busy = true
+	_hatch_blocked = [Vector2i.ZERO, 0]
 	player.frozen = true
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)

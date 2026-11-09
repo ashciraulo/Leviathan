@@ -316,31 +316,33 @@ func _new_game() -> Node:
 	return game
 
 
-## A locked hatch that sits just over a screen edge (the Hull's at 10,8, met
-## walking east from 9,8) holds from both sides: without a key Wren stays
-## put, with one it opens and lets them through.
+## A locked hatch that sits just over a screen edge (the Hull's, met walking
+## east from 9,8 and west from 11,9) holds from both sides: without a key
+## Wren stays put, with one it opens and lets them through.
 func _locked_edge() -> void:
-	var from := Vector2i(9, 8)
-	var lock := LockedDoor.lock_flag(from + Vector2i.RIGHT)
 	var had: int = GameState.keys("hull")
-	for keys in [0, 1]:
+	for case in [[Vector2i(9, 8), Vector2i.RIGHT, "move_right"], [Vector2i(11, 9), Vector2i.LEFT, "move_left"]]:
+		var from: Vector2i = case[0]
+		var lock := LockedDoor.lock_flag(from + case[1])
+		for keys in [0, 1]:
+			GameState.flags.erase(lock)
+			GameState.flags["keys_hull"] = keys
+			var room := await _goto(from)
+			await _play_scene(5.0)
+			_keep_safe()
+			var x := Room.SIZE.x - 10.0 if case[1] == Vector2i.RIGHT else 10.0
+			_game.player.global_position = room.global_position + Vector2(x, 104.0)
+			Input.action_press(case[2])
+			await _wait(1.5)
+			Input.action_release(case[2])
+			await _wait(0.5)
+			var now: Vector2i = _game.current_room.coord
+			if keys == 0:
+				_check(now == from, "a locked hatch over the edge from %s holds without a key (Wren got to %s)" % [from, now])
+			else:
+				_check(now == from + case[1] and GameState.flags.get(lock, false), "a key opens the hatch over the edge from %s (in %s)" % [from, now])
+			_check(_can_step(), "Wren can walk on after meeting the hatch over the edge from %s" % from)
 		GameState.flags.erase(lock)
-		GameState.flags["keys_hull"] = keys
-		var room := await _goto(from)
-		await _play_scene(5.0)
-		_keep_safe()
-		_game.player.global_position = room.global_position + Vector2(Room.SIZE.x - 10.0, 104.0)
-		Input.action_press("move_right")
-		await _wait(1.5)
-		Input.action_release("move_right")
-		await _wait(0.5)
-		var now: Vector2i = _game.current_room.coord
-		if keys == 0:
-			_check(now == from, "a locked hatch over a screen edge holds without a key (Wren got to %s)" % now)
-		else:
-			_check(now == from + Vector2i.RIGHT and GameState.flags.get(lock, false), "a key opens a hatch over a screen edge (in %s)" % now)
-		_check(_can_step(), "Wren can walk on after meeting a hatch over an edge")
-	GameState.flags.erase(lock)
 	GameState.flags["keys_hull"] = had
 
 
