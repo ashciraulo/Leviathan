@@ -11,8 +11,8 @@ extends Node2D
 ##
 ## Once the Old One has turned over (the Gale Bell, flag old_one_turned),
 ## Wren can turn the tide at any awake Tidestone: it runs in or out and
-## stays there (the flag tide_held, "low" or "high") instead of breathing
-## on its own.
+## stays there (flag tide_held, with tide_held_in set when it's held in)
+## instead of breathing on its own.
 
 enum Phase { LOW, RISING, HIGH, FALLING }
 
@@ -33,6 +33,7 @@ static var _stamp := -1
 static var _held_level := -1.0
 
 const HELD_FLAG := "tide_held"
+const HELD_IN_FLAG := "tide_held_in"
 const TURNED_FLAG := "old_one_turned"
 
 var _room: Room
@@ -94,7 +95,9 @@ static func phase() -> Phase:
 
 ## "low" or "high" while Wren holds the tide, "" while it breathes alone.
 static func held() -> String:
-	return str(GameState.flags.get(HELD_FLAG, ""))
+	if not GameState.has_flag(HELD_FLAG):
+		return ""
+	return "high" if GameState.has_flag(HELD_IN_FLAG) else "low"
 
 
 ## Can Wren turn the tide yet (at a Tidestone)?
@@ -108,7 +111,8 @@ static func can_turn() -> bool:
 static func turn(tree: SceneTree) -> String:
 	var from := level()
 	var to := "low" if from >= 0.5 else "high"
-	GameState.set_flag(HELD_FLAG, to)
+	GameState.set_flag(HELD_IN_FLAG, to == "high")
+	GameState.set_flag(HELD_FLAG)
 	var watching := false
 	for node in tree.get_nodes_in_group("rooms"):
 		if (node as Node).get_node_or_null("Tide") != null:
@@ -230,6 +234,12 @@ func _physics_process(delta: float) -> void:
 			(_shapes[tile] as CollisionShape2D).set_deferred("disabled", not under)
 	_sweep()
 	queue_redraw()
+
+
+func _exit_tree() -> void:
+	# Leaving the flats mid-turn: the tide finishes running in or out while
+	# Wren is away.
+	_held_level = -1.0
 
 
 func _wren_here() -> bool:

@@ -2995,8 +2995,12 @@ func _test_tide_turning() -> void:
 	_check(Tide.turn(get_tree()) == "high" and Tide.phase() == Tide.Phase.RISING, "turned in the Verge, the tide starts rising")
 	await _wait(Tide.RISING_TIME + 0.6)
 	_check(Tide.phase() == Tide.Phase.HIGH and tide != null and tide.is_flooded(Vector2i(9, 4)), "and the flats go under")
+	_check(GameState.has_flag(Tide.HELD_FLAG) and GameState.has_flag(Tide.HELD_IN_FLAG), "the held tide is kept as plain flags")
+	# Turned and then left behind mid-ebb, it finishes while Wren is away.
+	Tide.turn(get_tree())
 	game.queue_free()
 	await _wait(0.1)
+	_check(Tide.held() == "low" and Tide.phase() == Tide.Phase.LOW, "a tide left mid-turn finishes running out")
 	Tide.offset = 0.0
 	GameState.reset_new_game()
 
