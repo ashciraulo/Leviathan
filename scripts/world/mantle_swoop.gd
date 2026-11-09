@@ -40,6 +40,8 @@ func _ready() -> void:
 	var center := target
 	var camera := get_viewport().get_camera_2d()
 	if camera:
+		# The camera may have just jumped to a new room this frame.
+		camera.force_update_scroll()
 		center = camera.get_screen_center_position()
 	var top_left := center - view / 2.0
 	_from = Vector2(top_left.x - MARGIN.x, top_left.y - MARGIN.y)

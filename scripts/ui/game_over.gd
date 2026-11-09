@@ -52,7 +52,7 @@ func _input(event: InputEvent) -> void:
 	if dir.y != 0:
 		_cursor = clampi(_cursor + dir.y, 0, OPTIONS.size() - 1)
 		Audio.play_sfx("ui_move")
-	elif MenuKit.confirm(event) or event.is_action_pressed("pause"):
+	elif MenuKit.confirm(event):
 		_done = true
 		Audio.play_sfx("ui_select")
 		chosen.emit(_cursor == 0)

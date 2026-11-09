@@ -17,6 +17,8 @@ var current_room: Room
 var busy := false
 
 var _fade: ColorRect
+## True while the game over screen is up: play time doesn't count.
+var _game_over := false
 
 
 func _ready() -> void:
@@ -72,7 +74,8 @@ func _play_room_music() -> void:
 
 func _process(delta: float) -> void:
 	# The game scene stops while paused, so menus don't count.
-	GameState.play_time += delta
+	if not _game_over:
+		GameState.play_time += delta
 
 
 ## Build the world at the checkpoint in GameState. With by_mantle, Mantle
@@ -200,6 +203,9 @@ func _on_player_died() -> void:
 	await tween.finished
 	Engine.time_scale = 1.0
 	Audio.stop_music(0.5)
+	# The world holds still (and stays quiet) under the game over screen.
+	world.process_mode = Node.PROCESS_MODE_DISABLED
+	_game_over = true
 	var screen := GameOverScreen.new()
 	add_child(screen)
 	tween = create_tween()
@@ -209,6 +215,7 @@ func _on_player_died() -> void:
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
 	await tween.finished
 	screen.queue_free()
+	_game_over = false
 	if wake:
 		respawn()
 	else:

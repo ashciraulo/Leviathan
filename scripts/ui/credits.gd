@@ -23,6 +23,9 @@ var _time := 0.0
 var _scroll := 0.0
 var _leaving := false
 var _height := 0.0
+## The button that chose Credits may still be held: it only speeds the
+## roll up once it has been let go.
+var _fast_armed := false
 
 
 func _ready() -> void:
@@ -31,12 +34,15 @@ func _ready() -> void:
 	_height = 216.0 + Art.TITLE_LOGO.get_height() + GAP
 	for section: Array in SECTIONS:
 		_height += LINE * section.size() + GAP
-	_height += 120.0
+	_height += 60.0
 
 
 func _process(delta: float) -> void:
 	_time += delta
 	var fast := Input.is_action_pressed("interact") or Input.is_action_pressed("ui_accept")
+	if not fast:
+		_fast_armed = true
+	fast = fast and _fast_armed
 	_scroll += delta * SPEED * (FAST if fast else 1.0)
 	if _scroll >= _height and not _leaving:
 		_leave()
@@ -46,6 +52,7 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if MenuKit.cancel(event) or event.is_action_pressed("pause"):
 		get_viewport().set_input_as_handled()
+		Audio.play_sfx("ui_back")
 		_leave()
 
 
@@ -53,7 +60,6 @@ func _leave() -> void:
 	if _leaving:
 		return
 	_leaving = true
-	Audio.play_sfx("ui_back")
 	get_tree().change_scene_to_file.call_deferred(TITLE_SCENE)
 
 
