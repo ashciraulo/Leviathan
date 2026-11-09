@@ -8,6 +8,11 @@ extends Node2D
 ## walking, and Wren, if they're still out on it, is swept back to the
 ## nearest dry ground and loses a breath. The room adds one of these when
 ## its layout has any flats.
+##
+## Once the Old One has turned over (the Gale Bell, flag old_one_turned),
+## Wren can turn the tide at any awake Tidestone: it runs in or out and
+## stays there (the flag tide_held, "low" or "high") instead of breathing
+## on its own.
 
 enum Phase { LOW, RISING, HIGH, FALLING }
 
@@ -23,6 +28,12 @@ static var offset := 0.0
 ## frame by whichever Tide is processing, so a pause holds it still).
 static var elapsed := 0.0
 static var _stamp := -1
+## While the tide is held: where it stands now (it runs to the held level at
+## the usual flooding and ebbing pace), or -1 when it's already there.
+static var _held_level := -1.0
+
+const HELD_FLAG := "tide_held"
+const TURNED_FLAG := "old_one_turned"
 
 var _room: Room
 var _body: StaticBody2D
@@ -44,6 +55,14 @@ static func clock() -> float:
 
 ## Where the tide is: 0 fully out, 1 fully in.
 static func level() -> float:
+	var held_to := held()
+	if held_to != "":
+		var target := 1.0 if held_to == "high" else 0.0
+		return target if _held_level < 0.0 else _held_level
+	return _cycle_level()
+
+
+static func _cycle_level() -> float:
 	var t := clock()
 	if t < LOW_TIME:
 		return 0.0
@@ -58,6 +77,11 @@ static func level() -> float:
 
 
 static func phase() -> Phase:
+	var held_to := held()
+	if held_to != "":
+		if _held_level >= 0.0:
+			return Phase.RISING if held_to == "high" else Phase.FALLING
+		return Phase.HIGH if held_to == "high" else Phase.LOW
 	var t := clock()
 	if t < LOW_TIME:
 		return Phase.LOW
@@ -66,6 +90,43 @@ static func phase() -> Phase:
 	if t < LOW_TIME + RISING_TIME + HIGH_TIME:
 		return Phase.HIGH
 	return Phase.FALLING
+
+
+## "low" or "high" while Wren holds the tide, "" while it breathes alone.
+static func held() -> String:
+	return str(GameState.flags.get(HELD_FLAG, ""))
+
+
+## Can Wren turn the tide yet (at a Tidestone)?
+static func can_turn() -> bool:
+	return GameState.has_flag(TURNED_FLAG)
+
+
+## Turns the tide: out if it's mostly in, in if it's mostly out. It runs
+## there at the usual pace and holds (at once, where no flats are in
+## sight to watch it go). Returns where it's going.
+static func turn(tree: SceneTree) -> String:
+	var from := level()
+	var to := "low" if from >= 0.5 else "high"
+	GameState.set_flag(HELD_FLAG, to)
+	var watching := false
+	for node in tree.get_nodes_in_group("rooms"):
+		if (node as Node).get_node_or_null("Tide") != null:
+			watching = true
+	_held_level = from if watching else -1.0
+	return to
+
+
+## Moves a turning tide toward where it's held (once per physics frame).
+static func _advance_held(delta: float) -> void:
+	if _held_level < 0.0 or held() == "":
+		_held_level = -1.0
+		return
+	var target := 1.0 if held() == "high" else 0.0
+	var pace := 1.0 / (RISING_TIME if target > _held_level else FALLING_TIME)
+	_held_level = move_toward(_held_level, target, pace * delta)
+	if is_equal_approx(_held_level, target):
+		_held_level = -1.0
 
 
 ## The clock offset that puts the tide at `when` seconds into `p`.
@@ -150,6 +211,7 @@ func _physics_process(delta: float) -> void:
 	if Engine.get_physics_frames() != _stamp:
 		_stamp = Engine.get_physics_frames()
 		elapsed += delta
+		_advance_held(delta)
 	var now := level()
 	var now_phase := phase()
 	if now_phase != _phase:
