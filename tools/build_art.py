@@ -462,7 +462,7 @@ def build_enemies():
     out["slagbeetle"] = sheet([[lit(cinderreach_art.SLAGBEETLE[k], 26) for k in ("walk_a", "walk_b", "crack", "flipped")]], 16, 14)
     out["geyser"] = sheet([[lit(cinderreach_art.geyser(f), 27) for f in range(3)]], 16, 32)
     out["sporecap"] = sheet([[lit(gloamfen_art.sporecap(k), 28) for k in ("walk_a", "walk_b", "swell", "spent")]], 16, 16)
-    out["spore_cloud"] = sheet([[lit(gloamfen_art.spore_cloud(f), 29) for f in range(3)]], 48, 48)
+    out["spore_cloud"] = sheet([[lit(gloamfen_art.spore_cloud(f), 29) for f in range(3)]], 64, 64)
     out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out

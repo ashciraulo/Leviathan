@@ -252,17 +252,18 @@ def sporecap(frame):
     return ["".join(r) for r in c]
 
 
-# The spore burst: a soft ring of pink spores, drawn over the Sporecap.
-# 48x48, frames grow then fade.
+# The spore burst: a soft cloud of pink spores, drawn over the Sporecap.
+# 64x64, centred, frames grow then thin out. The outer frames match the
+# Sporecap's damage circle (radius 22) so what hurts is what shows.
 def spore_cloud(frame):
-    c = [["."] * 48 for _ in range(48)]
+    c = [["."] * 64 for _ in range(64)]
     rnd = random.Random(3000 + frame)
-    radius = (10, 17, 21)[frame]
-    for _ in range((40, 70, 50)[frame]):
+    radius = (20, 24, 24)[frame]
+    for _ in range((90, 120, 70)[frame]):
         ang = rnd.random() * math.tau
         r = radius * math.sqrt(rnd.random())
-        x, y = int(24 + math.cos(ang) * r), int(24 + math.sin(ang) * r * 0.8)
+        x, y = int(32 + math.cos(ang) * r), int(32 + math.sin(ang) * r)
         for (dx, dy) in ((0, 0), (1, 0), (0, 1)):
-            if 0 <= x + dx < 48 and 0 <= y + dy < 48:
+            if 0 <= x + dx < 64 and 0 <= y + dy < 64:
                 c[y + dy][x + dx] = "("
     return ["".join(r) for r in c]

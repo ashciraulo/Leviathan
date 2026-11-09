@@ -4,7 +4,7 @@ extends Enemy
 ## Wren comes close its cap swells and its spots turn pink (the tell), then
 ## it bursts a ring of stinging spores around itself. Afterwards it sags,
 ## spent, for a moment: the time to strike. Hitting it before then is fine
-## too, but it makes it burst at once.
+## too, but it starts it swelling.
 
 enum Mode { WANDER, SWELL, BURST, SPENT }
 
@@ -15,7 +15,7 @@ const SWELL_TIME := 0.6
 const BURST_TIME := 0.5
 const SPENT_TIME := 1.6
 ## Radius of the spore ring.
-const CLOUD_RADIUS := 26.0
+const CLOUD_RADIUS := 22.0
 const WANDER_DIRECTIONS := [Vector2.ZERO, Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 
 var mode := Mode.WANDER
@@ -43,7 +43,7 @@ func _ready() -> void:
 	shape.position = Vector2(0, -6)
 	_cloud.add_child(shape)
 	add_child(_cloud)
-	_cloud_sprite = Art.sprite(Art.SPORE_CLOUD, 3, 1, 29)
+	_cloud_sprite = Art.sprite(Art.SPORE_CLOUD, 3, 1, 37)
 	_cloud_sprite.z_index = 4
 	_cloud_sprite.visible = false
 	add_child(_cloud_sprite)
@@ -90,7 +90,6 @@ func _burst() -> void:
 
 
 func _set_cloud(on: bool) -> void:
-	_cloud.set_deferred("monitorable", on)
 	_cloud.active = on
 	_cloud_sprite.visible = on
 
@@ -103,10 +102,23 @@ func is_spent() -> bool:
 	return mode == Mode.SPENT
 
 
+func take_hit(damage: int, direction: Vector2) -> HitResult:
+	# The Tide Hook's harmless tug neither hurts nor startles it.
+	if damage <= 0:
+		return HitResult.IGNORED
+	return super(damage, direction)
+
+
 func _on_hurt() -> void:
-	# Struck while still full of spores: it bursts at once.
-	if mode == Mode.WANDER or mode == Mode.SWELL:
-		_burst()
+	# Struck while still full of spores: it starts to swell (the same tell
+	# as always), so Wren has time to back off before it bursts.
+	if mode == Mode.WANDER:
+		_swell()
+
+
+func _die() -> void:
+	_set_cloud(false)
+	super()
 
 
 func _make_sprite() -> Sprite2D:

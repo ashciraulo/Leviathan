@@ -1028,6 +1028,10 @@ func _test_cinderreach() -> void:
 	var vent := Geyser.new()
 	vent.position = Vector2(4 * Room.TILE, 3 * Room.TILE)
 	room.add_child(vent)
+	# Wren waits in the column, just above the cone.
+	player.global_position = room.global_position + vent.position + Vector2(0, -12)
+	GameState.refill()
+	var steam_before := GameState.bubbles
 	var seen_hiss := false
 	var seen_blow := false
 	var steam_safe := true
@@ -1041,7 +1045,10 @@ func _test_cinderreach() -> void:
 			break
 	_check(seen_blow, "a geyser hisses before it blows")
 	_check(steam_safe, "a geyser's steam is harmless until it blows")
-	_check(vent._steam.active, "the blowing column hurts")
+	_check(vent._steam.active, "the blowing column is live")
+	await _wait(0.3)
+	_check(GameState.bubbles < steam_before, "the steam hurts Wren standing in the column")
+	GameState.refill()
 	var beetle_flip := Slagbeetle.new()
 	beetle_flip.position = Vector2(4 * Room.TILE, 9 * Room.TILE)
 	room.add_child(beetle_flip)
@@ -1083,6 +1090,11 @@ func _test_audio() -> void:
 ## Gloamfen: the Lumen Pool is only reached by hooking across Stillwater
 ## Reach, and a Sporecap swells (the tell) before its spores burst.
 func _test_gloamfen() -> void:
+	var floors := {}
+	for biome: String in Room.BIOMES:
+		var tile: String = Room.BIOMES[biome]["floor"]
+		_check(not floors.has(tile), "%s has its own floor tiles (not %s's)" % [biome, floors.get(tile, "")])
+		floors[tile] = biome
 	var reach := Room.parse_layout(((load("res://rooms/room_5_1.tscn") as PackedScene).instantiate() as Room).layout)
 	var on_foot := _walkable_from(reach, Vector2i(0, 6))
 	_check(not on_foot.has(Vector2i(23, 5)), "Stillwater Reach's far bank needs the Tide Hook")
@@ -1107,7 +1119,10 @@ func _test_gloamfen() -> void:
 	await _wait(0.3)
 	_check(cap.mode == Sporecap.Mode.WANDER, "a Sporecap ignores Wren from afar")
 	cap.position = Vector2(4 * Room.TILE + 8, 6 * Room.TILE + 12)
-	player.global_position = room.global_position + cap.position + Vector2(24, 0)
+	# Wren stands still inside the ring the whole time.
+	player.global_position = room.global_position + cap.position + Vector2(16, 0)
+	GameState.refill()
+	var before := GameState.bubbles
 	var swelled := false
 	var burst_after_swell := false
 	for i in 40:
@@ -1117,7 +1132,8 @@ func _test_gloamfen() -> void:
 			burst_after_swell = swelled
 			break
 	_check(burst_after_swell, "a Sporecap swells before it bursts")
-	_check(cap._cloud.active, "the spores hurt while they burst")
+	await _wait(0.2)
+	_check(GameState.bubbles < before, "the spores hurt Wren standing inside the ring")
 	player.global_position = room.global_position + Vector2(20 * Room.TILE, 6 * Room.TILE + 12)
 	var spent := false
 	for i in 30:
@@ -1125,7 +1141,16 @@ func _test_gloamfen() -> void:
 		if cap.is_spent():
 			spent = true
 			break
-	_check(spent and not cap._cloud.active, "a spent Sporecap is harmless and open to a hit")
+	_check(spent and not cap._cloud.active, "a spent Sporecap is harmless")
+	_check(cap.take_hit(1, Vector2.LEFT) == Enemy.HitResult.HIT, "a spent Sporecap can be hit")
+	var cap2 := Sporecap.new()
+	cap2.position = Vector2(4 * Room.TILE + 8, 9 * Room.TILE + 12)
+	room.add_child(cap2)
+	await _wait(0.1)
+	cap2.take_hit(1, Vector2.LEFT)
+	_check(cap2.mode == Sporecap.Mode.SWELL, "a struck Sporecap swells (its tell) rather than bursting at once")
+	_check(cap2.take_hit(0, Vector2.LEFT) == Enemy.HitResult.IGNORED, "the Tide Hook's tug doesn't set off a Sporecap")
+	cap2.queue_free()
 	cap.queue_free()
 	game.queue_free()
 	await _wait(0.1)

@@ -82,7 +82,7 @@ const BIOMES := {
 		"wet_deco": "shell_%d", "dry_deco": "grass_%d",
 	},
 	"brinewood": {
-		"floor": "fen_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
+		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
 		"water": "bog_%d", "water_edge": "bank_%s_%d", "damp": "mire_%s",
 		"wet_deco": "reeds_%d", "dry_deco": "fern_%d",
 		# [tile, one in every n tiles]
