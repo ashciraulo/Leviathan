@@ -506,6 +506,47 @@ func _test_story() -> void:
 	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_AFTER_BELL", "Hessa points Wren to the Kiln afterwards")
 	home.queue_free()
 	await _wait(0.1)
+
+	# The Hull's boss chamber, the first time: Sister Lowe and her singers
+	# are prying at the sleeping Matriarch, and drop away when she wakes.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.HULL_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var hold: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hold)
+	await _wait(0.2)
+	_check(Cutscene.active, "the Matriarch's chamber starts Lowe's scene")
+	var choir: Array = hold.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(choir.size() == 3, "Lowe and two singers are in the chamber (%d)" % choir.size())
+	var sleeper: BarnacleMatriarch = null
+	for child in hold.current_room.get_children():
+		if child is BarnacleMatriarch:
+			sleeper = child
+	_check(sleeper != null and sleeper.mode == BarnacleMatriarch.Mode.INTRO and sleeper.modulate == BarnacleMatriarch.SLEEPING, "the Matriarch sleeps through the start")
+	var lowe_pages := await _play_scene(hold, 12.0)
+	_check(not Cutscene.active and not hold.player.in_cutscene, "Lowe's scene hands Wren back")
+	_check(lowe_pages == 3 and GameState.has_flag(StoryDirector.LOWE_HULL_FLAG), "Sister Lowe speaks three times (%d)" % lowe_pages)
+	var choir_left := 0
+	for figure: Variant in choir:
+		if is_instance_valid(figure):
+			choir_left += 1
+	_check(choir_left == 0, "the Choir is gone through the deck (%d left)" % choir_left)
+	for feet in [StoryDirector.LOWE_FROM_BOSS] + StoryDirector.SINGERS_FROM_BOSS:
+		var y: float = (sleeper.position.y if sleeper else 0.0) + feet.y
+		_check(y < 9 * Room.TILE, "the Choir stands clear of the dialogue box")
+	await _wait(1.6)
+	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO and sleeper.modulate == Color.WHITE, "the Matriarch wakes and fights")
+	hold.queue_free()
+	await _wait(0.1)
+	# Coming back (the scene has played): she rises at once, wide awake.
+	var back: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(back)
+	await _wait(0.2)
+	_check(not Cutscene.active, "Lowe's scene only plays once")
+	for child in back.current_room.get_children():
+		if child is BarnacleMatriarch:
+			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
+	back.queue_free()
+	await _wait(0.1)
 	Cutscene.fast = false
 
 
@@ -1002,7 +1043,8 @@ func _test_hull_dungeon() -> void:
 	await _wait(0.4)
 	_check(GameState.flags.get(BigDoor.flag_for(room.coord), false), "the big key opens the great door")
 
-	# The Barnacle Matriarch.
+	# The Barnacle Matriarch (Sister Lowe's scene is tested in _test_story).
+	GameState.set_flag(StoryDirector.LOWE_HULL_FLAG)
 	room = await _goto(game, Vector2i(10, 7), Vector2i(11, 10))
 	var boss: BarnacleMatriarch = _child_of(room, BarnacleMatriarch)[0] if _child_of(room, BarnacleMatriarch).size() > 0 else null
 	_check(boss != null, "the Matriarch waits in the Figurehead Hold")
