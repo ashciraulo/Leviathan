@@ -523,8 +523,20 @@ def dace_frames():
     return [idle, breathe, talk]
 
 
+
+# Vael at the end, with the grey robe dropped: under it all along, the
+# keepers' navy coat he trained in, its lamp badge polished again.
+def vael_keeper_frames():
+    coat = [r.replace("S", "D") for r in VAEL]
+    # Brass buttons down the front, and the badge bright on the chest.
+    coat = paint(coat, [(12, 9, "QQ"), (13, 9, "QQ"), (15, 7, "Q"), (17, 7, "Q"), (19, 7, "Q")])
+    breathe = settle(coat, 10)
+    talk = paint(coat, [(13, 14, "D."), (14, 14, "D."), (15, 14, "D."), (13, 14, "DV"), (12, 15, "V")])
+    return [coat, breathe, talk]
+
 SPRITES = {
     "dace": dace_frames,
+    "vael_keeper": vael_keeper_frames,
     "vael": vael_frames,
     "murmur": murmur_frames,
     "lowe": lowe_frames,
@@ -748,8 +760,16 @@ def portrait_dace():
     return _rows(c)
 
 
+def portrait_vael_keeper():
+    # The same face over the keepers' navy coat, the badge bright again.
+    c = [list(r) for r in portrait_vael()]
+    c = [["D" if ch == "S" else ("Q" if ch == "T" else ch) for ch in r] for r in c]
+    return ["".join(r) for r in c]
+
+
 PORTRAITS = {
     "dace": portrait_dace(),
+    "vael_keeper": portrait_vael_keeper(),
     "vael": portrait_vael(),
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),

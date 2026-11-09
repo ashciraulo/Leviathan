@@ -766,6 +766,42 @@ func _test_story() -> void:
 	barrow.queue_free()
 	await _wait(0.1)
 
+	# The ending: the Heart sleeps, Vael stays, Mantle carries Wren home.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(44, 6), Vector2(11 * Room.TILE + 8, 10 * Room.TILE + 12))
+	DreamingHeart.roll_credits = false
+	var heart_room: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart_room)
+	await _wait(0.3)
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	Events.game_finished.emit()
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.ENDING_FLAG), "when the Old One sleeps, the ending begins")
+	var end_pages := await _play_scene(heart_room, 40.0)
+	_check(end_pages == 5, "Vael speaks, then home is told (%d pages)" % end_pages)
+	_check(not Cutscene.active and GameState.room_coord == StoryDirector.SALTMARROW, "the ending carries Wren home to Saltmarrow")
+	_check(GameState.checkpoint_room == StoryDirector.SALTMARROW, "after the credits, Continue starts at home")
+	_check(heart_room.current_room.coord == StoryDirector.SALTMARROW and not heart_room.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "Vael stays behind in the Maw: no one follows Wren home")
+	_check(GameState.has_flag(StoryDirector.CONFESSION_FLAG) and GameState.has_flag("seen_wayshell"), "no older scene waits at home after the credits")
+	Events.game_finished.emit()
+	await _wait(0.1)
+	_check(not Cutscene.active, "the ending only plays once")
+	heart_room.queue_free()
+	await _wait(0.1)
+	# Closed partway through the ending: Continue picks it up again.
+	GameState.reset_new_game()
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_checkpoint(Vector2i(44, 6), GameState.NO_POSITION)
+	var heart_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart_again)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.ENDING_FLAG), "a save from mid-ending starts the ending again")
+	await _play_scene(heart_again, 40.0)
+	_check(GameState.room_coord == StoryDirector.SALTMARROW, "and it still ends at home")
+	DreamingHeart.roll_credits = true
+	heart_again.queue_free()
+	await _wait(0.1)
+
 	# A door opening under Wren mid-scene doesn't carry them off.
 	GameState.reset_new_game()
 	GameState.set_flag(HollowRegent.DEFEATED_FLAG)

@@ -260,6 +260,12 @@ func lift_veil(seconds: float = 1.2) -> void:
 	await tween.finished
 
 
+## The veil's colour (black by default; the ending's dawn is white).
+func set_veil_colour(colour: Color) -> void:
+	_veil.color = Color(colour, _veil.color.a)
+	_veil_text.add_theme_color_override("font_color", Palette.NARRATION if colour.get_luminance() < 0.5 else Color("#4a3a58"))
+
+
 func darken(seconds: float = 0.0) -> void:
 	if seconds <= 0.0:
 		_veil.color.a = 1.0
