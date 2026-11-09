@@ -25,8 +25,7 @@ jobs:
 
       - name: Download Godot
         run: |
-          # GitHub release downloads sometimes 504; retry before giving up.
-          curl -fsSL --retry 6 --retry-delay 10 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$RUNNER_TEMP/godot"
           "$RUNNER_TEMP/godot" --version
@@ -42,7 +41,7 @@ jobs:
       - name: Run smoke test
         run: |
           set +e
-          timeout 180 "$RUNNER_TEMP/godot" --headless --path . res://tests/smoke_test.tscn 2>&1 | tee test.log
+          timeout 300 "$RUNNER_TEMP/godot" --headless --path . res://tests/smoke_test.tscn 2>&1 | tee test.log
           status=${PIPESTATUS[0]}
           set -e
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" test.log; then

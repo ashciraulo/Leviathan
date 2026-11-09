@@ -22,8 +22,8 @@ var locale := "en"
 var text_speed := 1
 ## Bigger text for dialogue and toasts.
 var large_text := false
-## Show captions for important sounds.
-var captions := true
+## Show captions for important sounds (accessibility; off by default).
+var captions := false
 ## Colour filter: 0 off, 1 protanopia, 2 deuteranopia, 3 tritanopia.
 var color_filter := 0
 ## Volumes, 0 to 10.

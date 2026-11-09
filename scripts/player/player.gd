@@ -151,7 +151,9 @@ func is_sword_active() -> bool:
 
 
 func take_damage(amount: int, from_position: Vector2) -> void:
-	if _invuln > 0.0 or state in [State.DEAD, State.FALL]:
+	# Frozen means a cutscene or a room slide. Hazards are checked again once
+	# she can move, so this only guards callers outside _check_damage.
+	if frozen or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
 	GameState.damage(amount)
