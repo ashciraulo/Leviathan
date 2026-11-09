@@ -6,6 +6,7 @@ extends Node
 ##   "clear"   every enemy beaten. The bars stand open until Wren is well
 ##             inside, then slam shut behind them.
 ##   "braziers" every brazier (j) lit with the Glowmoth Lantern
+##   "eyes"    every ice eye (E) open at once (frost arrows open them)
 ## A solved gate stays solved (saved as a flag).
 
 var _room: Room
@@ -25,6 +26,8 @@ func _ready() -> void:
 			bars.open(true)
 		for brazier in _braziers():
 			brazier.light(true)
+		for eye in _eyes():
+			eye.hold_open()
 		return
 	if _room.chest_hidden:
 		for chest in _chests():
@@ -38,6 +41,8 @@ func _ready() -> void:
 			plate.changed.connect(_check_plates)
 	for brazier in _braziers():
 		brazier.changed.connect(_check_braziers)
+	for eye in _eyes():
+		eye.changed.connect(_check_eyes)
 
 
 func _physics_process(_delta: float) -> void:
@@ -76,6 +81,21 @@ func _check_braziers() -> void:
 		if not brazier.lit:
 			return
 	solve()
+
+
+func _check_eyes() -> void:
+	if solved or _room.gate != "eyes":
+		return
+	for eye in _eyes():
+		if not eye.lit:
+			return
+	for eye in _eyes():
+		eye.hold_open()
+	solve()
+
+
+func _eyes() -> Array:
+	return _room.get_children().filter(func(n: Node) -> bool: return n is IceEye)
 
 
 func _braziers() -> Array:

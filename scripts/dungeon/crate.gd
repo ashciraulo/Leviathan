@@ -1,6 +1,7 @@
 class_name Crate
 extends CharacterBody2D
-## A heavy cargo crate. Lean on it for a moment to shove it one tile; hook it
+## A heavy cargo crate. Lean on it for a moment to shove it one tile (on ice
+## it slides on until something stops it); hook it
 ## to drag it back towards Wren. Weighs down pressure plates. Crates go back
 ## where they started when Wren leaves the room.
 
@@ -50,9 +51,23 @@ func _slide(dir: Vector2) -> void:
 		Feel.shake(0.4)
 		return
 	_sliding = true
+	var on_ice := _on_ice()
 	var tween := create_tween()
-	tween.tween_property(self, "position", position + step, SLIDE_TIME)
-	tween.tween_callback(func() -> void: _sliding = false)
+	# On ice it glides on, quicker, until something stops it.
+	tween.tween_property(self, "position", position + step, SLIDE_TIME * (0.5 if on_ice else 1.0))
+	tween.tween_callback(func() -> void:
+		_sliding = false
+		if _on_ice() and not test_move(global_transform, step):
+			_slide(dir))
+
+
+## True when the crate stands on ice (I).
+func _on_ice() -> bool:
+	var room := get_parent() as Room
+	if room == null:
+		return false
+	var at := position + Vector2(0, -4)
+	return room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE)) == "I"
 
 
 ## The drag was cut short (Wren was hit): settle on the nearer tile.

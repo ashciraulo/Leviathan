@@ -31,7 +31,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "mantle", "lowe", "crucible"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "mantle", "lowe", "crucible"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -39,6 +39,8 @@ func _ready() -> void:
 				await _mire_shots(game)
 			"gale":
 				await _gale_shots(game)
+			"glacier":
+				await _glacier_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -265,6 +267,9 @@ func _ready() -> void:
 
 	# 8e. Gale Spire.
 	await _gale_shots(game)
+
+	# 8f. Hollow Glacier.
+	await _glacier_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -652,6 +657,91 @@ func _gale_shots(game: Node) -> void:
 	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
 	await _wait(0.3)
 	await _capture("104_storm_bell")
+	game.player._invuln = 0.0
+
+
+func _glacier_shots(game: Node) -> void:
+	GameState.give_item("frostfang_bow")
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(32, 10), "105_glacier_entry", Vector2i(11, 10)],
+		[Vector2i(31, 10), "106_glacier_frozen_pond", Vector2i(21, 6)],
+		[Vector2i(32, 9), "107_glacier_crevasse_hall", Vector2i(11, 10)],
+		[Vector2i(31, 9), "108_glacier_bowyers_cave", Vector2i(20, 6)],
+		[Vector2i(33, 9), "109_glacier_black_pool", Vector2i(1, 6)],
+		[Vector2i(32, 8), "110_glacier_eye_gallery", Vector2i(11, 11)],
+		[Vector2i(33, 8), "111_glacier_slide_hall", Vector2i(1, 7)],
+	]
+	for shot: Array in rooms:
+		await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		await _wait(0.4)
+		await _capture(shot[1])
+
+	# Freezing a way across the Black Pool.
+	var room := await _jump(game, Vector2i(33, 9), Vector2i(11, 1))
+	game.player._invuln = 600.0
+	game.player.facing = Vector2.DOWN
+	await _wait(0.2)
+	game.player.use_item("frostfang_bow")
+	await _wait(0.2)
+	await _capture("112_glacier_frost_arrow")
+	await _wait(0.4)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 2 * Room.TILE + 12)
+	game.player.velocity = Vector2.ZERO
+	game.player.facing = Vector2.DOWN
+	await _wait(0.2)
+	game.player.use_item("frostfang_bow")
+	await _wait(0.6)
+	await _capture("113_glacier_frozen_path")
+
+	# Two eyes open in the Eye Gallery.
+	room = await _jump(game, Vector2i(32, 8), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	var eyes := room.get_children().filter(func(n: Node) -> bool: return n is IceEye)
+	if eyes.size() >= 2:
+		eyes[0].arrow_hit(Vector2.UP)
+		eyes[1].arrow_hit(Vector2.UP)
+	game.player.global_position = room.global_position + Vector2(10 * Room.TILE + 8, 6 * Room.TILE + 12)
+	await _wait(0.4)
+	await _capture("114_glacier_eyes_open")
+
+	# Rimeback.
+	room = await _jump(game, Vector2i(32, 7), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	var walrus: Rimeback = null
+	for child in room.get_children():
+		if child is Rimeback:
+			walrus = child
+	if walrus:
+		await _wait(0.3)
+		walrus.hole = 0
+		walrus._come_up(game.player)
+		await _wait(Rimeback.RISE_TIME + 0.4)
+		await _capture("115_rimeback_surfaced")
+		walrus.mode = Rimeback.Mode.SPIT
+		walrus._timer = 0.3
+		await _wait(0.45)
+		await _capture("116_rimeback_ice")
+		for i in walrus.holes.size():
+			room.freeze(walrus.holes[i]["tiles"][0])
+		walrus.mode = Rimeback.Mode.UNDER
+		walrus._timer = 0.0
+		await _wait(0.6)
+		await _capture("117_rimeback_breaking_through")
+		await _wait(Rimeback.BREACH_TELL)
+		game.player.global_position = walrus.global_position + Vector2(0, 30)
+		await _wait(0.3)
+		await _capture("118_rimeback_dazed")
+		while is_instance_valid(walrus) and walrus.hp > 0:
+			walrus._stun = 0.0
+			walrus._hits_this_daze = 0
+			walrus.mode = Rimeback.Mode.DAZED
+			walrus.take_hit(1, Vector2.UP)
+	await _wait(4.0)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 4)
+	await _wait(0.3)
+	await _capture("119_frost_bell")
 	game.player._invuln = 0.0
 
 

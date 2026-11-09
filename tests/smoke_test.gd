@@ -29,6 +29,7 @@ func _ready() -> void:
 	await _test_kiln_dungeon()
 	await _test_mire_dungeon()
 	await _test_gale_dungeon()
+	await _test_glacier_dungeon()
 	await _test_villagers()
 	await _test_story()
 	await _test_brinewood_pearl()
@@ -1062,6 +1063,175 @@ func _test_gale_dungeon() -> void:
 						child.advance()
 	game.queue_free()
 	await _wait(0.1)
+
+## Hollow Glacier: ice, the Frostfang Bow freezing water, ice eyes, crates
+## sliding on ice, and Rimeback.
+func _test_glacier_dungeon() -> void:
+	_check(ResourceLoader.exists("res://rooms/room_32_10.tscn"), "Hollow Glacier has an entry room")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(32, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	_check(GameState.dungeon == "glacier" and game.current_room.biome == "glacier", "Wren starts inside Hollow Glacier")
+	_check(not player.use_item("frostfang_bow"), "no bow before it's found")
+	GameState.give_item("frostfang_bow")
+	_check(GameState.item_slots.has("frostfang_bow"), "the bow goes in an item slot")
+
+	# Ice: Wren keeps sliding after letting go.
+	var room: Room = game.current_room
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(14, 3))
+	await _wait(0.1)
+	_check(player.on_ice(), "the Entry's blue patches are ice")
+	Input.action_press("move_right")
+	await _wait(0.5)
+	Input.action_release("move_right")
+	var x0 := player.global_position.x
+	await _wait(0.2)
+	_check(player.global_position.x > x0 + 4.0, "let go on ice, Wren slides on (%.0f px)" % (player.global_position.x - x0))
+	player.global_position = _tile_pos(room, Vector2i(9, 6))
+	await _wait(0.1)
+	_check(not player.on_ice(), "snow isn't ice")
+	Input.action_press("move_right")
+	await _wait(0.3)
+	Input.action_release("move_right")
+	await _wait(0.05)
+	x0 = player.global_position.x
+	await _wait(0.2)
+	_check(absf(player.global_position.x - x0) < 1.0, "on snow, Wren stops at once")
+
+	# The Black Pool: frost arrows freeze a way out to the island.
+	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(11, 1))
+	player.facing = Vector2.DOWN
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	_check(room.tile_at(11, 2) == "~", "water lies between the shore and the island")
+	_check(player.use_item("frostfang_bow"), "Wren looses a frost arrow")
+	await _wait(0.6)
+	_check(room.tile_at(11, 2) == "I" and room.tile_at(11, 3) == "~", "the arrow freezes the first tile of the lake it reaches, only that one")
+	player.global_position = _tile_pos(room, Vector2i(11, 2))
+	await _wait(0.1)
+	player.velocity = Vector2.ZERO
+	player.facing = Vector2.DOWN
+	player.use_item("frostfang_bow")
+	await _wait(0.6)
+	_check(room.tile_at(11, 3) == "I", "a second arrow freezes the next")
+	player.global_position = _tile_pos(room, Vector2i(11, 3))
+	player.velocity = Vector2.ZERO
+	Input.action_press("move_down")
+	await _wait(0.7)
+	Input.action_release("move_down")
+	var local := player.global_position - room.global_position
+	_check(local.y > 4 * Room.TILE, "Wren walks across the new ice to the island (at %s)" % local)
+
+	# Leaving and coming back, the water has thawed.
+	room = await _goto(game, Vector2i(32, 9), Vector2i(11, 11))
+	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
+	_check(room.tile_at(11, 2) == "~", "back in the room, the lake is open water again")
+
+	# The Eye Gallery: every eye open at once opens the gate.
+	room = await _goto(game, Vector2i(32, 8), Vector2i(11, 11))
+	await _calm(room)
+	var eyes := _child_of(room, IceEye)
+	_check(eyes.size() == 3, "the Eye Gallery has three ice eyes")
+	var chest: Chest = _child_of(room, Chest)[0]
+	_check(not chest.visible, "its chest is hidden")
+	player.global_position = _tile_pos(room, Vector2i(2, 10))
+	player.velocity = Vector2.ZERO
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.use_item("frostfang_bow")
+	await _wait(0.6)
+	_check((eyes.filter(func(e: IceEye) -> bool: return e.lit)).size() == 1, "an arrow opens the eye it hits")
+	eyes[0].arrow_hit(Vector2.UP)
+	eyes[1].arrow_hit(Vector2.UP)
+	eyes[2].arrow_hit(Vector2.UP)
+	await _wait(0.5)
+	_check(chest.visible and GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "with every eye open the chest appears")
+
+	# The Slide Hall: the crate slides on ice till the pool stops it;
+	# frozen over, it slides on to the plate.
+	room = await _goto(game, Vector2i(33, 8), Vector2i(1, 7))
+	await _calm(room)
+	var crate: Crate = _child_of(room, Crate)[0]
+	crate._slide(Vector2.RIGHT)
+	await _wait(1.2)
+	var crate_tile := floori(crate.position.x / Room.TILE)
+	_check(crate_tile == 10, "pushed onto the ice, the crate slides until the water stops it (col %d)" % crate_tile)
+	room.freeze(Vector2i(11, 7))
+	_check(room.is_frozen(Vector2i(11, 6)) and room.is_frozen(Vector2i(12, 7)), "a small pool freezes over all at once")
+	await _wait(0.1)
+	crate._slide(Vector2.RIGHT)
+	await _wait(1.5)
+	crate_tile = floori(crate.position.x / Room.TILE)
+	_check(crate_tile == 18, "over the frozen pool it slides on to the plate (col %d)" % crate_tile)
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "the plate opens the bars to the big key")
+
+	# Rimeback.
+	GameState.refill()
+	room = await _goto(game, Vector2i(32, 7), Vector2i(11, 11))
+	var bosses := _child_of(room, Rimeback)
+	_check(bosses.size() == 1, "Rimeback waits in the Breathing Hall")
+	if bosses.size() == 1:
+		var walrus: Rimeback = bosses[0]
+		player._invuln = 60.0
+		await _wait(0.3)
+		_check(walrus.holes.size() == 4, "the hall has four breath holes")
+		await _wait(3.0)
+		var seen_up := false
+		for i in 40:
+			if walrus.mode in [Rimeback.Mode.UP, Rimeback.Mode.SPIT]:
+				seen_up = true
+				break
+			await _wait(0.1)
+		_check(seen_up, "it surfaces in a breath hole")
+		_check(walrus.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "surfaced, its eyes shut, blows glance off")
+		# Freeze every hole: it has to break through.
+		for i in walrus.holes.size():
+			room.freeze(walrus.holes[i]["tiles"][0])
+		walrus.mode = Rimeback.Mode.UNDER
+		walrus._timer = 0.0
+		await _wait(0.1)
+		_check(walrus.mode == Rimeback.Mode.BREACH, "with every hole frozen, it breaks up through the ice")
+		await _wait(Rimeback.BREACH_TELL + 0.2)
+		_check(walrus.mode == Rimeback.Mode.DAZED, "and comes up dazed")
+		walrus.arrow_hit(Vector2.UP)
+		_check(walrus.hp == 5, "a frost arrow to its open eyes hurts it")
+		walrus._stun = 0.0
+		walrus.arrow_hit(Vector2.UP)
+		await _wait(0.4)
+		var thawed := true
+		for i in walrus.holes.size():
+			thawed = thawed and not walrus.is_hole_frozen(i)
+		_check(walrus.mode in [Rimeback.Mode.DIVE, Rimeback.Mode.UNDER] and thawed, "after two hits it thrashes the holes open and dives")
+		walrus.mode = Rimeback.Mode.DAZED
+		walrus._timer = 10.0
+		while walrus.hp > 0:
+			walrus._stun = 0.0
+			walrus._hits_this_daze = 0
+			walrus.take_hit(1, Vector2.UP)
+		_check(GameState.flags.get(Rimeback.DEFEATED_FLAG, false), "enough hits bring Rimeback down")
+		await _wait(3.0)
+		var bell: Tidebell = null
+		for child in room.get_children():
+			if child is Tidebell:
+				bell = child
+		_check(bell != null and bell.bell == "glacier", "the Frost Bell rises in the Breathing Hall")
+		if bell:
+			bell.interact()
+			_check(GameState.has_flag(Tidebell.flag_for("glacier")), "ringing the Frost Bell counts as a Tidebell")
+			for child in game.get_children():
+				if child is DialogueBox:
+					while DialogueBox.is_open:
+						child.advance()
+						child.advance()
+	game.queue_free()
+	await _wait(0.1)
+
 
 func _tile_pos(room: Room, tile: Vector2i) -> Vector2:
 	return room.global_position + Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)

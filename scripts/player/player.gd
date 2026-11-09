@@ -32,6 +32,9 @@ const FLASH_TIME := 0.1
 ## How far from the point in front of Wren something can be and still be
 ## talked to or opened.
 const INTERACT_RANGE := 16.0
+## On ice (I): how fast Wren gets going, and how slowly they come to a stop.
+const ICE_GRIP := 170.0
+const ICE_DRIFT := 45.0
 
 var state := State.MOVE
 var facing := Vector2.DOWN
@@ -183,7 +186,12 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 
 func _move_state() -> void:
 	var direction := _input_direction()
-	velocity = direction * SPEED
+	if on_ice():
+		# Ice keeps what speed Wren has; pushing only slowly changes it.
+		var grip := ICE_GRIP if direction != Vector2.ZERO else ICE_DRIFT
+		velocity = velocity.limit_length(SPEED).move_toward(direction * SPEED, grip * get_physics_process_delta_time())
+	else:
+		velocity = direction * SPEED
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
 	if in_cutscene or DialogueBox.recently_closed():
@@ -265,12 +273,31 @@ func use_item(id: String) -> bool:
 			_enter(State.ITEM)
 			item_velocity = facing * KiteCloak.SPEED
 			return true
+		"frostfang_bow":
+			var bow := FrostfangBow.new()
+			bow.name = "FrostfangBow"
+			add_child(bow)
+			_enter(State.ITEM)
+			# On ice, Wren keeps sliding while they shoot.
+			item_velocity = velocity if on_ice() else Vector2.ZERO
+			return true
 		"glowmoth_lantern":
 			# Up or down; Wren keeps walking either way.
 			lantern_raised = not lantern_raised
 			Audio.play_sfx("lantern_up" if lantern_raised else "lantern_down", global_position)
 			return true
 	return false
+
+
+## True when Wren is standing on ice (an I tile, or frozen water).
+func on_ice() -> bool:
+	if airborne:
+		return false
+	var room := Room.under(get_tree(), global_position)
+	if room == null:
+		return false
+	var feet := global_position - room.global_position + Vector2(0, -3)
+	return room.tile_at(floori(feet.x / Room.TILE), floori(feet.y / Room.TILE)) == "I"
 
 
 ## The direction the player is pressing (for items that steer).
