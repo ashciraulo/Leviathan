@@ -12,6 +12,8 @@ const RADIUS := 150.0
 ## How thick the ring is, either side of its edge.
 const BAND := 5.0
 
+## Seconds before the tell starts (singers joining in late).
+var delay := 0.0
 var _time := 0.0
 var _hit := false
 var _broken := false
@@ -25,11 +27,18 @@ func _ready() -> void:
 	_mark.texture = MawSprites.CHANT_MARK
 	_mark.modulate.a = 0.0
 	add_child(_mark)
-	Audio.play_sfx("choir_chant", global_position)
+	_time = -delay
+	if delay <= 0.0:
+		Audio.play_sfx("choir_chant", global_position)
 
 
 func _physics_process(delta: float) -> void:
+	var before := _time
 	_time += delta
+	if before < 0.0 and _time >= 0.0:
+		Audio.play_sfx("choir_chant", global_position)
+	if _time < 0.0:
+		return
 	if _time < TELL_TIME:
 		_mark.modulate.a = 0.3 + 0.6 * (_time / TELL_TIME) * (0.6 + 0.4 * sin(_time * 30.0))
 	else:

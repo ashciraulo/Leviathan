@@ -103,7 +103,8 @@ func is_hole_frozen(i: int) -> bool:
 
 func _set_shown(shown: bool) -> void:
 	_hurtbox.collision_layer = (1 << (Layers.ENEMY_HURTBOX - 1)) if shown else 0
-	_contact.active = shown and mode in [Mode.UP, Mode.SPIT, Mode.RISE]
+	# Not while it's still rising: the splash is the warning, not a hit.
+	_contact.active = shown and mode in [Mode.UP, Mode.SPIT]
 
 
 func _think(delta: float) -> void:
@@ -157,7 +158,7 @@ func _think(delta: float) -> void:
 func _enter(new_mode: Mode, time: float) -> void:
 	mode = new_mode
 	_timer = time
-	_contact.active = _hurtbox.collision_layer != 0 and mode in [Mode.UP, Mode.SPIT, Mode.RISE]
+	_contact.active = _hurtbox.collision_layer != 0 and mode in [Mode.UP, Mode.SPIT]
 
 
 ## Up into an open hole, or, with every hole frozen, up through the ice.

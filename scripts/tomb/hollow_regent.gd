@@ -228,8 +228,10 @@ func _die() -> void:
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
+	set_deferred("collision_layer", 0)
 	# Through set_flag, so the story can answer (the last mural).
 	GameState.set_flag(DEFEATED_FLAG)
+	Events.boss_defeated.emit()
 	_sprite.position = _sprite_origin
 	_sprite.frame = 3
 	Audio.play_sfx("regent_roar", global_position, 0.5)

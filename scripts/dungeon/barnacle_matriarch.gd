@@ -140,12 +140,12 @@ func _think(delta: float) -> void:
 					_enter(Mode.STALK, 0.5)
 				else:
 					_lunge = to_player.normalized()
-					_enter(Mode.WINDUP, WINDUP_TIME / rage)
+					_enter(Mode.WINDUP, maxf(WINDUP_TIME / rage, 0.5))
 					Audio.play_sfx("matriarch_tell", global_position, rage)
 		Mode.WINDUP:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
-				_contact.damage = 2
+				_contact.damage = 1
 				_enter(Mode.SLAM, SLAM_TIME)
 		Mode.SLAM:
 			velocity = _lunge * SLAM_SPEED

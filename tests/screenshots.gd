@@ -40,8 +40,10 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "mantle", "lowe", "crucible", "turn", "mural"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "mantle", "lowe", "crucible", "turn", "mural"]:
 		match OS.get_environment("SHOTS_ONLY"):
+			"hull":
+				await _hull_shots(game)
 			"kiln":
 				await _kiln_shots(game)
 			"mire":
@@ -456,7 +458,11 @@ func _hull_shots(game: Node) -> void:
 		Vector2i(11, 10): ["36_hull_brig", Vector2i(3, 6)],
 	}
 	for coord: Vector2i in rooms:
-		await _jump(game, coord, rooms[coord][1])
+		var at := await _jump(game, coord, rooms[coord][1])
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		game.player._invuln = 0.0
 		await _capture(rooms[coord][0])
 
 	# The Tide Hook mid-flight across the Orlop's broken deck.
@@ -533,7 +539,12 @@ func _kiln_shots(game: Node) -> void:
 		Vector2i(22, 7): ["59_kiln_bell_loft", Vector2i(11, 10)],
 	}
 	for coord: Vector2i in rooms:
-		await _jump(game, coord, rooms[coord][1])
+		var at := await _jump(game, coord, rooms[coord][1])
+		# Everyone holds still for the picture.
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		game.player._invuln = 0.0
 		await _wait(0.4)
 		await _capture(rooms[coord][0])
 

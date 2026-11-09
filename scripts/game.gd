@@ -86,6 +86,9 @@ func _room_has_boss() -> bool:
 
 
 func _on_boss_defeated() -> void:
+	# Nothing the boss threw can hit Wren after it's beaten.
+	for shot in get_tree().get_nodes_in_group("enemy_shots"):
+		shot.queue_free()
 	if current_room and not _game_over:
 		Audio.play_music(Audio.cue_for_room(current_room.biome, current_room.dungeon), 2.5)
 
@@ -94,6 +97,10 @@ func _process(delta: float) -> void:
 	# The game scene stops while paused, so menus don't count.
 	if not _game_over:
 		GameState.play_time += delta
+	# A boss that falls without sending boss_defeated still hands the room
+	# back its own music.
+	if Audio.music_cue == "boss" and not busy and current_room and not _room_has_boss():
+		_on_boss_defeated()
 
 
 ## Build the world at the checkpoint in GameState. With by_mantle, Mantle
