@@ -1894,6 +1894,9 @@ func _test_windmere() -> void:
 		lit.append(row.replace("v", "."))
 	_check(not _walkable_from(dark, Vector2i(8, 12)).has(Vector2i(8, 3)), "the Gullwatch chasm can't be crossed on foot")
 	_check(steps[5].contains("v") and _walkable_from(lit, Vector2i(8, 12)).has(Vector2i(8, 3)), "lantern planks bridge the Gullwatch chasm")
+	# The way west to Frostspine is over a sea inlet: a Kite Cloak glide, not a walk.
+	_check(not _walkable_from(lit, Vector2i(8, 3)).has(Vector2i(0, 3)), "the inlet below Frostspine can't be walked across")
+	_check(steps[3].substr(2, 3) == "~~~" and _walkable_from(lit, Vector2i(1, 3)).has(Vector2i(0, 3)), "a three-tile inlet to glide over, with a landing on the far side")
 
 	GameState.reset_new_game()
 	GameState.set_checkpoint(Vector2i(4, -3), Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
@@ -2028,16 +2031,18 @@ func _test_frostspine() -> void:
 ## The Sunken Verge: the frozen-channel entrance, the tide that floods the
 ## flats, and Siltrays.
 func _test_verge() -> void:
-	# Causeway End: the channel can't be crossed on foot, but two frozen
-	# tiles (Frostfang arrows) make a way over.
+	# Causeway End: the channel can't be crossed on foot, but six frozen
+	# tiles (Frostfang arrows) make a way over. Six rows of water is more
+	# than a Kite Cloak glide carries.
 	var causeway: Room = (load("res://rooms/room_1_2.tscn") as PackedScene).instantiate()
 	var rows := Room.parse_layout(causeway.layout)
 	causeway.free()
-	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(11, 6)), "the Causeway End channel can't be crossed on foot")
+	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(2, 10)), "the Causeway End channel can't be crossed on foot")
 	var frozen := rows.duplicate()
-	for y in [3, 4]:
-		frozen[y] = frozen[y].substr(0, 11) + "." + frozen[y].substr(12)
-	_check(_walkable_from(frozen, Vector2i(11, 1)).has(Vector2i(11, 6)), "two frozen tiles bridge the channel")
+	for y in range(3, 9):
+		_check(rows[y][7] == "~", "the channel is water on row %d" % y)
+		frozen[y] = frozen[y].substr(0, 7) + "." + frozen[y].substr(8)
+	_check(_walkable_from(frozen, Vector2i(11, 1)).has(Vector2i(2, 10)), "a line of frozen tiles bridges the channel")
 	var square: Room = (load("res://rooms/room_1_3.tscn") as PackedScene).instantiate()
 	_check(square.door_to == Vector2i(36, 10) and Room.parse_layout(square.layout)[7][12] == "D", "Belfry Square's doorway leads into the Drowned Belfry")
 	square.free()
