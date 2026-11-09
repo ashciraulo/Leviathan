@@ -22,6 +22,9 @@ Item gates (keep in step with the game):
   Glowmoth Lantern shows veiled planks (v)
   Frostfang Bow    freezes open water (~) into ice to walk on
   Diver's Helm     swims deep water (Q)
+  (Q and bow freezing arrive with the Hollow Glacier PR. Props block one
+  tile here; their real footprints can be wider, which only makes this
+  check more generous, never stricter.)
   The seventh bell raises the Old One at Lullaby Point (alt_layout)
 """
 
@@ -33,11 +36,12 @@ from collections import deque
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 COLS, ROWS = 24, 13
-HOOK_RANGE = 7
-# KiteCloak: SPEED 95 px/s for GLIDE_TIME 0.75 s, about four tiles. A glide
+HOOK_RANGE = 8
+# KiteCloak: SPEED 95 px/s for GLIDE_TIME 0.75 s, so about four tiles of
+# water with Wren's feet starting at the bank's edge. A glide
 # that runs out over water drops Wren back where they took off, so water
 # doesn't carry it any further.
-GLIDE_TILES = 4
+GLIDE_TILES = 5
 GLIDE_WATER_TILES = GLIDE_TILES
 
 # Dungeon entry rooms (door_to) -> (name, the item Wren comes out with).
@@ -56,7 +60,13 @@ ORDER = ["Rotting Hull", "Kiln", "Lantern Mire", "Gale Spire", "Hollow Glacier",
 START = ((0, 0), None)
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
 PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
-BLOCKERS = set("TC")
+# Solid things that aren't scenery: stones, chests, hook posts, NPCs, and
+# boulders, crates and hatches, which also stop the chain and the cloak.
+BLOCKERS = set("TCOKXh123456k")
+
+
+def stops_flight(tile):
+    return tile == "#" or tile in PROPS or tile in BLOCKERS or tile == "Y"
 
 
 def load_rooms():
@@ -122,7 +132,7 @@ def hook_hops(rows, x, y, items):
                 if step > 1:
                     out.append((tx - dx, ty - dy))
                 break
-            if t == "#" or t in PROPS or t in BLOCKERS:
+            if stops_flight(t):
                 break
     return out
 
@@ -139,7 +149,7 @@ def glide_hops(rows, x, y, items):
             if not (0 <= tx < COLS and 0 <= ty < ROWS):
                 break
             t = rows[ty][tx]
-            if t == "#" or t in PROPS or t in BLOCKERS:
+            if stops_flight(t):
                 break
             if t != "~" and walkable(t, items):
                 out.append((tx, ty))
