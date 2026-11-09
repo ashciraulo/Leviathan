@@ -91,6 +91,7 @@ func _ready() -> void:
 
 	add_child(Art.shadow())
 	_body = Art.sprite(Art.WREN, 6, 3, 22)
+	_body.set_meta("contrast", Palette.CONTRAST_WREN)
 	add_child(_body)
 	# Sword and Hum effects draw on this layer, in front of Wren (or behind
 	# when swinging upwards).

@@ -59,6 +59,7 @@ func _ready() -> void:
 
 	add_child(Art.shadow(body_size.x > 14))
 	_sprite = _make_sprite()
+	_sprite.set_meta("contrast", Palette.CONTRAST_ENEMY)
 	add_child(_sprite)
 	_sprite_origin = _sprite.position
 

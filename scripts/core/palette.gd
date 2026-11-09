@@ -13,6 +13,9 @@ const OUTLINE := Color("#2a1e36")
 const SHADOW := Color(0.0, 0.0, 0.0, 0.25)
 const FLASH := Color(1.0, 1.0, 1.0)
 const SOFT_FLASH := Color(1.0, 0.85, 0.85)
+## High contrast: outlines around Wren and enemies.
+const CONTRAST_WREN := Color(1.0, 0.92, 0.45)
+const CONTRAST_ENEMY := Color(1.0, 0.3, 0.3)
 const TELL := Color(1.0, 0.85, 0.30)
 
 const WREN := Color(0.25, 0.65, 0.63)
