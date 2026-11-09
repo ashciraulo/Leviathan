@@ -619,3 +619,12 @@ CAPTION_HEART_ROAR,The Heart roars
 CAPTION_ECHO_RISE,An echo rises
 CAPTION_ECHO_CALM,An echo sighs
 CAPTION_OLD_ONE_HUM,The Old One hums
+ROOM_BELFRY_UNDERCROFT,The Drowned Belfry: Undercroft
+ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
+ROOM_MAW_HOLLOW,The Maw: Tidewell
+TOAST_GOT_NACRE_BUCKLER,You found the Nacre Buckler!
+TOAST_GOT_ABYSSAL,You found the Abyssal Coat!
+TOAST_GOT_TIDECALLER_SWORD,You found the Tidecaller!
+GOT_NACRE_BUCKLER_1,"The Nacre Buckler! Mother-of-pearl, grown over a bell-ringer's shield in the dark."
+GOT_ABYSSAL_1,"The Abyssal Coat! Cut from something that lived far deeper than this. It is heavier than it looks."
+GOT_TIDECALLER_SWORD_1,"The Tidecaller! A keeper's blade, lost in the Old One's mouth long ago. It hums with the tide."

@@ -7,7 +7,8 @@ extends Object
 const DIR := "res://rooms/"
 
 ## coord -> {name_key, biome, dungeon, rows, stones: Array[Vector2i] (tiles),
-##           chests: Array[Vector2i], doors: Array[Vector2i]}
+##           chests: Array[Vector2i], doors: Array[Vector2i],
+##           boss: Vector2i (a dungeon boss's tile, or (-1, -1))}
 static var _rooms: Dictionary = {}
 static var _loaded := false
 
@@ -72,6 +73,7 @@ static func _load() -> void:
 		var stones: Array[Vector2i] = []
 		var chests: Array[Vector2i] = []
 		var doors: Array[Vector2i] = []
+		var boss := Vector2i(-1, -1)
 		for y in rows.size():
 			for x in rows[y].length():
 				match rows[y][x]:
@@ -81,6 +83,9 @@ static func _load() -> void:
 						chests.append(Vector2i(x, y))
 					"D":
 						doors.append(Vector2i(x, y))
+					"V":
+						if room.dungeon != "":
+							boss = Vector2i(x, y)
 		_rooms[coord] = {
 			"name_key": room.name_key,
 			"biome": room.biome,
@@ -89,6 +94,7 @@ static func _load() -> void:
 			"stones": stones,
 			"chests": chests,
 			"doors": doors,
+			"boss": boss,
 			"alt_flag": room.alt_flag,
 			"alt_rows": Room.parse_layout(room.alt_layout) if room.alt_layout != "" else PackedStringArray(),
 		}

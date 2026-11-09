@@ -38,6 +38,7 @@ func _ready() -> void:
 		await _test_belfry_dungeon()
 		await _test_tomb_dungeon()
 		await _test_maw_dungeon()
+		await _test_extras_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -1902,6 +1903,71 @@ func _test_maw_dungeon() -> void:
 		_check(not GameState.final_line, "Hum goes back to normal")
 	DreamingHeart.roll_credits = true
 	game.queue_free()
+	await _wait(0.1)
+
+
+## Dungeon completeness: the optional rooms with the finest gear, and the
+## map screen in every dungeon with its map and compass.
+func _test_extras_dungeon() -> void:
+	# Each optional room, its way in, and its chest.
+	var extras := [
+		[Vector2i(36, 10), Vector2i(37, 9), Vector2i(37, 10), "nacre_buckler"],
+		[Vector2i(40, 10), Vector2i(41, 9), Vector2i(41, 10), "abyssal"],
+		[Vector2i(44, 10), Vector2i(45, 9), Vector2i(45, 10), "tidecaller_sword"],
+	]
+	for extra: Array in extras:
+		GameState.reset_new_game()
+		GameState.set_checkpoint(extra[0], GameState.NO_POSITION)
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.6)
+		var player: Player = game.player
+		player._invuln = 600.0
+		var room := await _goto(game, extra[1], Vector2i(11, 6))
+		await _calm(room)
+		var below: String = RoomInfo.get_room(extra[2])["rows"][0]
+		var above: String = RoomInfo.get_room(extra[1])["rows"][12]
+		_check(above[19] != "#" and above[20] != "#" and below[19] == "." and below[20] == ".", "%s opens south to %s" % [room.name_key, extra[2]])
+		if extra[3] == "abyssal":
+			var walls := _child_of(room, BoneWall).filter(func(w: BoneWall) -> bool: return w.concealed and w.tile.y == 12)
+			_check(walls.size() == 2, "a concealed wall hides the Ossuary")
+			for wall: BoneWall in walls:
+				wall.horn_hit(Vector2.ZERO)
+			await _wait(0.3)
+			_check(_child_of(room, BoneWall).filter(func(w: BoneWall) -> bool: return w.tile.y == 12 and not w.is_queued_for_deletion()).is_empty(), "the Echo Horn brings it down")
+		room = await _goto(game, extra[2], Vector2i(19, 1))
+		await _calm(room)
+		var chests := _child_of(room, Chest)
+		_check(chests.size() == 1 and chests[0].item == extra[3], "%s keeps the %s" % [room.name_key, extra[3]])
+		if chests.size() == 1:
+			chests[0].interact()
+			await _wait(1.0)
+			await _close_dialogue(game)
+			_check(GameState.equipped_item(Items.kind(extra[3])) == extra[3], "Wren takes up the %s" % extra[3])
+		game.queue_free()
+		await _wait(0.1)
+
+	# The map screen in each dungeon: the map shows every room, the compass
+	# every chest and the boss until it is calmed.
+	GameState.reset_new_game()
+	for dungeon: String in MapPage.BOSS_FLAGS:
+		var rooms := RoomInfo.in_area(dungeon)
+		GameState.dungeon = dungeon
+		GameState.room_coord = rooms[0]
+		var page := MapPage.new()
+		add_child(page)
+		page.on_open()
+		_check(page._rooms.size() == 1, "%s: with no map, only the room Wren stands in" % dungeon)
+		GameState.give_item(Items.dungeon_item(dungeon, "map"))
+		GameState.give_item(Items.dungeon_item(dungeon, "compass"))
+		page.on_open()
+		_check(page._rooms.size() == rooms.size(), "%s: the map shows all %d rooms" % [dungeon, rooms.size()])
+		var bosses := rooms.filter(func(c: Vector2i) -> bool: return RoomInfo.get_room(c)["boss"] != Vector2i(-1, -1))
+		_check(bosses.size() >= 1 and not page._boss_calmed(bosses[0]), "%s: the compass points to its boss" % dungeon)
+		GameState.set_flag(MapPage.BOSS_FLAGS[dungeon])
+		_check(page._boss_calmed(bosses.filter(func(c: Vector2i) -> bool: return RoomInfo.get_room(c)["name_key"] != "ROOM_MAW_HEART")[0]), "%s: and stops once it is calmed" % dungeon)
+		page.queue_free()
+	GameState.reset_new_game()
 	await _wait(0.1)
 
 

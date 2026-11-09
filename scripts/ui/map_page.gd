@@ -34,6 +34,9 @@ const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 
 ## Area names: "" is the overworld.
 const AREA_KEYS := {"": "MAP_OVERWORLD", "hull": "DUNGEON_HULL", "kiln": "DUNGEON_KILN", "mire": "DUNGEON_MIRE", "gale": "DUNGEON_GALE", "glacier": "DUNGEON_GLACIER", "belfry": "DUNGEON_BELFRY", "tomb": "DUNGEON_TOMB", "maw": "DUNGEON_MAW"}
+## Each dungeon's boss, by the flag set when it is calmed (the Maw's
+## Dreaming Heart is "the_end").
+const BOSS_FLAGS := {"hull": "boss_hull", "kiln": "boss_kiln", "mire": "boss_mire", "gale": "boss_gale", "glacier": "boss_glacier", "belfry": "boss_belfry", "tomb": "boss_tomb", "maw": "boss_maw_vael"}
 
 var _view: Control
 var _area := ""
@@ -210,6 +213,9 @@ func _draw_view() -> void:
 				var marker := MenuKit.Marker.STONE_AWAKE if _stone_awake(coord) else MenuKit.Marker.STONE_ASLEEP
 				MenuKit.draw_marker(_view, marker, rect.position + Vector2(tile) * PX + Vector2(1, 0))
 		if _area != "" and GameState.has_dungeon_item(_area, "compass"):
+			# The compass points to the bell's keeper, until it is calmed.
+			if info.get("boss", Vector2i(-1, -1)) != Vector2i(-1, -1) and not _boss_calmed(coord):
+				MenuKit.draw_marker(_view, MenuKit.Marker.BOSS, rect.position + Vector2(info["boss"]) * PX + Vector2(1, 0))
 			for tile: Vector2i in info["chests"]:
 				var flag := "chest_%d_%d_%d_%d" % [coord.x, coord.y, tile.x, tile.y]
 				if not GameState.flags.get(flag, false):
@@ -222,6 +228,13 @@ func _draw_view() -> void:
 	var selected: Rect2 = _rects[_cursor]
 	selected.position += _scroll
 	MenuKit.draw_cursor(_view, selected)
+
+
+## True once the boss in this room has been calmed.
+func _boss_calmed(coord: Vector2i) -> bool:
+	var flag: String = "the_end" if RoomInfo.get_room(coord)["name_key"] == "ROOM_MAW_HEART" \
+		else BOSS_FLAGS.get(_area, "")
+	return GameState.has_flag(flag)
 
 
 func _player_local() -> Vector2:
