@@ -14,9 +14,11 @@ extends Node2D
 ##          l  lantern post   R  beached hull (the Rotting Hull)
 ##             (big props: put the letter where the base centre stands;
 ##             the art rises above)
-##          h  Old Hessa      C  chest (holds chest_item)
+##          h  Old Hessa      1 2 3 4  villagers (see Npc.LETTERS)
+##          C  chest (holds chest_item)
 ##          X  locked hatch (all X in a room open with one small key)
 ##          D  doorway to door_to, arriving on door_spawn
+##          (a signpost n reads out sign_key when Wren faces it)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
 ## neighbouring room joins, at the same rows or columns on both sides.
@@ -41,6 +43,8 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## Where a doorway (D) in this room leads, and the tile Wren arrives on.
 @export var door_to := Vector2i.ZERO
 @export var door_spawn := Vector2i.ZERO
+## What signposts (n) in this room say: a translation key.
+@export var sign_key := ""
 
 ## Set by the game before the room enters the tree.
 var coord := Vector2i.ZERO
@@ -157,8 +161,6 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Lanternmoth.new()
 		"b":
 			node = Shellback.new()
-		"h":
-			node = Npc.new("hessa")
 		"C":
 			var chest := Chest.new()
 			chest.room_coord = coord
@@ -176,8 +178,13 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			door.target_room = door_to
 			door.target_tile = door_spawn
 			node = door
+		_ when Npc.LETTERS.has(tile):
+			node = Npc.new(Npc.LETTERS[tile])
 		_ when Prop.is_prop(tile):
-			node = Prop.new(tile)
+			var prop := Prop.new(tile)
+			if tile == "n":
+				prop.text_key = sign_key
+			node = prop
 		_:
 			push_warning("Room %s: unknown tile '%s'" % [scene_file_path, tile])
 	if node:

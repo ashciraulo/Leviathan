@@ -32,6 +32,15 @@ const HESSA := preload("res://assets/sprites/hessa.png")
 const CHEST := preload("res://assets/sprites/chest.png")
 const LOCKED_HATCH := preload("res://assets/sprites/locked_hatch.png")
 const SMALL_KEY := preload("res://assets/sprites/small_key.png")
+const VILLAGER_CORRIN := preload("res://assets/sprites/villager_corrin.png")
+const VILLAGER_PELL := preload("res://assets/sprites/villager_pell.png")
+const VILLAGER_MARGA := preload("res://assets/sprites/villager_marga.png")
+const VILLAGER_DUNSTAN := preload("res://assets/sprites/villager_dunstan.png")
+const PORTRAIT_HESSA := preload("res://assets/portraits/hessa.png")
+const PORTRAIT_CORRIN := preload("res://assets/portraits/corrin.png")
+const PORTRAIT_PELL := preload("res://assets/portraits/pell.png")
+const PORTRAIT_MARGA := preload("res://assets/portraits/marga.png")
+const PORTRAIT_DUNSTAN := preload("res://assets/portraits/dunstan.png")
 
 const FLASH_SHADER := """
 shader_type canvas_item;

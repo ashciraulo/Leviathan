@@ -19,8 +19,10 @@ ROOM_MANGROVE_DEEP,The Mangrove Deep
 ROOM_WRECK_STRAND,Wreck Strand
 NAME_HESSA,Old Hessa
 HESSA_1,"Wren! There you are. Come round where I can see you. My ears are gone, child, but my eyes still work."
-HESSA_2,"Last night the bell on the point went quiet. Folk in grey robes rowed off with it, singing. I felt it through the floorboards."
-HESSA_3,"The Drowned Choir, they call themselves. Seven bells keep the Old One sleeping, and they mean to take every one."
+HESSA_2,"Last night the bell on the point went quiet. Folk in grey robes rowed off with it, singing."
+HESSA_2B,I felt it through the floorboards.
+HESSA_3,"The Drowned Choir, they call themselves."
+HESSA_3B,"Seven bells keep the Old One sleeping, and they mean to take every one."
 HESSA_4,You have the ear I lost. You'll hear where the bells are hidden. The first one sang out from the east.
 HESSA_5,"Past the tidepools, into the Brinewood. There's an old ship rotting in the mangroves. Start there."
 HESSA_6,"Keep your lamp lit, keeper. I'll keep mine."
@@ -248,3 +250,39 @@ ROOM_OLD_STILTS,Old Stilts
 ROOM_BRINE_SPRING,Brine Spring
 ROOM_ROOTMAZE,The Rootmaze
 ROOM_TANGLE_SHORE,Tangle Shore
+NAME_CORRIN,Corrin
+NAME_PELL,Pell
+NAME_MARGA,Marga
+NAME_DUNSTAN,Dunstan
+NARRATE_WREN_NODS,Wren nods.
+NARRATE_WREN_LAMP_YES,Wren lifts the lamp and flashes it once: I'll go.
+NARRATE_DUNSTAN_ROPE,"Dunstan shoulders a coil of rope and wanders off towards the smokehouse, very slowly."
+SIGN_SALTMARROW,"Saltmarrow. Mind the lamp, mind the tide."
+HESSA_HULL_1,You've been inside that old hull. I can smell the bilge on you from here.
+HESSA_HULL_2,"Keep going down, child. Bells like the dark, and the Choir likes it better."
+CORRIN_1,"Morning, keeper. Sea's gone flat as a plate. No birds, no fish. Not a ripple."
+CORRIN_2,"Hessa's been up by the lighthouse since dawn, waving that lamp at nothing. Go and see her."
+CORRIN_QUEST_1,So the bell's gone. I felt the quiet in my nets before anyone said a word.
+CORRIN_QUEST_2,"If you're heading east, mind the tidepools. The scuttlers there have got bold."
+CORRIN_AGAIN,"Mind the tidepools, keeper. Bold little things, those scuttlers."
+CORRIN_HULL_1,The hull in the mangroves? My grandad swore she was a bell ship once.
+CORRIN_HULL_2,"Carried the bells out to their towers, he said. Then the sea took her crew and left the ship."
+PELL_1,Wren! Wren! Old Hessa's been shouting for you all morning!
+PELL_2,Well. Shouting. You know how she shouts. She's up by the lighthouse.
+PELL_QUEST_1,Are you going on an adventure? A real one? Past the tidepools?
+PELL_QUEST_2,Bring me something good. A heron feather. Or a crab with three claws.
+PELL_AGAIN,Three claws. Don't forget.
+PELL_HULL_1,You went in the Rotting Hull?! Was it full of ghosts?
+PELL_HULL_2,Mum says it's full of ghosts. I said I'd go and check. She said no.
+MARGA_1,Keeper. Good. Do me a kindness?
+MARGA_2,"My smokehouse rack's come down, and Dunstan's got the only good rope in Saltmarrow."
+MARGA_2B,Tell him Marga's asking. Nicely.
+MARGA_WAITING,"Dunstan's down by the barrels, most likely. Asleep on his feet."
+MARGA_THANKS_1,"He said yes? Without grumbling? Keeper, you've a gift."
+MARGA_THANKS_2,"Come by when you're back. There'll be smoked eel, and you'll be eating it."
+MARGA_AGAIN,Smoked eel when you're back. That's a promise.
+DUNSTAN_1,Hm.
+DUNSTAN_2,Bell's quiet. Sea's quiet. Even the gulls are quiet. Whole coast's holding its breath.
+DUNSTAN_ROPE_1,Marga sent you? Was she asking nicely?
+DUNSTAN_ROPE_2,...Hm. Tell her she'll have it by supper.
+DUNSTAN_AGAIN,Rope's coming. Rope's always coming.

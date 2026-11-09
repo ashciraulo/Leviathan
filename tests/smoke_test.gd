@@ -29,6 +29,7 @@ func _ready() -> void:
 	await _test_menus()
 	await _test_play()
 	await _test_talk_and_dungeon()
+	await _test_villagers()
 	SaveManager.delete_save()
 	if FileAccess.file_exists(real_save + ".testbackup"):
 		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
@@ -69,6 +70,12 @@ func _test_room_layouts() -> void:
 			continue
 		var rows := Room.parse_layout(room.layout)
 		var problem := Room.validate_layout(rows)
+		# People (and readable signs) stand where the dialogue box can't cover them.
+		for y in rows.size():
+			for x in rows[y].length():
+				var tile := rows[y][x]
+				if Npc.LETTERS.has(tile) or (tile == "n" and room.sign_key != ""):
+					_check(y <= DialogueBox.LAST_SPEAKER_ROW, "%s: '%s' on row %d would sit behind the dialogue box (keep to rows 0-%d)" % [file, tile, y, DialogueBox.LAST_SPEAKER_ROW])
 		_check(problem == "", file + ": " + problem)
 		_check(room.name_key != "" and tr(room.name_key) != room.name_key, file + " has a translated name")
 		var parts := file.get_basename().trim_prefix("room_").split("_")
@@ -164,7 +171,7 @@ func _test_talk_and_dungeon() -> void:
 	var player: Player = game.player
 	var hessa: Npc = null
 	for child in game.current_room.get_children():
-		if child is Npc:
+		if child is Npc and child.kind == "hessa":
 			hessa = child
 	_check(hessa != null, "Old Hessa stands in Saltmarrow")
 	if hessa == null:
@@ -181,15 +188,17 @@ func _test_talk_and_dungeon() -> void:
 	for child in game.get_children():
 		if child is DialogueBox:
 			box = child
+	_check(box != null and box.current_portrait() == Art.PORTRAIT_HESSA, "Hessa's portrait shows in the box")
+	var expected: int = Conversations.TALKS["hessa"][-1]["lines"].size()
 	var pages := 0
 	while box and DialogueBox.is_open and pages < 20:
 		box.advance()
 		box.advance()
 		pages += 1
 	_check(not DialogueBox.is_open and not get_tree().paused, "the talk ends and the game resumes")
-	_check(pages == Npc.KINDS["hessa"]["first"].size(), "Hessa's first talk has every page (%d)" % pages)
-	_check(GameState.flags.get("met_hessa", false), "meeting Hessa is remembered")
-	_check(hessa.current_lines().size() == 1, "Hessa has a short reminder after that")
+	_check(pages == expected and pages >= 6, "Hessa's first talk has every page (%d of %d)" % [pages, expected])
+	_check(GameState.has_flag("met_hessa"), "meeting Hessa is remembered")
+	_check(hessa.current_pages().size() == 1, "Hessa has a short reminder after that")
 	await _wait(0.4)
 
 	# The doorway in Hull Landing leads into the Rotting Hull.
@@ -209,6 +218,12 @@ func _test_talk_and_dungeon() -> void:
 		await _wait(1.0)
 	_check(game.current_room.coord == Vector2i(10, 10), "walking into the hole enters the Rotting Hull (in %s)" % game.current_room.coord)
 	_check(GameState.dungeon == "hull", "GameState knows Wren is in the Hull")
+	_check(GameState.has_flag("entered_hull"), "entering the Hull sets a story flag")
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_HULL_1", "Pell asks about the Hull")
+	Conversations.talk("pell")
+	_finish_talk(game)
+	_check(Conversations.branch_for("pell")["lines"][0] == "PELL_QUEST_1", "after the Hull talk, Pell still asks for a heron feather")
+	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_HULL_1", "Hessa has news for Wren after the Hull")
 
 	# A chest in the Galley holds the key for the Bilge's hatch.
 	Events.door_entered.emit(Vector2i(9, 9), Vector2i(20, 6))
@@ -247,6 +262,122 @@ func _test_talk_and_dungeon() -> void:
 	await _wait(1.0)
 	Input.action_release("move_right")
 	_check(game.current_room.coord == Vector2i(11, 9), "through the hatch to the Cargo Hold (in %s)" % game.current_room.coord)
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Talks every page of whatever is open.
+func _finish_talk(game: Node) -> int:
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	var pages := 0
+	while box and DialogueBox.is_open and pages < 30:
+		box.advance()
+		box.advance()
+		pages += 1
+	return pages
+
+
+## Saltmarrow's villagers, their portraits, Marga's rope errand (a chain of
+## story flags across two people), Pell wandering, and the village sign.
+func _test_villagers() -> void:
+	GameState.reset_new_game()
+	_check(not GameState.has_flag("asked_for_rope"), "a new game has no story flags")
+	GameState.set_flag("entered_hull")
+	_check(Conversations.branch_for("hessa").get("set", []).has("met_hessa"), "going to the Hull first still gets Hessa's introduction")
+	GameState.clear_flag("entered_hull")
+	GameState.set_flag("x")
+	_check(GameState.has_flag("x") and GameState.flags_match(["x"], ["y"]), "flags set and match")
+	GameState.clear_flag("x")
+	_check(not GameState.has_flag("x"), "flags clear")
+	GameState.set_checkpoint(Vector2i(0, -1), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var people := {}
+	var sign: Prop = null
+	for child in game.current_room.get_children():
+		if child is Npc:
+			people[child.kind] = child
+		elif child is Prop and child.kind == "n":
+			sign = child
+	for who in ["hessa", "pell", "marga", "dunstan"]:
+		_check(people.has(who), "%s lives in Saltmarrow" % who)
+	# On screen, each of them, and Wren standing just below to talk, stays
+	# above the tallest the dialogue box (and its name tab) ever gets.
+	for who in people:
+		var feet: float = people[who].get_global_transform_with_canvas().origin.y
+		_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "%s and Wren stay clear of the dialogue box (%d vs %d)" % [who, feet + Room.TILE, DialogueBox.HIGHEST_POINT])
+	for who in Conversations.TALKS:
+		_check(not Conversations.branch_for(who).is_empty(), "%s always has something to say" % who)
+		for branch: Dictionary in Conversations.TALKS[who]:
+			for page: Dictionary in Conversations.pages(who, branch):
+				_check(TranslationServer.translate(page["text"]) != page["text"], "line %s is in strings.csv" % page["text"])
+	if not people.has("marga") or not people.has("dunstan"):
+		game.queue_free()
+		return
+	# Every line fits in the box, with or without a portrait.
+	var fit_box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			fit_box = child
+	for who in Conversations.TALKS:
+		for branch: Dictionary in Conversations.TALKS[who]:
+			for page: Dictionary in Conversations.pages(who, branch):
+				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
+				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
+	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	var player: Player = game.player
+
+	# Dunstan grunts until Marga sends Wren over.
+	_check(people["dunstan"].current_pages()[0]["text"] == "DUNSTAN_1", "Dunstan has nothing to say about rope yet")
+	player.global_position = people["marga"].global_position + Vector2(0, 14)
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	_check(player.try_interact(), "Wren can talk to Marga")
+	await _wait(0.05)
+	var box: DialogueBox = null
+	for child in game.get_children():
+		if child is DialogueBox:
+			box = child
+	_check(box != null and box.current_portrait() == Art.PORTRAIT_MARGA, "Marga's portrait shows")
+	_check(box != null and box.current_page()["name"] == "NAME_MARGA", "the tab names Marga")
+	_finish_talk(game)
+	_check(GameState.has_flag("asked_for_rope"), "Marga's errand is remembered")
+	await _wait(0.4)
+	player.global_position = people["dunstan"].global_position + Vector2(0, 14)
+	await _wait(0.1)
+	_check(player.try_interact(), "Wren can talk to Dunstan")
+	await _wait(0.05)
+	var narration := 0
+	while box and DialogueBox.is_open:
+		if box.current_page()["name"] == "":
+			narration += 1
+			_check(box.current_portrait() == null, "narration has no portrait")
+		box.advance()
+		box.advance()
+	_check(narration >= 1, "Wren answers without words (narration pages)")
+	_check(GameState.has_flag("rope_promised"), "Dunstan promises the rope")
+	_check(people["marga"].current_pages()[0]["text"] == "MARGA_THANKS_1", "Marga hears the good news")
+	await _wait(0.4)
+
+	# Pell wanders.
+	if people.has("pell"):
+		player.global_position = game.current_room.global_position + Vector2(22 * Room.TILE, 1 * Room.TILE + 12)
+		var from_x: float = people["pell"].position.x
+		await _wait(4.0)
+		_check(absf(people["pell"].position.x - from_x) > 2.0, "Pell runs about the village")
+
+	# The village sign reads out.
+	_check(sign != null and sign.is_in_group("interactable"), "the village sign can be read")
+	if sign:
+		player.global_position = sign.global_position + Vector2(0, 14)
+		player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(player.try_interact() and box.current_page()["text"] == "SIGN_SALTMARROW", "reading the sign shows its words")
+		_finish_talk(game)
 	game.queue_free()
 	await _wait(0.1)
 

@@ -41,6 +41,10 @@ var play_time := 0.0
 const START_ITEMS := {"keeper_lamp": 1, "driftwood_sword": 1, "oilskin": 1}
 
 
+func _ready() -> void:
+	Events.room_entered.connect(_on_room_entered)
+
+
 func reset_new_game() -> void:
 	max_bubbles = START_BUBBLES
 	bubbles = START_BUBBLES
@@ -95,6 +99,44 @@ func can_hum() -> bool:
 func hum_heal() -> void:
 	resonance = maxf(resonance - hum_cost(), 0.0)
 	heal(1)
+
+
+## Story flags: simple named facts about the world ("met_hessa",
+## "entered_hull"). They live in `flags`, so they are saved with everything
+## else. Conversations read them to choose what people say.
+func has_flag(flag: String) -> bool:
+	return bool(flags.get(flag, false))
+
+
+func set_flag(flag: String, value: Variant = true) -> void:
+	if flags.get(flag) == value:
+		return
+	flags[flag] = value
+	Events.flag_changed.emit(flag, value)
+
+
+func clear_flag(flag: String) -> void:
+	if flags.has(flag):
+		flags.erase(flag)
+		Events.flag_changed.emit(flag, false)
+
+
+## True when every flag in `all` is set and none in `none` is.
+func flags_match(all: Array, none: Array = []) -> bool:
+	for flag in all:
+		if not has_flag(flag):
+			return false
+	for flag in none:
+		if has_flag(flag):
+			return false
+	return true
+
+
+## Entering a dungeon for the first time sets "entered_<dungeon>", so people
+## back home can talk about it.
+func _on_room_entered(_coord: Vector2i) -> void:
+	if dungeon != "":
+		set_flag("entered_" + dungeon)
 
 
 ## Small keys belong to one dungeon and only open doors there.

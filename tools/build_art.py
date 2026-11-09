@@ -26,6 +26,7 @@ import zlib
 
 import brinewood_art
 import hull_art
+import npc_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -918,6 +919,9 @@ RAMPS.update(brinewood_art.RAMPS)
 FLAT.update(brinewood_art.FLAT)
 RAMPS.update(hull_art.RAMPS)
 FLAT.update(hull_art.FLAT)
+assert not set(npc_art.RAMPS) & set(RAMPS), ("npc_art material letters clash", set(npc_art.RAMPS) & set(RAMPS))
+RAMPS.update(npc_art.RAMPS)
+FLAT.update(npc_art.FLAT)
 
 
 def build_tiles():
@@ -1060,6 +1064,10 @@ def main():
         write_png(os.path.join(OUT, "props", name + ".png"), px)
     for name, px in build_dungeon_objects().items():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
+    for name, frames in npc_art.SPRITES.items():
+        write_png(os.path.join(OUT, "sprites", "villager_" + name + ".png"), sheet([[lit(f, 31) for f in frames()]], 16, 24))
+    for name, rows in npc_art.PORTRAITS.items():
+        write_png(os.path.join(OUT, "portraits", name + ".png"), sheet([[lit(rows, 41)]], 32, 32))
     bubbles, shots, shadows = build_round()
     write_png(os.path.join(OUT, "ui", "bubbles.png"), bubbles)
     write_png(os.path.join(OUT, "sprites", "shot.png"), shots)
