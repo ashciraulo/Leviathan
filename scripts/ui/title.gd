@@ -44,8 +44,9 @@ func _ready() -> void:
 	menu.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	menu.offset_bottom = -10
 	# The menu surfaces a moment after the scene fades in.
+	# It takes no input until it has fully appeared.
 	menu.modulate.a = 0.0
-	create_tween().tween_property(menu, "modulate:a", 1.0, 0.6).set_delay(FADE_IN * 0.75)
+	menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_DISABLED
 	add_child(menu)
 
 	_menu = menu
@@ -74,14 +75,21 @@ func _ready() -> void:
 		_overlay.add_child(page)
 
 	var first := continue_button if continue_button.visible else new_game_button
-	first.grab_focus.call_deferred()
 
 	_fade = ColorRect.new()
 	_fade.color = Color.BLACK
-	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_fade)
 	create_tween().tween_property(_fade, "color:a", 0.0, FADE_IN)
+	var appear := create_tween()
+	appear.tween_property(menu, "modulate:a", 1.0, 0.6).set_delay(FADE_IN * 0.75)
+	appear.tween_callback(func() -> void:
+		if _leaving:
+			return
+		menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_INHERITED
+		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		first.grab_focus())
 
 
 func _show_page(page: MenuPage) -> void:
@@ -153,6 +161,9 @@ func _leave_to(scene: String) -> void:
 	get_viewport().gui_release_focus()
 	_page = null
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Tab could otherwise put focus back on a button mid-fade.
+	_menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_DISABLED
+	_overlay.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_DISABLED
 	Audio.stop_music(FADE_OUT)
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, FADE_OUT)

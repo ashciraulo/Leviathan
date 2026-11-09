@@ -22,7 +22,8 @@ The first open imports the translation file, which takes a few seconds.
 
 No Godot needed: on GitHub, open **Actions > Build PC > Run workflow**. When
 it finishes (about five minutes), download **Leviathan-windows** or
-**Leviathan-linux** from the run's page and unzip it. Pushing a tag like
+**Leviathan-linux** from the run's page and unzip it (the Linux one holds a
+`.tar.gz`; unpack that too, which keeps the game executable). Pushing a tag like
 `v0.2.0` builds them too.
 
 To export locally, install the export templates from the editor
