@@ -29,6 +29,12 @@ func _ready() -> void:
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.6)
+	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
+	if OS.get_environment("SHOTS_ONLY") == "kiln":
+		await _kiln_shots(game)
+		SaveManager.delete_save()
+		get_tree().quit(0)
+		return
 	await _capture("02_saltmarrow_shore")
 
 	# 3. Tidepools: walk east into the Scuttlers.
@@ -191,6 +197,9 @@ func _ready() -> void:
 	# 8b. The rest of the Rotting Hull, and the fight at its heart.
 	await _hull_shots(game)
 
+	# 8c. The Kiln.
+	await _kiln_shots(game)
+
 	# 9. Pause menu.
 	var pause: PauseMenu = null
 	for child in game.get_children():
@@ -309,6 +318,98 @@ func _hull_shots(game: Node) -> void:
 				for box in game.get_children():
 					if box is DialogueBox:
 						box.close()
+
+
+func _kiln_shots(game: Node) -> void:
+	GameState.give_item("tide_hook")
+	GameState.give_item("stonebreaker")
+	# coord: [file name, spawn tile]
+	var rooms := {
+		Vector2i(21, 10): ["50_kiln_entry", Vector2i(11, 10)],
+		Vector2i(21, 9): ["51_kiln_casting_floor", Vector2i(18, 6)],
+		Vector2i(20, 9): ["52_kiln_mould_store", Vector2i(11, 7)],
+		Vector2i(20, 10): ["53_kiln_bellows", Vector2i(11, 9)],
+		Vector2i(22, 9): ["54_kiln_slag_pits", Vector2i(11, 3)],
+		Vector2i(22, 10): ["55_kiln_quench_room", Vector2i(11, 4)],
+		Vector2i(21, 8): ["57_kiln_gallery", Vector2i(11, 5)],
+		Vector2i(20, 8): ["58_kiln_pattern_shop", Vector2i(20, 6)],
+		Vector2i(22, 7): ["59_kiln_bell_loft", Vector2i(11, 10)],
+	}
+	for coord: Vector2i in rooms:
+		await _jump(game, coord, rooms[coord][1])
+		await _wait(0.4)
+		await _capture(rooms[coord][0])
+
+	# The mallet coming down on a boulder in the Slag Pits.
+	var room := await _jump(game, Vector2i(22, 9), Vector2i(11, 3))
+	for enemy in room.get_children():
+		if enemy is Enemy:
+			enemy.queue_free()
+	game.player.facing = Vector2.UP
+	await _wait(0.2)
+	game.player.use_item("stonebreaker")
+	await _wait(0.1)
+	await _capture("54b_kiln_mallet_raise")
+	await _wait(0.1)
+	await _capture("54c_kiln_mallet_smash")
+	await _wait(0.5)
+
+	# A Clinker flipped onto its back.
+	for child in room.get_children():
+		if child is Clinker:
+			child.queue_free()
+	var clinker := Clinker.new()
+	clinker.position = Vector2(11 * Room.TILE + 8, 5 * Room.TILE + 12)
+	room.add_child(clinker)
+	game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 3 * Room.TILE + 12)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	clinker.ai_enabled = false
+	clinker.mallet_hit(Vector2.DOWN)
+	await _wait(0.4)
+	await _capture("54d_kiln_clinker_flipped")
+
+	# The Riser: lava climbing behind Wren.
+	room = await _jump(game, Vector2i(22, 8), Vector2i(11, 11))
+	game.player.global_position = room.global_position + Vector2(20 * Room.TILE + 8, 8 * Room.TILE + 12)
+	await _wait(5.0)
+	await _capture("56_kiln_riser")
+
+	# The Slagwyrm: chasing, plates set hard by a pool, then the wake.
+	room = await _jump(game, Vector2i(21, 7), Vector2i(11, 10))
+	await _wait(1.6)
+	var boss: Slagwyrm = null
+	for child in room.get_children():
+		if child is Slagwyrm:
+			boss = child
+	if boss:
+		# Wren can't be hurt during these shots: a death would reload the room.
+		game.player._invuln = 999.0
+		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12)
+		await _wait(1.6)
+		await _capture("60_slagwyrm")
+		for i in boss.segments.size():
+			if i % 2 == 0:
+				boss.segments[i].harden(6.0)
+		boss.ai_enabled = false
+		await _wait(0.3)
+		await _capture("61_slagwyrm_crusted")
+		boss.ai_enabled = true
+		boss._go_under()
+		await _wait(0.6)
+		await _capture("62_slagwyrm_wake")
+		await _wait(1.4)
+		await _capture("63_slagwyrm_tell")
+		await _wait(1.0)
+		while boss and is_instance_valid(boss) and boss.segments.size() > 0:
+			boss.segment_smashed(boss.segments[0])
+		await _wait(1.6)
+		await _capture("64_slagwyrm_stone")
+		await _wait(2.5)
+		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 12)
+		await _wait(0.3)
+		await _capture("65_ember_bell")
+		game.player._invuln = 0.0
 
 
 func _dialogue_box(game: Node) -> DialogueBox:

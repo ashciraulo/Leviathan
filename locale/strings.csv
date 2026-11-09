@@ -55,7 +55,6 @@ TOAST_BIG_DOOR_OPEN,The big key turns. The great door groans open.
 TOAST_CHEST_APPEARS,A chest appears!
 TOAST_GATE_OPENS,Something unlocks with a clank.
 BOSS_MATRIARCH,The Barnacle Matriarch
-TOAST_BOSS_DOWN,The Matriarch sinks into the bilge.
 TOAST_BELL_QUIET,The Tidebell hums softly.
 BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
@@ -307,6 +306,25 @@ DUNSTAN_2,Bell's quiet. Sea's quiet. Even the gulls are quiet. Whole coast's hol
 DUNSTAN_ROPE_1,Marga sent you? Was she asking nicely?
 DUNSTAN_ROPE_2,...Hm. Tell her she'll have it by supper.
 DUNSTAN_AGAIN,Rope's coming. Rope's always coming.
+ROOM_KILN_ENTRY,The Kiln
+ROOM_KILN_CASTING,The Kiln: Casting Floor
+ROOM_KILN_MOULDS,The Kiln: Mould Store
+ROOM_KILN_BELLOWS,The Kiln: Bellows Room
+ROOM_KILN_SLAG_PITS,The Kiln: Slag Pits
+ROOM_KILN_QUENCH,The Kiln: Quench Room
+ROOM_KILN_RISER,The Kiln: Riser
+ROOM_KILN_BELL_LOFT,The Kiln: Bell Loft
+ROOM_KILN_GALLERY,The Kiln: Pouring Gallery
+ROOM_KILN_PATTERNS,The Kiln: Pattern Shop
+ROOM_KILN_BOSS,The Kiln: Crucible
+DUNGEON_KILN,The Kiln
+TOAST_GOT_STONEBREAKER,You found the Stonebreaker Mallet!
+GOT_STONEBREAKER_1,"The Stonebreaker Mallet! An iron-bound head on an ash handle, heavy enough to dent an anvil."
+GOT_STONEBREAKER_2,"Press its item key (U or I) to bring it down in front of you. It bursts cracked boulders, drives pegs into the floor and flips armoured shells."
+BOSS_SLAGWYRM,The Slagwyrm
+BELL_KILN_1,"You ring the Ember Bell. A low, warm note fills the foundry, and the furnaces settle."
+BELL_KILN_2,"Somewhere under the bay, the great breathing slows. The fire is banked and low."
+BELL_KILN_3,You learned the second phrase of the lullaby. Your Resonance grows.
 OPENING_1,"For a thousand years, seven bells have kept the Old One asleep beneath the bay."
 OPENING_2,"At every turn of the tide a keeper rang them. Lately, only one keeper was left."
 OPENING_3,"Last night, out on the point at Saltmarrow, the oldest bell went quiet."

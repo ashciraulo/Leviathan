@@ -216,8 +216,8 @@ func _spit(to_player: Vector2) -> void:
 		var shot := BarnacleShot.new()
 		var angle := aim + (i - (count - 1) / 2.0) * spread
 		shot.velocity = Vector2.from_angle(angle) * SHOT_SPEED
-		shot.global_position = global_position + Vector2(0, -16)
 		get_parent().add_child(shot)
+		shot.global_position = global_position + Vector2(0, -16)
 
 
 func _die() -> void:
