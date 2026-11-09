@@ -14,12 +14,23 @@ const CUT_FROM := Vector2(21 * 16 + 8, 5 * 16 + 4)
 ## Where the path to the village leaves the shore (room 0,0): Hessa's lamp
 ## shows there in the opening.
 const SHORE_PATH := Vector2(12 * 16, 10)
+## The Rotting Hull's boss chamber, where Sister Lowe is first met.
+const HULL_BOSS := Vector2i(10, 7)
+const LOWE_HULL_FLAG := "seen_lowe_hull"
+## Where Lowe and her singers stand, from the Matriarch's feet, and the
+## holes in the deck they drop through (the chamber's top corners).
+const LOWE_FROM_BOSS := Vector2(-36, 40)
+const SINGERS_FROM_BOSS := [Vector2(-30, 4), Vector2(30, 4)]
+const HULL_HOLES := [Vector2(3 * 16 + 16, 2 * 16 + 16), Vector2(19 * 16 + 16, 2 * 16 + 16)]
+## Where Wren stops to watch, in the chamber.
+const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
 var game: Node
 
 
 func _ready() -> void:
 	game = get_parent()
+	add_to_group("story_director")
 	Events.game_started.connect(_on_game_started)
 	Events.room_entered.connect(_on_room_entered)
 
@@ -40,6 +51,14 @@ func _on_room_entered(coord: Vector2i) -> void:
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		the_wayshell()
+	elif lowe_waits(coord):
+		lowe_at_the_hull()
+
+
+## True while Lowe's scene is still to play in this room: the Matriarch
+## sleeps until it does.
+static func lowe_waits(coord: Vector2i) -> bool:
+	return coord == HULL_BOSS and not GameState.has_flag(LOWE_HULL_FLAG) and not GameState.has_flag(BarnacleMatriarch.DEFEATED_FLAG)
 
 
 func _scene() -> Cutscene:
@@ -108,6 +127,53 @@ func the_wayshell() -> void:
 	await scene.narrate(["NARRATE_GOT_WAYSHELL"])
 	await scene.speak("hessa", ["WAYSHELL_4"])
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	scene.finish()
+
+
+## Cutscene 4, "Lowe at the Hull": Sister Lowe and two singers are prying
+## the Point Bell out from under the sleeping Matriarch. Lowe warns Wren off,
+## the Matriarch wakes, and the Choir drops through holes in the deck.
+func lowe_at_the_hull() -> void:
+	GameState.set_flag(LOWE_HULL_FLAG)
+	var room: Node2D = game.current_room
+	var boss := get_tree().get_first_node_in_group("boss") as BarnacleMatriarch
+	var at: Vector2 = boss.position if boss else Vector2(11 * 16 + 8, 3 * 16 + 12)
+	var singers: Array[ChoirFigure] = []
+	for i in SINGERS_FROM_BOSS.size():
+		var singer := ChoirFigure.new("singer")
+		singer.position = at + SINGERS_FROM_BOSS[i]
+		singer.prying = true
+		singer.face(i == 1)
+		room.add_child(singer)
+		singers.append(singer)
+	var lowe := ChoirFigure.new("lowe")
+	lowe.position = at + LOWE_FROM_BOSS
+	room.add_child(lowe)
+	var scene := _scene()
+	await scene.wait(0.6)
+	await scene.walk_route(room.global_position + WATCH_FROM)
+	scene.face(Vector2.UP)
+	await scene.wait(0.6)
+	lowe.talking = true
+	await scene.speak("lowe", ["LOWE_HULL_1"])
+	lowe.talking = false
+	await scene.wait(0.5)
+	lowe.talking = true
+	await scene.speak("lowe", ["LOWE_HULL_2"])
+	lowe.talking = false
+	await scene.wait(0.6)
+	if boss:
+		boss.wake()
+	await scene.wait(0.8)
+	await scene.speak("lowe", ["LOWE_HULL_3"])
+	var runs: Array[ChoirFigure] = [singers[0], lowe, singers[1]]
+	var holes := [HULL_HOLES[0], HULL_HOLES[0], HULL_HOLES[1]]
+	for i in runs.size():
+		runs[i].flee_into(holes[i], 0.7 + 0.25 * i)
+	await scene.wait(1.5)
+	for figure in runs:
+		if is_instance_valid(figure):
+			figure.queue_free()
 	scene.finish()
 
 

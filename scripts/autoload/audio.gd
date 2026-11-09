@@ -93,6 +93,7 @@ const SFX := {
 	"beetle_crack": {"wave": "square", "f0": 240.0, "f1": 120.0, "dur": 0.2, "vol": 0.3, "caption": "CAPTION_TELL"},
 	"spore_swell": {"wave": "triangle", "f0": 300.0, "f1": 600.0, "dur": 0.5, "vol": 0.25, "caption": "CAPTION_TELL"},
 	"spore_burst": {"wave": "noise", "f0": 2200.0, "f1": 600.0, "dur": 0.3, "vol": 0.35},
+	"seal_bark": {"wave": "square", "f0": 330.0, "f1": 220.0, "dur": 0.25, "vol": 0.3, "caption": "CAPTION_TELL"},
 	"tidestone_wake": {"wave": "triangle", "f0": 196.0, "f1": 196.0, "dur": 0.9, "vol": 0.5, "steps": 4, "caption": "CAPTION_TIDESTONE"},
 	"bell_ring": {"wave": "triangle", "f0": 784.0, "f1": 780.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_BELL"},
 	"secret": {"wave": "square", "f0": 523.0, "f1": 523.0, "dur": 0.5, "vol": 0.3, "steps": 4, "caption": "CAPTION_SECRET"},

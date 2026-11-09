@@ -240,6 +240,27 @@ PAD_AXIS_2,Right stick
 PAD_AXIS_3,Right stick
 PAD_AXIS_4,LT / L2
 PAD_AXIS_5,RT / R2
+PAD_SHORT_0,A
+PAD_SHORT_1,B
+PAD_SHORT_2,X
+PAD_SHORT_3,Y
+PAD_SHORT_4,Back
+PAD_SHORT_5,Home
+PAD_SHORT_6,Start
+PAD_SHORT_7,LS
+PAD_SHORT_8,RS
+PAD_SHORT_9,LB
+PAD_SHORT_10,RB
+PAD_SHORT_11,Up
+PAD_SHORT_12,Down
+PAD_SHORT_13,Left
+PAD_SHORT_14,Right
+PAD_SHORT_AXIS_0,LS
+PAD_SHORT_AXIS_1,LS
+PAD_SHORT_AXIS_2,RS
+PAD_SHORT_AXIS_3,RS
+PAD_SHORT_AXIS_4,LT
+PAD_SHORT_AXIS_5,RT
 JOURNEY_FILE,File
 JOURNEY_FILE_N,File %d
 JOURNEY_PLACE,Now at
@@ -396,6 +417,12 @@ ROOM_KESTREL_LEDGE,Kestrel Ledge
 ROOM_THRIFT_POINT,Thrift Point
 ROOM_SPIRE_APPROACH,Spire Approach
 ROOM_WINDBREAK_CLIFFS,Windbreak Cliffs
+ROOM_RIMEWATCH_PASS,Rimewatch Pass
+ROOM_FROSTBITE_SHELF,Frostbite Shelf
+ROOM_GLACIER_FOOT,Glacier Foot
+ROOM_SHIVER_COAST,Shiver Coast
+ROOM_FLOE_STRAND,Floe Strand
+ROOM_STILL_COVE,Still Cove
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast
@@ -466,3 +493,7 @@ AGNA_AFTER_2,"My forge is lit again. Here. Brinesteel, from the same metal as th
 NARRATE_GOT_BRINESTEEL,Wren got the Brinesteel sword.
 AGNA_AFTER_3,"It'll ring when it strikes true. Mind you listen for it."
 AGNA_SMITH,"The forge stays lit now. Come back if that blade ever dulls."
+NAME_LOWE,Sister Lowe
+LOWE_HULL_1,"Put your backs into it. The bell's under her, and Vael wants it before the tide turns."
+LOWE_HULL_2,"A keeper's child, all the way down here? Go home, little lamp. This is bigger than you."
+LOWE_HULL_3,"She's waking! Leave the bar. Down the holes, both of you. Now!"

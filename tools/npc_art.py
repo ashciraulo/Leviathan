@@ -314,7 +314,91 @@ def agna_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# The Choir, in grey robes (the Hull's iron grey, "S"). Sister Lowe wears
+# her hood down: black hair scraped back, a hard brow, a brass tuning fork
+# on a cord. Her singers keep their hoods up and pry with iron bars.
+# --------------------------------------------------------------------------
+LOWE = [
+    "................",
+    "......vvvv......",
+    ".....vvvvvv.....",
+    "....vvvvvvvv....",
+    "....vAAAAAAv....",
+    "....veeAAeev....",
+    "....AAeAAeAA....",
+    "....AAAAAAAA....",
+    ".....AA--AA.....",
+    "......AAAA......",
+    "...SSSSSSSSSS...",
+    "..SSSSSSSSSSSS..",
+    "..SSSSJSJSSSSS..",
+    ".ASSSSJSJSSSSSA.",
+    ".ASSSSJJJSSSSSA.",
+    ".ASSSUUJUUUSSSA.",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "...SSSSSSSSSS...",
+    "....vv....vv....",
+    "................",
+]
+
+
+def lowe_frames():
+    idle = LOWE
+    breathe = settle(idle, 10)
+    # Talking: one arm thrown out, giving orders.
+    talk = paint(idle, [(13, 14, "S."), (14, 14, "S."), (12, 14, "SA"), (11, 14, "SA"), (10, 15, "A")])
+    return [idle, breathe, talk]
+
+
+SINGER = [
+    "................",
+    "................",
+    "......SSSS......",
+    ".....SSSSSS.....",
+    "....SSSSSSSS....",
+    "....SS1111SS....",
+    "....SVeVVeVS....",
+    "....SVVVVVVS....",
+    "....SSVVVVSS....",
+    "...SSSSSSSSSS...",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    ".VSSSSSSSSSSSSV.",
+    ".VSSSSSSSSSSSSV.",
+    "..SSSUUUUUUSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "..SSSSSSSSSSSS..",
+    "...SSSSSSSSSS...",
+    "...SSSSSSSSSS...",
+    "....vv....vv....",
+    "................",
+]
+
+
+def singer_frames():
+    idle = SINGER
+    breathe = settle(idle, 9)
+    # Prying: both hands on an iron bar driven down under the Matriarch,
+    # leaning on it, then heaving.
+    pry_a = paint(idle, [(12, 0, ".."), (13, 0, ".."), (12, 14, ".."), (13, 14, "..")]
+                  + [(11, 3, "VV"), (11, 11, "VV")]
+                  + [(11 + i, 11 - (i * 7) // 11, "U") for i in range(12)])
+    pry_b = settle(pry_a, 12)
+    pry_b = paint(pry_b, [(12 + i, 11 - (i * 7) // 10, "U") for i in range(11)])
+    return [idle, breathe, pry_a, pry_b]
+
+
 SPRITES = {
+    "lowe": lowe_frames,
+    "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
     "corrin": corrin_frames,
@@ -483,7 +567,20 @@ def portrait_agna():
     return _rows(c)
 
 
+def portrait_lowe():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
+    _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, down
+    _dots(c, [(16, 26), (16, 27), (15, 28), (16, 28), (17, 28), (16, 29)], "J")  # tuning fork
+    _ellipse(c, 16, 13, 10, 8, "v")                    # black hair, scraped back
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, cheeks=False)
+    _box(c, 10, 14, 4, 1, "v")                         # hard brows
+    _box(c, 18, 14, 4, 1, "v")
+    return _rows(c)
+
+
 PORTRAITS = {
+    "lowe": portrait_lowe(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

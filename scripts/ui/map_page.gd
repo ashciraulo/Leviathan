@@ -22,6 +22,7 @@ const BIOME_COLORS := {
 	"gloamfen": [Color("#655a78"), Color("#2a5458"), Color("#2e2650")],
 	"gale": [Color("#8e9cb4"), Color("#36405a"), Color("#8fc4e8")],
 	"windmere": [Color("#8fb15a"), Color("#e8e2d0"), Color("#2f6e9e")],
+	"frostspine": [Color("#dce6f2"), Color("#5a98cc"), Color("#365e84")],
 }
 const DEFAULT_COLORS := [Color("#b0a08e"), Color("#3a2e44"), Color("#2e7f8c")]
 

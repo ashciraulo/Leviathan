@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Stops a push that CI would fail in its first ten seconds.
+# Enable with: git config core.hooksPath .githooks
+exec bash "$(git rev-parse --show-toplevel)/tools/check.sh"

@@ -41,6 +41,7 @@ func _ready() -> void:
 	await _test_cinderreach()
 	await _test_gloamfen()
 	await _test_windmere()
+	await _test_frostspine()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -505,6 +506,47 @@ func _test_story() -> void:
 	_check(GameState.has_item("wayshell"), "Hessa gives Wren the Wayshell")
 	_check(Conversations.branch_for("hessa")["lines"][0] == "HESSA_AFTER_BELL", "Hessa points Wren to the Kiln afterwards")
 	home.queue_free()
+	await _wait(0.1)
+
+	# The Hull's boss chamber, the first time: Sister Lowe and her singers
+	# are prying at the sleeping Matriarch, and drop away when she wakes.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.HULL_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var hold: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hold)
+	await _wait(0.2)
+	_check(Cutscene.active, "the Matriarch's chamber starts Lowe's scene")
+	var choir: Array = hold.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(choir.size() == 3, "Lowe and two singers are in the chamber (%d)" % choir.size())
+	var sleeper: BarnacleMatriarch = null
+	for child in hold.current_room.get_children():
+		if child is BarnacleMatriarch:
+			sleeper = child
+	_check(sleeper != null and sleeper.mode == BarnacleMatriarch.Mode.INTRO and sleeper.modulate == BarnacleMatriarch.SLEEPING, "the Matriarch sleeps through the start")
+	var lowe_pages := await _play_scene(hold, 12.0)
+	_check(not Cutscene.active and not hold.player.in_cutscene, "Lowe's scene hands Wren back")
+	_check(lowe_pages == 3 and GameState.has_flag(StoryDirector.LOWE_HULL_FLAG), "Sister Lowe speaks three times (%d)" % lowe_pages)
+	var choir_left := 0
+	for figure: Variant in choir:
+		if is_instance_valid(figure):
+			choir_left += 1
+	_check(choir_left == 0, "the Choir is gone through the deck (%d left)" % choir_left)
+	for feet in [StoryDirector.LOWE_FROM_BOSS] + StoryDirector.SINGERS_FROM_BOSS:
+		var y: float = (sleeper.position.y if sleeper else 0.0) + feet.y
+		_check(y < 9 * Room.TILE, "the Choir stands clear of the dialogue box")
+	await _wait(1.6)
+	_check(is_instance_valid(sleeper) and sleeper.mode != BarnacleMatriarch.Mode.INTRO and sleeper.modulate == Color.WHITE, "the Matriarch wakes and fights")
+	hold.queue_free()
+	await _wait(0.1)
+	# Coming back (the scene has played): she rises at once, wide awake.
+	var back: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(back)
+	await _wait(0.2)
+	_check(not Cutscene.active, "Lowe's scene only plays once")
+	for child in back.current_room.get_children():
+		if child is BarnacleMatriarch:
+			_check(child.modulate == Color.WHITE, "the Matriarch is awake when Wren comes back")
+	back.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
 
@@ -1127,7 +1169,8 @@ func _test_hull_dungeon() -> void:
 	await _wait(0.4)
 	_check(GameState.flags.get(BigDoor.flag_for(room.coord), false), "the big key opens the great door")
 
-	# The Barnacle Matriarch.
+	# The Barnacle Matriarch (Sister Lowe's scene is tested in _test_story).
+	GameState.set_flag(StoryDirector.LOWE_HULL_FLAG)
 	room = await _goto(game, Vector2i(10, 7), Vector2i(11, 10))
 	var boss: BarnacleMatriarch = _child_of(room, BarnacleMatriarch)[0] if _child_of(room, BarnacleMatriarch).size() > 0 else null
 	_check(boss != null, "the Matriarch waits in the Figurehead Hold")
@@ -1460,13 +1503,45 @@ func _test_items() -> void:
 	var old := SaveManager.read_summary(TEST_SLOT)
 	_check(int(old.get("bubbles", 0)) == 8 and str(old.get("place", "")) != "", "old saves get a summary")
 	# A gamepad button for Tab Next, which has no default button.
-	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	# It has no button to give back, so it can't take one in use.
+	_check(not Settings.rebind("tab_next", _pad_event(JOY_BUTTON_A)), "Tab Next can't take a button in use")
+	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_STICK))
 	var has_button := false
 	for event in InputMap.action_get_events("tab_next"):
-		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER)
-	_check(has_button, "rebinding Tab Next to a button works")
+		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_STICK)
+	_check(has_button, "rebinding Tab Next to a free button works")
 	Settings.pad_overrides.erase("tab_next")
 	Settings.apply()
+	# Taking a key another action uses swaps the two.
+	var key_was := Settings.key_overrides.duplicate()
+	var pad_was := Settings.pad_overrides.duplicate()
+	var take_k := InputEventKey.new()
+	take_k.physical_keycode = KEY_K
+	Settings.rebind("attack", take_k)
+	_check(Settings.main_key("attack") == KEY_K and Settings.main_key("interact") == KEY_J,
+		"rebinding to a used key swaps the two actions")
+	Settings.rebind("item_1", _pad_event(JOY_BUTTON_Y))
+	_check(Settings.main_button("item_1") == JOY_BUTTON_Y and Settings.main_button("item_2") == JOY_BUTTON_X,
+		"rebinding to a used button swaps the two actions")
+	var up_arrow := InputEventKey.new()
+	up_arrow.physical_keycode = KEY_UP
+	_check(not Settings.rebind("attack", up_arrow) and Settings.main_key("attack") == KEY_K,
+		"an arrow key (always movement) can't be taken")
+	var pause_k := InputEventKey.new()
+	pause_k.physical_keycode = KEY_K
+	_check(not Settings.rebind("pause", pause_k) and Settings.main_key("attack") == KEY_K,
+		"a swap never moves Escape off Pause")
+	Settings.key_overrides = key_was
+	Settings.pad_overrides = pad_was
+	Settings.apply()
+	# Prompts follow the device in use.
+	var pad_was_used := Settings.using_pad
+	Settings.using_pad = true
+	var pad_prompt := MenuKit.key_name("interact")
+	Settings.using_pad = false
+	var key_prompt := MenuKit.key_name("interact")
+	Settings.using_pad = pad_was_used
+	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
 	for id: String in Items.DEFS:
 		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
 	SaveManager.delete_save()
@@ -2037,5 +2112,79 @@ func _test_windmere() -> void:
 		await _wait(0.05)
 	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(stray.position), "a Tumbleburr stays in its own room (at %s)" % stray.position)
 	stray.queue_free()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Frostspine: Wren keeps sliding on slick ice after letting go, and a
+## Sledgeseal rears (its tell) before it toboggans, glancing off blows to
+## its face while it slides.
+func _test_frostspine() -> void:
+	# The overworld's x (ice) and q (Sporecap) mean a wisp and a Shade in a
+	# dungeon.
+	var hollow: Room = (load("res://rooms/room_24_8.tscn") as PackedScene).instantiate()
+	add_child(hollow)
+	_check(_child_of(hollow, Wisp).size() > 0 and _child_of(hollow, Shade).size() > 0, "Mire rooms still spawn wisps and Shades")
+	_check(_child_of(hollow, Sporecap).is_empty() and not hollow.has_node("IceField"), "Mire rooms get no Sporecaps or slick ice")
+	hollow.queue_free()
+	var foot_room: Room = (load("res://rooms/room_0_-3.tscn") as PackedScene).instantiate()
+	var foot := Room.parse_layout(foot_room.layout)
+	_check(foot_room.door_to == Vector2i(32, 10) and foot[1][11] == "D" and _walkable_from(foot, Vector2i(23, 3)).has(Vector2i(11, 2)), "Glacier Foot's doorway leads into the Hollow Glacier")
+	foot_room.free()
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(1, -3), Vector2(4 * Room.TILE + 8, 5 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var room: Room = game.current_room
+	var player: Player = game.player
+	var ice := room.get_node_or_null("IceField") as IceField
+	_check(ice != null, "Frostbite Shelf has slick ice")
+	if ice != null:
+		# Run onto the ice heading right, then let go.
+		player.global_position = room.global_position + Vector2(10 * Room.TILE + 8, 6 * Room.TILE + 8)
+		ice.momentum = Vector2(Player.SPEED, 0)
+		var start_x := player.global_position.x
+		await _wait(0.4)
+		_check(player.global_position.x > start_x + 12.0, "Wren keeps sliding on the ice with no input (moved %.1f)" % (player.global_position.x - start_x))
+		# Off the ice, Wren stops at once.
+		player.global_position = room.global_position + Vector2(4 * Room.TILE + 8, 3 * Room.TILE + 12)
+		await _wait(0.1)
+		ice.momentum = Vector2(90, 0)
+		var still := player.global_position
+		await _wait(0.3)
+		_check(player.global_position.distance_to(still) < 1.0, "on snow Wren has their footing")
+	var seal := Sledgeseal.new()
+	seal.position = Vector2(4 * Room.TILE, 9 * Room.TILE - 4)
+	room.add_child(seal)
+	player.global_position = room.global_position + Vector2(11 * Room.TILE, 9 * Room.TILE - 4)
+	var reared := false
+	var slid_after := false
+	for i in 40:
+		await _wait(0.05)
+		reared = reared or seal.mode == Sledgeseal.Mode.REAR
+		if seal.is_sliding():
+			slid_after = reared
+			break
+	_check(slid_after, "a Sledgeseal rears before it slides")
+	if seal.is_sliding():
+		_check(seal.take_hit(1, Vector2.LEFT) == Enemy.HitResult.BLOCKED, "a blow to a sliding seal's face glances off")
+		_check(seal.take_hit(1, Vector2.DOWN) == Enemy.HitResult.HIT, "its flank can be struck")
+	seal.queue_free()
+	# A slide toward an open exit (row 6 runs out east) pulls up at the edge.
+	var runaway := Sledgeseal.new()
+	runaway.position = Vector2(18 * Room.TILE, 6 * Room.TILE + 8)
+	room.add_child(runaway)
+	player.global_position = room.global_position + Vector2(2 * Room.TILE, 3 * Room.TILE + 12)
+	await _wait(0.1)
+	runaway.mode = Sledgeseal.Mode.SLIDE
+	runaway._direction = Vector2.RIGHT
+	runaway._timer = Sledgeseal.SLIDE_MAX
+	await _wait(1.0)
+	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(runaway.position) and runaway.mode != Sledgeseal.Mode.SLIDE, "a Sledgeseal can't slide out of its room (at %s)" % runaway.position)
+	runaway.queue_free()
+	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)
