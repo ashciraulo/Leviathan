@@ -7,6 +7,8 @@ const GAME_SCENE := "res://scenes/game.tscn"
 const CREDITS_SCENE := "res://scenes/credits.tscn"
 const LOGO_TOP := 18.0
 const LOGO_BOB := 2.0
+const FADE_IN := 0.8
+const FADE_OUT := 0.5
 
 var _logo: TextureRect
 var _menu: VBoxContainer
@@ -16,6 +18,8 @@ var _files: FileSelect
 var _options: SettingsPage
 var _last_focus: Control
 var _continue: Button
+var _fade: ColorRect
+var _leaving := false
 
 
 func _ready() -> void:
@@ -38,7 +42,11 @@ func _ready() -> void:
 	menu.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	menu.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	menu.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	menu.offset_bottom = -16
+	menu.offset_bottom = -10
+	# The menu surfaces a moment after the scene fades in.
+	# It takes no input until it has fully appeared.
+	menu.modulate.a = 0.0
+	menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_DISABLED
 	add_child(menu)
 
 	_menu = menu
@@ -49,17 +57,8 @@ func _ready() -> void:
 	var new_game_button := UI.button("MENU_JOURNEYS", func() -> void: _show_page(_files))
 	menu.add_child(new_game_button)
 	menu.add_child(UI.button("MENU_OPTIONS", func() -> void: _show_page(_options)))
-	menu.add_child(UI.button("MENU_CREDITS", func() -> void:
-		get_tree().change_scene_to_file.call_deferred(CREDITS_SCENE)))
+	menu.add_child(UI.button("MENU_CREDITS", func() -> void: _leave_to(CREDITS_SCENE)))
 	menu.add_child(UI.button("MENU_QUIT", func() -> void: get_tree().quit()))
-
-	var controls := UI.label("TITLE_CONTROLS")
-	controls.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	controls.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	controls.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	controls.offset_bottom = -2
-	controls.modulate = Color(1, 1, 1, 0.6)
-	add_child(controls)
 
 	_overlay = ColorRect.new()
 	(_overlay as ColorRect).color = Color(0.03, 0.05, 0.1, 0.78)
@@ -76,7 +75,21 @@ func _ready() -> void:
 		_overlay.add_child(page)
 
 	var first := continue_button if continue_button.visible else new_game_button
-	first.grab_focus.call_deferred()
+
+	_fade = ColorRect.new()
+	_fade.color = Color.BLACK
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_fade)
+	create_tween().tween_property(_fade, "color:a", 0.0, FADE_IN)
+	var appear := create_tween()
+	appear.tween_property(menu, "modulate:a", 1.0, 0.6).set_delay(FADE_IN * 0.75)
+	appear.tween_callback(func() -> void:
+		if _leaving:
+			return
+		menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_INHERITED
+		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		first.grab_focus())
 
 
 func _show_page(page: MenuPage) -> void:
@@ -138,4 +151,21 @@ func _on_file_chosen(slot: int, new_game: bool) -> void:
 		# Never overwrite a file that won't load: show the files instead.
 		_show_page(_files)
 		return
-	get_tree().change_scene_to_file(GAME_SCENE)
+	_leave_to(GAME_SCENE)
+
+
+## Fade to black, then change scene. Menus stop taking input meanwhile.
+func _leave_to(scene: String) -> void:
+	if _leaving:
+		return
+	_leaving = true
+	get_viewport().gui_release_focus()
+	_page = null
+	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Tab could otherwise put focus back on a button mid-fade.
+	_menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_DISABLED
+	_overlay.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_DISABLED
+	Audio.stop_music(FADE_OUT)
+	var tween := create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, FADE_OUT)
+	tween.tween_callback(func() -> void: get_tree().change_scene_to_file(scene))

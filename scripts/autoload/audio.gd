@@ -107,6 +107,7 @@ var _voices: Array[AudioStreamPlayer2D] = []
 var _flat_voices: Array[AudioStreamPlayer] = []
 var _next_voice := 0
 var _streams: Dictionary = {}
+var _prewarm_task := -1
 var _last_played: Dictionary = {}
 var _warned: Dictionary = {}
 var _duck_tween: Tween
@@ -133,6 +134,30 @@ func _ready() -> void:
 		flat.bus = "Effects"
 		add_child(flat)
 		_flat_voices.append(flat)
+	# Building a placeholder takes up to ~15 ms: do them all off the main
+	# thread now, so the first sword swing or bell doesn't hitch a frame.
+	_prewarm_task = WorkerThreadPool.add_task(_prewarm)
+
+
+func _exit_tree() -> void:
+	if _prewarm_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_prewarm_task)
+		_prewarm_task = -1
+
+
+## Runs on a worker thread: synthesises every effect that has no file.
+func _prewarm() -> void:
+	var built := {}
+	for id: String in SFX:
+		if not (ResourceLoader.exists(SFX_DIR + id + ".ogg") or ResourceLoader.exists(SFX_DIR + id + ".wav")):
+			built[id] = synth(SFX[id])
+	_take_prewarmed.call_deferred(built)
+
+
+func _take_prewarmed(built: Dictionary) -> void:
+	for id: String in built:
+		if not _streams.has(id):
+			_streams[id] = built[id]
 
 
 # --------------------------------------------------------------------------

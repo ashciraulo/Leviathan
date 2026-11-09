@@ -18,17 +18,33 @@ jobs:
         with:
           lfs: true
 
-      - name: Check generated art is up to date
+      - name: Check generated art and text
         run: |
           python3 tools/build_art.py --check
+          python3 tools/check_strings.py
           python3 tools/hull_rooms.py --check
           python3 tools/kiln_rooms.py --check
 
+      # Cached: GitHub's release downloads sometimes time out (504).
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
       - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
         run: |
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip
-          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$RUNNER_TEMP/godot"
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
           "$RUNNER_TEMP/godot" --version
 
       - name: Import project
@@ -60,9 +76,12 @@ jobs:
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/screenshots.tscn 2>&1 | tee shots.log
           timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
             "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/menu_screenshots.tscn 2>&1 | tee -a shots.log
+          # The same menus with every string 40% longer (long-text check).
+          LEVIATHAN_PSEUDO=1 timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
+            "$RUNNER_TEMP/godot" --rendering-driver opengl3 --audio-driver Dummy --path . res://tests/menu_screenshots.tscn 2>&1 | tee -a shots.log
           ls -la screenshots
           # Also print the PNGs as base64 so they can be read from the job log.
-          for f in screenshots/*.png; do
+          for f in $(ls screenshots/*.png | grep -v /pseudo_); do
             echo "BEGIN_PNG $(basename "$f")"
             base64 -w 4000 "$f"
             echo "END_PNG"

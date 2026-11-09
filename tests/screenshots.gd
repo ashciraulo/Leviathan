@@ -20,7 +20,7 @@ func _ready() -> void:
 	# 1. Title screen.
 	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
 	add_child(title)
-	await _wait(0.3)
+	await _wait(1.6)
 	await _capture("01_title")
 	title.queue_free()
 
