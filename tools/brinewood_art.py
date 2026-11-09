@@ -270,6 +270,8 @@ RAMPS = {
     "B": ["#B8A890", "#8E7E6E", "#6A5A52", "#4A3E40", "#2E2630"],   # mangrove bark
     "h": ["#D8C8A8", "#A8987A", "#7A6E5E", "#52483E", "#2E2628"],   # sea-worn hull
     "v": ["#5E4E48", "#4A3E3A", "#3A302E", "#2A2224", "#1A1418"],   # inside a hull
+    "i": ["#D8D0A0", "#A8A070", "#7A7A52", "#545A42", "#2E3430"],   # mudskipper skin
+    "u": ["#8E7E5E", "#6E5E46", "#54463A", "#3A302A", "#221C1C"],   # bog mud
     "z": ["#B8D88A", "#86B86A", "#5E8E52", "#3E6648", "#22403A"],   # weed on wood
 }
 FLAT = {"@": "#F2A541", "*": "#FFE36E"}  # lantern frame, lantern glow
@@ -400,3 +402,58 @@ def lantern_post():
     for x in range(5, 9):
         c[29][x] = "B"
     return ["".join(r) for r in c]
+
+
+# --------------------------------------------------------------------------
+# Bogskipper: an ambusher that lies in the mud with only its eyes showing.
+# --------------------------------------------------------------------------
+BOGSKIPPER = {
+    "hidden": [
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "....We....eW....",
+        "....ee....ee....",
+        "...uiiu..uiiu...",
+        "..uuuuuuuuuuuu..",
+        ".uuuuuuuuuuuuuu.",
+        "..uuuuuuuuuuuu..",
+        "................",
+    ],
+    "rise": [
+        "................",
+        "................",
+        "................",
+        ".....We..eW.....",
+        ".....ee..ee.....",
+        "....iiiiiiii....",
+        "...iiiKKKKiii...",
+        "...iiiiiiiiii...",
+        "..uiiiiiiiiiiu..",
+        ".uuuuuuuuuuuuuu.",
+        "uuuuuuuuuuuuuuuu",
+        ".uuuuuuuuuuuuuu.",
+        "..uuuuuuuuuuuu..",
+        "................",
+    ],
+    "body": [
+        "................",
+        "................",
+        ".....We..eW.....",
+        ".....ee..ee.....",
+        "....iiiiiiii....",
+        "...iiiiiiiiii...",
+        "..iiiiiiiiiiii..",
+        ".iiijjjjjjjjiii.",
+        ".ii.ijjjjjji.ii.",
+        "....iiiiiiii....",
+        ".....iiiiii.....",
+        "......iiii......",
+        ".....ii..ii.....",
+        "................",
+    ],
+}

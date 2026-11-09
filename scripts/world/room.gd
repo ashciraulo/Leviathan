@@ -7,6 +7,7 @@ extends Node2D
 ##          .  floor          P  start position (first room only)
 ##          T  Tidestone      c  Scuttler (chaser)
 ##          s  Spitter (shooter)    b  Shellback (blocker)
+##          m  Bogskipper (ambusher, hides in the mud)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   (big props: put the letter where the
@@ -129,6 +130,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Scuttler.new()
 		"s":
 			node = Spitter.new()
+		"m":
+			node = Bogskipper.new()
 		"b":
 			node = Shellback.new()
 		_ when Prop.is_prop(tile):

@@ -214,6 +214,22 @@ func _test_play() -> void:
 	shell.queue_free()
 	await _wait(0.1)
 
+	# Bogskipper can't be hit while buried, rises when Wren comes close.
+	var bog := Bogskipper.new()
+	bog.position = Vector2(150, row_y)
+	room.add_child(bog)
+	player.global_position = room.global_position + Vector2(300, row_y)
+	await _wait(0.1)
+	_check(bog.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.IGNORED, "a buried Bogskipper can't be hit")
+	_check(not bog.is_exposed(), "Bogskipper stays buried while Wren is far away")
+	player.global_position = room.global_position + Vector2(150 - Bogskipper.WAKE_RANGE + 16, row_y)
+	await _wait(Bogskipper.RISE_TIME * 0.5)
+	_check(bog.mode == Bogskipper.Mode.RISE, "Bogskipper rises when Wren comes close")
+	_check(bog.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a risen Bogskipper can be hit")
+	bog.queue_free()
+	GameState.refill()
+	await _wait(0.1)
+
 	# Hold Sword to charge, release to spin: hits all around for 2.
 	var ring_crab := Scuttler.new()
 	ring_crab.ai_enabled = false
