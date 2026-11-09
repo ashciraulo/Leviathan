@@ -103,7 +103,7 @@ func _ready() -> void:
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
 		SaveManager.save_game()
 		# Reuse the respawn path to jump straight to that room.
-		game._on_player_died()
+		game.respawn()
 		await _wait(2.2)
 		await _capture(shots[coord][0])
 
@@ -164,7 +164,7 @@ func _ready() -> void:
 	# 8. Opening a chest in the Hull's galley.
 	GameState.set_checkpoint(Vector2i(9, 9), Vector2(15 * Room.TILE + 8, 4 * Room.TILE + 4))
 	SaveManager.save_game()
-	game._on_player_died()
+	game.respawn()
 	await _wait(2.2)
 	await _capture("19_hull_galley")
 	for child in game.current_room.get_children():
@@ -198,7 +198,7 @@ func _ready() -> void:
 func _jump(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
 	GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
 	SaveManager.save_game()
-	game._on_player_died()
+	game.respawn()
 	await _wait(2.2)
 	return game.current_room
 
