@@ -91,6 +91,8 @@ func _ready() -> void:
 	body.add_child(Layers.rect_shape(Vector2(48, 14), Vector2(0, -7)))
 	add_child(body)
 	if mode == Mode.SLEEP:
+		# After the end, the echo stones keep watch round the Heart.
+		get_parent().add_child.call_deferred(EchoHall.new())
 		return
 	Events.toast.emit("BOSS_HEART")
 	Audio.play_sfx("heart_roar", global_position)

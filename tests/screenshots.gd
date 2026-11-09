@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "mantle", "lowe", "crucible", "turn", "mural"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "echoes", "mantle", "lowe", "crucible", "turn", "mural"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"hull":
 				await _hull_shots(game)
@@ -60,6 +60,8 @@ func _ready() -> void:
 				await _maw_shots(game)
 			"extras":
 				await _extras_shots(game)
+			"echoes":
+				await _echoes_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -348,6 +350,9 @@ func _ready() -> void:
 
 	# 8j. The optional rooms, and a dungeon map with its compass.
 	await _extras_shots(game)
+
+	# 8k. After the end: the echo stones, and a remembered fight.
+	await _echoes_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -1226,6 +1231,28 @@ func _crucible_shots() -> void:
 	await _skip_scene(kiln)
 	kiln.queue_free()
 	await _wait(0.2)
+
+
+func _echoes_shots(game: Node) -> void:
+	for flag in ["boss_hull", "boss_kiln", "boss_mire", "boss_gale", "boss_glacier", "boss_belfry", "boss_tomb", "boss_maw_vael", "the_end"]:
+		GameState.set_flag(flag)
+	GameState.clear_flag(EchoTrial.WOKEN_FLAG)
+	var room := await _jump(game, EchoTrial.HEART_ROOM, Vector2i(11, 11))
+	game.player._invuln = 600.0
+	# The stones rising, then all eight.
+	await _wait(1.0 + EchoHall.RISE_GAP * 3)
+	await _capture("163_echo_stones_rising")
+	await _wait(EchoHall.RISE_GAP * 5 + 1.5)
+	GameState.set_flag(EchoTrial.cleared_flag("kiln"))
+	await _capture("164_echo_stones")
+	# Into the Matriarch's echo.
+	for stone in room.get_children():
+		if stone is EchoStone and stone.id == "hull":
+			stone.activate()
+	await _wait(2.0)
+	game.player._invuln = 600.0
+	await _capture("165_echo_matriarch")
+	EchoTrial.end()
 
 
 func _extras_shots(game: Node) -> void:
