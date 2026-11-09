@@ -604,6 +604,36 @@ func _test_story() -> void:
 	mire.queue_free()
 	await _wait(0.1)
 
+	# The Gale Spire's Crown: with the Stormheron gone, Vael speaks.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.GALE_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var crown: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(crown)
+	await _wait(0.3)
+	_check(not Cutscene.active, "nothing plays on the Crown before the fight")
+	crown.player._invuln = 60.0
+	for child in crown.current_room.get_children():
+		if child is Stormheron:
+			for blow in 20:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child._stun = 0.0
+				child._hits_this_landing = 0
+				child.mode = Stormheron.Mode.GROUNDED
+				child.take_hit(1, Vector2.UP)
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.VAEL_FLAG), "bringing the Stormheron down starts Vael's scene")
+	var vael_pages := await _play_scene(crown, 15.0)
+	_check(not Cutscene.active and not crown.player.in_cutscene, "Vael's scene hands Wren back")
+	_check(vael_pages == 4, "Vael speaks four times (%d)" % vael_pages)
+	_check(StoryDirector.VAEL_AT.y < 9 * Room.TILE, "Vael stands clear of the dialogue box")
+	var vael_left: Array = crown.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(vael_left.is_empty(), "Vael leaves the Crown")
+	await _wait(3.0)
+	_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is Tidebell), "the Storm Bell is there to ring after Vael goes")
+	crown.queue_free()
+	await _wait(0.1)
+
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
@@ -1054,8 +1084,9 @@ func _test_gale_dungeon() -> void:
 	local = player.global_position - room.global_position
 	_check(game.current_room == room and local.y < 3 * Room.TILE, "the Shaft's updraft lifts Wren to the top landing (at %s)" % local)
 
-	# The Stormheron.
+	# The Stormheron (Vael's scene after it is tested in _test_story).
 	GameState.refill()
+	GameState.set_flag(StoryDirector.VAEL_FLAG)
 	room = await _goto(game, Vector2i(28, 7), Vector2i(11, 10))
 	var bosses := _child_of(room, Stormheron)
 	_check(bosses.size() == 1, "the Stormheron waits on the Crown")
