@@ -186,6 +186,39 @@ func _test_save_load() -> void:
 	SaveManager.delete_save()
 	_check(not SaveManager.has_save() and not FileAccess.file_exists(path + ".bak"),
 		"delete removes the save and its backup")
+	# Versions: an unversioned (old) save is brought up to date and loads; a
+	# save from a newer version is shown as such and never loaded.
+	GameState.reset_new_game()
+	GameState.flags["test_flag"] = true
+	SaveManager.save_game()
+	var old_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	old_data.erase("format_version")
+	old_data.erase("summary")
+	_write_json(path, old_data)
+	GameState.reset_new_game()
+	_check(SaveManager.load_game() and GameState.flags.get("test_flag") == true,
+		"a save from before versioning still loads")
+	_check(SaveManager._migrate(old_data).get("format_version") == SaveManager.FORMAT_VERSION,
+		"migrating an old save brings it to the current version")
+	var newer_data := old_data.duplicate(true)
+	newer_data["format_version"] = SaveManager.FORMAT_VERSION + 1
+	_write_json(path, newer_data)
+	GameState.reset_new_game()
+	_check(not SaveManager.load_game() and GameState.flags.get("test_flag") != true,
+		"a save from a newer version is not loaded")
+	_check(SaveManager.read_summary(SaveManager.current_slot).get("newer", false),
+		"the file select shows a newer save as such")
+	_check(SaveManager.latest_slot() != SaveManager.current_slot, "Continue skips a newer save")
+	_check(not SaveManager.save_game(), "saving never writes over a newer save")
+	_check(SaveManager.is_newer(JSON.parse_string(FileAccess.get_file_as_string(path))),
+		"the newer save is still there")
+	SaveManager.delete_save()
+
+
+func _write_json(path: String, data: Dictionary) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(data))
+	file.close()
 
 
 func _test_keys() -> void:
@@ -604,6 +637,41 @@ func _test_story() -> void:
 		_finish_talk(mire)
 		_check(GameState.has_flag(Tidebell.flag_for("mire")), "the Moth Bell rings after the scene")
 	mire.queue_free()
+	await _wait(0.1)
+
+	# The Gale Spire's Crown: with the Stormheron gone, Vael speaks.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.GALE_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var crown: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(crown)
+	await _wait(0.3)
+	_check(not Cutscene.active, "nothing plays on the Crown before the fight")
+	# Wren lands the last blow from a side ledge, cut off by open sky.
+	crown.player.global_position = crown.current_room.global_position + Vector2(3 * Room.TILE + 8, 6 * Room.TILE + 12)
+	var crown_health := GameState.bubbles
+	crown.player._invuln = 60.0
+	for child in crown.current_room.get_children():
+		if child is Stormheron:
+			for blow in 20:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child._stun = 0.0
+				child._hits_this_landing = 0
+				child.mode = Stormheron.Mode.GROUNDED
+				child.take_hit(1, Vector2.UP)
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.VAEL_FLAG), "bringing the Stormheron down starts Vael's scene")
+	var vael_pages := await _play_scene(crown, 15.0)
+	_check(not Cutscene.active and not crown.player.in_cutscene, "Vael's scene hands Wren back")
+	_check(vael_pages == 4, "Vael speaks four times (%d)" % vael_pages)
+	_check(GameState.bubbles == crown_health, "Wren stays safe on the ledge through the scene (%d)" % GameState.bubbles)
+	var ledge: Vector2 = crown.player.global_position - crown.current_room.global_position
+	_check(ledge.distance_to(Vector2(3 * Room.TILE + 8, 6 * Room.TILE + 12)) < 4.0, "with no way across the sky, Wren stays on the ledge (%s)" % ledge)
+	var vael_left: Array = crown.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
+	_check(vael_left.is_empty(), "Vael leaves the Crown")
+	await _wait(3.0)
+	_check(crown.current_room.get_children().any(func(c: Node) -> bool: return c is Tidebell), "the Storm Bell is there to ring after Vael goes")
+	crown.queue_free()
 	await _wait(0.1)
 
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
@@ -1056,8 +1124,9 @@ func _test_gale_dungeon() -> void:
 	local = player.global_position - room.global_position
 	_check(game.current_room == room and local.y < 3 * Room.TILE, "the Shaft's updraft lifts Wren to the top landing (at %s)" % local)
 
-	# The Stormheron.
+	# The Stormheron (Vael's scene after it is tested in _test_story).
 	GameState.refill()
+	GameState.set_flag(StoryDirector.VAEL_FLAG)
 	room = await _goto(game, Vector2i(28, 7), Vector2i(11, 10))
 	var bosses := _child_of(room, Stormheron)
 	_check(bosses.size() == 1, "the Stormheron waits on the Crown")

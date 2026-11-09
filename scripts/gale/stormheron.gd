@@ -233,7 +233,8 @@ func _die() -> void:
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
-	GameState.flags[DEFEATED_FLAG] = true
+	# Through set_flag, so the story can answer (StoryDirector.vael_at_the_spire).
+	GameState.set_flag(DEFEATED_FLAG)
 	for r: LightningRod in _rods():
 		r.set_charged(false)
 	_sprite.position = _sprite_origin
