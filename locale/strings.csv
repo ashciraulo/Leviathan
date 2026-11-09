@@ -403,6 +403,12 @@ ROOM_GLACIER_FOOT,Glacier Foot
 ROOM_SHIVER_COAST,Shiver Coast
 ROOM_FLOE_STRAND,Floe Strand
 ROOM_STILL_COVE,Still Cove
+ROOM_CAUSEWAY_END,Causeway End
+ROOM_COCKLE_FLATS,Cockle Flats
+ROOM_WRACK_SHORE,Wrack Shore
+ROOM_DROWNED_LANE,Drowned Lane
+ROOM_BELFRY_SQUARE,Belfry Square
+ROOM_WEIR_STEPS,Weir Steps
 CAPTION_HUM,Wren hums
 CAPTION_FUSE,Fuse hissing
 CAPTION_BLAST,Blast
@@ -411,6 +417,7 @@ CAPTION_WINGS,Great wings beat
 CAPTION_BLOCK,Clang
 CAPTION_TELL,Enemy winds up
 CAPTION_GUST,Wind gusts
+CAPTION_TIDE,Tide rushing in
 CAPTION_HISS,Steam hisses
 CAPTION_ROAR,Roar
 CAPTION_UNLOCK,Lock clicks open

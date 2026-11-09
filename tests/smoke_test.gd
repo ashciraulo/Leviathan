@@ -41,6 +41,7 @@ func _ready() -> void:
 	await _test_gloamfen()
 	await _test_windmere()
 	await _test_frostspine()
+	await _test_verge()
 
 	await _test_fast_travel()
 	await _test_credits()
@@ -2017,6 +2018,93 @@ func _test_frostspine() -> void:
 	await _wait(1.0)
 	_check(Rect2(Vector2.ZERO, Room.SIZE).has_point(runaway.position) and runaway.mode != Sledgeseal.Mode.SLIDE, "a Sledgeseal can't slide out of its room (at %s)" % runaway.position)
 	runaway.queue_free()
+	GameState.refill()
+	game.queue_free()
+	await _wait(0.1)
+
+
+## The Sunken Verge: the frozen-channel entrance, the tide that floods the
+## flats, and Siltrays.
+func _test_verge() -> void:
+	# Causeway End: the channel can't be crossed on foot, but two frozen
+	# tiles (Frostfang arrows) make a way over.
+	var causeway: Room = (load("res://rooms/room_1_2.tscn") as PackedScene).instantiate()
+	var rows := Room.parse_layout(causeway.layout)
+	causeway.free()
+	_check(not _walkable_from(rows, Vector2i(11, 1)).has(Vector2i(11, 6)), "the Causeway End channel can't be crossed on foot")
+	var frozen := rows.duplicate()
+	for y in [3, 4]:
+		frozen[y] = frozen[y].substr(0, 11) + "." + frozen[y].substr(12)
+	_check(_walkable_from(frozen, Vector2i(11, 1)).has(Vector2i(11, 6)), "two frozen tiles bridge the channel")
+	var square: Room = (load("res://rooms/room_1_3.tscn") as PackedScene).instantiate()
+	_check(square.door_to == Vector2i(36, 10) and Room.parse_layout(square.layout)[7][12] == "D", "Belfry Square's doorway leads into the Drowned Belfry")
+	square.free()
+
+	GameState.reset_new_game()
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	GameState.set_checkpoint(Vector2i(0, 2), Vector2(6 * Room.TILE + 8, 7 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	var player: Player = game.player
+	await _calm(room)
+	var tide := room.get_node_or_null("Tide") as Tide
+	_check(tide != null, "Cockle Flats has a tide")
+	if tide == null:
+		game.queue_free()
+		return
+	# Low tide: the flats are sand to walk on.
+	player.global_position = _tile_pos(room, Vector2i(9, 8))
+	await _wait(0.3)
+	_check(not tide.is_flooded(Vector2i(9, 8)) and player.global_position.distance_to(_tile_pos(room, Vector2i(9, 8))) < 4.0, "at low tide Wren can stand on the flats")
+	# It floods from the sea inward: the tell.
+	Tide.offset = Tide.offset_for(Tide.Phase.RISING, Tide.RISING_TIME * 0.3)
+	await _wait(0.1)
+	_check(tide.cover(Vector2i(2, 4)) > tide.cover(Vector2i(9, 8)), "the tide reaches the flats by the sea first")
+	# High tide: whoever is still out there is swept back and loses a breath.
+	GameState.refill()
+	var breath := GameState.bubbles
+	Tide.offset = Tide.offset_for(Tide.Phase.HIGH, 0.2)
+	await _wait(0.2)
+	var at := player.global_position - room.global_position
+	var tile := Vector2i(floori(at.x / Room.TILE), floori(at.y / Room.TILE))
+	_check(room.tile_at(tile.x, tile.y) != "r", "the flood sweeps Wren off the flats (to %s)" % tile)
+	_check(GameState.bubbles < breath, "being swept costs a breath")
+	# And the flooded flats block the way.
+	await _wait(1.2)
+	GameState.refill()
+	player.global_position = _tile_pos(room, Vector2i(7, 8))
+	Input.action_press("move_right")
+	await _wait(0.5)
+	Input.action_release("move_right")
+	_check(player.global_position.x - room.global_position.x < 8 * Room.TILE, "Wren can't walk into the flood")
+	# A Siltray under the water can't be cut; it rears before it leaps.
+	var ray := Siltray.new()
+	ray.position = Vector2(9 * Room.TILE + 8, 5 * Room.TILE + 12)
+	room.add_child(ray)
+	await _wait(0.05)
+	_check(ray.take_hit(1, Vector2.UP) == Enemy.HitResult.IGNORED, "a swimming Siltray can't be cut")
+	player.global_position = _tile_pos(room, Vector2i(8, 6))
+	var reared := false
+	var leapt_after := false
+	for i in 30:
+		await _wait(0.05)
+		reared = reared or ray.mode == Siltray.Mode.REAR
+		if ray.mode == Siltray.Mode.LEAP:
+			leapt_after = reared
+			break
+	_check(leapt_after, "a Siltray's fin rears before it leaps")
+	ray.queue_free()
+	# When the tide goes out it's stranded, and the sword finds it.
+	var stranded := Siltray.new()
+	stranded.position = Vector2(12 * Room.TILE + 8, 5 * Room.TILE + 12)
+	room.add_child(stranded)
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	await _wait(0.3)
+	_check(stranded.mode == Siltray.Mode.STRANDED and stranded.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "at low tide a Siltray is stranded and can be struck")
+	stranded.queue_free()
+	Tide.offset = 0.0
 	GameState.refill()
 	game.queue_free()
 	await _wait(0.1)

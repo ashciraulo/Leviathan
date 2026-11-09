@@ -145,12 +145,22 @@ func _ready() -> void:
 		Vector2i(2, -2): ["64_shiver_coast", Vector2i(11, 2)],
 		Vector2i(1, -2): ["65_floe_strand", Vector2i(9, 7)],
 		Vector2i(0, -2): ["66_still_cove", Vector2i(21, 7)],
+		Vector2i(1, 2): ["67_causeway_end", Vector2i(11, 1)],
+		Vector2i(0, 2): ["68_cockle_flats", Vector2i(6, 7)],
+		Vector2i(2, 2): ["69_wrack_shore", Vector2i(3, 8)],
+		Vector2i(0, 3): ["70_drowned_lane", Vector2i(8, 4)],
+		Vector2i(1, 3): ["71_belfry_square", Vector2i(12, 8), Tide.Phase.RISING],
+		Vector2i(2, 3): ["72_weir_steps", Vector2i(17, 6), Tide.Phase.HIGH],
 		Vector2i(0, -1): ["10_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
 		SaveManager.save_game()
+		# The Sunken Verge's tide: out, unless the shot asks for it in.
+		var tide: Tide.Phase = shots[coord][2] if shots[coord].size() > 2 else Tide.Phase.LOW
+		var into: float = {Tide.Phase.LOW: 3.0, Tide.Phase.RISING: Tide.RISING_TIME * 0.6, Tide.Phase.HIGH: 1.0}[tide]
+		Tide.offset = Tide.offset_for(tide, into - 2.2)
 		# Reuse the respawn path to jump straight to that room.
 		game.respawn()
 		await _wait(2.2)
