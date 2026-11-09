@@ -82,9 +82,11 @@ def hull_top(seed):
     iron bolt now and then."""
     rnd = random.Random(600 + seed)
     px = blank(TIMBER[5])
-    for beam in range(3):
-        x0 = beam * 5 + (seed % 2)
-        for x in range(x0, min(x0 + 4, T)):
+    # Beams 4, 4 and 5 wide with a 1px gap after each, so 16 columns fill
+    # evenly and the beams line up from tile to tile.
+    for beam, width in enumerate((4, 4, 5)):
+        x0 = beam * 5
+        for x in range(x0, min(x0 + width, T)):
             for y in range(T):
                 px[y][x] = TIMBER[2] if x == x0 else TIMBER[3]
         # Grain down the beam.

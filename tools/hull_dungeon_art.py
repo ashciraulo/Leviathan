@@ -253,7 +253,7 @@ def big_door_half():
     # Iron hinge straps, with a curl at the hinge end.
     for y in (3, 12):
         for x in range(2, 16):
-            if c[y][x] in ("8", "3", "9"):
+            if c[y][x] in ("8", "3"):
                 c[y][x] = "S"
         put(c, 2, y - 1, "S")
         put(c, 2, y + 1, "S")
@@ -501,7 +501,7 @@ def _crab(c, step=0, claw="rest", mouth=False, out=False):
     """Everything of the crab that shows in front of the shell."""
     base = 33
     fill_ellipse(c, 33, base, 17, 6, "5")
-    # A ridge of highlight along the carapace's crown.
+    # Soft pink flecks along the carapace's crown.
     for x in range(22, 45):
         if c[base - 4][x] == "5":
             c[base - 4][x] = "&" if x % 5 == 0 else c[base - 4][x]

@@ -64,7 +64,7 @@ def blank(color=CLEAR):
 def floor_tile(seed):
     """Foundry flagstones: big irregular slabs worn smooth by carts. The
     joins are soft and don't all line up with the tiles (some tiles have
-    no join on an edge, some split a slab partway), so the floor reads as
+    no join on an edge, some split across by a wandering crack), so the floor reads as
     paving, not as a grid or as brick. Soot, scuffs, and now and then a
     fleck of slag still glowing."""
     rnd = random.Random(1200 + seed)
@@ -78,7 +78,7 @@ def floor_tile(seed):
     if seed in (0, 2):
         for y in range(T):
             px[y][T - 1] = join
-    # A slab split partway: an uneven join wandering across.
+    # A slab split across: an uneven join wandering from side to side.
     if seed in (1, 3):
         y = rnd.randrange(5, 11)
         for x in range(T):
