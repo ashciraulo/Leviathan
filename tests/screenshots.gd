@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "mantle", "lowe", "crucible", "turn"]:
+	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "mantle", "lowe", "crucible", "turn"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"kiln":
 				await _kiln_shots(game)
@@ -54,6 +54,8 @@ func _ready() -> void:
 				await _belfry_shots(game)
 			"tomb":
 				await _tomb_shots(game)
+			"maw":
+				await _maw_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -332,6 +334,9 @@ func _ready() -> void:
 
 	# 8h. Marrow Tomb.
 	await _tomb_shots(game)
+
+	# 8i. The Maw.
+	await _maw_shots(game)
 
 	# 9. Pause menu.
 	var pause: PauseMenu = null
@@ -1157,3 +1162,103 @@ func _crucible_shots() -> void:
 	await _skip_scene(kiln)
 	kiln.queue_free()
 	await _wait(0.2)
+
+
+func _maw_shots(game: Node) -> void:
+	for item in ["echo_horn", "divers_helm", "kite_cloak", "glowmoth_lantern", "tide_hook"]:
+		GameState.give_item(item)
+	DreamingHeart.roll_credits = false
+	MawBreath.elapsed = 0.0
+	# coord: [file name, spawn tile]
+	var rooms := [
+		[Vector2i(44, 10), "148_maw_throat", Vector2i(11, 10)],
+		[Vector2i(44, 9), "149_maw_palate", Vector2i(11, 11)],
+		[Vector2i(43, 9), "150_maw_hollows", Vector2i(21, 6)],
+		[Vector2i(45, 9), "151_maw_dim_gallery", Vector2i(2, 6)],
+		[Vector2i(44, 8), "152_maw_veins", Vector2i(11, 11)],
+	]
+	for shot: Array in rooms:
+		var at := await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		MawBreath.elapsed = 0.0
+		await _wait(0.5)
+		game.player._invuln = 0.0
+		await _wait(0.05)
+		await _capture(shot[1])
+
+	# The Old One breathes in: the Throat's palate floor floods.
+	var room := await _jump(game, Vector2i(44, 10), Vector2i(11, 10))
+	game.player._invuln = 600.0
+	MawBreath.elapsed = MawBreath.OUT_TIME + 0.9
+	await _wait(0.3)
+	await _capture("153_maw_breath_tell")
+	MawBreath.elapsed = MawBreath.OUT_TIME + MawBreath.IN_TELL_TIME + 0.5
+	await _wait(0.4)
+	game.player._invuln = 0.0
+	await _capture("154_maw_breath_flooded")
+	MawBreath.elapsed = 0.0
+
+	# Cantor Vael and his singers.
+	room = await _jump(game, Vector2i(44, 7), Vector2i(11, 10))
+	game.player._invuln = 600.0
+	await _wait(0.3)
+	await _close_dialogue(game)
+	await _wait(2.6)
+	await _capture("155_vael_sings")
+	var vael: CantorVael = null
+	for child in room.get_children():
+		if child is CantorVael:
+			vael = child
+	if vael:
+		vael.ai_enabled = false
+		var wave := ChantWave.new()
+		room.add_child(wave)
+		wave.global_position = game.player.global_position + Vector2(-20, -30)
+		await _wait(ChantWave.TELL_TIME + 0.7)
+		await _capture("156_choir_chant_wave")
+
+	# The Dreaming Heart, an echo, and a bell waiting for the beat.
+	room = await _jump(game, Vector2i(44, 6), Vector2i(11, 11))
+	game.player._invuln = 600.0
+	await _wait(DreamingHeart.WAKE_TIME + 1.5)
+	game.player._invuln = 0.0
+	await _capture("157_dreaming_heart")
+	game.player._invuln = 600.0
+	var heart: DreamingHeart = null
+	for child in room.get_children():
+		if child is DreamingHeart:
+			heart = child
+	if heart:
+		for i in 4:
+			var bell: HeartBell = null
+			for child in room.get_children():
+				if child is HeartBell and not child.rung:
+					bell = child
+			if bell == null:
+				break
+			while heart.off_beat() > 0.05:
+				await get_tree().physics_frame
+			bell.take_hit(1, Vector2.UP)
+			await _wait(DreamingHeart.CALM_TIME + 0.2)
+		await _wait(1.0)
+		game.player._invuln = 0.0
+		await _capture("158_heart_glacier_echo")
+	game.player._invuln = 600.0
+	DreamingHeart.roll_credits = true
+	# Out of the fight before the shots that follow.
+	await _jump(game, Vector2i(44, 9), Vector2i(11, 11))
+
+
+## Pages through whatever dialogue is open.
+func _close_dialogue(game: Node) -> void:
+	for child in game.get_children():
+		if child is DialogueBox:
+			var guard := 0
+			while DialogueBox.is_open and guard < 40:
+				child.advance()
+				child.advance()
+				guard += 1
+				await _wait(0.05)
