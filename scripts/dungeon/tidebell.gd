@@ -57,7 +57,7 @@ func _process(delta: float) -> void:
 
 func interact() -> void:
 	if _rung:
-		Events.toast.emit("TOAST_BELL_QUIET")
+		Audio.play_sfx("bell_quiet", global_position)
 		return
 	_rung = true
 	_sprite.frame = 1
