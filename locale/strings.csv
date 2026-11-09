@@ -313,8 +313,8 @@ OPENING_2,"At every turn of the tide a keeper rang them. Lately, only one keeper
 OPENING_3,"Last night, out on the point at Saltmarrow, the oldest bell went quiet."
 WAYSHELL_1,"You found it. I felt the Point Bell ring through the floorboards, clear as morning."
 WAYSHELL_2,"One bell home. Six more out there, and the Choir after every one of them."
-WAYSHELL_3,Take this. The old keepers' Wayshell. Blow it at a woken Tidestone and the sky-rays will carry you.
-NARRATE_GOT_WAYSHELL,Wren got the Wayshell.
+WAYSHELL_3,"Take this. The old keepers' Wayshell. Blow it under open sky, think of a Tidestone you've woken, and the sky-rays will carry you there."
+NARRATE_GOT_WAYSHELL,"Wren got the Wayshell. Outdoors, open the map and pick a woken Tidestone to travel there."
 WAYSHELL_4,"The next bell is crying out from the Kiln, in Cinderreach. Go on. I'll keep the lamp lit."
 HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp stays lit."
 PELL_BELL_1,You got the bell back?! Can I hold it? Just for a second?
