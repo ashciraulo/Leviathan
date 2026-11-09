@@ -7,6 +7,9 @@ extends Node2D
 ##          .  floor          P  start position (first room only)
 ##          T  Tidestone      c  Scuttler (chaser)
 ##          s  Spitter (shooter)    b  Shellback (blocker)
+##          o  pot   u  barrel   f  rope fence   n  signpost
+##          H  hut   L  lighthouse   (big props: put the letter where the
+##             building's base centre stands; its art rises above)
 ##
 ## A room is 24 x 13 tiles. Leave a gap in the border wall where a
 ## neighbouring room joins, at the same rows or columns on both sides.
@@ -110,6 +113,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Spitter.new()
 		"b":
 			node = Shellback.new()
+		_ when Prop.is_prop(tile):
+			node = Prop.new(tile)
 		_:
 			push_warning("Room %s: unknown tile '%s'" % [scene_file_path, tile])
 	if node:

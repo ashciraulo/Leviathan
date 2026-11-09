@@ -52,6 +52,10 @@ RAMPS = {
     "m": ["#C4DB7A", "#9FC46A", "#6F9A4E", "#3F6648", "#1F3A33"],  # moss body
     "s": ["#FFF4D6", "#DCCFB4", "#B0A08E", "#7E6E72", "#3A2E44"],  # shell plate
     "o": ["#E0D6E0", "#B9AABE", "#8E7C93", "#5E4E70", "#2A2238"],  # standing stone
+    "a": ["#FFD0A0", "#E89A6A", "#C8704A", "#8A4A3E", "#3E1E2A"],  # clay
+    "x": ["#FFF0B0", "#E8D07A", "#C8A858", "#8A7048", "#3E2C2E"],  # thatch
+    "q": ["#FFFFFF", "#FFF4D6", "#E8DCC8", "#B0A0B0", "#4A3A58"],  # whitewash
+    "j": ["#F2E3C6", "#D9C59E", "#B8A07A", "#86705A", "#3E2C2E"],  # rope, canvas
 }
 # Flat colours: not lit, no outline of their own.
 FLAT = {
@@ -61,11 +65,15 @@ FLAT = {
     "G": "#F4C542",
     "n": "#5E4E70",   # rune, dormant
     "N": "#6EF0E0",   # rune, awake
+    "K": "#2A1E36",   # doorways, dark windows
+    "J": "#FFE36E",   # lit windows, lamp
+    "I": "#F4C542",   # lamp glow edge
+    "-": "#4E3436",   # plank seams
 }
 # Materials that get a little speckle texture.
-TEXTURED = {"o": 0.10, "s": 0.08, "k": 0.10}
+TEXTURED = {"o": 0.10, "s": 0.08, "k": 0.10, "x": 0.25, "a": 0.05}
 # Materials that cast a one-pixel shadow on what is under them.
-CASTS_SHADOW = {"y", "r", "s"}
+CASTS_SHADOW = {"y", "r", "s", "x"}
 
 SHADOW = hex_color("#3E2C4A", 90)
 
@@ -440,6 +448,158 @@ def build_enemies():
     out["tidestone"] = sheet([[lit(TIDESTONE, 6), lit(awake, 6)]], 16, 22)
     out["sword"] = sheet([[lit(SWORD, 8)]], 16, 6)
     return out
+
+
+# --------------------------------------------------------------------------
+# Saltmarrow props. Big ones are drawn with simple shape helpers.
+# --------------------------------------------------------------------------
+def canvas(w, h):
+    return [["."] * w for _ in range(h)]
+
+
+def fill_rect(c, x, y, w, h, m):
+    for yy in range(max(0, y), min(len(c), y + h)):
+        for xx in range(max(0, x), min(len(c[0]), x + w)):
+            c[yy][xx] = m
+
+
+def rows_of(c):
+    return ["".join(r) for r in c]
+
+
+POT = [
+    "................",
+    "................",
+    "................",
+    "......aaaa......",
+    ".....aaaaaa.....",
+    "......aaaa......",
+    "....aaaaaaaa....",
+    "...aaaaaaaaaa...",
+    "...aaaaaaaaaa...",
+    "...aaaaaaaaaa...",
+    "...aaaaaaaaaa...",
+    "....aaaaaaaa....",
+    ".....aaaaaa.....",
+    "................",
+]
+BARREL = [
+    "................",
+    "................",
+    "....dddddddd....",
+    "...dddddddddd...",
+    "...bbbbbbbbbb...",
+    "...dddddddddd...",
+    "...d-ddd-ddd-...",
+    "...dddddddddd...",
+    "...d-ddd-ddd-...",
+    "...bbbbbbbbbb...",
+    "...dddddddddd...",
+    "....dddddddd....",
+    "................",
+    "................",
+]
+FENCE = [
+    "................",
+    "................",
+    "......dddd......",
+    "......dddd......",
+    "jjjjjjjjjjjjjjjj",
+    "......dddd......",
+    "......dddd......",
+    "jjjjjjjjjjjjjjjj",
+    "......dddd......",
+    "......dddd......",
+    "......dddd......",
+    "......dddd......",
+    "................",
+    "................",
+]
+SIGN = [
+    "................",
+    "................",
+    "..dddddddddddd..",
+    "..d----------d..",
+    "..dddddddddddd..",
+    "..d---------dd..",
+    "..dddddddddddd..",
+    "......dddd......",
+    "......dddd......",
+    "......dddd......",
+    "......dddd......",
+    "......dddd......",
+    "................",
+    "................",
+]
+
+
+def hut():
+    """A driftwood fisher's hut with a thatch roof, 48x48."""
+    c = canvas(48, 48)
+    # Walls of horizontal planks.
+    fill_rect(c, 5, 22, 38, 23, "d")
+    for y in range(25, 45, 4):
+        fill_rect(c, 6, y, 36, 1, "-")
+    # Door and a lit window.
+    fill_rect(c, 20, 31, 8, 14, "K")
+    fill_rect(c, 9, 28, 7, 6, "J")
+    fill_rect(c, 12, 28, 1, 6, "-")
+    fill_rect(c, 32, 28, 7, 6, "K")
+    # Thatch roof: a wide trapezoid that overhangs the walls.
+    for i, y in enumerate(range(3, 25)):
+        inset = max(0, 12 - i)
+        fill_rect(c, 1 + inset, y, 46 - inset * 2, 1, "x")
+    # Straw strands, then rope bands across the thatch.
+    for y in range(4, 24):
+        for x in range(48):
+            if c[y][x] == "x" and (x * 3 + y) % 7 == 0:
+                c[y][x] = "-" if y % 2 else "x"
+    for y in (12, 19):
+        for x in range(48):
+            if c[y][x] == "x":
+                c[y][x] = "j"
+    return rows_of(c)
+
+
+def lighthouse():
+    """Saltmarrow's lighthouse, 32x80: whitewash and buoy-red bands."""
+    c = canvas(32, 80)
+    # Tapered tower.
+    for y in range(22, 77):
+        t = (y - 22) / 55.0
+        half = int(6 + t * 5)
+        band = "r" if ((y - 22) // 9) % 2 == 1 else "q"
+        fill_rect(c, 16 - half, y, half * 2, 1, band)
+    # Door and slit windows.
+    fill_rect(c, 13, 66, 6, 10, "K")
+    fill_rect(c, 15, 34, 2, 4, "K")
+    fill_rect(c, 15, 52, 2, 4, "K")
+    # Gallery deck and rail.
+    fill_rect(c, 6, 20, 20, 2, "b")
+    for x in range(7, 26, 3):
+        fill_rect(c, x, 16, 1, 4, "b")
+    fill_rect(c, 6, 15, 20, 1, "b")
+    # Lamp room.
+    fill_rect(c, 10, 9, 12, 7, "J")
+    fill_rect(c, 10, 9, 1, 7, "I")
+    fill_rect(c, 21, 9, 1, 7, "I")
+    fill_rect(c, 15, 9, 2, 7, "I")
+    # Red cap.
+    for i, y in enumerate(range(2, 9)):
+        fill_rect(c, 15 - i, y, 2 + i * 2, 1, "r")
+    fill_rect(c, 15, 1, 2, 1, "b")
+    return rows_of(c)
+
+
+def build_props():
+    return {
+        "pot": sheet([[lit(POT, 11)]], 16, 14),
+        "barrel": sheet([[lit(BARREL, 12)]], 16, 14),
+        "fence": sheet([[lit(FENCE, 13)]], 16, 14),
+        "sign": sheet([[lit(SIGN, 14)]], 16, 14),
+        "hut": sheet([[lit(hut(), 15)]], 48, 48),
+        "lighthouse": sheet([[lit(lighthouse(), 16)]], 32, 80),
+    }
 
 
 # --------------------------------------------------------------------------
@@ -830,6 +990,8 @@ def main():
     write_png(os.path.join(OUT, "sprites", "wren.png"), build_wren())
     for name, px in build_enemies().items():
         write_png(os.path.join(OUT, "sprites", name + ".png"), px)
+    for name, px in build_props().items():
+        write_png(os.path.join(OUT, "props", name + ".png"), px)
     bubbles, shots, shadows = build_round()
     write_png(os.path.join(OUT, "ui", "bubbles.png"), bubbles)
     write_png(os.path.join(OUT, "sprites", "shot.png"), shots)

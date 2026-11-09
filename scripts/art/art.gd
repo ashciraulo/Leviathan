@@ -13,6 +13,12 @@ const SHOT := preload("res://assets/sprites/shot.png")
 const SHADOW_SMALL := preload("res://assets/sprites/shadow_small.png")
 const SHADOW_LARGE := preload("res://assets/sprites/shadow_large.png")
 const BUBBLES := preload("res://assets/ui/bubbles.png")
+const POT := preload("res://assets/props/pot.png")
+const BARREL := preload("res://assets/props/barrel.png")
+const FENCE := preload("res://assets/props/fence.png")
+const SIGN := preload("res://assets/props/sign.png")
+const HUT := preload("res://assets/props/hut.png")
+const LIGHTHOUSE := preload("res://assets/props/lighthouse.png")
 const SALTMARROW_TILES := preload("res://assets/tiles/saltmarrow.png")
 
 const FLASH_SHADER := """
