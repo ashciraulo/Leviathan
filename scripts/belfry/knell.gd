@@ -127,6 +127,8 @@ func _think(delta: float) -> void:
 		Mode.INTRO:
 			if _timer <= 0.0:
 				mode = Mode.ARMS
+				# Every arm already cut (in the opening moments): straight in.
+				_on_arm_cut()
 		Mode.ARMS, Mode.HIDDEN:
 			_ink -= delta
 			if _ink <= 0.0 and wren and not wren.diving:

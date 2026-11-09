@@ -1326,6 +1326,17 @@ func _test_belfry_dungeon() -> void:
 	room = await _goto(game, Vector2i(37, 9), Vector2i(1, 6))
 	await _calm(room)
 	_check(_child_of(room, SunkenGrate).size() == 16, "the Cistern's island is ringed with grates")
+	# The grates stop a glide too: no floating over them onto the island.
+	GameState.give_item("kite_cloak")
+	player.global_position = _tile_pos(room, Vector2i(15, 1))
+	player.facing = Vector2.DOWN
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(1.6)
+	var glide_at := player.global_position - room.global_position
+	_check(glide_at.y < 4 * Room.TILE, "a glide stops at the grates round the island (at %s)" % glide_at)
+	await _wait(0.5)
 	player.global_position = _tile_pos(room, Vector2i(11, 5))
 	player.facing = Vector2.RIGHT
 	Input.action_press("move_right")

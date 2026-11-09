@@ -65,8 +65,8 @@ ROOMS = {
 .....QQQ,,,,,,,,QQQQQ...
 #....QQQQQQQQQQQQQQQQ..#
 #....QQQQQQQQQQQQQQQQQQ#
-#......................#
-#......................#
+#................QQQQQQ#
+#................QQQQQQ#
 ###########..###########"""),
     (35, 9): ("ROOM_BELFRY_VESTRY", {"chest_item": '"divers_helm"', "gate": '"clear"', "chest_hidden": "true"}, """
 ########################

@@ -46,6 +46,11 @@ func _area(area: Area2D, layer: int, size: Vector2, at: Vector2) -> Area2D:
 	return area
 
 
+## The Tide Hook clinks off it.
+func hook_hit(_direction: Vector2) -> bool:
+	return false
+
+
 func dive_hit(_direction: Vector2) -> void:
 	if severed:
 		return
