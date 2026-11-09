@@ -179,6 +179,9 @@ func _move_state() -> void:
 		velocity = Vector2.ZERO
 	elif Input.is_action_just_pressed("item_2") and use_item(GameState.item_slots[1]):
 		velocity = Vector2.ZERO
+	elif _hum_requested() and not GameState.can_hum():
+		# Don't leave Hum toggled on; it would start by itself later.
+		_hum_latched = false
 	elif _hum_requested() and GameState.can_hum():
 		_enter(State.HUM)
 		velocity = Vector2.ZERO
@@ -194,6 +197,8 @@ func try_interact() -> bool:
 	var best: Node2D = null
 	var best_distance := INTERACT_RANGE
 	for node in get_tree().get_nodes_in_group("interactable"):
+		if node.get("opened") == true:
+			continue
 		var distance := (node as Node2D).global_position.distance_to(interact_point())
 		if distance < best_distance:
 			best = node
