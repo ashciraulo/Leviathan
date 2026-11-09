@@ -257,6 +257,7 @@ func _die() -> void:
 	set_deferred("collision_layer", 0)
 	# Through set_flag, so the story can answer (StoryDirector.the_calf).
 	GameState.set_flag(DEFEATED_FLAG)
+	Events.boss_defeated.emit()
 	for wisp in wisps:
 		var area: DamageArea = wisp["area"]
 		area.active = false
