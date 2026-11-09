@@ -36,7 +36,7 @@ const INTERACT_RANGE := 16.0
 const ICE_GRIP := 170.0
 const ICE_DRIFT := 45.0
 ## What stops Wren in the air (gliding, or on the Tide Hook's line): walls.
-const AIR_MASK := 1 << (Layers.WORLD - 1)
+const AIR_MASK := (1 << (Layers.WORLD - 1)) | (1 << (Layers.GRATE - 1))
 ## Swimming in deep water is slower.
 const SWIM_SPEED := 58.0
 

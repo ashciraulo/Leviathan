@@ -99,6 +99,8 @@ func handle_input(event: InputEvent) -> bool:
 		Mode.PLAY:
 			if _summaries[slot].get("damaged", false):
 				_note = "FILES_DAMAGED"
+			elif _summaries[slot].get("newer", false):
+				_note = "FILES_NEWER"
 			else:
 				file_chosen.emit(slot, not _filled(slot))
 		Mode.COPY_FROM:
@@ -111,9 +113,11 @@ func handle_input(event: InputEvent) -> bool:
 			if _filled(slot):
 				_note = "FILES_COPY_NEED_EMPTY"
 				return true
-			SaveManager.copy_save(_source, slot)
-			_note = "FILES_COPIED"
-			_set_mode(Mode.PLAY, slot)
+			if SaveManager.copy_save(_source, slot):
+				_note = "FILES_COPIED"
+				_set_mode(Mode.PLAY, slot)
+			else:
+				_note = "FILES_DAMAGED"
 		Mode.ERASE:
 			if _filled(slot):
 				_source = slot
@@ -178,8 +182,9 @@ func _draw_card(slot: int) -> void:
 		MenuKit.draw_text(self, "FILES_EMPTY", Vector2(rect.position.x, rect.position.y + 17), MenuKit.TEXT_DIM,
 			HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 		return
-	if data.get("damaged", false):
-		MenuKit.draw_text(self, "FILES_DAMAGED", Vector2(rect.position.x, rect.position.y + 17), MenuKit.TEXT_WARN,
+	if data.get("damaged", false) or data.get("newer", false):
+		var key := "FILES_DAMAGED" if data.get("damaged", false) else "FILES_NEWER"
+		MenuKit.draw_text(self, key, Vector2(rect.position.x, rect.position.y + 17), MenuKit.TEXT_WARN,
 			HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 		return
 	var place := str(data.get("place", ""))

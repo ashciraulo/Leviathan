@@ -61,10 +61,14 @@ func _physics_process(delta: float) -> void:
 
 ## A grate overhead: Wren can't come up here.
 func _under_grate() -> bool:
-	var query := PhysicsPointQueryParameters2D.new()
-	query.position = _player.global_position + Vector2(0, -4)
+	# Wren's whole body, not just one point: no surfacing half in a grate.
+	var query := PhysicsShapeQueryParameters2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(10, 6)
+	query.shape = box
+	query.transform = Transform2D(0.0, _player.global_position + Vector2(0, -3))
 	query.collision_mask = 1 << (Layers.GRATE - 1)
-	return not get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+	return not get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 func _strike() -> void:

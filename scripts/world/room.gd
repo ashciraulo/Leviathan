@@ -384,11 +384,6 @@ static func low_water_flag(for_dungeon: String) -> String:
 func refresh_water() -> void:
 	_build_water()
 	_ground.queue_redraw()
-	for child in get_children():
-		if child is Enemy and not child.is_in_group("boss") and child.collision_mask != 0:
-			var at := (child as Node2D).position + Vector2(0, -3)
-			if _tile_at(floori(at.x / TILE), floori(at.y / TILE)) == "Q":
-				child.queue_free()
 
 
 ## The room under a point (global), or null.
@@ -501,7 +496,7 @@ func _tile_at(x: int, y: int) -> String:
 	if not _frozen.is_empty() and _frozen.has(Vector2i(x, y)):
 		return "I"
 	var letter := _rows[y][x]
-	if letter == "L":
+	if letter == "L" and dungeon != "":
 		return "Q"  # A sunken grate stands in deep water.
 	if letter == "$":
 		# A hidden bone wall: wall, until the Echo Horn brings it down.

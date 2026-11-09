@@ -266,6 +266,7 @@ JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps ever
 FILES_TITLE,Choose a journey
 FILES_EMPTY,New journey
 FILES_DAMAGED,This file is damaged.
+FILES_NEWER,Saved by a newer version.
 FILES_COPY,Copy
 FILES_ERASE,Erase
 FILES_BACK,Back
@@ -562,3 +563,8 @@ CAPTION_ARMOUR_SHATTER,Bone armour shatters
 CAPTION_HUSH,Something unseen shivers
 CAPTION_REGENT,The Regent roars
 CAPTION_SLAM,Sceptre slams
+NAME_VAEL,Vael
+VAEL_SPIRE_1,"So you carry Hessa's lamp now. I carried it once, before you were born."
+VAEL_SPIRE_2,"I was her first apprentice. She taught me the lullaby, just as she's teaching you."
+VAEL_SPIRE_3,"But I listened too closely. Under every phrase, the Old One is weeping."
+VAEL_SPIRE_4,"Ring the bell, and listen. Then tell me we should keep singing it to sleep."
