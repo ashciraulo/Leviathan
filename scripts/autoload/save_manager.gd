@@ -65,13 +65,17 @@ func read_summary(slot: int) -> Dictionary:
 	if not (parsed is Dictionary) or not (parsed.get("state") is Dictionary):
 		return {"damaged": true}
 	var out: Dictionary = {}
-	var saved = parsed.get("summary", {})
+	var saved = parsed.get("summary")
 	if saved is Dictionary:
 		out = saved.duplicate()
 	else:
 		# Older saves without a summary: work out what we can.
 		var state: Dictionary = parsed["state"]
 		out["bubbles"] = int(state.get("max_bubbles", GameState.START_BUBBLES))
+		var room = state.get("checkpoint_room", [0, 0])
+		if room is Array and room.size() >= 2:
+			out["place"] = str(RoomInfo.get_room(Vector2i(int(room[0]), int(room[1]))).get("name_key", ""))
+		out["play_time"] = float(state.get("play_time", 0.0))
 	out["saved_at"] = str(parsed.get("saved_at", ""))
 	return out
 
@@ -90,7 +94,10 @@ func latest_slot() -> int:
 	for slot in SLOT_COUNT:
 		if not has_save(slot):
 			continue
-		var at := str(read_summary(slot).get("saved_at", ""))
+		var data := read_summary(slot)
+		if data.get("damaged", false):
+			continue
+		var at := str(data.get("saved_at", ""))
 		if best < 0 or at > best_time:
 			best = slot
 			best_time = at

@@ -300,7 +300,10 @@ func from_dict(data: Dictionary) -> void:
 	var saved_slots = data.get("item_slots", [])
 	if saved_slots is Array:
 		for i in mini(saved_slots.size(), 2):
-			assign_slot(i, str(saved_slots[i]))
+			var id := str(saved_slots[i])
+			# Counted tools stay slotted at zero (bombs, arrows run out).
+			if Items.slottable(id) and inventory.has(id) and not id in item_slots:
+				item_slots[i] = id
 	jars = []
 	var saved_jars = data.get("jars", [])
 	if saved_jars is Array:

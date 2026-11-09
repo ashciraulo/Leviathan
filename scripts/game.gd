@@ -165,6 +165,8 @@ func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 
 
 func _on_player_died() -> void:
+	if busy and player == null:
+		return
 	busy = true
 	# Real-time waits: hitstop may still have the game frozen.
 	await get_tree().create_timer(0.6, false, false, true).timeout
@@ -172,8 +174,11 @@ func _on_player_died() -> void:
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
 	await tween.finished
 	Engine.time_scale = 1.0
+	# Time played keeps counting across deaths.
+	var played := GameState.play_time
 	if not SaveManager.load_game():
 		GameState.reset_new_game()
+	GameState.play_time = played
 	GameState.refill()
 	world.queue_free()
 	world = null
@@ -199,6 +204,8 @@ func _on_fast_travel(coord: Vector2i) -> void:
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME * 2.0)
 	await tween.finished
 	GameState.set_checkpoint(coord, landing)
+	GameState.wake_tidestone(coord, landing)
+	SaveManager.save_game()
 	world.queue_free()
 	world = null
 	current_room = null

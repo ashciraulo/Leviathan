@@ -12,6 +12,10 @@ var _checks := 0
 
 func _ready() -> void:
 	SaveManager.current_slot = TEST_SLOT
+	# Slot 2 is File 3 on the file select: keep a real save safe.
+	var real_save := ProjectSettings.globalize_path(SaveManager.slot_path(TEST_SLOT))
+	if FileAccess.file_exists(real_save):
+		DirAccess.rename_absolute(real_save, real_save + ".testbackup")
 	SaveManager.delete_save()
 	_test_room_layouts()
 	_test_game_state()
@@ -22,6 +26,8 @@ func _ready() -> void:
 	await _test_play()
 	await _test_talk_and_dungeon()
 	SaveManager.delete_save()
+	if FileAccess.file_exists(real_save + ".testbackup"):
+		DirAccess.rename_absolute(real_save + ".testbackup", real_save)
 	Engine.time_scale = 1.0
 	if _failures.is_empty():
 		print("SMOKE TEST PASSED (%d checks)" % _checks)
@@ -465,6 +471,25 @@ func _test_items() -> void:
 	_check(is_equal_approx(GameState.play_time, 125.0), "load restores play time")
 	var summary := SaveManager.read_summary(TEST_SLOT)
 	_check(int(summary.get("bubbles", 0)) == 6 and summary.has("saved_at"), "the save has a file-select summary")
+	# A counted tool stays slotted when it runs out, also after loading.
+	GameState.take_item("puffer_bombs", 17)
+	SaveManager.save_game()
+	SaveManager.load_game()
+	_check(GameState.item_slots[0] == "puffer_bombs", "an empty counted tool stays slotted after loading")
+	# Saves from before summaries still show their bubbles and place.
+	var file := FileAccess.open(SaveManager.slot_path(TEST_SLOT), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"state": {"max_bubbles": 8, "checkpoint_room": [0, 0]}}))
+	file.close()
+	var old := SaveManager.read_summary(TEST_SLOT)
+	_check(int(old.get("bubbles", 0)) == 8 and str(old.get("place", "")) != "", "old saves get a summary")
+	# A gamepad button for Tab Next, which has no default button.
+	Settings.rebind("tab_next", _pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	var has_button := false
+	for event in InputMap.action_get_events("tab_next"):
+		has_button = has_button or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER)
+	_check(has_button, "rebinding Tab Next to a button works")
+	Settings.pad_overrides.erase("tab_next")
+	Settings.apply()
 	for id: String in Items.DEFS:
 		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
 	SaveManager.delete_save()
@@ -508,3 +533,10 @@ func _test_menus() -> void:
 	await get_tree().process_frame
 	files.queue_free()
 	await get_tree().process_frame
+
+
+func _pad_event(button: JoyButton) -> InputEventJoypadButton:
+	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	event.pressed = true
+	return event

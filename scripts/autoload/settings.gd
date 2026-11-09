@@ -125,6 +125,9 @@ func _apply_bindings() -> void:
 				if pad_overrides.has(action):
 					use = _pad(int(pad_overrides[action]))
 			InputMap.action_add_event(action, use)
+		# Actions with no default button (Tab Next uses a trigger): add one.
+		if not pad_done and pad_overrides.has(action):
+			InputMap.action_add_event(action, _pad(int(pad_overrides[action])))
 
 
 func _apply_audio() -> void:

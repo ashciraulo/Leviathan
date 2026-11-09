@@ -13,6 +13,7 @@ var _page: MenuPage
 var _files: FileSelect
 var _options: SettingsPage
 var _last_focus: Control
+var _continue: Button
 
 
 func _ready() -> void:
@@ -39,6 +40,7 @@ func _ready() -> void:
 
 	_menu = menu
 	var continue_button := UI.button("MENU_CONTINUE", _on_continue)
+	_continue = continue_button
 	continue_button.visible = SaveManager.latest_slot() >= 0
 	menu.add_child(continue_button)
 	var new_game_button := UI.button("MENU_JOURNEYS", func() -> void: _show_page(_files))
@@ -85,6 +87,9 @@ func _show_page(page: MenuPage) -> void:
 func _hide_page() -> void:
 	_overlay.visible = false
 	_menu.visible = true
+	_continue.visible = SaveManager.latest_slot() >= 0
+	if _last_focus == _continue and not _continue.visible:
+		_last_focus = _menu.get_child(1)
 	_page = null
 	if _last_focus:
 		_last_focus.grab_focus()
@@ -114,9 +119,13 @@ func _on_continue() -> void:
 
 func _on_file_chosen(slot: int, new_game: bool) -> void:
 	SaveManager.current_slot = slot
-	if new_game or not SaveManager.load_game():
+	if new_game:
 		# A new file is saved at once, so dying before the first Tidestone
 		# brings Wren back to the start.
 		GameState.reset_new_game()
 		SaveManager.save_game()
+	elif not SaveManager.load_game():
+		# Never overwrite a file that won't load: show the files instead.
+		_show_page(_files)
+		return
 	get_tree().change_scene_to_file(GAME_SCENE)
