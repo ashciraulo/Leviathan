@@ -735,6 +735,86 @@ func _test_story() -> void:
 	turned_home.queue_free()
 	await _wait(0.1)
 
+	# The Marrow Tomb: with the Regent gone to bones, Dace shows Wren the
+	# last mural.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(barrow)
+	await _wait(0.3)
+	_check(not barrow.current_room.get_children().any(func(c: Node) -> bool: return c is LastMural), "the mural is walled up before the fight")
+	for child in barrow.current_room.get_children():
+		if child is HollowRegent:
+			child.ai_enabled = false
+			child.mode = HollowRegent.Mode.OPEN
+			for blow in 30:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child._stun = 0.0
+				child._hits_this_open = 0
+				child.take_hit(1, Vector2.UP)
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.MURAL_FLAG), "the Regent's fall starts the last mural")
+	var mural_pages := await _play_scene(barrow, 20.0)
+	_check(mural_pages == 4, "Dace speaks four times (%d)" % mural_pages)
+	_check(not Cutscene.active and not barrow.player.in_cutscene, "the mural scene hands Wren back")
+	var murals: Array = barrow.current_room.get_children().filter(func(c: Node) -> bool: return c is LastMural)
+	_check(murals.size() == 1 and not murals[0].is_showing(), "the mural stays carved on the wall, the close view gone")
+	_check(not barrow.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "Dace leaves the tomb")
+	await _wait(4.0)
+	_check(barrow.current_room.get_children().any(func(c: Node) -> bool: return c is Tidebell), "the Marrow Bell waits to be rung")
+	barrow.queue_free()
+	await _wait(0.1)
+
+	# The ending: the Heart sleeps, Vael stays, Mantle carries Wren home.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(44, 6), Vector2(11 * Room.TILE + 8, 10 * Room.TILE + 12))
+	DreamingHeart.roll_credits = false
+	var heart_room: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart_room)
+	await _wait(0.3)
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	Events.game_finished.emit()
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.ENDING_FLAG), "when the Old One sleeps, the ending begins")
+	var end_pages := await _play_scene(heart_room, 40.0)
+	_check(end_pages == 5, "Vael speaks, then home is told (%d pages)" % end_pages)
+	_check(not Cutscene.active and GameState.room_coord == StoryDirector.SALTMARROW, "the ending carries Wren home to Saltmarrow")
+	_check(GameState.checkpoint_room == StoryDirector.SALTMARROW, "after the credits, Continue starts at home")
+	_check(heart_room.current_room.coord == StoryDirector.SALTMARROW and not heart_room.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "Vael stays behind in the Maw: no one follows Wren home")
+	_check(GameState.has_flag(StoryDirector.CONFESSION_FLAG) and GameState.has_flag("seen_wayshell"), "no older scene waits at home after the credits")
+	Events.game_finished.emit()
+	await _wait(0.1)
+	_check(not Cutscene.active, "the ending only plays once")
+	heart_room.queue_free()
+	await _wait(0.1)
+	# Closed partway through the ending: Continue picks it up again.
+	GameState.reset_new_game()
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_checkpoint(Vector2i(44, 6), GameState.NO_POSITION)
+	var heart_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart_again)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.ENDING_FLAG), "a save from mid-ending starts the ending again")
+	await _play_scene(heart_again, 40.0)
+	_check(GameState.room_coord == StoryDirector.SALTMARROW, "and it still ends at home")
+	DreamingHeart.roll_credits = true
+	heart_again.queue_free()
+	await _wait(0.1)
+
+	# A door opening under Wren mid-scene doesn't carry them off.
+	GameState.reset_new_game()
+	GameState.set_flag(HollowRegent.DEFEATED_FLAG)
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var old_barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(old_barrow)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.MURAL_FLAG), "an older save still sees the last mural on the way back in")
+	var old_pages := await _play_scene(old_barrow, 20.0)
+	_check(old_pages == 4 and GameState.room_coord == StoryDirector.TOMB_BOSS, "standing on the way out, Wren stays for the whole scene (%d pages)" % old_pages)
+	old_barrow.queue_free()
+	await _wait(0.1)
+
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
@@ -1696,8 +1776,9 @@ func _test_tomb_dungeon() -> void:
 		_check(hush.shown > 0.0, "the horn's echo shows the Hush")
 		_check(hush.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "shown, the sword finds it")
 
-	# The Hollow Regent.
+	# The Hollow Regent. (The last mural has its own test in _test_story.)
 	GameState.refill()
+	GameState.set_flag(StoryDirector.MURAL_FLAG)
 	room = await _goto(game, Vector2i(40, 7), Vector2i(11, 11))
 	var bosses := _child_of(room, HollowRegent)
 	_check(bosses.size() == 1, "the Hollow Regent waits in his barrow")

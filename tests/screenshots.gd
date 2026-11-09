@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "mantle", "lowe", "crucible", "turn"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "mantle", "lowe", "crucible", "turn", "mural", "ending"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"hull":
 				await _hull_shots(game)
@@ -76,6 +76,14 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _turn_shots()
+			"mural":
+				game.queue_free()
+				await _wait(0.2)
+				await _mural_shots()
+			"ending":
+				game.queue_free()
+				await _wait(0.2)
+				await _ending_shots()
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -375,6 +383,8 @@ func _ready() -> void:
 	await _lowe_shots()
 	await _crucible_shots()
 	await _turn_shots()
+	await _mural_shots()
+	await _ending_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -1101,6 +1111,81 @@ func _lowe_shots() -> void:
 	await _capture("40_choir_scatters")
 	await _skip_scene(hold)
 	hold.queue_free()
+	await _wait(0.2)
+
+
+## The ending: Vael stays as the Old One's keeper, dawn, and home.
+func _ending_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(44, 6), Vector2(11 * Room.TILE + 8, 10 * Room.TILE + 12))
+	DreamingHeart.roll_credits = false
+	var heart: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart)
+	await _wait(0.6)
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	Events.game_finished.emit()
+	var page := 0
+	var dawn_taken := false
+	var waited := 0.0
+	while Cutscene.active and waited < 90.0:
+		if DialogueBox.is_open:
+			await _wait(2.6)
+			if page == 0:
+				await _capture("50_vael_at_the_heart")
+			elif page == 1:
+				await _capture("51_vael_keeps_watch")
+			elif page == 3:
+				await _capture("53_home")
+			page += 1
+			var box := _dialogue_box(heart)
+			if box and DialogueBox.is_open:
+				box.advance()
+				box.advance()
+			await _wait(0.3)
+		elif page == 3 and not dawn_taken:
+			await _wait(3.2)
+			await _capture("52_dawn")
+			dawn_taken = true
+		else:
+			await _wait(0.1)
+			waited += 0.1
+	DreamingHeart.roll_credits = true
+	heart.queue_free()
+	await _wait(0.2)
+
+
+## The last mural in the Marrow Tomb: Dace, the carving close up.
+func _mural_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12))
+	var barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(barrow)
+	await _wait(0.5)
+	for child in barrow.current_room.get_children():
+		if child is HollowRegent:
+			child.ai_enabled = false
+			child.mode = HollowRegent.Mode.OPEN
+			for blow in 30:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child._stun = 0.0
+				child._hits_this_open = 0
+				child.take_hit(1, Vector2.UP)
+	for page in 4:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(2.0)
+		if page == 0:
+			await _capture("48_dace_at_the_mural")
+		elif page == 1:
+			await _capture("49_the_last_mural")
+		var box := _dialogue_box(barrow)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _skip_scene(barrow)
+	barrow.queue_free()
 	await _wait(0.2)
 
 

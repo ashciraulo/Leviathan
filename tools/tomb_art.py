@@ -56,24 +56,35 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Packed sand over flagstones, a chip of bone here and there."""
+    """Packed sand over flagstones. One even sand on every variant (no
+    lighter tile to checker the floor), scattered grit, now and then the
+    edge of a buried flagstone showing through in a short broken line, and
+    a chip of bone here and there."""
     rnd = random.Random(6100 + seed)
-    px = blank(SAND[2] if seed != 1 else SAND[1])
-    for y in range(T):
-        for x in range(T):
-            if (x * 7 + y * 3 + seed) % 17 == 0:
-                px[y][x] = SAND[3]
-            elif (x * 5 + y * 11 + seed) % 23 == 0:
+    base = SAND[2]
+    px = blank(base)
+    for _ in range(14):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = rnd.choice((SAND[1], SAND[1], SAND[3], SAND[3], SAND[0]))
+    # Soft drifts: a few lighter, wind-laid streaks.
+    for _ in range(2):
+        y = rnd.randrange(2, T - 2)
+        x0 = rnd.randrange(0, 10)
+        for x in range(x0, min(T, x0 + rnd.randrange(3, 6))):
+            if px[y][x] == base:
                 px[y][x] = SAND[1]
+    # A buried flagstone's edge, half covered: a broken line, an L at most.
     if seed in (0, 2):
-        # Flagstone joins showing through the sand.
-        for i in range(T):
-            if i % 5 != 2:
-                px[7][i] = SAND[4]
-        for y in range(8):
-            px[y][(4 + seed * 4) % T] = SAND[4]
-    for _ in range(4):
-        px[rnd.randrange(T)][rnd.randrange(T)] = rnd.choice((SAND[0], SAND[3]))
+        y = rnd.randrange(4, 12)
+        x0, x1 = rnd.randrange(1, 5), rnd.randrange(9, 15)
+        for x in range(x0, x1):
+            if rnd.random() < 0.75:
+                px[y][x] = SAND[4]
+                if px[y + 1][x] == base:
+                    px[y + 1][x] = SAND[1]
+        if seed == 2:
+            for yy in range(y - rnd.randrange(2, 4), y):
+                px[yy][x0] = SAND[4]
     if seed == 3:
         for (x, y) in ((5, 6), (6, 6), (7, 7), (11, 11)):
             px[y][x] = BONE[1]

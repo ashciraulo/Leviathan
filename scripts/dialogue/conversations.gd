@@ -28,6 +28,8 @@ const SPEAKERS := {
 	"lowe": ["NAME_LOWE", Art.PORTRAIT_LOWE],
 	"murmur": ["NAME_MURMUR", Art.PORTRAIT_MURMUR],
 	"vael": ["NAME_VAEL", Art.PORTRAIT_VAEL],
+	"dace": ["NAME_DACE", Art.PORTRAIT_DACE],
+	"vael_keeper": ["NAME_VAEL", Art.PORTRAIT_VAEL_KEEPER],
 	"marga": ["NAME_MARGA", Art.PORTRAIT_MARGA],
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 }

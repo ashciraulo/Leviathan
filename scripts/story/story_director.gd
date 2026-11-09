@@ -51,6 +51,18 @@ const GALE_BELL_FLAG := "tidebell_" + "gale"
 const PHRASE_PULSE := BellPhrase.PULSE
 const TURNED_FLAG := "old_one_turned"
 const CONFESSION_FLAG := "seen_hessa_confession"
+const TOMB_BOSS := Vector2i(40, 7)
+const MURAL_FLAG := "seen_last_mural"
+## Wren stands under the slab; Dace comes up from the way in at the south.
+const MURAL_WATCH := Vector2(16 * 16 + 8, 2 * 16 + 12)
+const DACE_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 7 * 16 + 12), Vector2(14 * 16 + 8, 3 * 16 + 12)]
+const ENDING_FLAG := "seen_ending"
+## The Heart's chamber: Wren stands below the sleeping Heart, Vael comes
+## up from the Choir Loft and stops beside them.
+const ENDING_WATCH := Vector2(11 * 16 + 8, 7 * 16 + 12)
+const VAEL_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 9 * 16 + 12), Vector2(13 * 16 + 8, 7 * 16 + 12)]
+## Where Wren stands, just below Hessa, in the epilogue at home.
+const HOME_FROM_HESSA := Vector2(0, 22)
 ## Where Wren stops to watch, in any of these chambers.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
 
@@ -63,6 +75,7 @@ func _ready() -> void:
 	Events.game_started.connect(_on_game_started)
 	Events.room_entered.connect(_on_room_entered)
 	Events.flag_changed.connect(_on_flag_changed)
+	Events.game_finished.connect(the_ending)
 
 
 func _on_game_started() -> void:
@@ -81,12 +94,22 @@ func _on_room_entered(coord: Vector2i) -> void:
 	# Old One has turned all the same, so Hessa still has her say at home.
 	if GameState.has_flag(GALE_BELL_FLAG) and not GameState.has_flag(TURNED_FLAG):
 		GameState.set_flag(TURNED_FLAG)
+	if coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG):
+		_put_up_mural()
+	# The game closed partway through the ending: the Heart sleeps, so pick
+	# the ending up again.
+	if GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and not GameState.has_flag(ENDING_FLAG) and _heart_here():
+		the_ending()
+		return
 	if coord == WRECK_STRAND and GameState.has_flag("tidebell_hull") and not GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		freeing_mantle()
 	elif coord == SALTMARROW and GameState.has_flag("freed_mantle") and not GameState.has_flag("seen_wayshell"):
 		the_wayshell()
 	elif coord == SALTMARROW and GameState.has_flag(TURNED_FLAG) and not GameState.has_flag(CONFESSION_FLAG):
 		hessas_confession()
+	elif coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not GameState.has_flag(MURAL_FLAG):
+		# A save from before the mural existed: show it on the way back in.
+		the_last_mural()
 	elif lowe_waits(coord):
 		if coord == HULL_BOSS:
 			lowe_at_the_hull()
@@ -103,6 +126,8 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		vael_at_the_spire()
 	elif flag == GALE_BELL_FLAG and not GameState.has_flag(TURNED_FLAG):
 		the_old_one_turns()
+	elif flag == HollowRegent.DEFEATED_FLAG and GameState.room_coord == TOMB_BOSS and not GameState.has_flag(MURAL_FLAG):
+		the_last_mural()
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -409,6 +434,151 @@ func hessas_confession() -> void:
 	# Wren answers: one flash, yes.
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
 	scene.finish()
+
+
+## Cutscene 15, "The last mural": with the Hollow Regent gone to bones,
+## the wall he sealed falls open on the last carving. Mother Dace comes down
+## into the tomb and shows Wren what it is: the Old One lying down beside its
+## dead family. Then she leaves Wren to ring the Marrow Bell.
+func the_last_mural() -> void:
+	GameState.set_flag(MURAL_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# The Regent crumbles and the Marrow Bell rises first.
+	await scene.wait(3.4)
+	Audio.play_sfx("old_one_rumble", null, 1.4)
+	Feel.shake(3.0)
+	for i in 3:
+		KilnDebris.burst(room, room.global_position + LastMural.SLAB.get_center() + Vector2(-24 + 24 * i, 6), 5, TombSprites.BONE_SHARD)
+	var mural := _put_up_mural()
+	await scene.wait(1.2)
+	await scene.walk_route(room.global_position + MURAL_WATCH, false)
+	scene.face(Vector2.UP)
+	var dace := ChoirFigure.new("dace")
+	dace.position = DACE_IN[0]
+	room.add_child(dace)
+	await dace.walk_along(DACE_IN.slice(1), 26.0, 1)
+	dace.face(false)
+	scene.face(Vector2.LEFT)
+	dace.talking = true
+	await scene.speak("dace", ["DACE_MURAL_1"])
+	dace.talking = false
+	scene.face(Vector2.UP)
+	await mural.show_close()
+	await scene.wait(1.6)
+	await scene.speak("dace", ["DACE_MURAL_2", "DACE_MURAL_3"])
+	await mural.hide_close()
+	scene.face(Vector2.LEFT)
+	dace.talking = true
+	await scene.speak("dace", ["DACE_MURAL_4"])
+	dace.talking = false
+	var out: Array = DACE_IN.duplicate()
+	out.reverse()
+	await dace.walk_along(out.slice(1), 26.0, -1)
+	dace.queue_free()
+	scene.finish()
+
+
+## Cutscenes 19 and 20, "The Heart wakes" and the ending: the Old One
+## sleeps. Vael comes up from the Choir Loft, lets his grey robe fall, and
+## stays behind as its keeper. At dawn Mantle carries Wren home, where Hessa
+## feels the Point Bell ring through the lighthouse floor. Then the credits,
+## and Continue picks up at home.
+func the_ending() -> void:
+	while Cutscene.active:
+		await get_tree().process_frame
+	if GameState.has_flag(ENDING_FLAG):
+		# Already told: the credits still roll.
+		if DreamingHeart.roll_credits:
+			get_tree().change_scene_to_file.call_deferred(DreamingHeart.CREDITS_SCENE)
+		return
+	GameState.set_flag(ENDING_FLAG)
+	# Scenes still owed at home would play after the credits, out of turn.
+	GameState.set_flag(CONFESSION_FLAG)
+	GameState.set_flag("seen_wayshell")
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	await scene.wait(1.0)
+	await scene.walk_route(room.global_position + ENDING_WATCH)
+	scene.face(Vector2.UP)
+	await scene.wait(1.2)
+	var vael := ChoirFigure.new("vael")
+	vael.position = VAEL_IN[0]
+	room.add_child(vael)
+	await vael.walk_along(VAEL_IN.slice(1), 24.0, 1)
+	vael.face(true)
+	scene.face(Vector2.RIGHT)
+	await scene.wait(0.8)
+	vael.talking = true
+	await scene.speak("vael", ["VAEL_END_1"])
+	vael.talking = false
+	# The grey robe drops at his feet: the keeper's coat was under it.
+	var at := vael.position
+	vael.queue_free()
+	var heap := RobeHeap.new()
+	heap.position = at + Vector2(12, 3)
+	room.add_child(heap)
+	var keeper := ChoirFigure.new("vael_keeper")
+	keeper.position = at
+	keeper.face(true)
+	room.add_child(keeper)
+	Audio.play_sfx("bell_quiet", null, 0.8)
+	await scene.wait(1.4)
+	keeper.talking = true
+	await scene.speak("vael_keeper", ["VAEL_END_2", "VAEL_END_3"])
+	keeper.talking = false
+	await scene.wait(0.8)
+	# Dawn: the screen goes to white light, not black.
+	scene.set_veil_colour(Color(1.0, 0.96, 0.86))
+	await scene.darken(2.0)
+	await scene.veil_text(["ENDING_DAWN_1", "ENDING_DAWN_2"])
+	# Home: Saltmarrow, with Hessa by the lighthouse.
+	_move_to(SALTMARROW)
+	var hessa := _find_npc("hessa")
+	if hessa:
+		game.player.global_position = hessa.global_position + HOME_FROM_HESSA
+	scene.face(Vector2.UP)
+	await scene.lift_veil(2.0)
+	if hessa:
+		await scene.lamp(hessa.global_position, Cutscene.LAMP_HERE)
+	await scene.narrate(["ENDING_HOME_1", "ENDING_HOME_2"])
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	await scene.wait(1.0)
+	scene.set_veil_colour(Color.BLACK)
+	await scene.darken(2.0)
+	await scene.veil_text(["ENDING_SLEEP_1", "ENDING_SLEEP_2"])
+	# After the credits, Continue starts at home.
+	GameState.set_checkpoint(SALTMARROW, game.player.global_position - game.current_room.global_position)
+	SaveManager.save_game()
+	scene.finish()
+	if DreamingHeart.roll_credits:
+		get_tree().change_scene_to_file.call_deferred(DreamingHeart.CREDITS_SCENE)
+
+
+func _heart_here() -> bool:
+	return game.current_room != null and game.current_room.get_children().any(func(c: Node) -> bool: return c is DreamingHeart)
+
+
+## Swap the room behind a veil, without the door fade.
+func _move_to(coord: Vector2i) -> void:
+	game.current_room.queue_free()
+	game.current_room = game._spawn_room(coord)
+	game.player.global_position = game.current_room.global_position + game.current_room.player_spawn
+	game.camera.position = game._room_center(game.current_room)
+	GameState.room_coord = coord
+	GameState.dungeon = game.current_room.dungeon
+	Events.room_entered.emit(coord)
+
+
+## The carved slab on the tomb's north wall, once the Regent has fallen.
+func _put_up_mural() -> LastMural:
+	var room: Node = game.current_room
+	for child in room.get_children():
+		if child is LastMural:
+			return child
+	var mural := LastMural.new()
+	room.add_child(mural)
+	return mural
 
 
 ## Cutscene 5, "Bell rung": the phrase leaves the bell as a stream of notes
