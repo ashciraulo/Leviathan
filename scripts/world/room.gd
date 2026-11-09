@@ -12,6 +12,8 @@ extends Node2D
 ##          e  Slagbeetle (charger; flip it against a wall)   y  geyser
 ##          q  Sporecap (bursts spores when Wren is close)
 ##          t  Tumbleburr (rolls with the wind)   J  windmill
+##          x  slick ice (Wren slides; regions with "ice" tiles)
+##          g  Sledgeseal (rears, then slides at Wren)
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)
@@ -122,7 +124,13 @@ const BIOMES := {
 		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
 		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
 		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d",
-		"floor_overlay": ["gust_%d", 9],
+		"floor_overlay": ["gust_%d", 9], "door": "exit_glow",
+	},
+	"frostspine": {
+		"floor": "snow_%d", "wall_top": "glacier_top_%d", "wall_face": "glacier_face_%d",
+		"water": "floe_sea_%d", "water_edge": "shelf_%s_%d", "damp": "drift_%s",
+		"wet_deco": "ice_shards_%d", "dry_deco": "frost_rock_%d",
+		"floor_overlay": ["snowfall_%d", 7], "ice": "slick_ice_%d", "door": "exit_glow",
 	},
 	"hull": {
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
@@ -207,6 +215,11 @@ func _build() -> void:
 			_spawn(tile, Vector2(x * TILE + TILE / 2.0, y * TILE + TILE - 4))
 			x += 1
 	DungeonTiles.finish(self)
+	# In a dungeon, x is a wisp, not ice.
+	if dungeon == "" and layout.contains("x"):
+		var ice := IceField.new()
+		ice.name = "IceField"
+		add_child(ice)
 	if wind != Vector2.ZERO:
 		var gust := Gust.new()
 		gust.name = "Gust"
@@ -216,8 +229,16 @@ func _build() -> void:
 
 func _spawn(tile: String, pos: Vector2) -> void:
 	var node: Node2D = null
+	# Dungeon pieces win in a dungeon: some of their letters (k q x) mean
+	# something else out in the overworld.
+	if dungeon != "" and DungeonTiles.handles(tile):
+		node = DungeonTiles.make(tile, self, pos)
+		if node:
+			node.position = pos
+			add_child(node)
+		return
 	match tile:
-		".", ":":
+		".", ":", "x":
 			pass
 		"P":
 			player_spawn = pos
@@ -241,6 +262,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Sporecap.new()
 		"t":
 			node = Tumbleburr.new()
+		"g":
+			node = Sledgeseal.new()
 		"b":
 			node = Shellback.new()
 		"C":
@@ -350,7 +373,10 @@ func _draw_ground() -> void:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
-				_draw_tile(tiles["floor"] % (h % 4), x, y)
+				if tile == "x" and tiles.has("ice"):
+					_draw_tile(tiles["ice"] % (h % 2), x, y)
+				else:
+					_draw_tile(tiles["floor"] % (h % 4), x, y)
 				# Damp ground fades out from any water alongside.
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					if _tile_at(x + side[1], y + side[2]) in ["~", "v"]:

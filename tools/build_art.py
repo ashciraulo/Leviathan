@@ -33,6 +33,7 @@ import cinderreach_art
 import mire_art
 import gloamfen_art
 import windmere_art
+import frostspine_art
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets")
@@ -514,6 +515,7 @@ def build_enemies():
     out["sporecap"] = sheet([[lit(gloamfen_art.sporecap(k), 28) for k in ("walk_a", "walk_b", "swell", "spent")]], 16, 16)
     out["spore_cloud"] = sheet([[lit(gloamfen_art.spore_cloud(f), 29) for f in range(3)]], 64, 64)
     out["tumbleburr"] = sheet([[lit(windmere_art.tumbleburr(f), 43) for f in range(4)]], 16, 16)
+    out["sledgeseal"] = sheet([[lit(frostspine_art.sledgeseal(k), 44) for k in ("idle", "rear", "slide")]], 20, 14)
     out["lanternmoth"] = sheet([[lit(brinewood_art.LANTERNMOTH[k], 25) for k in ("up", "down", "flare")]], 16, 14)
     out["bogskipper"] = sheet([[lit(brinewood_art.BOGSKIPPER[k], 9) for k in ("hidden", "rise", "body")]], 16, 14)
     return out
@@ -1017,6 +1019,15 @@ FLAT.update(windmere_art.FLAT)
 _names = {n for n, _ in TILE_LAYOUT}
 assert not _names & {n for n, _ in windmere_art.TILES}, "windmere_art reuses tile names"
 TILE_LAYOUT += windmere_art.TILES
+
+_taken = set(RAMPS) | set(FLAT)
+_clash = _taken & (set(frostspine_art.RAMPS) | set(frostspine_art.FLAT))
+assert not _clash, "frostspine_art reuses material letters: %s" % sorted(_clash)
+RAMPS.update(frostspine_art.RAMPS)
+FLAT.update(frostspine_art.FLAT)
+_names = {n for n, _ in TILE_LAYOUT}
+assert not _names & {n for n, _ in frostspine_art.TILES}, "frostspine_art reuses tile names"
+TILE_LAYOUT += frostspine_art.TILES
 
 
 def build_tiles():
