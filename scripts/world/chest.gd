@@ -19,6 +19,9 @@ const ITEMS := {
 	"compass": ["TOAST_GOT_COMPASS", HullSprites.COMPASS],
 	"big_key": ["TOAST_GOT_BIG_KEY", HullSprites.BIG_KEY],
 	"breath_pearl": ["TOAST_GOT_PEARL", null],
+	"nacre_buckler": ["TOAST_GOT_NACRE_BUCKLER", null],
+	"abyssal": ["TOAST_GOT_ABYSSAL", null],
+	"tidecaller_sword": ["TOAST_GOT_TIDECALLER_SWORD", null],
 }
 ## Finding one of these opens the dialogue box to explain it.
 const ITEM_TALK := {
@@ -29,6 +32,9 @@ const ITEM_TALK := {
 	"frostfang_bow": ["GOT_FROSTFANG_BOW_1", "GOT_FROSTFANG_BOW_2"],
 	"divers_helm": ["GOT_DIVERS_HELM_1", "GOT_DIVERS_HELM_2"],
 	"echo_horn": ["GOT_ECHO_HORN_1", "GOT_ECHO_HORN_2"],
+	"nacre_buckler": ["GOT_NACRE_BUCKLER_1"],
+	"abyssal": ["GOT_ABYSSAL_1"],
+	"tidecaller_sword": ["GOT_TIDECALLER_SWORD_1"],
 }
 
 var room_coord := Vector2i.ZERO
