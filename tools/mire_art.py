@@ -60,23 +60,23 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Old shrine flagstones in bog violet, big uneven slabs that run across
-    tiles (only some tiles have a join on an edge, and a crack now and then
-    wanders through one), moss in the joins and, here and there, a cushion of it on the stone."""
+    """Old shrine flagstones in bog violet: big uneven slabs that run across
+    tiles (only some tiles have a join on an edge, and now and then a crack
+    wanders through one), moss in the joins and, here and there, a cushion
+    of it on the stone."""
     rnd = random.Random(2400 + seed)
     base = SLAB[2]
     px = blank(base)
-    join, lip = SLAB[4], SLAB[1]
+    join = SLAB[4]
     if seed in (0, 1):
         for x in range(T):
             px[T - 1][x] = join
-            px[0][x] = lip if px[0][x] == base else px[0][x]
-    if seed in (0, 2):
+    if seed == 2:
         for y in range(T):
             px[y][T - 1] = join
     if seed == 1:
         y = rnd.randrange(5, 10)
-        for x in range(T):
+        for x in range(rnd.randrange(2, 5), rnd.randrange(11, 14)):
             if rnd.random() < 0.3:
                 y = max(3, min(T - 4, y + rnd.choice((-1, 1))))
             px[y][x] = join

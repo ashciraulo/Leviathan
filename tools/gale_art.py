@@ -60,9 +60,9 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Wind-scoured flagstones, pale slate, laid in long courses two tiles
-    deep. Joins fall on only some tiles, so the courses run on across the
-    floor instead of boxing every tile; the wind has worn pale streaks along
+    """Wind-scoured flagstones, pale slate, laid in long courses. Joins fall
+    on only some tiles, so the slabs run on across the floor instead of
+    boxing every tile; the wind has worn pale streaks along
     the stone and blown grit into the joins."""
     rnd = random.Random(3100 + seed)
     base = STONE[2]
@@ -70,11 +70,10 @@ def floor_tile(seed):
     if seed in (0, 1):
         for x in range(T):
             px[T - 1][x] = STONE[4]
-            px[0][x] = STONE[1]
     if seed in (1, 2):
         split = rnd.randrange(4, 12)
         for y in range(T):
-            if px[y][split] == base or y in (0, T - 1):
+            if px[y][split] == base:
                 px[y][split] = STONE[4]
             if px[y][split + 1] == base:
                 px[y][split + 1] = STONE[1]
@@ -89,7 +88,7 @@ def floor_tile(seed):
         x, y = rnd.randrange(1, T - 1), rnd.randrange(1, T - 1)
         if px[y][x] == base:
             px[y][x] = rnd.choice((STONE[3], STONE[3], STONE[0]))
-    # A tuft of lichen in a join.
+    # Lichen: a tuft in a join, or a patch on the open stone.
     if seed == 1:
         px[T - 1][rnd.randrange(2, T - 2)] = LICHEN[1]
     if seed == 3:
