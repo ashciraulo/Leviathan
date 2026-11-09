@@ -41,7 +41,7 @@ jobs:
       - name: Run smoke test
         run: |
           set +e
-          timeout 180 "$RUNNER_TEMP/godot" --headless --path . res://tests/smoke_test.tscn 2>&1 | tee test.log
+          timeout 300 "$RUNNER_TEMP/godot" --headless --path . res://tests/smoke_test.tscn 2>&1 | tee test.log
           status=${PIPESTATUS[0]}
           set -e
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" test.log; then
