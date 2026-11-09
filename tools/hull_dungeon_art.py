@@ -234,32 +234,35 @@ BARS = [
 
 
 def big_door_half():
-    """Left half of the carved double door (the right half is mirrored):
-    a great wave carved in the timbers, gilt studs, and half of a brass
-    lock plate with the big keyhole. 16x16."""
+    """Left half of the great door (the right half is mirrored): tall
+    vertical planks under a dark arch, heavy iron hinges, gilt rivets, and
+    half of a big brass lock with a keyhole at the seam. 16x16."""
     c = canvas(16, 16)
-    fill_rect(c, 0, 0, 16, 16, "P")
-    # Frame.
+    fill_rect(c, 0, 0, 16, 16, "3")
+    # Arched opening: the doorway's top corner curves in.
     for y in range(16):
-        c[y][0] = "M"
-    for x in range(16):
-        c[0][x] = "M"
-        c[15][x] = "S"
-    # Carved wave curling towards the middle.
-    for x in range(2, 14):
-        y = round(9 - 4 * math.sin((x - 2) / 11 * math.pi))
-        c[y][x] = "T"
-        c[y + 1][x] = "T"
-    c[4][12] = "T"
-    c[5][13] = "T"
-    # Studs.
-    for (x, y) in ((3, 3), (3, 12), (9, 13)):
-        c[y][x] = "M"
-    # Lock plate at the seam.
-    fill_rect(c, 12, 6, 4, 6, "Q")
-    c[8][15] = "3"
-    c[9][15] = "3"
-    c[10][15] = "3"
+        inset = max(0, 4 - y) if y < 4 else 0
+        for x in range(1 + inset, 16):
+            c[y][x] = "P"
+    # Vertical planks with dark seams.
+    for x in (5, 10):
+        for y in range(16):
+            if c[y][x] == "P":
+                c[y][x] = "3"
+    # Iron hinge straps.
+    for y in (4, 11):
+        for x in range(2, 14):
+            if c[y][x] in ("P", "3"):
+                c[y][x] = "S"
+        put(c, 2, y + 1, "S")
+    # Gilt rivets on the straps.
+    for (x, y) in ((4, 4), (8, 4), (12, 4), (4, 11), (8, 11), (12, 11)):
+        put(c, x, y, "M")
+    # The lock: half of a brass plate with the big keyhole at the seam.
+    fill_rect(c, 11, 6, 5, 4, "Q")
+    put(c, 15, 7, "3")
+    put(c, 15, 8, "3")
+    put(c, 14, 8, "3")
     return rows_of(c)
 
 
