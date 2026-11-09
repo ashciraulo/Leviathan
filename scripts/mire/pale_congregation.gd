@@ -173,6 +173,7 @@ func _think(delta: float) -> void:
 					mode = Mode.TELL
 					_timer = TELL_TIME
 					Audio.play_sfx("heart_beat", global_position, 0.8)
+					Audio.play_sfx("congregation_tell", global_position)
 		Mode.TELL:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
@@ -249,6 +250,7 @@ func _on_hurt() -> void:
 func _die() -> void:
 	dying = true
 	mode = Mode.DYING
+	Audio.play_sfx("boss_fall", global_position, 1.2)
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)

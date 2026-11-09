@@ -26,6 +26,7 @@ func _physics_process(_delta: float) -> void:
 	if now != pressed:
 		pressed = now
 		_sprite.frame = 1 if pressed else 0
+		Audio.play_sfx("switch", global_position, 1.0 if pressed else 0.8)
 		if pressed:
 			Feel.shake(0.5)
 		changed.emit()

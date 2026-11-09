@@ -71,6 +71,7 @@ func _on_room_entered(coord: Vector2i) -> void:
 func _play_room_music() -> void:
 	if current_room:
 		Audio.play_music(Audio.cue_for_room(current_room.biome, current_room.dungeon))
+		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon))
 
 
 func _process(delta: float) -> void:
@@ -206,6 +207,7 @@ func _on_player_died() -> void:
 	await tween.finished
 	Engine.time_scale = 1.0
 	Audio.stop_music(0.5)
+	Audio.play_ambience("", 0.5)
 	# The world holds still (and stays quiet) under the game over screen.
 	world.process_mode = Node.PROCESS_MODE_DISABLED
 	_game_over = true

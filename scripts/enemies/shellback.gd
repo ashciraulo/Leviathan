@@ -36,6 +36,7 @@ func _think(delta: float) -> void:
 				if toward != shell_dir:
 					mode = Mode.TURNING
 					_timer = TURN_PAUSE
+					Audio.play_sfx("shell_clack", global_position)
 				else:
 					_timer = TURN_EVERY
 		Mode.TURNING:

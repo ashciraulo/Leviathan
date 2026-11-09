@@ -68,6 +68,7 @@ func interact() -> void:
 	match item:
 		"small_key":
 			GameState.add_key(dungeon)
+			Audio.play_sfx("key_get", global_position)
 		"map", "compass", "big_key":
 			GameState.give_item(Items.dungeon_item(dungeon, item))
 		_:

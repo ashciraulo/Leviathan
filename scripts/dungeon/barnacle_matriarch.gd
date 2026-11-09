@@ -130,11 +130,13 @@ func _think(delta: float) -> void:
 				var spits := hp <= MAX_HP - HP_PER_PLATE and randf() < 0.45
 				if spits:
 					_enter(Mode.SPIT_WINDUP, SPIT_WINDUP_TIME)
+					Audio.play_sfx("spitter_gulp", global_position, 0.6)
 				elif to_player.length() > SLAM_RANGE:
 					_enter(Mode.STALK, 0.5)
 				else:
 					_lunge = to_player.normalized()
 					_enter(Mode.WINDUP, WINDUP_TIME / rage)
+					Audio.play_sfx("matriarch_tell", global_position, rage)
 		Mode.WINDUP:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
@@ -241,6 +243,7 @@ func _spit(to_player: Vector2) -> void:
 func _die() -> void:
 	dying = true
 	mode = Mode.DYING
+	Audio.play_sfx("boss_fall", global_position)
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
