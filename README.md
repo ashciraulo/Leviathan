@@ -18,13 +18,18 @@ and test the Saltmarrow art style before the vertical slice.
 
 The first open imports the translation file, which takes a few seconds.
 
-## Playable builds (Windows, Linux)
+## Playable builds (Windows, Linux, web)
 
 No Godot needed: on GitHub, open **Actions > Build PC > Run workflow**. When
 it finishes (about five minutes), download **Leviathan-windows** or
 **Leviathan-linux** from the run's page and unzip it (the Linux one holds a
 `.tar.gz`; unpack that too, which keeps the game executable). Pushing a tag like
 `v0.2.0` builds them too.
+
+**Leviathan-web** is the browser version. Browsers won't run it straight from
+the unzipped folder, so serve it: in that folder run `python3 -m http.server`
+and open <http://localhost:8000>, or upload the folder to any static host
+(itch.io, GitHub Pages). Saves stay in that browser.
 
 To export locally, install the export templates from the editor
 (**Editor > Manage Export Templates**) and use **Project > Export**; the

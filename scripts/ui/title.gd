@@ -74,7 +74,9 @@ func _ready() -> void:
 	menu.add_child(new_game_button)
 	menu.add_child(UI.button("MENU_OPTIONS", func() -> void: _show_page(_options)))
 	menu.add_child(UI.button("MENU_CREDITS", func() -> void: _leave_to(CREDITS_SCENE)))
-	menu.add_child(UI.button("MENU_QUIT", func() -> void: get_tree().quit()))
+	# A browser tab can't be closed by the page, so the web build has no Quit.
+	if not OS.has_feature("web"):
+		menu.add_child(UI.button("MENU_QUIT", func() -> void: get_tree().quit()))
 
 	_overlay = ColorRect.new()
 	(_overlay as ColorRect).color = Color(0.03, 0.05, 0.1, 0.78)

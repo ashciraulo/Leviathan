@@ -1,6 +1,6 @@
 name: Build PC
 
-# Builds playable Windows and Linux versions. Run it from the Actions tab
+# Builds playable Windows, Linux and web versions. Run it from the Actions tab
 # (Build PC > Run workflow), or push a tag like v0.2.0. The builds are
 # attached to the run as downloadable artifacts.
 
@@ -11,7 +11,7 @@ on:
 
 jobs:
   export:
-    name: Export Windows and Linux
+    name: Export Windows, Linux and web
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-          key: godot-templates-${{ env.GODOT_VERSION }}-pc
+          key: godot-templates-${{ env.GODOT_VERSION }}-pc-web
 
       - name: Download export templates
         if: steps.templates.outputs.cache-hit != 'true'
@@ -56,9 +56,11 @@ jobs:
           dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mkdir -p "$dir"
           curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
-          # Only the PC templates; the full set is over a gigabyte.
+          # Only the PC and web templates; the full set is over a gigabyte.
+          # The web build is single-threaded so it runs on any static host.
           unzip -q -o -j templates.tpz templates/version.txt templates/linux_release.x86_64 \
-            templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe -d "$dir"
+            templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe \
+            templates/web_nothreads_release.zip -d "$dir"
           rm templates.tpz
 
       - name: Import project
@@ -66,11 +68,14 @@ jobs:
 
       - name: Export
         run: |
-          mkdir -p export/windows export/linux
+          mkdir -p export/windows export/linux export/web
           "$RUNNER_TEMP/godot" --headless --path . --export-release "Windows Desktop" export/windows/Leviathan.exe
           "$RUNNER_TEMP/godot" --headless --path . --export-release "Linux" export/linux/Leviathan.x86_64
           test -s export/windows/Leviathan.exe
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web" export/web/index.html
           test -s export/linux/Leviathan.x86_64
+          test -s export/web/index.wasm
+          test -s export/web/index.pck
           ls -la export/*
 
       - name: Check the Linux build starts
@@ -102,3 +107,8 @@ jobs:
         with:
           name: Leviathan-linux
           path: Leviathan-linux.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Leviathan-web
+          path: export/web/
