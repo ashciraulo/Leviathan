@@ -7,6 +7,13 @@ extends Node
 ## the new file take its place. If the main file is ever damaged (a crash or
 ## power cut mid-write), loading falls back to the .bak.
 
+##
+## Every save records its FORMAT_VERSION. When the layout of "state" changes,
+## bump FORMAT_VERSION and add a step to _migrate() that turns the old
+## layout into the new one; old saves are brought up to date as they load.
+## A save from a newer version of the game is never loaded or overwritten
+## by accident: the file select shows it as from a newer version.
+
 const SLOT_COUNT := 3
 const FORMAT_VERSION := 1
 
@@ -64,8 +71,41 @@ func load_game(slot: int = -1) -> bool:
 		if has_save(slot):
 			push_error("Save file is damaged: %s" % slot_path(slot))
 		return false
-	GameState.from_dict(parsed["state"])
+	if is_newer(parsed):
+		push_error("Save %s is from a newer version of the game" % slot_path(slot))
+		return false
+	GameState.from_dict(_migrate(parsed)["state"])
 	return true
+
+
+## True when a save was written by a newer version of the game (a format
+## this build doesn't know).
+func is_newer(parsed: Dictionary) -> bool:
+	return _version_of(parsed) > FORMAT_VERSION
+
+
+func _version_of(parsed: Dictionary) -> int:
+	# Saves from before versioning count as version 0.
+	var version = parsed.get("format_version", 0)
+	return int(version) if (version is int or version is float) else 0
+
+
+## Brings a parsed save up to FORMAT_VERSION, one step at a time. Each step
+## takes the whole save (state, summary...) at version N and returns it at
+## N + 1. Steps only ever get added, never changed, so any old save can be
+## walked forward.
+func _migrate(parsed: Dictionary) -> Dictionary:
+	var data := parsed.duplicate(true)
+	var version := _version_of(data)
+	while version < FORMAT_VERSION:
+		match version:
+			0:
+				# Version 0 (before versioning) has the same state layout;
+				# GameState.from_dict fills anything missing with defaults.
+				pass
+		version += 1
+		data["format_version"] = version
+	return data
 
 
 ## The few facts the file select shows, so it needn't load the whole game.
@@ -86,6 +126,8 @@ func read_summary(slot: int) -> Dictionary:
 	var parsed := _read_slot(slot)
 	if parsed.is_empty():
 		return {"damaged": true}
+	if is_newer(parsed):
+		return {"newer": true, "saved_at": str(parsed.get("saved_at", ""))}
 	var out: Dictionary = {}
 	var saved = parsed.get("summary")
 	if saved is Dictionary:
@@ -125,7 +167,7 @@ func latest_slot() -> int:
 		if not has_save(slot):
 			continue
 		var data := read_summary(slot)
-		if data.get("damaged", false):
+		if data.get("damaged", false) or data.get("newer", false):
 			continue
 		var at := str(data.get("saved_at", ""))
 		if best < 0 or at > best_time:

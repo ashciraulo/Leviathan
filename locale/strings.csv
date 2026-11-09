@@ -266,6 +266,7 @@ JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps ever
 FILES_TITLE,Choose a journey
 FILES_EMPTY,New journey
 FILES_DAMAGED,This file is damaged.
+FILES_NEWER,Saved by a newer version.
 FILES_COPY,Copy
 FILES_ERASE,Erase
 FILES_BACK,Back
