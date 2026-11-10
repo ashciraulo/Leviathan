@@ -816,6 +816,10 @@ func _gale_shots(game: Node) -> void:
 		heron._timer = 0.3
 		await _wait(0.45)
 		await _capture("100_stormheron_feathers")
+		heron.mode = Stormheron.Mode.CROUCH
+		heron._timer = 0.5
+		await _wait(0.2)
+		await _capture("179_stormheron_dive_tell")
 		heron._throws = Stormheron.THROWS_PER_STORM
 		heron.mode = Stormheron.Mode.PERCH
 		heron._timer = 0.0

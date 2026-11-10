@@ -18,6 +18,7 @@ var _sprite: Sprite2D
 var _timer := 1.5
 var _telling := false
 var _time := 0.0
+var _base_x := 0.0
 
 
 func _ready() -> void:
@@ -26,6 +27,7 @@ func _ready() -> void:
 	# A ghost of dream-light: washed pale, then tinted the colour of the
 	# Maw's veins, and half see-through.
 	_sprite.modulate = Color(0.55, 0.95, 0.9, 0.0)
+	_base_x = _sprite.position.x
 	add_child(_sprite)
 	Art.set_flash(_sprite, 0.55)
 	create_tween().tween_property(_sprite, "modulate:a", 0.75, 0.8)
@@ -44,6 +46,8 @@ func _physics_process(delta: float) -> void:
 	if _telling:
 		var flare := int(_time * 16.0) % 2 == 0
 		_sprite.modulate = Color(1.0, 0.55, 0.6, 0.95) if flare else Color(0.55, 0.95, 0.9, 0.75)
+		# It shudders as it flares, so the tell isn't in the colour alone.
+		_sprite.position.x = _base_x + (1.0 if flare else -1.0)
 	if _timer <= 0.0:
 		_fire()
 
@@ -58,6 +62,7 @@ func _fire() -> void:
 	_telling = false
 	_timer = shot_every
 	_sprite.modulate = Color(0.55, 0.95, 0.9, 0.75)
+	_sprite.position.x = _base_x
 	var wren := get_tree().get_first_node_in_group("player") as Node2D
 	if wren == null:
 		return
@@ -74,6 +79,7 @@ func _fire() -> void:
 ## Its phrase is sung: it sighs, and fades into the dark.
 func calm() -> void:
 	calmed = true
+	_sprite.position.x = _base_x
 	Audio.play_sfx("echo_calm", global_position)
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(_sprite, "modulate", Color(0.9, 1.0, 1.0, 0.0), 1.4)

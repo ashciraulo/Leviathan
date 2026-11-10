@@ -41,6 +41,7 @@ var _room: Room
 const INTRO_TIME := 2.0
 var _timer := INTRO_TIME
 var _spits := 0
+var _cracks: Node2D
 var _hits_this_daze := 0
 ## Holes to crack open again once Wren steps off them.
 var _to_thaw: Array[Vector2i] = []
@@ -79,6 +80,11 @@ func _ready() -> void:
 	collision_mask = 0
 	collision_layer = 0
 	_set_shown(false)
+	_cracks = Node2D.new()
+	_cracks.name = "BreachCracks"
+	_cracks.z_index = 1
+	_cracks.draw.connect(_draw_cracks)
+	add_child(_cracks)
 	Events.toast.emit("BOSS_RIMEBACK")
 	# Its entrance: a great shadow slides under the ice, and the ice groans.
 	Audio.play_sfx("ice_groan", global_position, 0.7)
@@ -368,6 +374,8 @@ func _make_sprite() -> Sprite2D:
 
 
 func _update_sprite() -> void:
+	if _cracks:
+		_cracks.queue_redraw()
 	if mode == Mode.DYING:
 		return
 	_sprite.visible = mode != Mode.UNDER
@@ -388,7 +396,8 @@ func _update_sprite() -> void:
 			_sprite.frame = FRAME_UNDER
 			_sprite.position.y += 10.0 * (1.0 - _timer / DIVE_TIME)
 		Mode.BREACH:
-			# A shadow under the ice, and the ice groaning.
+			# A shadow under the ice, the ice groaning, and cracks spreading
+			# over the spot it will burst through (see _draw).
 			_sprite.frame = FRAME_UNDER
 			_sprite.modulate.a = 0.35
 			_jitter(_timer)
@@ -396,3 +405,21 @@ func _update_sprite() -> void:
 			_sprite.frame = FRAME_DAZED
 		_:
 			_sprite.frame = FRAME_UP
+
+
+## The breach tell drawn on the ice: cracks spreading out from the spot it
+## bursts through, as far as the burst throws Wren, so it can be seen as
+## well as heard. On its own layer, above the frozen holes.
+func _draw_cracks() -> void:
+	if mode != Mode.BREACH:
+		return
+	var k := clampf(1.0 - _timer / BREACH_TELL, 0.0, 1.0)
+	var center := Vector2(0, -8)
+	var crack := Color(0.1, 0.24, 0.42, 0.55 + 0.45 * k)
+	for i in 7:
+		var dir := Vector2.from_angle(TAU * i / 7.0 + 0.3)
+		var bend := dir.rotated(0.5 if i % 2 == 0 else -0.5)
+		var mid := center + dir * 14.0 * k
+		_cracks.draw_line(center, mid, crack, 1.0)
+		_cracks.draw_line(mid, mid + bend * 16.0 * k, crack, 1.0)
+	_cracks.draw_arc(center, 30.0 * k, 0.0, TAU, 24, Color(crack, 0.4 * k), 1.0)

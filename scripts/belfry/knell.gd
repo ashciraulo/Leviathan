@@ -239,6 +239,8 @@ func _update_sprite() -> void:
 		return
 	_sprite.visible = mode != Mode.HIDDEN or _ink_tell > 0.0
 	if _ink_tell > 0.0:
+		# About to spit: it leans further out of the bell's mouth and shudders.
+		_sprite.position.y += 3.0
 		_jitter(_ink_tell)
 	if mode == Mode.INTRO:
 		_jitter(_timer)

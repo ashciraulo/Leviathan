@@ -119,7 +119,10 @@ func burst() -> void:
 
 func _make_sprite() -> Sprite2D:
 	var sprite := Art.sprite(MawSprites.NOTE, 2, 1, 11)
-	sprite.position.y -= 4
+	# Centred on the note (it spins on the way back), where Art.sprite's
+	# top-left corner would put it.
+	sprite.centered = true
+	sprite.position = Vector2(0, -10)
 	return sprite
 
 
@@ -127,3 +130,6 @@ func _update_sprite() -> void:
 	_sprite.frame = int(_time * 6.0) % 2
 	_sprite.position.y += sin(_time * 9.0) * 1.0
 	_sprite.modulate = Color(1.6, 1.3, 0.8) if returning else Color.WHITE
+	# Sent back, it's bigger and spins, not only warmer.
+	_sprite.scale = Vector2.ONE * (1.3 if returning else 1.0)
+	_sprite.rotation = _time * 10.0 if returning else 0.0

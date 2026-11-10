@@ -10,6 +10,7 @@ var dungeon := ""
 ## The right-hand half of a two-tile door (drawn mirrored).
 var right_half := false
 var _touch: Area2D
+var _sprite: Sprite2D
 var _last_toast := -100000
 
 
@@ -28,6 +29,7 @@ func _ready() -> void:
 	sprite.frame = 1 if right_half else 0
 	sprite.position.y += 4
 	add_child(sprite)
+	_sprite = sprite
 	_touch = Area2D.new()
 	Layers.assign(_touch, 0, [Layers.PLAYER])
 	_touch.monitorable = false
@@ -50,6 +52,10 @@ func _on_touch(body: Node2D) -> void:
 	elif Time.get_ticks_msec() - _last_toast > TOAST_COOLDOWN * 1000.0:
 		_last_toast = Time.get_ticks_msec()
 		Audio.play_sfx("door_locked", global_position)
+		# The whole door rattles, every tile of it.
+		for door in get_tree().get_nodes_in_group("big_doors"):
+			if door.get("room_coord") == room_coord and door.get("_sprite"):
+				Art.rattle(door._sprite)
 
 
 func _vanish() -> void:

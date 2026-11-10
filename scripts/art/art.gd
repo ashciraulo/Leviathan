@@ -149,6 +149,19 @@ static func sprite(texture: Texture2D, hframes: int, vframes: int, foot_row: int
 	return node
 
 
+## A short rattle (a locked door tried): the node shakes a pixel each way
+## and settles back where it was, so the refusal can be seen as well as heard.
+static func rattle(node: Node2D) -> void:
+	if node.has_meta("rattle_home"):
+		return
+	var home := node.position
+	node.set_meta("rattle_home", home)
+	var tween := node.create_tween()
+	for dx: float in [1.0, -1.0, 1.0, -1.0, 0.0]:
+		tween.tween_property(node, "position:x", home.x + dx, 0.05)
+	tween.tween_callback(node.remove_meta.bind("rattle_home"))
+
+
 ## A soft drop shadow, offset down and to the right (light is top left).
 static func shadow(large: bool = false) -> Sprite2D:
 	var node := Sprite2D.new()
