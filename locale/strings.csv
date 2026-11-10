@@ -604,6 +604,12 @@ NAME_MURMUR,Murmur
 MURMUR_CALF_1,"Oh... look at them. Every light in the fen, dreaming the same shape."
 MURMUR_CALF_2,"That's a calf. The Old One isn't angry. It's grieving, and they're its dreams."
 MURMUR_CALF_3,"I sang them out of their lanterns for Vael. I won't do it again. Not for anyone."
+MURMUR_FEN_1,"Keeper. Wick lets me help with the lights now. I owe the fen that."
+MURMUR_FEN_2,"I sang the lights out of them once. Now I hum them home."
+MURMUR_FEN_3,"It's slower. The lights don't mind. Neither do I."
+MURMUR_AGAIN,"Wick counts the lanterns. I count with them. I keep losing count."
+MURMUR_TURNED,"It turned over in its sleep. I felt it in my teeth, like a low hymn."
+MURMUR_END,"The strange lights went out to sea last night. They were singing."
 ROOM_TOMB_ENTRY,The Marrow Tomb
 ROOM_TOMB_HALL,The Marrow Tomb: Hall of Ribs
 ROOM_TOMB_CRYPT,The Marrow Tomb: Horn Crypt
@@ -700,6 +706,9 @@ DACE_MURAL_1,"So the Regent's gone to bones at last. Then you've earned this. Co
 DACE_MURAL_2,Those bones out on the dunes were its family. It lay down beside them to grieve.
 DACE_MURAL_3,"The Regent wanted a weapon. All it ever wanted was to sleep where they sleep."
 DACE_MURAL_4,"Whatever that Choir hears weeping, child, it isn't anger. Go and ring your bell."
+DACE_END_1,"Back with the bones, child? They're quieter now. So is it."
+DACE_END_2,"It dreams of them, I think. Not grieving now. Remembering."
+DACE_AGAIN,"Sit a while, if you like. The dead don't mind company."
 ROOM_BELFRY_UNDERCROFT,The Drowned Belfry: Undercroft
 ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
 ROOM_MAW_TIDEWELL,The Maw: Tidewell
