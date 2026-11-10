@@ -204,6 +204,7 @@ const BIOMES := {
 		"water": "bilge_%d", "water_edge": "brine_%s_%d", "damp": "soak_%s",
 		"wet_deco": "barnacles_%d", "dry_deco": "rope_%d",
 		"floor_overlay": ["shaft_%d", 9], "door": "exit_glow",
+		"set_pieces": 2,
 	},
 	"kiln": {
 		"wall_deco": "kiln",
@@ -211,6 +212,7 @@ const BIOMES := {
 		"water": "quench_%d", "water_edge": "kerb_%s_%d", "damp": "kiln_scorch_%s",
 		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
 		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
+		"set_pieces": 2,
 	},
 	"mire": {
 		"wall_deco": "mire",
