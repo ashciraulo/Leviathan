@@ -52,6 +52,7 @@ const SPEAKERS := {
 	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
 	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
 	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
+	"gully_ebb": ["NAME_GULLY", Art.PORTRAIT_GULLY],
 	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
 	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
 	"coralie": ["NAME_CORALIE", Art.PORTRAIT_CORALIE],
@@ -69,6 +70,8 @@ const TALKS := {
 		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
 	],
 	"hessa": [
+		# The little cap from the lantern-boat on the Ebb Shelf.
+		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
 		# Ottilie's old cave sign, carried by Wren's lamp.
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "set": ["hessa_answered_ottilie"], "lines": [["", "NARRATE_WREN_OTTILIE_SIGNAL"], "HESSA_OTTILIE_1", "HESSA_OTTILIE_2"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
@@ -76,7 +79,7 @@ const TALKS := {
 		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
 		# Once Wren has the Wayshell, Hessa always has a word on where the
 		# next bell is, for anyone who asks her.
-		{"if": ["hessa_rowed"], "lines": ["HESSA_HINT_MAW"]},
+		{"if": ["tidebell_tomb"], "lines": ["HESSA_HINT_MAW"]},
 		{"if": ["tidebell_belfry"], "lines": ["HESSA_HINT_TOMB_1", "HESSA_HINT_TOMB_2"]},
 		{"if": ["tidebell_glacier"], "lines": ["HESSA_HINT_BELFRY_1", "HESSA_HINT_BELFRY_2"]},
 		{"if": ["seen_hessa_confession"], "lines": ["HESSA_AFTER_TURN"]},
@@ -243,6 +246,18 @@ const TALKS := {
 		{"if": ["gully_box_hauled"], "set": ["gully_paid"], "give": {"glint": 100}, "lines": ["GULLY_BOX_1", "GULLY_BOX_2", ["", "NARRATE_GOT_SALVAGE"]]},
 		{"if": ["gully_asked"], "lines": ["GULLY_WAITING"]},
 		{"set": ["gully_asked"], "lines": ["GULLY_1", "GULLY_1B", "GULLY_2", "GULLY_2B", "GULLY_3", "GULLY_3B"]},
+	],
+	# Gully on the Ebb Shelf with the tide held out, and the lantern-boat
+	# the ebb bared (LanternBoat).
+	"gully_ebb": [
+		{"if": ["found_wren_cap"], "lines": ["GULLY_EBB_AFTER"]},
+		{"if": ["gully_ebb_told"], "lines": ["GULLY_EBB_AGAIN"]},
+		{"set": ["gully_ebb_told"], "lines": ["GULLY_EBB_1", "GULLY_EBB_2", "GULLY_EBB_3", "GULLY_EBB_4"]},
+	],
+	"lantern_boat": [
+		{"if": ["found_wren_cap"], "lines": ["NARRATE_LANTERN_BOAT_EMPTY"]},
+		{"if": ["gully_ebb_told"], "set": ["found_wren_cap"], "lines": ["NARRATE_LANTERN_BOAT", "NARRATE_FOUND_CAP_1", "NARRATE_FOUND_CAP_2"]},
+		{"lines": ["NARRATE_LANTERN_BOAT"]},
 	],
 	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
 	# five that have gone dark (FenLantern).

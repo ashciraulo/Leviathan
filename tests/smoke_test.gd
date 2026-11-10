@@ -81,6 +81,7 @@ func _ready() -> void:
 		_test_talk_order()
 		_test_errands()
 		_test_hessa_hints()
+		await _test_ebb_shelf()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -447,6 +448,10 @@ func _test_villagers() -> void:
 			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
 	for key in ["WAYSHELL_1", "WAYSHELL_2", "WAYSHELL_3"]:
 		_check(fit_box.lines_for(key, true) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
+	# And what's cut into every Tidestone.
+	for carving: Array in Tidestone.CARVINGS.values():
+		for key: String in carving:
+			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
 	# Large text: the same box, one big line per page, long pages split.
 	var was_large := Settings.large_text
 	Settings.large_text = true
@@ -3772,6 +3777,8 @@ func _test_tide_turning() -> void:
 	stone.room_coord = Vector2i(0, 2)
 	add_child(stone)
 	stone.awake = true
+	# Its carving already read, so Interact goes straight to the tide.
+	GameState.set_flag(stone.read_key())
 	stone.interact()
 	_check(Tide.held() == "" and not Tide.can_turn(), "before the Old One turns, a Tidestone leaves the tide alone")
 	GameState.set_flag("old_one_turned")
@@ -5095,6 +5102,62 @@ func _test_errands() -> void:
 	GameState.reset_new_game()
 
 
+## With the tide held out, Gully is out on the Ebb Shelf by a lantern-boat
+## the ebb bared, and there is a child's cap under its bench.
+func _test_ebb_shelf() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tile := Vector2i(StoryDirector.GULLY_EBB_AT / Room.TILE)
+	_check(_find_kind(room, "gully_ebb") != null and room.tile_at(tile.x, tile.y) == ".", "with the tide held out, Gully stands on the Shelf's dry sandbar")
+	_check(tile.y <= 8, "above the dialogue box")
+	var boat: LanternBoat = null
+	for child in room.get_children():
+		if child is LanternBoat:
+			boat = child
+	_check(boat != null, "the bared wreck can be searched")
+	_check(Conversations.branch_for("lantern_boat").get("lines") == ["NARRATE_LANTERN_BOAT"], "before Gully's story, it's only an old boat")
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages == 4 and GameState.has_flag("gully_ebb_told"), "Gully remembers the storm twelve years back (%d pages)" % pages)
+	_check(Conversations.branch_for("lantern_boat").get("lines")[1] == "NARRATE_FOUND_CAP_1", "now Wren finds the cap under the bench")
+	await _close_dialogue(game)
+	for side: Vector2 in [Vector2(0, 10), Vector2(0, -20)]:
+		game.player.global_position = boat.global_position + side
+		game.player.facing = Vector2.UP if side.y > 0 else Vector2.DOWN
+		await _wait(0.4)
+		_check(game.player.try_interact() and DialogueBox.is_open, "Wren can search the boat from the %s" % ("south" if side.y > 0 else "north"))
+		await _close_dialogue(game)
+		await _wait(0.4)
+	_check(GameState.has_flag("found_wren_cap") and Conversations.branch_for("lantern_boat").get("lines") == ["NARRATE_LANTERN_BOAT_EMPTY"], "and the boat is empty after")
+	_check(Conversations.branch_for("gully_ebb").get("lines") == ["GULLY_EBB_AFTER"], "Gully sees Wren found something")
+	_check(Conversations.branch_for("hessa").get("lines")[1] == "HESSA_CAP_1", "Wren shows Hessa the cap")
+	Conversations.talk("hessa")
+	_check(Conversations.branch_for("hessa").get("lines")[0] != "NARRATE_WREN_SHOWS_CAP", "once")
+	await _close_dialogue(game)
+	game.queue_free()
+	await _wait(0.1)
+	# Meanwhile the Wreck Strand is without him; with the tide free, he's home.
+	for held in [true, false]:
+		if not held:
+			GameState.clear_flag(Tide.HELD_FLAG)
+		GameState.set_checkpoint(StoryDirector.WRECK_STRAND, StoryDirector.GULLY_AT + Vector2(0, 20))
+		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.4)
+		_check((_find_kind(game.current_room, "gully") == null) == held, "Gully %s the Wreck Strand" % ("is away from" if held else "is back on"))
+		game.queue_free()
+		await _wait(0.1)
+	GameState.reset_new_game()
+
+
 ## Hessa always has a word on where the next bell is, if Wren asks.
 func _test_hessa_hints() -> void:
 	GameState.reset_new_game()
@@ -5104,7 +5167,7 @@ func _test_hessa_hints() -> void:
 	var expect := [
 		["", "HESSA_AFTER_BELL"], ["tidebell_kiln", "HESSA_HINT_MIRE_1"], ["tidebell_mire", "HESSA_HINT_GALE_1"],
 		["seen_hessa_confession", "HESSA_AFTER_TURN"], ["tidebell_glacier", "HESSA_HINT_BELFRY_1"],
-		["tidebell_belfry", "HESSA_HINT_TOMB_1"], ["tidebell_tomb", "HESSA_ROW_1"], ["hessa_rows", "HESSA_HINT_TOMB_1"],
+		["tidebell_belfry", "HESSA_HINT_TOMB_1"], ["tidebell_tomb", "HESSA_ROW_1"], ["hessa_rows", "HESSA_HINT_MAW"],
 		["hessa_rowed", "HESSA_HINT_MAW"], ["seen_ending", "HESSA_AFTER_END"],
 	]
 	for step: Array in expect:

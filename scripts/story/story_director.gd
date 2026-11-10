@@ -113,6 +113,10 @@ const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
 ## Gully dozing beside the Lantern Wake's figurehead on Wreck Strand, and
 ## his strongbox out in the pool.
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
+## The Ebb Shelf, bared only while the tide is held out: Gully goes out to
+## its one dry sandbar, by the lantern-boat the ebb uncovered.
+const EBB_SHELF := Vector2i(1, 4)
+const GULLY_EBB_AT := Vector2(12 * 16 + 8, 5 * 16 + 10)
 const FIGUREHEAD_AT := Vector2(8 * 16 + 8, 2 * 16 + 14)
 const STRONGBOX_AT := Vector2(13 * 16 + 8, 4 * 16 + 12)
 ## Captain Sorrel on Gullwatch Steps' north bank, and the far post on the
@@ -238,6 +242,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_npc("dace", DACE_AFTER_AT)
 	if coord == WRECK_STRAND:
 		_put_gully()
+	if coord == EBB_SHELF:
+		_put_lantern_boat()
 	if coord == STILL_COVE:
 		_put_ottilie()
 	# Coralie comes down to the shore once the opening's done with it.
@@ -937,9 +943,11 @@ func _put_gully() -> void:
 	var figurehead := Prop.new("figurehead")
 	figurehead.position = FIGUREHEAD_AT
 	room.add_child(figurehead)
-	var gully := Npc.new("gully")
-	gully.position = GULLY_AT
-	room.add_child(gully)
+	# With the tide held out, Gully is out salvaging on the Ebb Shelf.
+	if Tide.held() != "low":
+		var gully := Npc.new("gully")
+		gully.position = GULLY_AT
+		room.add_child(gully)
 	if not GameState.has_flag("gully_box_hauled"):
 		var box := Strongbox.new()
 		box.position = STRONGBOX_AT
@@ -985,6 +993,27 @@ func _put_coralie() -> void:
 	var chime := GlassChime.new()
 	chime.position = CHIME_AT
 	room.add_child(chime)
+
+
+## The lantern-boat on the Ebb Shelf, and Gully beside it while the tide is
+## held out.
+func _put_lantern_boat() -> void:
+	var room: Node = game.current_room
+	if room == null:
+		return
+	if Tide.held() == "low":
+		_put_npc("gully_ebb", GULLY_EBB_AT)
+	for child in room.get_children():
+		if child is LanternBoat:
+			return
+	# The room's own wreck prop becomes one Wren can search.
+	for child in room.get_children():
+		if child is Prop and child.kind == "W":
+			var boat := LanternBoat.new()
+			boat.position = child.position
+			child.queue_free()
+			room.add_child(boat)
+			return
 
 
 ## Captain Sorrel and the far post of her old kite-post.
