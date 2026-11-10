@@ -1073,6 +1073,8 @@ assert not _names & {n for n, _ in dungeon_deco_art.TILES}, "dungeon_deco_art re
 TILE_LAYOUT += dungeon_deco_art.TILES
 assert not {n for n, _ in TILE_LAYOUT} & {n for n, _ in dungeon_setpiece_art.TILES}, "dungeon_setpiece_art reuses tile names"
 TILE_LAYOUT += dungeon_setpiece_art.TILES
+assert not {n for n, _ in TILE_LAYOUT} & {n for n, _ in verge_art.EBB_TILES}, "verge_art.EBB_TILES reuses tile names"
+TILE_LAYOUT += verge_art.EBB_TILES
 
 
 def build_tiles():

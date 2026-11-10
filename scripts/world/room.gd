@@ -15,6 +15,7 @@ extends Node2D
 ##          x  slick ice (Wren slides; regions with "ice" tiles)
 ##          g  Sledgeseal (rears, then slides at Wren)
 ##          r  tide flat (sand at low tide, water at high; see Tide)
+##          ;  sea bed (water unless Wren holds the tide out; see Tide)
 ##          d  Siltray (swims the flooded flats; stranded when the tide's out)
 ##          Z  drowned cottage   B  the Drowned Belfry
 ##          p  the Old One's back (walkable)   N  the Old One's lip (the Maw)
@@ -198,7 +199,7 @@ const BIOMES := {
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
 		"water": "shallows_%d", "water_edge": "tideline_%s_%d", "damp": "seep_%s",
 		"wet_deco": "wrack_%d", "dry_deco": "cockle_%d",
-		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d", "door": "exit_glow",
+		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d", "seabed": "seabed_%d", "door": "exit_glow",
 	},
 	"ossuary": {
 		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
@@ -328,7 +329,7 @@ func _build() -> void:
 	_water_body = _make_static(Layers.WATER, "Water")
 	_deep_body = _make_static(Layers.DEEP, "DeepWater")
 	# Tide flats (r): the tide comes first, so swimmers can find it.
-	if dungeon == "" and (layout.contains("r") or layout.contains("d")):
+	if dungeon == "" and (layout.contains("r") or layout.contains("d") or layout.contains(";")):
 		var tide := Tide.new()
 		tide.name = "Tide"
 		add_child(tide)
@@ -549,7 +550,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			add_child(node)
 		return
 	match tile:
-		".", ":", "x", "I", "r", "S", "p":
+		".", ":", "x", "I", "r", ";", "S", "p":
 			pass
 		"P":
 			player_spawn = pos
@@ -896,6 +897,10 @@ func _draw_ground() -> void:
 				var on_ice := tile == "*" and _tile_at(x - 1, y) == "x" and _tile_at(x + 1, y) == "x"
 				if (tile == "x" or on_ice) and tiles.has("ice"):
 					_draw_tile(tiles["ice"] % (h % 2), x, y)
+				elif Tide.is_seabed(tile) and tiles.has("seabed"):
+					# Mostly bare; now and then a starfish or an anemone.
+					var k := h % 9
+					_draw_tile(tiles["seabed"] % (2 if k == 7 else 3 if k == 8 else k % 2), x, y)
 				elif Tide.is_flat(tile) and tiles.has("tidal"):
 					_draw_tile(tiles["tidal"] % (h % 2), x, y)
 				elif tile == "p":

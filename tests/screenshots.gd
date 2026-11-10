@@ -47,6 +47,14 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=ebb: the sea bed, under water and then held bare.
+	if OS.get_environment("SHOTS_ONLY") == "ebb":
+		await _ebb_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=pacing: the small finds in rooms that had nothing else.
 	if OS.get_environment("SHOTS_ONLY") == "pacing":
 		await _pacing_shots(game)
@@ -2183,6 +2191,29 @@ func _sea_glass_shots(game: Node) -> void:
 		await _capture("glass_overworld_map")
 		pause.close()
 		await _wait(0.1)
+
+
+func _ebb_shots(game: Node) -> void:
+	GameState.set_flag(Tide.TURNED_FLAG)
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	var shots := [
+		[Vector2i(1, 3), "ebb_belfry_square_breathing", Vector2i(12, 9), ""],
+		[Vector2i(1, 3), "ebb_belfry_square_held_out", Vector2i(12, 9), "low"],
+		[Vector2i(2, 3), "ebb_weir_steps_held_out", Vector2i(13, 9), "low"],
+		[Vector2i(1, 4), "ebb_shelf", Vector2i(8, 4), "low"],
+		[Vector2i(0, 4), "ebb_grotto", Vector2i(16, 6), "low"],
+	]
+	for shot: Array in shots:
+		GameState.set_flag(Tide.HELD_FLAG, shot[3] != "")
+		GameState.clear_flag(Tide.HELD_IN_FLAG)
+		var tile: Vector2i = shot[2]
+		GameState.set_checkpoint(shot[0], Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		game.player._invuln = 600.0
+		await _wait(2.2)
+		await _capture(shot[1])
+	Tide.offset = 0.0
 
 
 func _pacing_shots(game: Node) -> void:

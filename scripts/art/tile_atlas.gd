@@ -533,6 +533,10 @@ const POSITIONS := {
 	"mire_set1_1": Vector2i(5, 65),
 	"mire_set1_2": Vector2i(6, 65),
 	"mire_set1_3": Vector2i(7, 65),
+	"seabed_0": Vector2i(0, 66),
+	"seabed_1": Vector2i(1, 66),
+	"seabed_2": Vector2i(2, 66),
+	"seabed_3": Vector2i(3, 66),
 }
 
 

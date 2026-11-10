@@ -54,6 +54,7 @@ func _ready() -> void:
 		await _test_maw_approach()
 		await _test_overworld_secrets()
 		await _test_tide_turning()
+		await _test_sea_bed()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -3800,6 +3801,53 @@ func _test_tide_turning() -> void:
 	GameState.reset_new_game()
 
 
+## The sea bed (;): under water while the tide breathes, even at its lowest;
+## bared only while Wren holds the tide out.
+func _test_sea_bed() -> void:
+	GameState.reset_new_game()
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	var square: Room = (load("res://rooms/room_1_3.tscn") as PackedScene).instantiate()
+	add_child(square)
+	await _wait(0.1)
+	var tide := square.get_node_or_null("Tide") as Tide
+	var bed := Vector2i(11, 11)
+	_check(tide != null and square.tile_at(bed.x, bed.y) == ";" and tide.is_flooded(bed) and not tide.is_flooded(Vector2i(11, 10)),
+		"at low tide the flats are bare but the sea bed is still under water")
+	GameState.set_flag(Tide.TURNED_FLAG)
+	GameState.set_flag(Tide.HELD_FLAG)
+	await _wait(0.1)
+	_check(tide != null and not tide.is_flooded(bed), "held out, the tide bares the sea bed")
+	GameState.set_flag(Tide.HELD_IN_FLAG)
+	await _wait(0.1)
+	_check(tide != null and tide.is_flooded(bed) and tide.is_flooded(Vector2i(11, 10)), "held in, it's all under again")
+	square.queue_free()
+	# The map only joins Belfry Square to the Ebb Shelf while the sea bed is bare.
+	var map := MapPage.new()
+	_check(not map._joined(Vector2i(1, 3), Vector2i(1, 4), Vector2i.DOWN), "the map keeps the Ebb Shelf hidden while the tide is in")
+	GameState.clear_flag(Tide.HELD_IN_FLAG)
+	_check(map._joined(Vector2i(1, 3), Vector2i(1, 4), Vector2i.DOWN), "and joins it once the tide is held out")
+	map.free()
+	# Frost can't make a path out to it: only open water freezes.
+	GameState.clear_flag(Tide.HELD_FLAG)
+	var steps: Room = (load("res://rooms/room_2_3.tscn") as PackedScene).instantiate()
+	add_child(steps)
+	await _wait(0.1)
+	var froze := steps.freeze(Vector2i(10, 11))
+	var laid := Room.parse_layout(steps.layout)
+	_check(not froze.is_empty() and froze.all(func(t: Vector2i) -> bool: return laid[t.y][t.x] == "~"),
+		"a frost arrow beside the sea bed freezes only the open water")
+	# Turned in at a breathing low tide, the sea bed never shows on the way up.
+	var steps_tide := steps.get_node_or_null("Tide") as Tide
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	Tide.turn(get_tree())
+	await _wait(0.2)
+	_check(Tide.held() == "high" and steps_tide != null and steps_tide.is_flooded(Vector2i(9, 11)) and steps_tide.cover(Vector2i(9, 11)) >= 1.0,
+		"turning the tide in at low water never bares the sea bed")
+	steps.queue_free()
+	Tide.offset = 0.0
+	GameState.reset_new_game()
+
+
 ## Overworld secrets: chests hold what their room says, a cache holds a
 ## count, and the Ember Ridge jar sits behind a cracked boulder.
 func _test_overworld_secrets() -> void:
@@ -3808,6 +3856,8 @@ func _test_overworld_secrets() -> void:
 		Vector2i(0, 3): "scaleweave", Vector2i(6, -4): "glint", Vector2i(1, -3): "glint",
 		# Side areas off the main path.
 		Vector2i(1, -1): "glint", Vector2i(7, -1): "glint", Vector2i(3, 3): "glint",
+		# Out on the sea bed.
+		Vector2i(2, 3): "glint", Vector2i(1, 4): "glint", Vector2i(0, 4): "glint",
 	}
 	for coord: Vector2i in expect:
 		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()

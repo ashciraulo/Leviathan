@@ -70,6 +70,49 @@ def flat_tile(seed):
     return px
 
 
+SEABED = [hex_color(c) for c in ("#8A9690", "#6E7A74", "#58625C", "#48504A", "#363C38", "#262A28")]
+ANEMONE = [hex_color(c) for c in ("#E89A8A", "#C46A62", "#8E4646")]
+
+
+def seabed_tile(seed):
+    """The sea bed (layout ;), bared only when Wren holds the tide out:
+    darker and greener than the flats, never dried by the sun, strewn
+    with wrack, shells and, here and there, a closed-up anemone."""
+    rnd = random.Random(5250 + seed)
+    px = blank(SEABED[2])
+    for y in range(T):
+        for x in range(T):
+            v = math.sin(x * 0.7 + y * 0.45 + seed * 2.1) + math.sin(y * 0.9 - x * 0.3 + seed)
+            if v > 1.1:
+                px[y][x] = SEABED[1]
+            elif v < -1.2:
+                px[y][x] = SEABED[3]
+    # Wrack strands lying the way the water left.
+    for _ in range(2):
+        x, y = rnd.randrange(1, 12), rnd.randrange(2, 14)
+        for i in range(rnd.randrange(3, 6)):
+            if x + i < T:
+                px[y - (i // 2) % 2][x + i] = WEED[2 if i % 2 else 1]
+    # Small shells and pale grit.
+    for _ in range(4):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = SHELL[1]
+    if seed == 3:
+        # A closed anemone, wet and glossy.
+        cx, cy = 10, 5
+        for (dx, dy) in ((0, 0), (1, 0), (0, 1), (1, 1), (-1, 1), (2, 1), (0, 2), (1, 2)):
+            px[cy + dy][cx + dx] = ANEMONE[1]
+        px[cy][cx] = ANEMONE[0]
+        px[cy + 2][cx + 1] = ANEMONE[2]
+    elif seed == 2:
+        # A starfish.
+        cx, cy = 5, 9
+        for (dx, dy) in ((0, 0), (-1, 0), (-2, 0), (1, 0), (2, 0), (0, -1), (0, -2), (-1, 1), (-2, 2), (1, 1), (2, 2)):
+            px[cy + dy][cx + dx] = (214, 138, 74, 255)
+        px[cy][cx] = (240, 182, 112, 255)
+    return px
+
+
 def seawall_top(seed):
     """Wall top: the slumped stone of drowned houses, crusted with barnacles
     and draped in wrack."""
@@ -249,6 +292,13 @@ TILES = [
     ("cockle_0", lambda: cockles(0)), ("cockle_1", lambda: cockles(1)),
     ("glint_0", lambda: glint(0)), ("glint_1", lambda: glint(1)),
     ("tidewater_0", lambda: tidewater(0)), ("tidewater_1", lambda: tidewater(1)),
+]
+
+# The sea bed's tiles go at the end of the sheet (build_art.py adds them
+# last) so they don't move every tile after the Verge's.
+EBB_TILES = [
+    ("seabed_0", lambda: seabed_tile(0)), ("seabed_1", lambda: seabed_tile(1)),
+    ("seabed_2", lambda: seabed_tile(2)), ("seabed_3", lambda: seabed_tile(3)),
 ]
 
 # --------------------------------------------------------------------------

@@ -6,6 +6,8 @@
 script = ExtResource("1_room")
 name_key = "ROOM_WEIR_STEPS"
 biome = "sunken_verge"
+chest_item = "glint"
+chest_count = 50
 layout = "##################..####
 #~~~~~~~~~~~~~#.......##
 #~~~~~~~~~~~~dr.......##
@@ -15,7 +17,7 @@ rrrrrrrrrrrrr......T..##
 rrrrrrrrrrrr..........##
 rrrrrrrrrrrrr.........##
 #~~~~~~~~~rrrrrr......##
-#~~~~~~~~~~~rrrrr.....##
-#~~~~~~~~~~~~~~rr....###
-#~~~~~~~~~~~~~~~~~..####
+#~~~~~~;;;;;rrrrr.....##
+#~~~~~;;C;;;;;;rr....###
+#~~~~~~;;;~~~~~~~~..####
 ########################"
