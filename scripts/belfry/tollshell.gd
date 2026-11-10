@@ -9,7 +9,7 @@ extends Enemy
 enum Mode { SHUT, RATTLE, TOLL, OPEN }
 
 ## How close Wren has to come before it starts to rattle.
-const TRIGGER_RANGE := 46.0
+const TRIGGER_RANGE := 40.0
 const RATTLE_TIME := 0.75
 const TOLL_TIME := 0.45
 const OPEN_TIME := 1.5

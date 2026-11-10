@@ -39,6 +39,7 @@ func _ready() -> void:
 	super()
 	# It floats: walls and other enemies stop it, gaps and water don't.
 	Layers.assign(self, Layers.ENEMY, [Layers.WORLD, Layers.ENEMY])
+	set_meta("floats", true)
 	_bob = randf() * TAU
 	z_index = 2
 
@@ -88,6 +89,9 @@ func _think(delta: float) -> void:
 func _blow(player: Player, delta: float) -> void:
 	if player == null or player.frozen or player.airborne:
 		return
+	# Only a Wren on their feet is blown about (as the spire's fans do).
+	if not (player.state in [Player.State.MOVE, Player.State.ATTACK, Player.State.CHARGE, Player.State.HUM, Player.State.HURT]):
+		return
 	var to := player.global_position - global_position
 	var along := to.dot(aim)
 	if along < 0.0 or along > REACH or absf(to.cross(aim)) > HALF_WIDTH:
@@ -98,6 +102,11 @@ func _blow(player: Player, delta: float) -> void:
 		var local := player.global_position - room.global_position
 		if field.is_gap(local + Vector2(0, -3) + aim * 7.0):
 			return
+	# Walls and pillars stand in the gust's way.
+	var space := get_world_2d().direct_space_state
+	var ray := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -4), player.global_position + Vector2(0, -4), 1 << (Layers.WORLD - 1))
+	if not space.intersect_ray(ray).is_empty():
+		return
 	player.move_and_collide(aim * PUSH * delta)
 
 

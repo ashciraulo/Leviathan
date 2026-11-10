@@ -163,7 +163,7 @@ const SFX := {
 	"jaw_snap": {"wave": "square", "f0": 260.0, "f1": 90.0, "dur": 0.15, "vol": 0.4},
 	"ray_splash": {"wave": "noise", "f0": 2400.0, "f1": 900.0, "dur": 0.3, "vol": 0.3, "caption": "CAPTION_TELL"},
 	"tidestone_wake": {"wave": "triangle", "f0": 196.0, "f1": 196.0, "dur": 0.9, "vol": 0.5, "steps": 4, "caption": "CAPTION_TIDESTONE"},
-	"toll_rattle": {"wave": "square", "f0": 640.0, "f1": 600.0, "dur": 0.45, "vol": 0.2, "caption": "CAPTION_CLACK"},
+	"toll_rattle": {"wave": "square", "f0": 640.0, "f1": 600.0, "dur": 0.72, "vol": 0.2, "caption": "CAPTION_CLACK"},
 	"toll_ring": {"wave": "triangle", "f0": 523.0, "f1": 520.0, "dur": 0.8, "vol": 0.3, "caption": "CAPTION_BELL_QUIET"},
 	"puff_inhale": {"wave": "noise", "f0": 400.0, "f1": 1600.0, "dur": 0.5, "vol": 0.2, "caption": "CAPTION_GUST"},
 	"puff_blow": {"wave": "noise", "f0": 1600.0, "f1": 400.0, "dur": 0.5, "vol": 0.3, "caption": "CAPTION_GUST"},

@@ -420,8 +420,8 @@ SOUNDS = {
         L("sine", 262, dur=0.5, vol=0.4, decay=0.3)),
     # A Tollshell (Drowned Belfry): its rattle before it tolls, and the toll.
     "toll_rattle": S(0.4,
-        L("fm", 640, 600, dur=0.5, ratio=2.7, index=1.2, decay=0.25, vib=(28, 0.06)),
-        L("noise", dur=0.45, hp=2500, lp=6000, vol=0.25, decay=0.2, seed=181, wobble=(30, 0.7))),
+        L("fm", 640, 600, dur=0.75, ratio=2.7, index=1.2, decay=0.4, vib=(28, 0.06)),
+        L("noise", dur=0.72, hp=2500, lp=6000, vol=0.25, decay=0.35, seed=181, wobble=(30, 0.7))),
     "toll_ring": S(0.55,
         L("fm", 523, 520, dur=1.0, ratio=2.4, index=1.8, decay=0.35),
         L("sine", 262, dur=0.8, vol=0.4, decay=0.3)),

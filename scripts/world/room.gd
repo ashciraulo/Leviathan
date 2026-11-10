@@ -466,10 +466,13 @@ const DEPTH_DAMAGE := [0, 0, 0, 1]
 
 
 ## Toughens a regular enemy for this dungeon's depth (before its _ready).
+## One-touch foes (a single point of health: wisps, moths) stay one-touch.
 func _harden(node: Node) -> void:
 	if not node is Enemy or not DEPTH.has(dungeon):
 		return
 	var enemy := node as Enemy
+	if enemy.max_hp <= 1:
+		return
 	var depth: int = DEPTH[dungeon]
 	enemy.max_hp = ceili(enemy.max_hp * DEPTH_HP[depth])
 	if enemy.contact_damage > 0:
