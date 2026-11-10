@@ -81,13 +81,30 @@ def canopy_tile(seed):
 
 
 def roots_tile(seed):
-    """Wall face: shadow under the canopy, with prop roots arching down."""
+    """Wall face: deep shade under the canopy, with a tangle of prop roots
+    curving down out of it and splaying into the mud."""
     rnd = random.Random(300 + seed)
     px = blank(LEAF[6])
-    for y in range(T):
+    for y in range(9, T):
         for x in range(T):
-            if y > 10:
-                px[y][x] = LEAF[5]
+            px[y][x] = LEAF[5]
+    # A few dim leaves back in the shade.
+    for _ in range(5):
+        px[rnd.randrange(4, 9)][rnd.randrange(T)] = LEAF[5]
+    # Roots: from a knot up in the shade, prop roots splay out and down like
+    # tent poles, lit on the left and shaded on the right. They stay inside
+    # the tile, so either variant sits next to the other.
+    apex = 6 + 3 * (seed % 2)
+    for drift in (-5, 0, 5):
+        for y in range(4, T - 1):
+            t = (y - 4) / (T - 6)
+            x = round(apex + drift * t ** 1.4)
+            px[y][x] = BARK[1]
+            px[y][x + 1] = BARK[3]
+    # The knot the roots spring from.
+    for dx in (-1, 0, 1, 2):
+        px[4][apex + dx] = BARK[2]
+        px[3][apex + dx] = BARK[3]
     # Leaf fringe hanging over the top edge.
     for x in range(T):
         depth = 2 + (1 if (x * 7 + seed) % 5 < 2 else 0)
@@ -95,29 +112,9 @@ def roots_tile(seed):
             px[y][x] = LEAF[3] if y == 0 else LEAF[4]
         if rnd.random() < 0.3:
             px[depth][x] = LEAF[4]
-    # Roots: arcs from the top shadow down to the ground, lit on the left.
-    for _ in range(3):
-        x0 = rnd.randrange(-2, T)
-        span = rnd.randrange(5, 9)
-        for i in range(span + 1):
-            t = i / span
-            x = x0 + i
-            y = round(3 + (1 - (2 * t - 1) ** 2) * -3 + t * 0 + 10 * abs(2 * t - 1) ** 1.5)
-            y = max(3, min(T - 1, y))
-            for yy in range(y, T):
-                if 0 <= x < T and yy == y:
-                    px[yy][x] = BARK[1]
-                    if yy + 1 < T:
-                        px[yy + 1][x] = BARK[3]
-        # The two feet of the arch reach the ground.
-        for fx in (x0, x0 + span):
-            if 0 <= fx < T:
-                for yy in range(8, T):
-                    px[yy][fx] = BARK[2] if yy % 3 else BARK[1]
-                    if fx + 1 < T:
-                        px[yy][fx + 1] = BARK[3]
+    # Mud with a little moss at the foot.
     for x in range(T):
-        px[T - 1][x] = BARK[4] if px[T - 1][x] in BARK else LEAF[6]
+        px[T - 1][x] = PEAT[4] if x % 4 else PEAT[3]
     return px
 
 

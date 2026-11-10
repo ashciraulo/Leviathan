@@ -68,6 +68,7 @@ SATCHEL_BELL_COUNT,%s  (%d of %d)
 HINT_SATCHEL_TOOL,%s / %s: put on item slot
 HINT_SATCHEL_GEAR,%s: equip
 HINT_SATCHEL_CLEAR,%s: clear slot
+HINT_SATCHEL_DRINK,%s: drink
 HINT_MAP,Move the cursor to look around
 HINT_MAP_FLY,%s: blow the Wayshell and fly here
 HINT_OPTIONS,Left / right: change

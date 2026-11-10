@@ -126,6 +126,12 @@ var _water_frame := 0
 var _frozen: Dictionary = {}
 ## Floor set pieces laid in this room: [top-left tile, which piece].
 var _set_pieces: Array = []
+## Tufts of grass (and ferns, scrub...) cut down in this visit: tile -> true.
+var _cut: Dictionary = {}
+## Floor decoration that a sword cuts down, by the start of its tile name,
+## and the chance a cut tuft leaves a glint.
+const PLANT_DECO := ["grass_", "fern_", "scrub_", "frond_", "tussock_"]
+const GRASS_GLINT_ODDS := 0.2
 ## Hidden bone walls ($) the Echo Horn has brought down.
 var _broken: Dictionary = {}
 ## Whether the layout has any I tiles (so ice checks can skip other rooms).
@@ -677,6 +683,67 @@ func _plain_block(x0: int, y0: int, size: int) -> bool:
 				return false
 	return true
 
+## True when the tile shows a tuft a sword can cut (drawn by _draw_ground).
+func has_plant(x: int, y: int) -> bool:
+	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
+	var deco := str(tiles["dry_deco"])
+	if not PLANT_DECO.any(func(start: String) -> bool: return deco.begins_with(start)):
+		return false
+	# Open floor only: not under a hut, a fence, a pot or anything else.
+	if not _tile_at(x, y) in [".", "P"] or _cut.has(Vector2i(x, y)):
+		return false
+	if _hash(x, y) % 13 != 0 or _near_water(x, y):
+		return false
+	if not is_inside_tree():
+		return true
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = global_position + Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
+	query.collision_mask = 1 << (Layers.WORLD - 1)
+	return get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
+## Cuts every tuft under `area` (global): clippings fly, now and then a glint
+## is left. Returns how many were cut.
+func cut_plants(area: Rect2) -> int:
+	var local := Rect2(area.position - global_position, area.size)
+	var cut := 0
+	for y in range(maxi(floori(local.position.y / TILE), 0), mini(floori(local.end.y / TILE), ROWS - 1) + 1):
+		for x in range(maxi(floori(local.position.x / TILE), 0), mini(floori(local.end.x / TILE), COLS - 1) + 1):
+			if not has_plant(x, y):
+				continue
+			_cut[Vector2i(x, y)] = true
+			cut += 1
+			var at := Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
+			var bits := Clippings.new()
+			bits.position = at
+			add_child(bits)
+			Glint.drop.call_deferred(self, at + Vector2(0, 4), Glint.roll(GRASS_GLINT_ODDS))
+	if cut > 0:
+		Audio.play_sfx("grass_cut", area.get_center())
+		_ground.queue_redraw()
+	return cut
+
+
+## Cut grass flung up and drifting down.
+class Clippings extends Node2D:
+	const TIME := 0.5
+	var _age := 0.0
+
+	func _process(delta: float) -> void:
+		_age += delta
+		if _age >= TIME:
+			queue_free()
+		queue_redraw()
+
+	func _draw() -> void:
+		var t := _age / TIME
+		modulate.a = 1.0 - t * t
+		for i in 5:
+			var angle := TAU * i / 5.0 + 0.9
+			var out := Vector2(cos(angle) * (2.0 + 9.0 * t), -6.0 * sin(t * PI) + sin(angle) * 4.0 * t)
+			draw_rect(Rect2(out, Vector2(2, 1)), Color("#4f7a3a"))
+			draw_rect(Rect2(out + Vector2(1, -1), Vector2(1, 1)), Color("#8cbf5a"))
+
 
 ## A stable pseudo-random number per tile, so variants don't flicker.
 func _hash(x: int, y: int) -> int:
@@ -786,7 +853,7 @@ func _draw_ground() -> void:
 					pass
 				elif wet and h % 11 == 0:
 					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
-				elif not wet and h % 13 == 0:
+				elif not wet and h % 13 == 0 and not _cut.has(Vector2i(x, y)):
 					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)
 	# The floor set pieces go over the floor they lie on.
 	var deco: String = tiles.get("wall_deco", "")
