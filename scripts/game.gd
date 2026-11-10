@@ -78,7 +78,7 @@ func _play_room_music() -> void:
 	if current_room:
 		var cue := "boss" if _room_has_boss() else Audio.cue_for_room(current_room.biome, current_room.dungeon)
 		Audio.play_music(cue)
-		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon))
+		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon, current_room.ambience, current_room.cave))
 
 
 func _room_has_boss() -> bool:

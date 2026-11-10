@@ -116,6 +116,9 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## A hollow or grotto off the overworld: the light falls off toward its
 ## rock walls (see CaveShade), so it feels tucked away.
 @export var cave := false
+## An ambience loop for this room alone (audio/ambience/<id>), in place of
+## its region's: "" uses the region's.
+@export var ambience := ""
 ## Windmere: the direction and strength (px/s) of the gusts that sweep
 ## this room. Zero means calm.
 @export var wind := Vector2.ZERO

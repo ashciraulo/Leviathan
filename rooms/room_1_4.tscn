@@ -8,6 +8,7 @@ name_key = "ROOM_EBB_SHELF"
 biome = "sunken_verge"
 chest_item = "glint"
 chest_count = 50
+ambience = "ebb"
 layout = "###########;;###########
 #####~~~~~;;;;~~~~~~####
 ###~~~~;;;;##;;;;~~~~###

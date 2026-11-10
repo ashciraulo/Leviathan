@@ -2,7 +2,8 @@
 
 One quiet loop per region (`saltmarrow`, `brinewood`, `cinderreach`,
 `gloamfen`, `windmere`, `frostspine`, `sunken_verge`, `ossuary`, `maw`), one
-shared by every dungeon (`dungeon`), and `rain`, `wind` and `underwater`.
+shared by every dungeon (`dungeon`), and `rain`, `wind` and `underwater`. The hollows (`Room.cave`) play `hollow`,
+and a room can name its own loop (`Room.ambience`, as the Ebb Shelf does with `ebb`).
 The game picks the loop from the room (`Audio.ambience_for_room`) and fades
 between them. The `.wav` loops are made by `tools/sfx_gen.py` (`AMBIENCE`);
 their import settings loop them. A hand-made `<id>.ogg` here wins over the
