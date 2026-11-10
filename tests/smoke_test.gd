@@ -4741,6 +4741,7 @@ func _test_coralie() -> void:
 	game.player.try_interact()
 	await _play_scene(game, 10.0)
 	_check(GameState.item_count("sea_glass") == 0 and GlassChime.hung() == 2, "she hangs both pieces")
+	_check(SeaGlass.found() == 2, "pieces on the chime still count as found, for the last piece's jingle")
 	_check(GameState.item_count("glint") == glints + 50, "and pays 25 glints a piece")
 	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_WAITING"], "with no glass, she waits for more")
 	# Most of the rest, then the last: the chime's done and she adds her savings.

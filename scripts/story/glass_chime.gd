@@ -45,7 +45,7 @@ func _process(delta: float) -> void:
 	if now != _hung:
 		if now > _hung:
 			_fresh = 1.2
-			Audio.play_sfx("wisp_chime", global_position, 1.0 + now * 0.04)
+			Audio.play_sfx("glass_chime", global_position, 1.0 + now * 0.04)
 		_hung = now
 	queue_redraw()
 

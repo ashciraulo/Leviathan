@@ -654,6 +654,7 @@ CAPTION_ECHO_RISE,An echo rises
 CAPTION_ECHO_CALM,An echo sighs
 CAPTION_OLD_ONE_HUM,The Old One hums
 CAPTION_WISP,Wisp chimes
+CAPTION_GLASS_CHIME,Glass chime rings
 CAPTION_WINGBEAT,Wings beat
 CAPTION_ICE_SHATTER,Ice shatters
 CAPTION_EYE_OPEN,Ice eye opens
@@ -814,13 +815,13 @@ OTTILIE_TURNED_2,"Vael would lie with his ear to the ice for hours. Listening."
 OTTILIE_TURNED_3,"He heard it first, you know. The Old One, grieving."
 OTTILIE_END,"The ice sings at night now. Soft, like someone humming."
 NAME_CORALIE,Coralie
-CORALIE_1,"Mind your feet! Oh, you missed the glass. Good. I'm Coralie."
+CORALIE_1,"Mind where you step, I've glass drying on the sand. I'm Coralie."
 CORALIE_1B,"Sea-glass. Old bottles the tide's tumbled smooth for years."
 CORALIE_2,"Hang it on a string and the wind makes it ring. Listen."
-CORALIE_2B,"My chime's half bare, though. The sea hides its glass well."
+CORALIE_2B,"My chime's bare, though. The sea hides its glass well."
 CORALIE_3,"Twelve strings. Bring me any glass you find. I'll pay for it."
 CORALIE_WAITING,"Twelve strings to fill. Glass hides in quiet corners."
-CORALIE_HANG,"Oh, that's a lovely one. Hear it? A little higher than the rest."
+CORALIE_HANG,"Oh, lovely. Hear that? Every piece rings a little different."
 NARRATE_GOT_GLASS_PAY,Wren got 25 Glints for each piece.
 CORALIE_DONE_1,"That's twelve! Every string has its glass. Hush a moment."
 CORALIE_DONE_2,"Hear that? The whole shore's ringing with it."
