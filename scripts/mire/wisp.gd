@@ -9,7 +9,7 @@ const DRAWN_SPEED := 52.0
 
 var _time := 0.0
 var _drift := Vector2.RIGHT
-var _light: PointLight2D
+var _light: Glow
 
 
 func _init() -> void:
@@ -22,7 +22,7 @@ func _ready() -> void:
 	# Wisps float over the bog.
 	collision_mask = 1 << (Layers.WORLD - 1)
 	_time = randf() * TAU
-	_light = Lantern.make_light(28.0, Color(0.75, 1.0, 0.9), 0.7)
+	_light = Glow.make(28.0, Color(0.75, 1.0, 0.9), 0.7)
 	_light.position = Vector2(0, -12)
 	add_child(_light)
 

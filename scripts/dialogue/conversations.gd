@@ -34,6 +34,9 @@ const SPEAKERS := {
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 	"marlo": ["NAME_MARLO", Art.PORTRAIT_MARLO],
 	"tobin": ["NAME_TOBIN", Art.PORTRAIT_TOBIN],
+	"ide": ["NAME_IDE", Art.PORTRAIT_IDE],
+	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
+	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -99,6 +102,34 @@ const TALKS := {
 	"tobin": [
 		{"if": ["seen_ending"], "lines": ["TOBIN_END"]},
 		{"lines": ["TOBIN_AFTER"]},
+	],
+	# Ide, the Causeway End ferrywoman: her boat stays tied up while the
+	# Belfry's bell rings wrong under the channel. Asking sets ide_ferry,
+	# and StoryDirector rows Wren over.
+	"ide": [
+		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
+		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		{"if": ["seen_ending"], "set": ["ide_ferry"], "lines": ["IDE_END"]},
+		{"set": ["ide_ferry"], "lines": ["IDE_FERRY_AGAIN"]},
+	],
+	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
+	# (a Doorbell out on Belfry Square's flats, there at low tide).
+	"liesl": [
+		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
+		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
+		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
+		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
+		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
+		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
+	],
+	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
+	# five that have gone dark (FenLantern).
+	"wick": [
+		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
+		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
+		{"if": ["fen_lanterns_lit"], "set": ["wick_gave_jar"], "give": {"jar": 1}, "lines": ["WICK_DONE_1", "WICK_DONE_2", ["", "NARRATE_GOT_JAR"]]},
+		{"if": ["wick_asked"], "lines": ["WICK_WAITING"]},
+		{"set": ["wick_asked"], "lines": ["WICK_1", "WICK_1B", "WICK_2", "WICK_2B", "WICK_3"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},

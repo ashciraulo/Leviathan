@@ -356,6 +356,134 @@ def lowe_frames():
 
 
 # --------------------------------------------------------------------------
+# Ide the ferrywoman, at Causeway End: a red headscarf, a long grey braid
+# over one shoulder, a sea-green coat and her oar stood upright beside her.
+# Beckons Wren aboard with her free hand when she talks.
+# --------------------------------------------------------------------------
+IDE = [
+    "................",
+    ".d..............",
+    ".d....rrrr......",
+    ".d...rrrrrr.....",
+    ".d..rrrrrrrr....",
+    ".d..rVVVVVVr....",
+    ".d..VVeVVeVV....",
+    ".d..VVeVVeVV....",
+    ".d..VVVVVVVV....",
+    ".d...VVVVVVZ....",
+    ".d....VVVVZZ....",
+    ".d.tttttttttZ...",
+    ".VttttttttttZt..",
+    ".dtttttttttttZ..",
+    ".dtttttttttttV..",
+    ".dttttjjjttttt..",
+    ".dtttttttttttt..",
+    ".dtttttttttttt..",
+    ".d.tttttttttt...",
+    ".d.tttttttttt...",
+    ".d..pppppppp....",
+    ".d..ppp..ppp....",
+    "....bbb..bbb....",
+    "................",
+]
+
+
+def ide_frames():
+    # The oar's blade, broad at the foot.
+    idle = paint(IDE, [(17, 0, "dd"), (18, 0, "ddd"), (19, 0, "ddd"), (20, 0, "ddd"), (21, 0, "dd"), (22, 1, "d")])
+    breathe = settle(idle, 11)
+    # Talking: her free hand comes up, beckoning.
+    talk = paint(idle, [(14, 13, "t"), (13, 14, "V"), (12, 14, "V"), (11, 14, "V")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
+# Liesl, of the Sunken Verge: a plum headscarf, a green knit shawl over a
+# dusk-coloured dress, a canvas apron, and her broom. Every low tide she
+# walks out to her great-grandmother's drowned door and sweeps the step.
+# --------------------------------------------------------------------------
+LIESL = [
+    "................",
+    "................",
+    "......PPPP......",
+    ".....PPPPPP.....",
+    "....PPPPPPPP....",
+    "....PAAAAAAP....",
+    "....AAeAAeAA....",
+    "....AAeAAeAA....",
+    "....AAAAAAAA....",
+    ".....AAAAAA.....",
+    "....YYYAAYYY....",
+    "...YYYYYYYYYY.d.",
+    "..YYYYYYYYYYYYd.",
+    "..YYYYYYYYYYYAd.",
+    "..AppjjjjjjppYd.",
+    "...ppjjjjjjpp.d.",
+    "...ppjjjjjjpp.d.",
+    "...ppjjjjjjpp.d.",
+    "...pppppppppp.d.",
+    "...pppppppppp.d.",
+    "....pppppppp.xdx",
+    "....ppppppppxxxx",
+    ".....bb..bbxxxxx",
+    "................",
+]
+
+
+def liesl_frames():
+    idle = LIESL
+    # Sweeping: the broom swung out to her side, bristles across the step.
+    sweep = paint(LIESL, [(r, 14, ".") for r in range(11, 20)] + [(20, 13, "..."), (21, 12, "...."), (22, 11, ".....")])
+    sweep = paint(sweep, [(14, 14, "d"), (15, 14, "d"), (16, 14, "d"), (17, 15, "d"), (18, 15, "d"), (19, 15, "d"), (20, 12, "xxxx"), (21, 11, "xxxxx"), (22, 11, "xxxxx")])
+    # Talking: leaning on the broom, her free hand up to her scarf.
+    talk = paint(LIESL, [(14, 2, "."), (13, 2, "."), (12, 2, "Y"), (11, 3, "A"), (10, 3, "A"), (9, 4, "A")])
+    return [idle, sweep, talk]
+
+
+# --------------------------------------------------------------------------
+# Wick, Gloamfen's lamplighter child, about ten: a moss-green hooded cape,
+# a brown fringe, and a lighting pole twice their height with a little
+# brass lamp on its hook. Counts the fen's lanterns every night.
+# --------------------------------------------------------------------------
+WICK = [
+    "............QQQ.",
+    "............QJQ.",
+    "............QQQ.",
+    ".............d..",
+    ".............d..",
+    ".....mmmmmm..d..",
+    "....mmmmmmmm.d..",
+    "...mmMMMMMMmmd..",
+    "...mMAAAAAAMmd..",
+    "...mAAeAAeAAmd..",
+    "...mAAeAAeAAmd..",
+    "....AAAAAAAA.d..",
+    ".....AAAAAA..d..",
+    "...mmmmmmmmmmd..",
+    "..mmmmmmmmmmAd..",
+    "..mmmmmmmmmmmd..",
+    "..mmmmmmmmmmmd..",
+    "...mmmmmmmmm.d..",
+    "....pppppppp.d..",
+    "....pp....pp.d..",
+    "....pp....pp.d..",
+    "....AA....AA.d..",
+    "....bb....bb.d..",
+    "................",
+]
+
+
+def wick_frames():
+    idle = WICK
+    breathe = settle(idle, 13)
+    # The lamp's flame flickers while they breathe.
+    breathe = paint(breathe, [(0, 12, "QQQ"), (1, 12, "QJQ"), (2, 12, "QQQ")])
+    # Talking: a hand up, counting on their fingers.
+    talk = paint(idle, [(14, 2, "m"), (13, 1, "A"), (12, 1, "A"), (11, 1, "A")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
 # Tobin, Dunstan's son, about seventeen: the Choir's newest singer. A grey
 # robe too big for him, hood shoved down, a rope belt, his father's mop of
 # brown hair grown out. Rubs the back of his neck when he talks.
@@ -821,6 +949,9 @@ SPRITES = {
     "murmur": murmur_frames,
     "lowe": lowe_frames,
     "tobin": tobin_frames,
+    "ide": ide_frames,
+    "liesl": liesl_frames,
+    "wick": wick_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1002,6 +1133,52 @@ def portrait_lowe():
     return _rows(c)
 
 
+def portrait_ide():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "t")                    # sea-green coat
+    _box(c, 13, 25, 6, 1, "j")                         # coat ties
+    _face(c, "V", eye_row=16, cy=17, rx=7, ry=8)
+    _ellipse(c, 16, 9, 10, 5, "r")                     # headscarf
+    _box(c, 6, 11, 20, 2, "r")
+    _dots(c, [(25, 15), (26, 16)], "r")                # its knot
+    for y in range(18, 30):
+        _box(c, 21 + (y % 2), y, 3, 1, "Z")            # the braid, over her shoulder
+        if y % 3 == 0:
+            _box(c, 21 + (y % 2), y, 3, 1, "H")
+    _box(c, 3, 0, 2, 22, "d")                          # the oar's loom
+    _box(c, 2, 22, 4, 10, "d")                         # and its blade
+    return _rows(c)
+
+
+def portrait_liesl():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "Y")                    # green knit shawl
+    _box(c, 9, 27, 14, 5, "j")                         # apron bib
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8)
+    _dots(c, [(9, 13), (9, 14), (10, 15), (23, 13), (23, 14), (22, 15)], "M")  # brown hair at her temples
+    _ellipse(c, 16, 8, 11, 5, "P")                     # plum headscarf, over the crown
+    _box(c, 6, 9, 20, 3, "P")
+    _dots(c, [(8, 12), (24, 12)], "P")
+    _box(c, 24, 12, 3, 3, "P")                         # knotted at the side
+    _box(c, 25, 15, 2, 6, "P")                         # and its ends down past her ear
+    _box(c, 27, 16, 1, 4, "P")
+    _box(c, 28, 2, 2, 30, "d")                         # the broom's handle, held close
+    return _rows(c)
+
+
+def portrait_wick():
+    c = _canvas()
+    _ellipse(c, 16, 32, 14, 8, "m")                    # moss-green cape
+    _ellipse(c, 16, 15, 13, 13, "m")                   # its hood, up
+    _face(c, "A", eye_row=17, cy=18, rx=7, ry=8)
+    _box(c, 9, 10, 14, 3, "M")                         # brown fringe under the hood
+    _dots(c, [(10, 13), (13, 13), (19, 13), (22, 13)], "M")
+    _box(c, 28, 4, 2, 28, "d")                         # the lighting pole
+    _box(c, 26, 0, 6, 5, "Q")                          # and its little lamp
+    _box(c, 28, 1, 2, 3, "J")
+    return _rows(c)
+
+
 def portrait_tobin():
     c = _canvas()
     _ellipse(c, 16, 32, 14, 8, "S")                    # grey robe, too big
@@ -1130,6 +1307,9 @@ PORTRAITS = {
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),
     "tobin": portrait_tobin(),
+    "ide": portrait_ide(),
+    "liesl": portrait_liesl(),
+    "wick": portrait_wick(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

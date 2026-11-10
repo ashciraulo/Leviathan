@@ -5,6 +5,10 @@ of those dungeons has something of its own to look at. They're transparent
 overlays drawn over the floor (scripts/world/room.gd places them, "set_pieces"
 in a biome's tile table), never solid.
 
+  hull     a wrecked ship's wheel, a third of it smashed away; a tangle of old net
+           with a cork float and a starfish caught in it
+  kiln     a cooled spill of bronze, crusted, a drip channel feeding it;
+           a brass ring set in the floor with the kiln's flame mark
   gale     a compass rose inlaid in copper; a fallen kite, torn, its string
            trailing
   glacier  a fish frozen under the floor's ice; a bloom of hoar frost
@@ -78,6 +82,142 @@ def poly(px, pts, c):
                 j = i
             if inside:
                 px[y][x] = c
+
+
+# --------------------------------------------------------------------------
+# Rotting Hull.
+# --------------------------------------------------------------------------
+def hull_wheel():
+    px = canvas()
+    wood = [hx("#E8BC78"), hx("#C08848"), hx("#7E5530"), hx("#3A2412")]
+    brass = [hx("#F0D080"), hx("#B8923C")]
+    shadow = hx("#1A1008", 110)
+    ring(px, 17, 17.5, 8.5, 12.0, shadow)
+    # Eight spokes running out past the rim into turned handles.
+    for k in range(8):
+        a = k * math.tau / 8 + 0.2
+        c, sn = math.cos(a), math.sin(a)
+        for off in (-0.5, 0.5):
+            line(px, 16 + c * 2 - sn * off, 16 + sn * 2 + c * off,
+                 16 + c * 13 - sn * off, 16 + sn * 13 + c * off, wood[3])
+        line(px, 16 + c * 2, 16 + sn * 2, 16 + c * 12, 16 + sn * 12, wood[1])
+        disc(px, 16 + c * 13.6, 16 + sn * 13.6, 1.7, wood[3])
+        disc(px, 16 + c * 13.6, 16 + sn * 13.6, 1.1, wood[1])
+        put(px, 16 + c * 13.6 - 0.5, 16 + sn * 13.6 - 0.5, wood[0])
+    ring(px, 16, 16, 8.3, 11.2, wood[3])
+    ring(px, 16, 16, 9.0, 10.5, wood[1])
+    for k in range(28):
+        a = k * math.tau / 28
+        put(px, 16 + math.cos(a) * 9.6, 16 + math.sin(a) * 9.6 - 0.5, wood[0])
+    # The hub, brass-capped.
+    disc(px, 16, 16, 3.4, wood[3])
+    disc(px, 16, 16, 2.4, brass[1])
+    put(px, 15, 15, brass[0])
+    # Wrecked: a third of the rim smashed away and its spokes snapped,
+    # splinters strewn, the rest half sunk in silt. No helm to turn here.
+    for y in range(S):
+        for x in range(S):
+            ang = math.atan2(y + 0.5 - 16, x + 0.5 - 16)
+            d = math.hypot(x + 0.5 - 16, y + 0.5 - 16)
+            if 0.35 < ang < 2.45 and d > 4.5:
+                px[y][x] = CLEAR
+    silt = hx("#5A4430", 170)
+    for (x, y) in ((20, 22), (22, 20), (17, 25), (12, 24), (24, 17)):
+        line(px, x, y, x + 2, y + 1, wood[2])
+    for k in range(10):
+        a = 0.5 + k * 0.2
+        put(px, 16 + math.cos(a) * 11, 16 + math.sin(a) * 11, silt)
+    return px
+
+
+def hull_net():
+    px = canvas()
+    cord = [hx("#C8B890", 230), hx("#9A8A68", 220)]
+    cork = [hx("#E0A060"), hx("#A86A34")]
+    star = [hx("#F08A6A"), hx("#C85A44")]
+    rnd = random.Random(21)
+    # A sagging diamond mesh, ragged at the edges.
+    for i in range(-3, 9):
+        x0 = i * 5
+        for y in range(3, 29):
+            sway = math.sin(y * 0.35 + i) * 1.2
+            for xx in (x0 + (y - 3) * 0.6 + sway, x0 + 22 - (y - 3) * 0.6 + sway):
+                d = math.hypot(xx - 16, (y - 16) * 1.15)
+                if d < 13.5 - rnd.random() * 2.5:
+                    put(px, xx, y, cord[(i + y) % 2])
+    # Knots where the cords cross.
+    for y in range(0, S):
+        for x in range(0, S):
+            c = px[y][x]
+            if c != CLEAR and x + 1 < S and y + 1 < S and px[y][x + 1] != CLEAR and px[y + 1][x] != CLEAR:
+                put(px, x, y, cord[1])
+    # A cork float on the rim, and a starfish caught in the mesh.
+    disc(px, 24.5, 8.5, 2.8, cork[1], 2.2)
+    disc(px, 24, 8, 2.2, cork[0], 1.6)
+    for k in range(5):
+        a = k * math.tau / 5 - math.pi / 2
+        line(px, 11, 19, 11 + math.cos(a) * 4.5, 19 + math.sin(a) * 4.5, star[1])
+        line(px, 11, 19, 11 + math.cos(a) * 3.2, 19 + math.sin(a) * 3.2, star[0])
+    disc(px, 11, 19, 1.4, star[0])
+    return px
+
+
+# --------------------------------------------------------------------------
+# Kiln.
+# --------------------------------------------------------------------------
+def kiln_spill():
+    px = canvas()
+    metal = [hx("#E8C078"), hx("#C08A44"), hx("#8A5A2C"), hx("#4E3018")]
+    crust = hx("#3A2A22")
+    glow = hx("#FF9A3A")
+    rnd = random.Random(31)
+    # A lopsided puddle of cooled bronze with lobes.
+    for (cx, cy, rx, ry) in ((16, 18, 10, 7), (9, 15, 5, 4), (22, 22, 5, 4), (20, 13, 4, 3)):
+        disc(px, cx + 0.8, cy + 1.2, rx, crust, ry)
+    for (cx, cy, rx, ry) in ((16, 18, 10, 7), (9, 15, 5, 4), (22, 22, 5, 4), (20, 13, 4, 3)):
+        disc(px, cx, cy, rx - 0.6, metal[2], ry - 0.6)
+    disc(px, 15, 17, 7, metal[1], 4.2)
+    disc(px, 13, 16, 3.5, metal[0], 1.6)
+    # Wrinkles where it cooled, and a still-warm crack.
+    for _ in range(14):
+        x, y = rnd.uniform(8, 24), rnd.uniform(13, 23)
+        if px[int(y)][int(x)] in (metal[1], metal[2]):
+            line(px, x, y, x + rnd.uniform(1.5, 3), y + rnd.uniform(-0.6, 0.6), metal[3])
+    line(px, 17, 19, 21, 21, glow)
+    put(px, 18, 20, hx("#FFE0A0"))
+    # The drip channel it ran out of.
+    for y in range(1, 11):
+        put(px, 16 + math.sin(y * 0.6), y, crust)
+        put(px, 17 + math.sin(y * 0.6), y, metal[2])
+    return px
+
+
+def kiln_mark():
+    px = canvas()
+    brass = [hx("#B89A62"), hx("#8A7044"), hx("#5E4A2E")]
+    soot = hx("#2A1E20", 150)
+    cut = hx("#3A2A22", 200)
+    # An old brass ring sunk flush in the floor, dulled with soot, and the
+    # kiln's flame mark cut into it as an outline (nothing burns here).
+    disc(px, 16, 16, 13.0, soot)
+    ring(px, 16, 16, 11.6, 12.8, brass[1])
+    ring(px, 16, 16, 11.6, 12.0, brass[0])
+    ring(px, 16, 16, 12.8, 13.3, brass[2])
+    for k in range(8):
+        a = k * math.tau / 8 + math.pi / 8
+        put(px, 16 + math.cos(a) * 12.2, 16 + math.sin(a) * 12.2, brass[2])
+    # The mark: a bowl and three tongues, engraved lines only.
+    line(px, 10, 21, 22, 21, brass[1])
+    line(px, 11, 23, 21, 23, brass[2])
+    for (bx, h, w) in ((12.5, 7, 2.2), (16, 11, 2.8), (19.5, 6, 2.2)):
+        line(px, bx - w, 20, bx + 0.5, 20 - h, cut)
+        line(px, bx + 0.5, 20 - h, bx + w, 20, cut)
+        line(px, bx - w + 0.6, 20, bx + 0.5, 21 - h, brass[2])
+    # Scuffed: a worn gap in the ring.
+    for k in range(5):
+        a = 2.3 + k * 0.08
+        put(px, 16 + math.cos(a) * 12.0, 16 + math.sin(a) * 12.0, soot)
+    return px
 
 
 # --------------------------------------------------------------------------
@@ -312,6 +452,8 @@ def mire_wreath():
 
 
 PIECES = {
+    "hull": [hull_wheel, hull_net],
+    "kiln": [kiln_spill, kiln_mark],
     "gale": [gale_compass, gale_kite],
     "glacier": [glacier_fish, glacier_frost],
     "belfry": [belfry_shard, belfry_mosaic],

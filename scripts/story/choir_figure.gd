@@ -19,6 +19,8 @@ const KINDS := {
 	"hessa": {"texture": Art.HESSA, "frames": 3},
 	# Tobin, the Choir's newest singer, on his way out of it.
 	"tobin": {"texture": Art.VILLAGER_TOBIN, "frames": 3},
+	# Ide at her oars, ferrying Wren over the Causeway End channel.
+	"ide": {"texture": Art.VILLAGER_IDE, "frames": 3},
 	# Hessa and Vael when they were young, in the frozen journal's vision.
 	"young_hessa": {"texture": Art.VILLAGER_YOUNG_HESSA, "frames": 3},
 	"young_vael": {"texture": Art.VILLAGER_YOUNG_VAEL, "frames": 3},
