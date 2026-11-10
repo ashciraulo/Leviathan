@@ -3954,8 +3954,6 @@ func _test_equipment() -> void:
 	await _wait(0.1)
 
 
-## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
-## bought with glints.
 ## Sea-glass shows in the satchel, with its count, only once a piece is found.
 func _test_satchel_sea_glass() -> void:
 	GameState.reset_new_game()
@@ -3974,6 +3972,8 @@ func _test_satchel_sea_glass() -> void:
 	GameState.reset_new_game()
 
 
+## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
+## bought with glints.
 func _test_shop() -> void:
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
