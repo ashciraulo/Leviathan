@@ -23,7 +23,7 @@ jobs:
   web:
     name: Export and boot the web build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
       GODOT_VERSION: 4.7.2
     steps:
@@ -97,6 +97,35 @@ jobs:
         with:
           name: web-title
           path: web_title.png
+          if-no-files-found: ignore
+
+      # The heavy rooms in a browser: every dungeon room and the busiest
+      # overworld screens, timed, with pictures of the Maw and a dark room.
+      # Fails on errors, a blank picture, or a room far slower than the rest.
+      - name: Export the performance tour
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
+        run: |
+          mkdir -p export/web_perf
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web perf" export/web_perf/index.html 2>&1 | tee export_perf.log
+          test -s export/web_perf/index.pck
+
+      - name: Time the heavy rooms in a browser
+        # On main a slow room shouldn't hold back publishing the game; PRs
+        # still fail on it.
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
+        timeout-minutes: 20
+        run: |
+          status=0
+          node tools/web_check.mjs export/web_perf --perf web_perf || status=$?
+          cat web_perf/perf.md >> "$GITHUB_STEP_SUMMARY" || true
+          exit $status
+
+      - name: Keep the performance table
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-perf
+          path: web_perf/
           if-no-files-found: ignore
 
       - name: Keep the build

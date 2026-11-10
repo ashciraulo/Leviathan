@@ -2,6 +2,9 @@
 .godot/
 *.translation
 export/
+# Web check output (tools/web_check.mjs)
+web_perf/
+web_title.png
 *.tmp
 
 # OS / editor
