@@ -35,6 +35,9 @@ var _singers: Array[ChoirFigure] = []
 var _drift_dir := 1.0
 ## A remembered fight (EchoTrial): no words, before or after.
 var _echo := false
+## The first time, the Choir is mid-song when Wren walks in (cutscene 18,
+## StoryDirector.vaels_choir): no fight until the scene wakes him.
+var asleep := false
 
 
 ## What a V tile becomes in Vael's hall: Vael, or once his song is broken,
@@ -72,10 +75,22 @@ func _ready() -> void:
 		singer.face(offset.x > 0)
 		get_parent().add_child.call_deferred(singer)
 		_singers.append(singer)
+	# A few words before the song (not in an echo of it). The first time,
+	# the story's scene says them.
+	if not _echo and get_tree().get_first_node_in_group("story_director") and StoryDirector.choir_waits():
+		asleep = true
+		return
 	Events.toast.emit("BOSS_VAEL")
-	# A few words before the song (not in an echo of it).
 	if not _echo:
 		Events.conversation_requested.emit.call_deferred(_pages(["VAEL_MAW_1", "VAEL_MAW_2"]))
+
+
+## The scene is over: the duel begins.
+func wake() -> void:
+	asleep = false
+	_timer = 0.6
+	Events.toast.emit("BOSS_VAEL")
+	Events.boss_woke.emit()
 
 
 func _think(delta: float) -> void:
@@ -88,6 +103,10 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
+			# Still waiting on a scene that never came (enemies don't think
+			# during scenes): don't wait for ever.
+			if asleep:
+				wake()
 			if _timer <= 0.0:
 				_enter(Mode.DRIFT, REST_TIME)
 		Mode.DRIFT:

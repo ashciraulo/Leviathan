@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -102,6 +102,14 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _belfry_lowe_shots()
+			"choir":
+				game.queue_free()
+				await _wait(0.2)
+				await _choir_shots()
+			"ide":
+				game.queue_free()
+				await _wait(0.2)
+				await _ide_shots()
 			"rowing":
 				game.queue_free()
 				await _wait(0.2)
@@ -1337,6 +1345,26 @@ func _belfry_lowe_shots() -> void:
 	await _wait(0.2)
 
 
+## Cutscene 18: the Choir singing the Waking Song in Vael's hall.
+func _choir_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.MAW_VAEL, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 10))
+	var hall: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hall)
+	await _wait(1.4)
+	await _capture("75_the_waking_song")
+	await _wait(3.4)
+	await _capture("76_the_lamp_hushes_them")
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(0.8)
+	await _capture("77_vael_turns")
+	await _skip_scene(hall)
+	await _wait(0.4)
+	hall.queue_free()
+	await _wait(0.2)
+
+
 ## Cutscene 17: Hessa rows Wren out to the Maw.
 func _rowing_shots() -> void:
 	GameState.reset_new_game()
@@ -1377,6 +1405,52 @@ func _rowing_shots() -> void:
 	await _capture("74_hessa_rows_home")
 	await _skip_scene(home)
 	home.queue_free()
+	await _wait(0.2)
+
+
+## Ide the ferrywoman at Causeway End: her offer, the far landing, and the
+## hand bell that calls her back over.
+func _ide_shots() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TURNED_FLAG, "tidebell_belfry"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.CAUSEWAY_END, Vector2(StoryDirector.IDE_AT.x - 14, StoryDirector.IDE_AT.y))
+	var shore: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(shore)
+	await _wait(0.6)
+	shore.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	shore.player.try_interact()
+	await _wait(1.6)
+	await _capture("78_ide_at_causeway_end")
+	var box := _dialogue_box(shore)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	# Over the channel: she lifts a hand from the oars before rowing home.
+	var landing: Vector2 = shore.current_room.global_position + StoryDirector.WREN_SOUTH
+	while Cutscene.active and shore.player.global_position.distance_to(landing) > 4.0:
+		await _wait(0.1)
+	await _wait(1.7)
+	shore.player._invuln = 0.0
+	await _capture("79_the_far_landing")
+	await _skip_scene(shore)
+	shore.queue_free()
+	await _wait(0.2)
+	# Back from the south, the bell on its post calls her over.
+	GameState.set_checkpoint(StoryDirector.CAUSEWAY_END, StoryDirector.FERRY_BELL_AT + Vector2(10, 10))
+	var south: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(south)
+	await _wait(0.6)
+	south.player.facing = Vector2.UP
+	await _wait(0.05)
+	south.player.try_interact()
+	await _wait(2.0)
+	south.player._invuln = 0.0
+	await _capture("80_ring_for_ide")
+	await _skip_scene(south)
+	south.queue_free()
 	await _wait(0.2)
 
 
@@ -1698,6 +1772,8 @@ func _maw_shots(game: Node) -> void:
 	for item in ["echo_horn", "divers_helm", "kite_cloak", "glowmoth_lantern", "tide_hook"]:
 		GameState.give_item(item)
 	DreamingHeart.roll_credits = false
+	# The choir's own scene has its shots (SHOTS_ONLY=choir).
+	GameState.set_flag(StoryDirector.CHOIR_FLAG)
 	MawBreath.elapsed = 0.0
 	# coord: [file name, spawn tile]
 	var rooms := [

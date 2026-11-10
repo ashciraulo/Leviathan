@@ -64,6 +64,8 @@ func _ready() -> void:
 		await _test_journal()
 		await _test_tobin()
 		await _test_rowing()
+		await _test_choir()
+		await _test_ide()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -1878,6 +1880,8 @@ func _close_dialogue(game: Node) -> void:
 func _test_maw_dungeon() -> void:
 	_check(ResourceLoader.exists("res://rooms/room_44_10.tscn"), "the Maw has an entry room")
 	GameState.reset_new_game()
+	# The choir's scene has its own test (_test_choir).
+	GameState.set_flag(StoryDirector.CHOIR_FLAG)
 	GameState.set_checkpoint(Vector2i(44, 10), GameState.NO_POSITION)
 	DreamingHeart.roll_credits = false
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
@@ -4177,6 +4181,115 @@ func _test_rowing() -> void:
 	pages = await _play_scene(game, 40.0)
 	_check(pages >= 4 and not Cutscene.active and GameState.has_flag(StoryDirector.ROWED_FLAG), "she says she came to find them (%d pages)" % pages)
 	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_AT_BOAT) < 4.0, "Wren walks down to the boat")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+
+
+## Ide's ferry at Causeway End: tied up while the Belfry's bell rings
+## wrong, then over the channel and back by the hand bell.
+func _test_ide() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	var talk_at := Vector2(StoryDirector.IDE_AT.x - 14, StoryDirector.IDE_AT.y)
+	GameState.set_checkpoint(StoryDirector.CAUSEWAY_END, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var ides: Array = room.get_children().filter(func(c: Node) -> bool: return c is Npc and c.kind == "ide")
+	var boats: Array = room.get_children().filter(func(c: Node) -> bool: return c is Rowboat)
+	_check(ides.size() == 1 and boats.size() == 1 and (boats[0] as Rowboat).rider == null, "Ide stands on the north shore by her empty boat")
+	_check(not room.get_children().any(func(c: Node) -> bool: return c is FerryBell), "no bell on the far landing while the Belfry still rings")
+	for at: Vector2 in [StoryDirector.IDE_AT, StoryDirector.WREN_NORTH, StoryDirector.WREN_NORTH_EAST, StoryDirector.WREN_SOUTH, StoryDirector.FERRY_BELL_AT]:
+		_check(room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE)) == ".", "the ferry's footing at %s is dry ground" % at)
+	for at: Vector2 in [StoryDirector.FERRY_NORTH, StoryDirector.FERRY_SOUTH]:
+		_check(room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE)) == "~", "the boat at %s sits on the channel" % at)
+	_check(StoryDirector.IDE_AT.y < 9 * Room.TILE, "Ide stands clear of the dialogue box")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 1 and not GameState.has_flag(StoryDirector.FERRY_FLAG) and not Cutscene.active, "before the Belfry's bell she won't put a boat out")
+	# The Belfry's bell is quiet: she rows Wren over.
+	GameState.set_flag("tidebell_belfry")
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	pages = await _play_scene(game, 40.0)
+	_check(pages >= 2 and GameState.has_flag("met_ide_ferry") and not GameState.has_flag(StoryDirector.FERRY_FLAG), "she offers the ferry and rows (%d pages)" % pages)
+	_check(game.player.global_position.distance_to(room.global_position + StoryDirector.WREN_SOUTH) < 4.0, "Wren lands on the south landing (at %s)" % (game.player.global_position - room.global_position))
+	var boat: Rowboat = boats[0]
+	_check(boat.position.distance_to(StoryDirector.FERRY_NORTH) < 1.0 and boat.rider == null and (ides[0] as Npc).visible, "and Ide rows home and steps back onto her shore")
+	game.queue_free()
+	await _wait(0.1)
+	# Back from the south: the bell on the landing calls her over.
+	GameState.set_checkpoint(StoryDirector.CAUSEWAY_END, StoryDirector.FERRY_BELL_AT + Vector2(0, 10))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	room = game.current_room
+	var bells: Array = room.get_children().filter(func(c: Node) -> bool: return c is FerryBell)
+	_check(bells.size() == 1, "now a hand bell hangs on the south landing")
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	game.player.try_interact()
+	await _wait(0.1)
+	_check(Cutscene.active, "ringing it brings Ide over")
+	pages = await _play_scene(game, 40.0)
+	_check(not Cutscene.active and not GameState.has_flag(StoryDirector.FERRY_FLAG), "she rows Wren back without a word (%d pages)" % pages)
+	_check(game.player.global_position.distance_to(room.global_position + StoryDirector.WREN_NORTH) < 4.0, "back on the north shore (at %s)" % (game.player.global_position - room.global_position))
+	# The talk after the first ride, and after the ending.
+	_check(Conversations.branch_for("ide").get("lines") == ["IDE_FERRY_AGAIN"], "the next time it's just a nod over")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("ide").get("lines") == ["IDE_END"], "after the ending she'd row Wren anywhere")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+
+
+## Cutscene 18: the Choir mid-song in Vael's hall; the fight waits for it.
+func _test_choir() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.MAW_VAEL, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 10))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	var vaels: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is CantorVael)
+	_check(vaels.size() == 1, "Vael is in his hall")
+	if vaels.is_empty():
+		game.queue_free()
+		return
+	var vael: CantorVael = vaels[0]
+	_check(Cutscene.active and vael.asleep and GameState.has_flag(StoryDirector.CHOIR_FLAG), "the first time in, the Choir is singing and the fight waits")
+	_check(Audio.music_cue != "boss", "no boss theme over the song (%s)" % Audio.music_cue)
+	await _wait(0.3)
+	_check(get_tree().get_nodes_in_group("choir_extra").size() == StoryDirector.CHOIR_EXTRAS.size(), "the whole Choir stands along the hall")
+	var pages := await _play_scene(game, 40.0)
+	_check(pages >= 1 and not Cutscene.active, "Vael has his say (%d pages)" % pages)
+	_check(not vael.asleep and Audio.music_cue == "boss", "then the duel begins (%s)" % Audio.music_cue)
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WATCH_FROM) < 6.0, "Wren walked up the hall into the song")
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is WakingSong), "the song's notes are gone once it's broken off")
+	# Break his song: the rest of the Choir slips away.
+	game.player._invuln = 60.0
+	while vael.hp > 0:
+		vael.note_hit(null)
+	await _wait(2.0)
+	await _play_scene(game, 10.0)
+	await _wait(1.5)
+	_check(get_tree().get_nodes_in_group("choir_extra").all(func(c: Node) -> bool: return not c.visible or c.modulate.a < 0.1), "with his song broken, the Choir slips away")
+	game.queue_free()
+	await _wait(0.1)
+	# Back again later: no second song.
+	GameState.clear_flag(CantorVael.DEFEATED_FLAG)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	_check(not Cutscene.active, "the choir scene plays once")
+	await _play_scene(game, 5.0)
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false

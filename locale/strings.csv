@@ -724,3 +724,10 @@ HESSA_MAW_0,"There you are. I felt the last bell ring, and I took the boat out t
 HESSA_MAW_1,"There's its lip, and the door the singers use. Vael's in there, with all of them."
 HESSA_MAW_2,"He was a good boy once. He heard what I couldn't. Bring him out, if he'll come."
 HESSA_MAW_3,I'll keep the lamp lit at home. Look for it when you come up.
+NAME_IDE,Ide
+IDE_1,"Ide. I ferry folk over the channel when the water lets me. It hasn't let me in weeks."
+IDE_2,"Something's ringing wrong under the water south of here. Until it stops, my boat stays tied up."
+IDE_FERRY_1,"That bell's gone quiet. The channel's sitting still for the first time in weeks."
+IDE_FERRY_2,"In you get, keeper. Sit low, and mind the oar."
+IDE_FERRY_AGAIN,"Over again? Sit low."
+IDE_END,"The whole sea's lying still. I'd row you anywhere today. Over we go."
