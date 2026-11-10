@@ -428,6 +428,13 @@ func _test_villagers() -> void:
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
 	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	# The bells' narration and the Wayshell scene fit on one page each, too.
+	for k in ["HULL", "KILN", "MIRE", "GALE", "GLACIER", "BELFRY", "TOMB"]:
+		for part in [1, 2]:
+			var key := "BELL_%s_%d" % [k, part]
+			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
+	for key in ["WAYSHELL_1", "WAYSHELL_2", "WAYSHELL_3"]:
+		_check(fit_box.lines_for(key, true) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
 	# Large text: the same box, one big line per page, long pages split.
 	var was_large := Settings.large_text
 	Settings.large_text = true
