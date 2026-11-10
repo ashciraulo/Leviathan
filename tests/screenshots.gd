@@ -2043,6 +2043,25 @@ func _sea_glass_shots(game: Node) -> void:
 		game.respawn()
 		await _wait(2.2)
 		await _capture(shots[coord][0])
+	# The overworld map partway through: Saltmarrow, Brinewood and the
+	# Gloamfen walked, the rest under fog; doors marked, and a twinkle where
+	# sea-glass still lies.
+	for x in range(0, 7):
+		for y in range(-2, 3):
+			if RoomInfo.has_room(Vector2i(x, y)) and str(RoomInfo.get_room(Vector2i(x, y))["dungeon"]) == "":
+				GameState.mark_seen(Vector2i(x, y))
+	GameState.set_flag("sea_glass_1_1")
+	await _jump(game, Vector2i(4, -1), Vector2i(9, 5))
+	var pause: PauseMenu = null
+	for child in game.get_children():
+		if child is PauseMenu:
+			pause = child
+	if pause:
+		pause.open(PauseMenu.Tab.MAP)
+		await _wait(0.5)
+		await _capture("glass_overworld_map")
+		pause.close()
+		await _wait(0.1)
 
 
 func _echoes_shots(game: Node) -> void:

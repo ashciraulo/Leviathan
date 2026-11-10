@@ -528,7 +528,7 @@ def cursor_frames():
 
 def map_markers():
     """8x8 map markers: Wren, Tidestone (asleep), Tidestone (awake),
-    chest, boss skull, door."""
+    chest, boss skull, door, sea-glass glint."""
     def from_rows(rows, colors):
         return [[hex_color(colors[c]) if c in colors else CLEAR for c in row] for row in rows]
 
@@ -595,7 +595,17 @@ def map_markers():
         ".kkkkkk.",
         "........",
     ], {"k": "#2A1E36", "G": "#F4C542"})
-    return [wren, asleep, awake, chest, skull, door]
+    glass = from_rows([
+        "........",
+        "...w....",
+        "...w....",
+        ".wwXww..",
+        "...w....",
+        "...w....",
+        "........",
+        "........",
+    ], {"w": "#C8EEF0", "X": "#FFFFFF"})
+    return [wren, asleep, awake, chest, skull, door, glass]
 
 
 def tab_frames():
