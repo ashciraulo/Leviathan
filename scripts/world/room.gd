@@ -120,6 +120,13 @@ var player_spawn := SIZE / 2.0
 
 var _rows := PackedStringArray()
 var _ground: Node2D
+## The ground is drawn in pieces of this many tiles, so a light (a dark
+## room's lantern, a wisp) only shades the pieces it reaches: a whole-room
+## canvas item under one small light costs a browser a lit full screen.
+const GROUND_CHUNK := Vector2i(6, 5)
+## The tiles the ground piece being drawn now covers, and the piece.
+var _chunk_rect := Rect2i()
+var _chunk: Node2D
 var _water_frame := 0
 ## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
 ## ice (I) until it thaws, and goes back to water when the room reloads.
@@ -272,8 +279,13 @@ func _ready() -> void:
 	_ground = Node2D.new()
 	_ground.name = "Ground"
 	_ground.z_index = -10
-	_ground.draw.connect(_draw_ground)
 	add_child(_ground)
+	for cy in ceili(float(ROWS) / GROUND_CHUNK.y):
+		for cx in ceili(float(COLS) / GROUND_CHUNK.x):
+			var piece := Node2D.new()
+			var rect := Rect2i(Vector2i(cx, cy) * GROUND_CHUNK, GROUND_CHUNK)
+			piece.draw.connect(_draw_ground_piece.bind(piece, rect))
+			_ground.add_child(piece)
 	_build()
 	if dark:
 		var darkness := Darkness.new()
@@ -385,7 +397,7 @@ func _build_water() -> void:
 ## A hidden bone wall ($) has come down: it's floor now.
 func break_wall(tile: Vector2i) -> void:
 	_broken[tile] = true
-	_ground.queue_redraw()
+	_redraw_ground()
 
 
 ## True when the room has any ice at all: I tiles or frozen water.
@@ -413,7 +425,7 @@ func freeze(tile: Vector2i) -> Array[Vector2i]:
 			froze.append(t)
 	if not froze.is_empty():
 		_build_water()
-		_ground.queue_redraw()
+		_redraw_ground()
 	return froze
 
 
@@ -424,7 +436,7 @@ func thaw(tiles: Array) -> void:
 		changed = _frozen.erase(t) or changed
 	if changed:
 		_build_water()
-		_ground.queue_redraw()
+		_redraw_ground()
 
 
 ## The open water joined to `tile` (empty when it isn't water).
@@ -462,7 +474,7 @@ static func low_water_flag(for_dungeon: String) -> String:
 ## anything that can't swim, caught on flooding floor, is swept away.
 func refresh_water() -> void:
 	_build_water()
-	_ground.queue_redraw()
+	_redraw_ground()
 
 
 ## The room under a point (global), or null.
@@ -595,7 +607,7 @@ func _process(delta: float) -> void:
 	if _water_time >= WATER_FRAME_TIME:
 		_water_time = 0.0
 		_water_frame = 1 - _water_frame
-		_ground.queue_redraw()
+		_redraw_ground()
 
 
 ## The letter as written in the layout, before water, ice or broken walls
@@ -720,7 +732,7 @@ func cut_plants(area: Rect2) -> int:
 			Glint.drop.call_deferred(self, at + Vector2(0, 4), Glint.roll(GRASS_GLINT_ODDS))
 	if cut > 0:
 		Audio.play_sfx("grass_cut", area.get_center())
-		_ground.queue_redraw()
+		_redraw_ground()
 	return cut
 
 
@@ -773,14 +785,30 @@ func _near_water(x: int, y: int) -> bool:
 	return false
 
 
+## Draws the ground again (all its pieces).
+func _redraw_ground() -> void:
+	for piece: Node2D in _ground.get_children():
+		piece.queue_redraw()
+
+
+func _draw_ground_piece(piece: Node2D, rect: Rect2i) -> void:
+	_chunk = piece
+	_chunk_rect = rect
+	_draw_ground()
+	_chunk = null
+
+
 func _draw_tile(tile_name: String, x: int, y: int) -> void:
-	_ground.draw_texture_rect_region(Art.WORLD_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
+	if not _chunk_rect.has_point(Vector2i(x, y)):
+		return
+	_chunk.draw_texture_rect_region(Art.WORLD_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
 
 
 func _draw_ground() -> void:
 	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
-	for y in _rows.size():
-		for x in _rows[y].length():
+	var r := _chunk_rect
+	for y in range(r.position.y, mini(r.end.y, _rows.size())):
+		for x in range(r.position.x, mini(r.end.x, _rows[y].length())):
 			var tile := _tile_at(x, y)
 			var h := _hash(x, y)
 			if tile == "#":
