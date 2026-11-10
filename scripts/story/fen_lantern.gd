@@ -25,7 +25,7 @@ const GLOW := Color("#f6c25a")
 
 var room_coord := Vector2i.ZERO
 var lit := false
-var _light: PointLight2D
+var _light: Glow
 var _time := 0.0
 var _catch := 0.0
 
@@ -46,11 +46,11 @@ func _ready() -> void:
 	Layers.assign(self, Layers.WORLD, [])
 	add_child(Layers.rect_shape(Vector2(6, 4), Vector2(0, -2)))
 	add_child(Art.shadow())
-	# A real light only where the room is dark; in the fen's dusk the glow
-	# is drawn (see _draw), so it doesn't wash the ground out.
+	# A Glow the dark lets through only where the room is dark; in the
+	# fen's dusk the glow is drawn (see _draw).
 	var room := get_parent() as Room
 	if room and room.dark:
-		_light = Lantern.make_light(48.0, GLOW, 0.9)
+		_light = Glow.make(48.0, GLOW, 0.9)
 		_light.position = Vector2(4, -20)
 		add_child(_light)
 	if GameState.has_flag(flag_for(room_coord)):
@@ -84,7 +84,7 @@ func _show() -> void:
 	if _light == null:
 		return
 	# Dark, only an ember of a wick shows, so it can be found at night.
-	_light.texture_scale = (48.0 if lit else 10.0) / 128.0
+	_light.radius = 48.0 if lit else 10.0
 	_light.energy = 0.9 if lit else 0.35
 
 
