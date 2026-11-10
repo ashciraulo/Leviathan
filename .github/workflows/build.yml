@@ -1,17 +1,33 @@
 name: Build PC
 
-# Builds playable Windows, Linux and web versions. Run it from the Actions tab
-# (Build PC > Run workflow), or push a tag like v0.2.0. The builds are
-# attached to the run as downloadable artifacts.
+# Builds the Windows, macOS and Linux versions, then starts each one on its
+# own system (a Windows, a Mac and a Linux runner) and has it play into a new
+# game by itself (scripts/core/boot_check.gd). Runs on every PR and push to
+# main, so a broken desktop build shows up at once.
+#
+# Pushing a tag like v0.2.0 also publishes a GitHub release with the three
+# downloads attached; the newest is always at
+#   https://github.com/ashciraulo/Leviathan/releases/latest
+# Run it from the Actions tab (Build PC > Run workflow) for builds on demand:
+# they're attached to the run as downloadable artifacts.
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
+    branches: [main]
     tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   export:
-    name: Export Windows, Linux and web
+    name: Export Windows, macOS and Linux
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -48,7 +64,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-          key: godot-templates-${{ env.GODOT_VERSION }}-pc-web
+          key: godot-templates-${{ env.GODOT_VERSION }}-desktop
 
       - name: Download export templates
         if: steps.templates.outputs.cache-hit != 'true'
@@ -56,11 +72,10 @@ jobs:
           dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mkdir -p "$dir"
           curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
-          # Only the PC and web templates; the full set is over a gigabyte.
-          # The web build is single-threaded so it runs on any static host.
+          # Only the desktop templates; the full set is over a gigabyte.
           unzip -q -o -j templates.tpz templates/version.txt templates/linux_release.x86_64 \
             templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe \
-            templates/web_nothreads_release.zip -d "$dir"
+            templates/macos.zip -d "$dir"
           rm templates.tpz
 
       - name: Import project
@@ -68,47 +83,141 @@ jobs:
 
       - name: Export
         run: |
-          mkdir -p export/windows export/linux export/web
-          "$RUNNER_TEMP/godot" --headless --path . --export-release "Windows Desktop" export/windows/Leviathan.exe
-          "$RUNNER_TEMP/godot" --headless --path . --export-release "Linux" export/linux/Leviathan.x86_64
+          mkdir -p export/windows export/linux export/macos
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Windows Desktop" export/windows/Leviathan.exe 2>&1 | tee export.log
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Linux" export/linux/Leviathan.x86_64 2>&1 | tee -a export.log
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "macOS" export/macos/Leviathan.zip 2>&1 | tee -a export.log
           test -s export/windows/Leviathan.exe
           test -s export/linux/Leviathan.x86_64
-          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web" export/web/index.html
-          test -s export/web/index.wasm
-          test -s export/web/index.pck
+          test -s export/macos/Leviathan.zip
           ls -la export/*
 
-      - name: Check the Linux build starts
+      - name: Pack the downloads
+        # Zips for Windows and macOS; a tarball keeps Linux's executable bit.
         run: |
-          set +e
-          timeout 10 export/linux/Leviathan.x86_64 --headless --audio-driver Dummy 2>&1 | tee run.log
-          rc=${PIPESTATUS[0]}
-          if grep -E "SCRIPT ERROR|Parse Error|Failed to load" run.log; then
-            echo "::error::The exported build reported errors"
-            exit 1
-          fi
-          # 124 = still running when the timeout stopped it, which is what we want.
-          if [ "$rc" != "124" ]; then
-            echo "::error::The exported build exited early (code $rc)"
-            exit 1
-          fi
-          exit 0
-
-      - name: Pack the Linux build
-        # Artifacts drop file permissions; a tarball keeps the executable bit.
-        run: tar -czf Leviathan-linux.tar.gz -C export/linux .
+          mkdir -p dist
+          (cd export/windows && zip -q -r ../../dist/Leviathan-windows.zip .)
+          tar -czf dist/Leviathan-linux.tar.gz -C export/linux .
+          cp export/macos/Leviathan.zip dist/Leviathan-macos.zip
+          ls -la dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: Leviathan-windows
-          path: export/windows/
+          path: dist/Leviathan-windows.zip
+          compression-level: 0
 
       - uses: actions/upload-artifact@v4
         with:
           name: Leviathan-linux
-          path: Leviathan-linux.tar.gz
+          path: dist/Leviathan-linux.tar.gz
+          compression-level: 0
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Leviathan-web
-          path: export/web/
+          name: Leviathan-macos
+          path: dist/Leviathan-macos.zip
+          compression-level: 0
+
+  boot:
+    # Each build on its own system: the title screen, a new file, into the
+    # game, and out, with no script errors.
+    name: Boot on ${{ matrix.name }}
+    needs: export
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            artifact: Leviathan-windows
+          - name: macOS
+            os: macos-latest
+            artifact: Leviathan-macos
+          - name: Linux
+            os: ubuntu-latest
+            artifact: Leviathan-linux
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dl
+
+      - name: Unpack
+        run: |
+          mkdir -p game
+          case "${{ matrix.name }}" in
+            Windows) unzip -q dl/Leviathan-windows.zip -d game; echo "BIN=game/Leviathan.exe" >> "$GITHUB_ENV" ;;
+            macOS)   ditto -x -k dl/Leviathan-macos.zip game; echo "BIN=game/Leviathan.app/Contents/MacOS/Leviathan" >> "$GITHUB_ENV" ;;
+            Linux)   tar -xzf dl/Leviathan-linux.tar.gz -C game; echo "BIN=game/Leviathan.x86_64" >> "$GITHUB_ENV" ;;
+          esac
+          ls -la game
+
+      - name: Play into a new game
+        run: |
+          set +e
+          out="$PWD/boot.txt"
+          log="$PWD/boot.log"
+          rm -f "$out" "$log"
+          # No GPU on the runners, so it runs without a window; everything
+          # else (loading, saving, the game scene) is the real thing.
+          "$BIN" --headless --audio-driver Dummy --log-file "$log" -- --boot-check="$out" &
+          pid=$!
+          for i in $(seq 1 120); do
+            [ -s "$out" ] && break
+            kill -0 $pid 2>/dev/null || break
+            sleep 1
+          done
+          sleep 2
+          kill $pid 2>/dev/null
+          cat "$log" 2>/dev/null
+          verdict="$(cat "$out" 2>/dev/null)"
+          echo "Verdict: ${verdict:-none}"
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load" "$log" 2>/dev/null; then
+            echo "::error::The ${{ matrix.name }} build reported script errors"
+            exit 1
+          fi
+          case "$verdict" in
+            "BOOT OK"*) exit 0 ;;
+            *) echo "::error::The ${{ matrix.name }} build didn't reach the game: ${verdict:-no verdict written}"; exit 1 ;;
+          esac
+
+  release:
+    name: Publish the release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: boot
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Release notes
+        run: |
+          cat > notes.md <<'NOTES'
+          **Play in the browser:** https://ashciraulo.github.io/Leviathan/
+
+          **Download:**
+          - Windows: `Leviathan-windows.zip`. Unzip it and run `Leviathan.exe`. Windows may warn about an unknown app: choose *More info*, then *Run anyway*.
+          - macOS: `Leviathan-macos.zip`. Unzip it, then right-click `Leviathan.app` and choose *Open* the first time (it isn't notarised by Apple).
+          - Linux: `Leviathan-linux.tar.gz`. Unpack it and run `Leviathan.x86_64`.
+
+          Each build was started on its own system and played into a new game before this release was published.
+          NOTES
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Leviathan ${{ github.ref_name }}
+          body_path: notes.md
+          files: |
+            dist/Leviathan-windows.zip
+            dist/Leviathan-macos.zip
+            dist/Leviathan-linux.tar.gz
