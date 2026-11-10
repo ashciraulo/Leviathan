@@ -774,6 +774,43 @@ def journal_ice():
     return ["".join(r) for r in c]
 
 
+def rowboat():
+    """Hessa's rowboat seen from above and a little south, 36x16: red-painted
+    planks, a thwart, oars shipped out either side."""
+    w, h = 36, 16
+    c = [["."] * w for _ in range(h)]
+    cx, cy, rx, ry = 18.0, 8.5, 15.5, 5.0
+    for y in range(h):
+        for x in range(w):
+            # A hull pointed at both ends (bow left, stern right, rounder).
+            dx = (x + 0.5 - cx) / rx
+            dy = (y + 0.5 - cy) / ry
+            if dx * dx + dy * dy * (1.0 + 0.6 * max(0.0, -dx)) <= 1.0:
+                c[y][x] = "r"
+    # The inside, planked, inset from the painted hull.
+    for y in range(h):
+        for x in range(w):
+            dx = (x + 0.5 - cx) / (rx - 2.5)
+            dy = (y + 0.5 - (cy - 0.8)) / (ry - 1.6)
+            if c[y][x] == "r" and dx * dx + dy * dy * (1.0 + 0.6 * max(0.0, -dx)) <= 1.0:
+                c[y][x] = "d"
+    for x in range(6, 31):
+        if c[7][x] == "d":
+            c[7][x] = "-"
+    # Two thwarts across.
+    for y in range(4, 11):
+        for x in (13, 14, 23, 24):
+            if c[y][x] == "d" or c[y][x] == "-":
+                c[y][x] = "b"
+    # Oars out over the water from the oarlocks, blades down at the ends.
+    for i in range(6):
+        c[3 - i // 2][16 - i] = "j"
+        c[13 + i // 2][16 - i] = "j"
+    for x, y in ((9, 0), (10, 0), (9, 15), (10, 15)):
+        c[y][x] = "j"
+    return ["".join(r) for r in c]
+
+
 SPRITES = {
     "young_hessa": young_hessa_frames,
     "young_vael": young_vael_frames,

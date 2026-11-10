@@ -17,6 +17,8 @@ const PAGES := {
 const LAST := 6
 
 var page := 1
+## Off while it's still rising out of the ice: it can't be read yet.
+var readable := true
 var _sprite: Sprite2D
 var _time := 0.0
 
@@ -56,11 +58,11 @@ func _process(delta: float) -> void:
 
 
 func interact() -> void:
-	if DialogueBox.is_open or Cutscene.active:
+	if not readable or DialogueBox.is_open or Cutscene.active:
 		return
 	GameState.set_flag(flag_for(page))
 	Audio.play_sfx("ui_open")
-	if page == LAST:
+	if page == LAST and not GameState.has_flag(StoryDirector.JOURNAL_FLAG):
 		var director := get_tree().get_first_node_in_group("story_director")
 		if director:
 			director.the_frozen_journal(self)

@@ -63,6 +63,7 @@ func _ready() -> void:
 		await _test_dream()
 		await _test_journal()
 		await _test_tobin()
+		await _test_rowing()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4017,7 +4018,11 @@ func _test_journal() -> void:
 	add_child(hall)
 	await _wait(0.3)
 	_check(get_tree().get_first_node_in_group("journal_page") == null, "no last page while Rimeback is up")
-	# As Rimeback itself does: the flag written quietly, then the fight's end.
+	# As Rimeback itself does: the flag written quietly, then the fight's end
+	# (with the beast itself gone, so it can't knock Wren about meanwhile).
+	for boss in get_tree().get_nodes_in_group("boss"):
+		boss.queue_free()
+	await _wait(0.05)
 	GameState.flags[Rimeback.DEFEATED_FLAG] = true
 	Events.boss_defeated.emit()
 	await _wait(0.2)
@@ -4034,6 +4039,11 @@ func _test_journal() -> void:
 		var pages := await _play_scene(hall, 30.0)
 		_check(pages == 4 and not Cutscene.active, "Vael's last page, and Hessa's later words (%d pages)" % pages)
 		_check(not hall.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "the young keepers fade with the vision")
+		await _wait(0.2)
+		hall.player.try_interact()
+		await _wait(0.1)
+		_check(not Cutscene.active and DialogueBox.is_open, "read again, it's only the page: the vision doesn't replay")
+		await _play_scene(hall, 5.0)
 	hall.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
@@ -4077,6 +4087,9 @@ func _test_tobin() -> void:
 	var tobins: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is Npc and c.kind == "tobin")
 	_check(tobins.size() == 1, "Tobin stays on the dock, someone to talk to")
 	_check(Conversations.branch_for("dunstan").get("lines", []) == ["DUNSTAN_TOBIN_AFTER"], "and Dunstan has a new line about him")
+	GameState.set_flag("asked_for_rope")
+	_check(Conversations.branch_for("dunstan").get("set", []) == ["rope_promised"], "Marga's rope errand still works with Tobin home")
+	GameState.clear_flag("asked_for_rope")
 	game.queue_free()
 	await _wait(0.1)
 	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
@@ -4084,6 +4097,48 @@ func _test_tobin() -> void:
 	await _wait(0.4)
 	_check(not Cutscene.active, "the homecoming plays once")
 	_check(game.current_room.get_children().filter(func(c: Node) -> bool: return c is Npc and c.kind == "tobin").size() == 1, "and Tobin's still there next time")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+
+
+## Cutscene 17: Hessa rows Wren out to the Maw, or waits there in her boat.
+func _test_rowing() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.CONFESSION_FLAG, StoryDirector.TURNED_FLAG, StoryDirector.TOMB_BELL_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(18 * Room.TILE + 8, 6 * Room.TILE + 10))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(not Cutscene.active, "home quietly, with Hessa there")
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	game.player.try_interact()
+	await _wait(0.2)
+	_check(GameState.has_flag(StoryDirector.ROW_ASKED_FLAG), "with all seven bells rung she offers to row Wren out")
+	var pages := await _play_scene(game, 40.0)
+	_check(pages >= 5 and not Cutscene.active, "she rows them over and has her say about Vael (%d pages)" % pages)
+	_check(GameState.room_coord == StoryDirector.LULLABY_POINT and GameState.has_flag(StoryDirector.ROWED_FLAG), "and leaves Wren at Lullaby Point")
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is Rowboat), "then rows herself home")
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_AT_BOAT) < 4.0, "Wren stands on the shore by the boat")
+	var shore := Vector2i(floori(StoryDirector.WREN_AT_BOAT.x / Room.TILE), floori(StoryDirector.WREN_AT_BOAT.y / Room.TILE))
+	var water := Vector2i(floori(StoryDirector.BOAT_AT.x / Room.TILE), floori(StoryDirector.BOAT_AT.y / Room.TILE))
+	_check(game.current_room.tile_at(shore.x, shore.y) == "." and game.current_room.tile_at(water.x, water.y) == "~", "on sand, with the boat on the water")
+	game.queue_free()
+	await _wait(0.1)
+	# On foot instead: she's out there waiting.
+	GameState.clear_flag(StoryDirector.ROW_ASKED_FLAG)
+	GameState.clear_flag(StoryDirector.ROWED_FLAG)
+	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, Vector2(1 * Room.TILE + 8, 9 * Room.TILE + 10))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(Cutscene.active, "walking to Lullaby Point, Hessa's waiting in her boat")
+	pages = await _play_scene(game, 40.0)
+	_check(pages >= 4 and not Cutscene.active and GameState.has_flag(StoryDirector.ROWED_FLAG), "she says she came to find them (%d pages)" % pages)
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_AT_BOAT) < 4.0, "Wren walks down to the boat")
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false

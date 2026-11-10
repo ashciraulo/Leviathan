@@ -49,6 +49,8 @@ const TALKS := {
 	],
 	"hessa": [
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
+		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
+		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
 		{"if": ["seen_hessa_confession"], "lines": ["HESSA_AFTER_TURN"]},
 		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},
 		{"if": ["tidebell_hull"], "unless": ["freed_mantle"], "lines": ["HESSA_MANTLE_1", "HESSA_MANTLE_2"]},
@@ -107,13 +109,15 @@ const TALKS := {
 		{"set": ["asked_for_rope"], "lines": ["MARGA_1", "MARGA_2", "MARGA_2B", ["", "NARRATE_WREN_NODS"]]},
 	],
 	"dunstan": [
-		{"if": ["tobin_home"], "lines": ["DUNSTAN_TOBIN_AFTER"]},
-		{"if": ["rope_promised"], "lines": ["DUNSTAN_AGAIN"]},
+		# Marga's rope errand comes first, whenever it's still owed.
 		{
 			"if": ["asked_for_rope"],
+			"unless": ["rope_promised"],
 			"set": ["rope_promised"],
 			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
 		},
+		{"if": ["tobin_home"], "lines": ["DUNSTAN_TOBIN_AFTER"]},
+		{"if": ["rope_promised"], "lines": ["DUNSTAN_AGAIN"]},
 		{"lines": ["DUNSTAN_1", "DUNSTAN_2"]},
 	],
 }

@@ -15,6 +15,8 @@ const KINDS := {
 	"vael_keeper": {"texture": Art.VILLAGER_VAEL_KEEPER, "frames": 3},
 	# Not of the Choir, but walks into scenes the same way.
 	"dace": {"texture": Art.VILLAGER_DACE, "frames": 3},
+	# Hessa, when she leaves the lighthouse: rowing Wren out to the Maw.
+	"hessa": {"texture": Art.HESSA, "frames": 3},
 	# Tobin, the Choir's newest singer, on his way out of it.
 	"tobin": {"texture": Art.VILLAGER_TOBIN, "frames": 3},
 	# Hessa and Vael when they were young, in the frozen journal's vision.
@@ -40,6 +42,8 @@ var ghost := false
 var sunk := 0.0
 ## In the water and fighting it: bobbing, arms up, splashing.
 var struggling := false
+## Rings on the water round them while sunk (off when sitting in a boat).
+var ripples := true
 ## Fresh out of the water, still running with it.
 var dripping := false
 var _sprite: Sprite2D
@@ -169,7 +173,7 @@ func _draw() -> void:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.4))
 		draw_circle(Vector2.ZERO, 7.0, Color(0.4, 0.55, 0.7, 0.35))
 		return
-	if sunk <= 0.0:
+	if sunk <= 0.0 or not ripples:
 		return
 	# Rings spreading out where they break the surface.
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.4))

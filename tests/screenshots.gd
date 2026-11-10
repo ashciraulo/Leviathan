@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -102,6 +102,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _belfry_lowe_shots()
+			"rowing":
+				game.queue_free()
+				await _wait(0.2)
+				await _rowing_shots()
 			"tobin":
 				game.queue_free()
 				await _wait(0.2)
@@ -1330,6 +1334,49 @@ func _belfry_lowe_shots() -> void:
 			shots["66_the_long_way_out"] = true
 			await _capture("66_the_long_way_out")
 	hall.queue_free()
+	await _wait(0.2)
+
+
+## Cutscene 17: Hessa rows Wren out to the Maw.
+func _rowing_shots() -> void:
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.CONFESSION_FLAG, StoryDirector.TURNED_FLAG, StoryDirector.TOMB_BELL_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(18 * Room.TILE + 8, 6 * Room.TILE + 10))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	await _wait(0.6)
+	home.player.facing = Vector2.UP
+	await _wait(0.05)
+	home.player.try_interact()
+	await _wait(1.6)
+	await _capture("71_ill_row_you")
+	var box := _dialogue_box(home)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	# Out at the point, in her boat beside the Old One's lip.
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(1.4)
+	await _capture("72_off_lullaby_point")
+	# Through her words to the lamp signals.
+	var quiet := 0.0
+	while Cutscene.active and quiet < 0.5:
+		if DialogueBox.is_open:
+			quiet = 0.0
+			box.advance()
+			box.advance()
+		else:
+			quiet += 0.1
+		await _wait(0.1)
+	await _wait(0.2)
+	await _capture("73_ill_keep_the_lamp_lit")
+	await _wait(5.2)
+	await _capture("74_hessa_rows_home")
+	await _skip_scene(home)
+	home.queue_free()
 	await _wait(0.2)
 
 
