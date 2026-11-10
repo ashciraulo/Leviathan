@@ -119,7 +119,10 @@ func burst() -> void:
 
 func _make_sprite() -> Sprite2D:
 	var sprite := Art.sprite(MawSprites.NOTE, 2, 1, 11)
-	sprite.position.y -= 4
+	# Centred on the note (it spins on the way back), where Art.sprite's
+	# top-left corner would put it.
+	sprite.centered = true
+	sprite.position = Vector2(0, -10)
 	return sprite
 
 

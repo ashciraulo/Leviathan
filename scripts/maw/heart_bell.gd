@@ -23,6 +23,11 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+	# The heartbeat ring (see _draw) goes over the bell, not under it (its
+	# shadow and sprite both drawn behind, in their usual order).
+	for child in get_children():
+		if child is Sprite2D:
+			child.show_behind_parent = true
 	_contact.active = false
 	collision_layer = 1 << (Layers.WORLD - 1)
 	# It rises out of the floor.

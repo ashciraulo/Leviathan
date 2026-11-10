@@ -291,7 +291,8 @@ func _update_sprite() -> void:
 			# About to dive: wings out and dropped low on the rod, a
 			# different shape from the feather flare.
 			_sprite.frame = FRAME_FLY
-			_sprite.position.y += 4.0
+			# (The fly frame's underside is 10 px higher than the perch's.)
+			_sprite.position.y += 14.0
 			_jitter(_timer)
 		Mode.STORM:
 			_sprite.frame = FRAME_FLARE if int(_timer * 10.0) % 2 == 0 else FRAME_PERCH

@@ -52,7 +52,10 @@ func _on_touch(body: Node2D) -> void:
 	elif Time.get_ticks_msec() - _last_toast > TOAST_COOLDOWN * 1000.0:
 		_last_toast = Time.get_ticks_msec()
 		Audio.play_sfx("door_locked", global_position)
-		Art.rattle(_sprite)
+		# The whole door rattles, every tile of it.
+		for door in get_tree().get_nodes_in_group("big_doors"):
+			if door.get("room_coord") == room_coord and door.get("_sprite"):
+				Art.rattle(door._sprite)
 
 
 func _vanish() -> void:

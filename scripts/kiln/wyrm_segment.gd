@@ -68,6 +68,8 @@ func _physics_process(delta: float) -> void:
 	if hard_time > 0.0:
 		hard_time = maxf(hard_time - delta, 0.0)
 		_refresh()
+	elif Settings.high_contrast:
+		Art.set_flash(_sprite, 0.0)
 
 
 func _refresh() -> void:
