@@ -484,6 +484,49 @@ def wick_frames():
 
 
 # --------------------------------------------------------------------------
+# Ottilie, Frostspine's old ice-fisher, who trained with Hessa and Vael in
+# the keepers' cave: a white fur-hooded parka, red mittens, a short ice rod
+# with its line hanging. Idle she watches her float; talk, the rod tips up.
+# --------------------------------------------------------------------------
+OTTILIE = [
+    "................",
+    "................",
+    "......qqqq......",
+    "....qqqqqqqq....",
+    "...qqqqqqqqqq...",
+    "...qqVVVVVVqq...",
+    "...qVVeVVeVVq...",
+    "...qVVeVVeVVq...",
+    "...qVVVVVVVVq...",
+    "...qqVVVVVVqq...",
+    "....qqqqqqqq....",
+    "...ssssssssss...",
+    "..ssssssssssss..",
+    "..ssssqqssssss..",
+    "..rsssssssssrd..",
+    "..rssssqsssrrd..",
+    "...ssssssssss.d.",
+    "...ssssssssss.d.",
+    "...qqqqqqqqqq..j",
+    "....bb....bb...j",
+    "....bb....bb...j",
+    "....bb....bb...r",
+    "...bbb....bbb...",
+    "................",
+]
+
+
+def ottilie_frames():
+    idle = OTTILIE
+    breathe = settle(idle, 11)
+    # Talking: the rod tips up as she turns to Wren.
+    talk = paint(idle, [(14, 13, "."), (15, 13, "."), (16, 14, "."), (17, 14, "."), (18, 15, "."),
+                        (19, 15, "."), (20, 15, "."), (21, 15, "."),
+                        (13, 13, "d"), (12, 13, "d"), (11, 14, "d"), (10, 14, "d"), (9, 15, "j")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
 # Captain Sorrel, the retired Gullwatch kite-post captain: a leather flying
 # cap with brass goggles pushed up, a grey braid, a long blue coat and a red
 # scarf the wind never stops tugging. Talks with her whistle in her hand.
@@ -1105,6 +1148,7 @@ SPRITES = {
     "wick": wick_frames,
     "gully": gully_frames,
     "sorrel": sorrel_frames,
+    "ottilie": ottilie_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1332,6 +1376,21 @@ def portrait_wick():
     return _rows(c)
 
 
+def portrait_ottilie():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "s")                    # pale grey parka
+    _ellipse(c, 16, 16, 14, 15, "q")                   # white fur hood, up
+    _face(c, "V", eye_row=17, cy=18, rx=7, ry=8)
+    _box(c, 9, 10, 14, 3, "q")                         # the fur's edge over her brow
+    _box(c, 10, 13, 12, 1, "Z")                        # white hair under it
+    _dots(c, [(10, 14), (21, 14)], "Z")
+    _dots(c, [(10, 17), (21, 17), (11, 22), (20, 22)], "-")  # lines of a long life
+    _box(c, 3, 26, 4, 4, "r")                          # a red mitten
+    _box(c, 4, 8, 1, 18, "d")                          # on her ice rod
+    _dots(c, [(5, 8), (6, 9)], "j")
+    return _rows(c)
+
+
 def portrait_sorrel():
     c = _canvas()
     _ellipse(c, 16, 32, 15, 8, "C")                    # long blue coat
@@ -1499,6 +1558,7 @@ PORTRAITS = {
     "wick": portrait_wick(),
     "gully": portrait_gully(),
     "sorrel": portrait_sorrel(),
+    "ottilie": portrait_ottilie(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),
