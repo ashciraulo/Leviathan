@@ -130,24 +130,41 @@ async function saveCheck() {
     await tab.waitForTimeout(6000);
     return up;
   };
+  // CI draws in software at a few frames a second: hold each key for a
+  // couple of frames and leave room between presses and screens.
   const key = async (k, n = 1) => {
     for (let i = 0; i < n; i++) {
       await tab.keyboard.down(k);
-      await tab.waitForTimeout(70);
+      await tab.waitForTimeout(150);
       await tab.keyboard.up(k);
-      await tab.waitForTimeout(250);
+      await tab.waitForTimeout(450);
     }
+  };
+  // The title's logo is bright; the file select dims it behind dark cards.
+  const onFiles = async () => (await brightness(await tab.screenshot({ clip: { x: 300, y: 70, width: 550, height: 120 } }))) < 70;
+  // Enter on Journeys (or Continue's neighbour) until the file select is up:
+  // the title only takes keys once its menu has faded in.
+  const openFiles = async (downs) => {
+    for (let tries = 0; tries < 6; tries++) {
+      await key("ArrowDown", downs);
+      await key("Enter");
+      for (let i = 0; i < 10; i++) {
+        if (await onFiles()) { await tab.waitForTimeout(800); return true; }
+        await tab.waitForTimeout(500);
+      }
+      await key("ArrowUp", downs);
+    }
+    return false;
   };
   // The file select's buttons, from the left: Copy, Erase, Export, Import, Back.
   const button = async (index) => { await key("ArrowDown", 3); await key("ArrowLeft", 4); await key("ArrowRight", index); };
   await tab.goto(`http://127.0.0.1:${port}/`);
   if (!(await boot())) return failures.push("saves: the engine never started");
-  await key("Enter"); // Journeys
-  await tab.waitForTimeout(800);
+  if (!(await openFiles(0))) return failures.push("saves: Journeys didn't open the file select");
   await button(3);
   await key("k"); // Import, into File 1
   await key("k");
-  for (let i = 0; i < 20 && !picker; i++) await tab.waitForTimeout(250);
+  for (let i = 0; i < 60 && !picker; i++) await tab.waitForTimeout(250);
   if (!picker) {
     // What the page saw, and a picture of the menu, for working out why.
     const seen = await tab.evaluate(() => JSON.stringify({ importing: window.__lvImport, active: navigator.userActivation && navigator.userActivation.isActive }));
@@ -177,9 +194,8 @@ async function saveCheck() {
   // Saves live in the browser's storage: a reload still has the file.
   await tab.reload();
   if (!(await boot())) return failures.push("saves: the engine didn't start again after a reload");
-  await key("ArrowDown"); // Continue, then Journeys
-  await key("Enter");
-  await tab.waitForTimeout(800);
+  // With a save the title starts on Continue; Journeys is next.
+  if (!(await openFiles(1))) return failures.push("saves: after a reload, Journeys didn't open the file select");
   await button(2);
   await key("k"); // Export; the file select starts on the latest file
   const download = tab.waitForEvent("download", { timeout: 8000 }).catch(() => null);
@@ -236,6 +252,24 @@ function finish(passed) {
   }
   console.log(passed);
   process.exit(0);
+}
+
+// The average brightness (0-255) of a screenshot.
+async function brightness(png) {
+  return page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.width;
+    c.height = img.height;
+    const g = c.getContext("2d");
+    g.drawImage(img, 0, 0);
+    const data = g.getImageData(0, 0, c.width, c.height).data;
+    let sum = 0;
+    for (let i = 0; i < data.length; i += 4) sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+    return sum / (data.length / 4);
+  }, png.toString("base64"));
 }
 
 // How many colours a screenshot has: a drawn screen has many, a blank or
