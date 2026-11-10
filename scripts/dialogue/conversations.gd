@@ -40,6 +40,7 @@ const SPEAKERS := {
 	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
 	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
 	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
+	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -124,6 +125,17 @@ const TALKS := {
 		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
 		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
 		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
+	],
+	# Ottilie at Still Cove, who trained with Hessa and Vael, and three
+	# rimefin from her fishing hole (a FishingHole).
+	"ottilie": [
+		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
+		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
+		{"if": ["ottilie_paid"], "lines": ["OTTILIE_AFTER"]},
+		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"]]},
+		{"if": ["ottilie_asked"], "lines": ["OTTILIE_WAITING"]},
+		{"if": ["seen_hessa_confession"], "set": ["ottilie_asked"], "lines": ["OTTILIE_HESSA", "OTTILIE_1", "OTTILIE_1B", "OTTILIE_2", "OTTILIE_2B", "OTTILIE_3"]},
+		{"set": ["ottilie_asked"], "lines": ["OTTILIE_1", "OTTILIE_1B", "OTTILIE_2", "OTTILIE_2B", "OTTILIE_3"]},
 	],
 	# Captain Sorrel at Gullwatch Steps, and her kite race to the far post
 	# (StoryDirector.sorrel_race, started by the sorrel_race flag).

@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -118,6 +118,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _sorrel_shots()
+			"ottilie":
+				game.queue_free()
+				await _wait(0.2)
+				await _ottilie_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1465,6 +1469,52 @@ func _wick_shots() -> void:
 	reach.player._invuln = 0.0
 	await _capture("86_it_catches")
 	reach.queue_free()
+	await _wait(0.2)
+
+
+## Ottilie at Still Cove, the float going under, and a rimefin landed.
+func _ottilie_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, StoryDirector.OTTILIE_AT + Vector2(0, -18))
+	var cove: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(cove)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.6)
+	cove.player.facing = Vector2.DOWN
+	await _wait(0.05)
+	cove.player.try_interact()
+	var box := _dialogue_box(cove)
+	for i in 2:
+		await _wait(0.4)
+		box.advance()
+		box.advance()
+	await _wait(1.6)
+	await _capture("93_ottilie_of_still_cove")
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	var room: Node2D = cove.current_room
+	cove.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	cove.player.facing = Vector2.DOWN
+	await _wait(0.3)
+	var hole: FishingHole = room.get_children().filter(func(c: Node) -> bool: return c is FishingHole)[0]
+	cove.player.try_interact()
+	hole.bite_in = 0.6
+	await _wait(0.72)
+	cove.player._invuln = 0.0
+	await _capture("94_the_float_goes_under")
+	# A fresh cast for the catch.
+	hole.state = FishingHole.State.IDLE
+	cove.player.try_interact()
+	hole.bite_in = 0.1
+	await _wait(0.2)
+	cove.player.try_interact()
+	await _wait(0.25)
+	await _capture("95_a_rimefin")
+	cove.queue_free()
 	await _wait(0.2)
 
 
