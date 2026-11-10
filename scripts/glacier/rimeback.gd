@@ -37,7 +37,9 @@ var mode := Mode.INTRO
 var holes: Array = []
 var hole := -1
 var _room: Room
-var _timer := 1.4
+## Its entrance, gliding under the ice before it first goes for a hole.
+const INTRO_TIME := 2.0
+var _timer := INTRO_TIME
 var _spits := 0
 var _hits_this_daze := 0
 ## Holes to crack open again once Wren steps off them.
@@ -78,6 +80,9 @@ func _ready() -> void:
 	collision_layer = 0
 	_set_shown(false)
 	Events.toast.emit("BOSS_RIMEBACK")
+	# Its entrance: a great shadow slides under the ice, and the ice groans.
+	Audio.play_sfx("ice_groan", global_position, 0.7)
+	Feel.shake(2.0)
 	call_deferred("_find_holes")
 
 
@@ -135,7 +140,7 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0:
 				if _spits < (3 if hp * 2 <= max_hp else 2):
 					_enter(Mode.SPIT, SPIT_TELL)
-					Audio.play_sfx("enemy_tell", global_position, 0.7)
+					Audio.play_sfx("rime_gather", global_position)
 				else:
 					_enter(Mode.DIVE, DIVE_TIME)
 					Audio.play_sfx("splash", global_position, 0.7)
@@ -364,9 +369,14 @@ func _make_sprite() -> Sprite2D:
 func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
-	_sprite.visible = mode not in [Mode.INTRO, Mode.UNDER]
-	_sprite.modulate.a = 1.0
+	_sprite.visible = mode != Mode.UNDER
+	_sprite.modulate = Color.WHITE
 	match mode:
+		Mode.INTRO:
+			# A shadow under the ice, gliding in to its first hole.
+			_sprite.frame = FRAME_UNDER
+			_sprite.modulate = Color(0.08, 0.14, 0.24, 0.55 * clampf(_timer * 2.0, 0.0, 1.0))
+			_sprite.position.x -= 120.0 * (_timer / INTRO_TIME)
 		Mode.RISE:
 			_sprite.frame = FRAME_UNDER
 			_sprite.position.y += 10.0 * (_timer / RISE_TIME)

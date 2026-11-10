@@ -353,7 +353,8 @@ def regent(pose):
     for a head, a crown of teeth, a sceptre of spine. Without his armour his
     ribs stand open on the red marrow-light inside. 64x64.
     Poses: 'stand', 'raise' (sceptre up: the slam tell), 'slam', 'open'
-    (armour gone, staggering)."""
+    (armour gone, staggering), 'throw' (his free hand high with a fistful
+    of bone, the marrow-light flaring: the throw tell)."""
     c = canvas(64, 64)
     # Legs: great thigh bones.
     for x0 in (24, 37):
@@ -364,7 +365,7 @@ def regent(pose):
     # Ribcage and the marrow-light in it.
     fill_ellipse(c, 32, 33, 13, 11, "_")
     fill_ellipse(c, 32, 34, 5, 5, "m")
-    if pose == "open":
+    if pose in ("open", "throw"):
         fill_ellipse(c, 32, 34, 7, 7, "m")
         fill_ellipse(c, 32, 33, 3, 3, "!")
     for i, y in enumerate((25, 29, 33, 37, 41)):
@@ -385,8 +386,16 @@ def regent(pose):
         line(c, 20, 25, 14, 36, "o", 2)
         line(c, 14, 36, 13, 44, "o", 2)
         sceptre = (12, 60, 14, 26)
-    line(c, 44, 25, 50, 36, "o", 2)
-    line(c, 50, 36, 51, 44, "o", 2)
+    if pose == "throw":
+        # The free arm drawn back high, a fistful of bone shards in it.
+        line(c, 44, 25, 53, 15, "o", 2)
+        line(c, 53, 15, 56, 5, "o", 2)
+        for (x, y) in ((54, 2), (57, 1), (59, 4), (56, 4)):
+            line(c, x, y, x + 1, y - 1, "b", 1)
+            put(c, x, y + 1, "o")
+    else:
+        line(c, 44, 25, 50, 36, "o", 2)
+        line(c, 50, 36, 51, 44, "o", 2)
     # Sceptre: a length of vertebrae with a skull on top.
     x0, y0, x1, y1 = sceptre
     line(c, x0, y0, x1, y1, "b", 2)
@@ -500,7 +509,7 @@ def build(lit, sheet):
         "singing_skull": sheet([[lit(singing_skull(False), 122), lit(singing_skull(True), 122)]], 16, 20),
         "marrowguard": sheet([[lit(marrowguard(s, f), 123) for s in (True, False) for f in (0, 1)]], 16, 24),
         "hush": sheet([[lit(hush(0), 124), lit(hush(1), 124)]], 16, 20),
-        "regent": sheet([[lit(regent(p), 125) for p in ("stand", "raise", "slam", "open")]], 64, 64),
+        "regent": sheet([[lit(regent(p), 125) for p in ("stand", "raise", "slam", "open", "throw")]], 64, 64),
         "regent_armour": sheet([[lit(armour(p), 126) for p in ("left", "right", "breast")]], 28, 22),
         "bone_shard": sheet([[lit(bone_shard(), 127)]], 8, 8),
         "marrow_bell": sheet([[lit(marrow_bell(False), 128), lit(marrow_bell(True), 128)]], 32, 40),

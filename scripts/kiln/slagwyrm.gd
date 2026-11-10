@@ -231,7 +231,7 @@ func _chase(delta: float, to_player: Vector2) -> void:
 			# The tell: its jaw gapes and it shudders, with a gurgle.
 			_spit_timer = SPIT_EVERY
 			_spit_tell = SPIT_TELL
-			Audio.play_sfx("enemy_tell", global_position, 0.7)
+			Audio.play_sfx("wyrm_gurgle", global_position)
 
 
 ## Each plate sits a fixed distance back along the head's path. Plates the

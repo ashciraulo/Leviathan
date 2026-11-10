@@ -909,6 +909,9 @@ func _tomb_shots(game: Node) -> void:
 		regent.mode = HollowRegent.Mode.RAISE
 		await _wait(0.2)
 		await _capture("146_regent_raises_sceptre")
+		regent.mode = HollowRegent.Mode.THROW
+		await _wait(0.2)
+		await _capture("176_regent_throw_tell")
 		game.player.global_position = regent.global_position + Vector2(0, 40)
 		regent.mode = HollowRegent.Mode.WALK
 		for i in 3:
@@ -974,7 +977,9 @@ func _belfry_shots(game: Node) -> void:
 		if child is Knell:
 			knell = child
 	if knell:
-		await _wait(2.5)
+		await _wait(0.4)
+		await _capture("177_knell_entrance")
+		await _wait(2.1)
 		await _capture("131_knell_arms")
 		var arm: Tentacle = knell.arms[2]
 		game.player.global_position = arm.global_position + Vector2(0, 14)
@@ -1051,6 +1056,13 @@ func _glacier_shots(game: Node) -> void:
 		if child is Rimeback:
 			walrus = child
 	if walrus:
+		# Its entrance (mostly over by the time the room has faded in here).
+		walrus.ai_enabled = false
+		walrus.mode = Rimeback.Mode.INTRO
+		walrus._timer = Rimeback.INTRO_TIME * 0.6
+		await _wait(0.1)
+		await _capture("178_rimeback_entrance")
+		walrus.ai_enabled = true
 		await _wait(0.3)
 		walrus.hole = 0
 		walrus._come_up(game.player)

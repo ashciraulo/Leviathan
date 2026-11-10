@@ -84,6 +84,10 @@ func _set_up() -> void:
 	_room.add_child(bell)
 	position = _home
 	_grow_arms()
+	# Its entrance: it peers out of the bell's mouth and moans, and the
+	# great bell shudders on its beam.
+	Audio.play_sfx("knell_moan", position, 0.8)
+	Feel.shake(2.0)
 
 
 func _grow_arms() -> void:
@@ -147,7 +151,7 @@ func _think(delta: float) -> void:
 					# The tell: it peeks out of the bell's mouth and shudders.
 					_ink = INK_EVERY * (0.7 if mode == Mode.HIDDEN else 1.0)
 					_ink_tell = INK_TELL
-					Audio.play_sfx("enemy_tell", global_position, 0.8)
+					Audio.play_sfx("knell_ink", global_position)
 		Mode.DAZED:
 			if _timer <= 0.0 or _hits_this_daze >= HITS_PER_DAZE:
 				mode = Mode.RETREAT
@@ -232,9 +236,11 @@ func _make_sprite() -> Sprite2D:
 func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
-	_sprite.visible = (mode != Mode.HIDDEN and mode != Mode.INTRO) or _ink_tell > 0.0
+	_sprite.visible = mode != Mode.HIDDEN or _ink_tell > 0.0
 	if _ink_tell > 0.0:
 		_jitter(_ink_tell)
+	if mode == Mode.INTRO:
+		_jitter(_timer)
 	_sprite.frame = FRAME_OUT if mode in [Mode.DAZED, Mode.RETREAT] else FRAME_PEEK
 	if mode == Mode.DAZED and _timer < 1.0:
 		_jitter(_timer)
