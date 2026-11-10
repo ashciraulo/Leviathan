@@ -55,6 +55,24 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=caves: the side areas and hidden nooks, and their ways in.
+	if OS.get_environment("SHOTS_ONLY") == "caves":
+		await _room_shots(game, {
+			Vector2i(1, -2): ["caves_rime_way_in", Vector2i(12, 6)],
+			Vector2i(1, -1): ["caves_rime_hollow", Vector2i(12, 10)],
+			Vector2i(8, -1): ["caves_cinder_way_in", Vector2i(3, 6)],
+			Vector2i(7, -1): ["caves_cinder_hollow", Vector2i(20, 5)],
+			Vector2i(3, 2): ["caves_glowworm_way_in", Vector2i(13, 8)],
+			Vector2i(3, 3): ["caves_glowworm_hollow", Vector2i(10, 2)],
+			Vector2i(8, -3): ["caves_ember_ridge", Vector2i(6, 6)],
+			Vector2i(7, 1): ["caves_ossuary_ring", Vector2i(12, 10)],
+			Vector2i(4, 2): ["caves_mural_lake", Vector2i(12, 7)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=pacing: the small finds in rooms that had nothing else.
 	if OS.get_environment("SHOTS_ONLY") == "pacing":
 		await _pacing_shots(game)
@@ -2235,6 +2253,11 @@ func _pacing_shots(game: Node) -> void:
 		Vector2i(8, -1): ["pacing_geyser_basin", Vector2i(16, 11)],
 		Vector2i(8, 1): ["pacing_vertebra_road", Vector2i(8, 7)],
 	}
+	await _room_shots(game, shots)
+
+
+## One shot per room: Wren set down on the given tile.
+func _room_shots(game: Node, shots: Dictionary) -> void:
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))

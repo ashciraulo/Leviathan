@@ -8,6 +8,7 @@ name_key = "ROOM_GLOWWORM_HOLLOW"
 biome = "gloamfen"
 chest_item = "glint"
 chest_count = 150
+cave = true
 layout = "#########..#############
 #######......###########
 #####..........#########

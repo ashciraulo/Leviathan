@@ -113,6 +113,9 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 @export var dark := false
 ## What signposts (n) in this room say: a translation key.
 @export var sign_key := ""
+## A hollow or grotto off the overworld: the light falls off toward its
+## rock walls (see CaveShade), so it feels tucked away.
+@export var cave := false
 ## Windmere: the direction and strength (px/s) of the gusts that sweep
 ## this room. Zero means calm.
 @export var wind := Vector2.ZERO
@@ -325,6 +328,10 @@ static func is_solid(tile: String) -> bool:
 
 
 func _build() -> void:
+	if cave:
+		var shade := CaveShade.new()
+		shade.name = "CaveShade"
+		add_child(shade)
 	var walls := _make_static(Layers.WORLD, "Walls")
 	_water_body = _make_static(Layers.WATER, "Water")
 	_deep_body = _make_static(Layers.DEEP, "DeepWater")
