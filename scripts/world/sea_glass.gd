@@ -40,6 +40,12 @@ func _ready() -> void:
 	_time = fmod(float(absi(room_coord.x * 7 + room_coord.y * 13 + tile.x)), GLINT_EVERY)
 
 
+## Pieces found so far: those Wren carries, and those already hung on
+## Coralie's chime.
+static func found() -> int:
+	return GameState.item_count("sea_glass") + Conversations.tally(Conversations.GLASS_TRADE)
+
+
 func flag_key() -> String:
 	return "sea_glass_%d_%d" % [room_coord.x, room_coord.y]
 
@@ -75,10 +81,10 @@ func _on_body_entered(body: Node2D) -> void:
 	_taken = true
 	GameState.set_flag(flag_key())
 	GameState.give_item("sea_glass")
-	var found := GameState.item_count("sea_glass")
-	if found >= TOTAL:
+	var count := found()
+	if count >= TOTAL:
 		Audio.play_jingle("jingle_secret")
 	else:
 		# Each piece rings a little higher than the last.
-		Audio.play_sfx("pickup", global_position, 1.0 + found * 0.05)
+		Audio.play_sfx("pickup", global_position, 1.0 + count * 0.05)
 	queue_free()

@@ -12,6 +12,11 @@ extends Object
 ##   "lines":  the pages, in order
 ##   "give":   items handed to Wren, {id: count} (a narration line in
 ##             "lines" says so; the jingle plays as the box opens)
+##   "trade":  takes every one of an item Wren carries, adds how many to a
+##             tally flag and pays for each: {"take": id, "tally": flag,
+##             "each": {id: count}}
+##   "reaches": with "trade", only when the tally plus what Wren carries
+##             comes to at least this many
 ##
 ## A line is a translation key, said by the speaker. To give a page to
 ## someone else, use [speaker, key]. Use "" as the speaker for narration
@@ -19,6 +24,9 @@ extends Object
 ## hear, so Wren answers her with the lamp: one flash yes, two no).
 ##
 ## Speakers: [name key, portrait texture or null].
+
+## Coralie takes Wren's sea-glass for her chime, 25 glints a piece.
+const GLASS_TRADE := {"take": "sea_glass", "tally": "coralie_glass", "each": {"glint": 25}}
 
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
@@ -41,6 +49,7 @@ const SPEAKERS := {
 	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
 	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
 	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
+	"coralie": ["NAME_CORALIE", Art.PORTRAIT_CORALIE],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -70,6 +79,8 @@ const TALKS := {
 	],
 	"corrin": [
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_corrin_hull"], "set": ["heard_corrin_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
+		{"if": ["talked_corrin_quest", "seen_ending"], "lines": ["CORRIN_END"]},
+		{"if": ["talked_corrin_quest", "old_one_turned"], "lines": ["CORRIN_TURNED"]},
 		{"if": ["talked_corrin_quest"], "lines": ["CORRIN_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_corrin_quest"], "lines": ["CORRIN_QUEST_1", "CORRIN_QUEST_2"]},
 		{"lines": ["CORRIN_1", "CORRIN_2"]},
@@ -78,24 +89,32 @@ const TALKS := {
 		{"if": ["found_crab"], "unless": ["pell_gave_pearl"], "set": ["pell_gave_pearl"], "give": {"breath_pearl": 1}, "lines": ["PELL_CRAB_1", "PELL_CRAB_2", ["", "NARRATE_GOT_PEARL"]]},
 		{"if": ["tidebell_hull"], "unless": ["heard_pell_bell"], "set": ["heard_pell_bell"], "lines": ["PELL_BELL_1", "PELL_BELL_2"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_pell_hull"], "set": ["heard_pell_hull"], "lines": ["PELL_HULL_1", "PELL_HULL_2"]},
+		# Admiral gets his introduction even when the crab turns up late.
+		{"if": ["pell_gave_pearl"], "unless": ["heard_pell_admiral"], "set": ["heard_pell_admiral"], "lines": ["PELL_CRAB_AGAIN"]},
+		{"if": ["talked_pell_quest", "seen_ending"], "lines": ["PELL_END"]},
+		{"if": ["talked_pell_quest", "old_one_turned"], "lines": ["PELL_TURNED"]},
 		{"if": ["pell_gave_pearl"], "lines": ["PELL_CRAB_AGAIN"]},
 		{"if": ["talked_pell_quest"], "lines": ["PELL_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_pell_quest"], "lines": ["PELL_QUEST_1", "PELL_QUEST_2"]},
 		{"lines": ["PELL_1", "PELL_2"]},
 	],
-	# Marga sends Wren to Dunstan for rope: a small errand made of flags.
 	# Nettle wants to be a keeper, and learns the lamp signals from Wren.
 	"nettle": [
-		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
 		{"if": ["tidebell_hull"], "unless": ["heard_nettle_bell"], "set": ["heard_nettle_bell"], "lines": ["NETTLE_BELL_1", ["", "NARRATE_WREN_FLASH_ONCE"], "NETTLE_BELL_2"]},
+		# The lamp lessons, whenever Wren first stops to talk after meeting Hessa.
+		{"if": ["met_hessa"], "unless": ["nettle_learned"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
+		{"if": ["nettle_learned", "seen_ending"], "lines": ["NETTLE_END"]},
+		{"if": ["nettle_learned", "old_one_turned"], "lines": ["NETTLE_TURNED"]},
+		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
 		{"if": ["nettle_learned"], "lines": ["NETTLE_AGAIN"]},
-		{"if": ["met_hessa"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
 		{"lines": ["NETTLE_1", "NETTLE_2"]},
 	],
 	# Agna Holt, the last founder, outside the Kiln. After the Ember Bell she
 	# lights her forge again and gives Wren a Brinesteel sword. She always
 	# introduces herself first, even if Wren walked past her into the Kiln.
 	"agna": [
+		{"if": ["agna_gave_sword", "seen_ending"], "lines": ["AGNA_END"]},
+		{"if": ["agna_gave_sword", "old_one_turned"], "lines": ["AGNA_TURNED"]},
 		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
 		{"unless": ["met_agna"], "set": ["met_agna"], "lines": ["AGNA_1", "AGNA_2", "AGNA_3"]},
 		{"if": ["tidebell_kiln"], "set": ["agna_gave_sword"], "give": {"brinesteel_sword": 1}, "lines": ["AGNA_AFTER_1", "AGNA_AFTER_2", ["", "NARRATE_GOT_BRINESTEEL"], "AGNA_AFTER_3"]},
@@ -141,6 +160,7 @@ const TALKS := {
 	# (StoryDirector.sorrel_race, started by the sorrel_race flag).
 	"sorrel": [
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
+		{"if": ["sorrel_paid", "old_one_turned"], "lines": ["SORREL_AFTER", "SORREL_TURNED"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
 		{"if": ["sorrel_won"], "set": ["sorrel_paid"], "give": {"glint": 150}, "lines": ["SORREL_WON_1", "SORREL_WON_2", ["", "NARRATE_GOT_COURIER_PAY"]]},
 		{"if": ["sorrel_race"], "lines": ["SORREL_FLYING"]},
@@ -148,6 +168,25 @@ const TALKS := {
 		{"has": ["kite_cloak"], "set": ["sorrel_asked", "sorrel_raced", "sorrel_race"], "lines": ["SORREL_CLOAK_1", "SORREL_CLOAK_1B", "SORREL_CLOAK_2", "SORREL_GO"]},
 		{"if": ["sorrel_asked"], "lines": ["SORREL_WAITING"]},
 		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
+	],
+	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
+	# (GlassChime) and pays for every piece Wren brings her.
+	"coralie": [
+		{"if": ["coralie_chime_done", "seen_ending"], "lines": ["CORALIE_END"]},
+		{"if": ["coralie_chime_done", "old_one_turned"], "lines": ["CORALIE_TURNED"]},
+		{"if": ["coralie_chime_done"], "lines": ["CORALIE_AFTER"]},
+		{
+			"if": ["coralie_asked"],
+			"has": ["sea_glass"],
+			"reaches": SeaGlass.TOTAL,
+			"trade": GLASS_TRADE,
+			"set": ["coralie_chime_done"],
+			"give": {"glint": 100},
+			"lines": ["CORALIE_DONE_1", ["", "NARRATE_GOT_GLASS_PAY"], "CORALIE_DONE_2", "CORALIE_DONE_3", ["", "NARRATE_GOT_CORALIE_SAVINGS"]],
+		},
+		{"if": ["coralie_asked"], "has": ["sea_glass"], "trade": GLASS_TRADE, "lines": ["CORALIE_HANG", ["", "NARRATE_GOT_GLASS_PAY"]]},
+		{"if": ["coralie_asked"], "lines": ["CORALIE_WAITING"]},
+		{"set": ["coralie_asked"], "lines": ["CORALIE_1", "CORALIE_1B", "CORALIE_2", "CORALIE_2B", "CORALIE_3"]},
 	],
 	# Gully on Wreck Strand, and his strongbox out in the pool (a Strongbox,
 	# hauled in with the Tide Hook).
@@ -163,12 +202,16 @@ const TALKS := {
 	# five that have gone dark (FenLantern).
 	"wick": [
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
+		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
 		{"if": ["fen_lanterns_lit"], "set": ["wick_gave_jar"], "give": {"jar": 1}, "lines": ["WICK_DONE_1", "WICK_DONE_2", ["", "NARRATE_GOT_JAR"]]},
 		{"if": ["wick_asked"], "lines": ["WICK_WAITING"]},
 		{"set": ["wick_asked"], "lines": ["WICK_1", "WICK_1B", "WICK_2", "WICK_2B", "WICK_3"]},
 	],
+	# Marga sends Wren to Dunstan for rope: a small errand made of flags.
 	"marga": [
+		{"if": ["marga_gave_jar", "seen_ending"], "lines": ["MARGA_END"]},
+		{"if": ["marga_gave_jar", "old_one_turned"], "lines": ["MARGA_TURNED"]},
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
 		{"if": ["marga_thanked", "tidebell_hull"], "set": ["marga_gave_jar"], "give": {"jar": 1}, "lines": ["MARGA_EEL_1", "MARGA_EEL_2", ["", "NARRATE_GOT_JAR"]]},
 		{"if": ["marga_thanked"], "lines": ["MARGA_AGAIN"]},
@@ -184,7 +227,9 @@ const TALKS := {
 			"set": ["rope_promised"],
 			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
 		},
+		{"if": ["seen_ending"], "lines": ["DUNSTAN_END"]},
 		{"if": ["tobin_home"], "lines": ["DUNSTAN_TOBIN_AFTER"]},
+		{"if": ["old_one_turned"], "lines": ["DUNSTAN_TURNED"]},
 		{"if": ["rope_promised"], "lines": ["DUNSTAN_AGAIN"]},
 		{"lines": ["DUNSTAN_1", "DUNSTAN_2"]},
 	],
@@ -194,9 +239,22 @@ const TALKS := {
 ## The branch `speaker` would use right now, or {} if they have nothing to say.
 static func branch_for(speaker: String) -> Dictionary:
 	for branch: Dictionary in TALKS.get(speaker, []):
-		if GameState.flags_match(branch.get("if", []), branch.get("unless", [])) and _has_all(branch.get("has", [])):
+		if GameState.flags_match(branch.get("if", []), branch.get("unless", [])) and _has_all(branch.get("has", [])) and _reaches(branch):
 			return branch
 	return {}
+
+
+## How many of a trade's items have been handed over so far.
+static func tally(trade: Dictionary) -> int:
+	return int(GameState.flags.get(trade["tally"], 0))
+
+
+## True unless the branch has "reaches" and its trade wouldn't get there.
+static func _reaches(branch: Dictionary) -> bool:
+	if not branch.has("reaches"):
+		return true
+	var trade: Dictionary = branch["trade"]
+	return tally(trade) + GameState.item_count(trade["take"]) >= int(branch["reaches"])
 
 
 ## True when Wren carries every item in `items` (a branch's "has").
@@ -230,7 +288,15 @@ static func talk(speaker: String) -> Array:
 		return []
 	for flag: String in branch.get("set", []):
 		GameState.set_flag(flag)
-	var gifts: Dictionary = branch.get("give", {})
+	var gifts: Dictionary = branch.get("give", {}).duplicate()
+	var trade: Dictionary = branch.get("trade", {})
+	if not trade.is_empty():
+		var handed := GameState.item_count(trade["take"])
+		GameState.take_item(trade["take"], handed)
+		GameState.set_flag(trade["tally"], tally(trade) + handed)
+		var each: Dictionary = trade["each"]
+		for id: String in each:
+			gifts[id] = int(gifts.get(id, 0)) + int(each[id]) * handed
 	for id: String in gifts:
 		GameState.give_item(id, int(gifts[id]), false)
 	if not gifts.is_empty():

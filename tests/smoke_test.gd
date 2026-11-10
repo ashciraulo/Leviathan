@@ -60,6 +60,7 @@ func _ready() -> void:
 		await _test_equipment()
 		await _test_side_quests()
 		await _test_shop()
+		_test_satchel_sea_glass()
 		await _test_dream()
 		await _test_journal()
 		await _test_tobin()
@@ -71,6 +72,8 @@ func _ready() -> void:
 		await _test_gully()
 		await _test_sorrel()
 		await _test_ottilie()
+		await _test_coralie()
+		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -427,6 +430,13 @@ func _test_villagers() -> void:
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
 	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	# The bells' narration and the Wayshell scene fit on one page each, too.
+	for k in ["HULL", "KILN", "MIRE", "GALE", "GLACIER", "BELFRY", "TOMB"]:
+		for part in [1, 2]:
+			var key := "BELL_%s_%d" % [k, part]
+			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
+	for key in ["WAYSHELL_1", "WAYSHELL_2", "WAYSHELL_3"]:
+		_check(fit_box.lines_for(key, true) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
 	# Large text: the same box, one big line per page, long pages split.
 	var was_large := Settings.large_text
 	Settings.large_text = true
@@ -3976,6 +3986,24 @@ func _test_equipment() -> void:
 	await _wait(0.1)
 
 
+## Sea-glass shows in the satchel, with its count, only once a piece is found.
+func _test_satchel_sea_glass() -> void:
+	GameState.reset_new_game()
+	var page := SatchelPage.new()
+	add_child(page)
+	page.on_open()
+	var shown := func() -> bool:
+		return page._cells.any(func(c: Dictionary) -> bool: return c["id"] == "sea_glass")
+	_check(not shown.call(), "no sea-glass in the satchel before any is found")
+	GameState.give_item("sea_glass", 3, false)
+	page.on_open()
+	_check(shown.call(), "found sea-glass shows in the satchel")
+	page._cursor = page._cells.size() - 1
+	_check(page._owned_id(page._cells[page._cursor]) == "sea_glass", "the sea-glass cell can be looked at")
+	page.queue_free()
+	GameState.reset_new_game()
+
+
 ## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
 ## bought with glints.
 func _test_shop() -> void:
@@ -4715,6 +4743,100 @@ func _test_ottilie() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_1", "met after the turn but before Hessa's word, she's a stranger")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "once Hessa's sent Wren, she knows")
+
+
+## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a
+## piece, and a little more when all twelve are hung.
+func _test_coralie() -> void:
+	GameState.reset_new_game()
+	var talk_at := StoryDirector.CORALIE_AT + Vector2(0, -18)
+	GameState.set_checkpoint(StoryDirector.SHORE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "coralie") == null, "Coralie isn't on the shore before the opening's done")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	GameState.set_flag("met_hessa")
+	GameState.set_checkpoint(StoryDirector.SHORE, talk_at)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	_check(_find_kind(room, "coralie") != null, "Coralie combs Saltmarrow Shore")
+	var chimes: Array = room.get_children().filter(func(c: Node) -> bool: return c is GlassChime)
+	_check(chimes.size() == 1, "beside her chime")
+	for at: Vector2 in [StoryDirector.CORALIE_AT, StoryDirector.CHIME_AT]:
+		var tile := Vector2i(at / Room.TILE)
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y - 1) == ".", "%s stands on open sand, reachable from above" % tile)
+	# Glass found before she asks is kept until she does.
+	GameState.give_item("sea_glass", 2, false)
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("coralie_asked") and GameState.item_count("sea_glass") == 2, "she asks for sea-glass (%d pages)" % pages)
+	var glints := GameState.item_count("glint")
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	_check(GameState.item_count("sea_glass") == 0 and GlassChime.hung() == 2, "she hangs both pieces")
+	_check(SeaGlass.found() == 2, "pieces on the chime still count as found, for the last piece's jingle")
+	_check(GameState.item_count("glint") == glints + 50, "and pays 25 glints a piece")
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_WAITING"], "with no glass, she waits for more")
+	# Most of the rest, then the last: the chime's done and she adds her savings.
+	GameState.give_item("sea_glass", 9, false)
+	_check(Conversations.branch_for("coralie").get("lines")[0] == "CORALIE_HANG", "eleven isn't twelve")
+	Conversations.talk("coralie")
+	await _play_scene(game, 10.0)
+	_check(GlassChime.hung() == 11 and not GameState.has_flag("coralie_chime_done"), "eleven hung")
+	GameState.give_item("sea_glass", 1, false)
+	glints = GameState.item_count("glint")
+	_check(Conversations.branch_for("coralie").get("lines")[0] == "CORALIE_DONE_1", "the twelfth piece finishes it")
+	Conversations.talk("coralie")
+	await _play_scene(game, 10.0)
+	_check(GlassChime.hung() == SeaGlass.TOTAL and GameState.has_flag("coralie_chime_done"), "twelve hung")
+	_check(GameState.item_count("glint") == glints + 25 + 100, "the last piece, and her savings")
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_AFTER"], "then she listens to the wind")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_TURNED"], "the chime rings when the Old One turns")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_END"], "and after the ending")
+	# Saved and loaded, the tally comes back as a float: still twelve.
+	GameState.flags["coralie_glass"] = 12.0
+	_check(GlassChime.hung() == 12, "a loaded tally still counts")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## Saltmarrow and the locals notice the Old One turn, and the ending.
+func _test_late_reactions() -> void:
+	GameState.reset_new_game()
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "seen_wayshell"]:
+		GameState.set_flag(flag)
+	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
+	GameState.clear_flag("nettle_learned")
+	GameState.set_flag("met_hessa")
+	_check(Conversations.branch_for("nettle").get("lines")[0] == "NETTLE_LEARN_1", "Nettle's lamp lessons still happen after the Wayshell")
+	GameState.set_flag("nettle_learned")
+	GameState.set_flag("heard_nettle_bell")
+	# A crab found late still gets its name before the late lines.
+	GameState.set_flag("pell_gave_pearl")
+	_check(Conversations.branch_for("pell").get("lines") == ["PELL_CRAB_AGAIN"], "Pell names the crab Admiral")
+	GameState.set_flag("heard_pell_admiral")
+	var who := ["corrin", "pell", "nettle", "agna", "marga", "dunstan", "wick"]
+	for speaker in who:
+		_check(not str(Conversations.branch_for(speaker).get("lines")[0]).ends_with("_TURNED"), "%s has nothing to say about a turn that hasn't happened" % speaker)
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	for speaker in who:
+		_check(Conversations.branch_for(speaker).get("lines")[0] == speaker.to_upper() + "_TURNED", "%s felt the Old One turn" % speaker)
+	_check(Conversations.branch_for("sorrel").get("lines")[1] == "SORREL_TURNED", "Sorrel feels the gales ease")
+	GameState.set_flag("seen_ending")
+	for speaker in ["corrin", "pell", "nettle", "agna", "marga", "dunstan", "wick", "sorrel"]:
+		_check(str(Conversations.branch_for(speaker).get("lines")[0]).begins_with(speaker.to_upper() + "_END"), "%s has a word after the ending" % speaker)
 
 
 func _enemies_away() -> void:

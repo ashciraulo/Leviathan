@@ -47,7 +47,7 @@ TOAST_GOT_MAP,You found the map.
 TOAST_GOT_COMPASS,You found the compass.
 TOAST_GOT_BIG_KEY,You found the big key!
 BOSS_MATRIARCH,The Barnacle Matriarch
-BELL_HULL_1,You ring the Tidebell. The note rolls down through the wreck and out across the bay.
+BELL_HULL_1,Wren rings the Tidebell. The note rolls down through the wreck and out across the bay.
 BELL_HULL_2,"Far under the water, something vast breathes out, and sleeps a little deeper."
 MENU_JOURNEYS,Journeys
 MENU_OPTIONS,Options
@@ -339,14 +339,14 @@ TOAST_GOT_STONEBREAKER,You found the Stonebreaker Mallet!
 GOT_STONEBREAKER_1,"The Stonebreaker Mallet! An iron-bound head on an ash handle, heavy enough to dent an anvil."
 GOT_STONEBREAKER_2,"Press its item key (U or I) to bring it down in front of you. It bursts cracked boulders, drives pegs into the floor and flips armoured shells."
 BOSS_SLAGWYRM,The Slagwyrm
-BELL_KILN_1,"You ring the Ember Bell. A low, warm note fills the foundry, and the furnaces settle."
+BELL_KILN_1,"Wren rings the Ember Bell. A low, warm note fills the foundry, and the furnaces settle."
 BELL_KILN_2,"Somewhere under the bay, the great breathing slows. The fire is banked and low."
 OPENING_1,"For a thousand years, seven bells have kept the Old One asleep beneath the bay."
 OPENING_2,"At every turn of the tide a keeper rang them. Lately, only one keeper was left."
 OPENING_3,"Last night, out on the point at Saltmarrow, the oldest bell went quiet."
 WAYSHELL_1,"You found it. I felt the Point Bell ring through the floorboards, clear as morning."
 WAYSHELL_2,"One bell home. Six more out there, and the Choir after every one of them."
-WAYSHELL_3,"Take this. The old keepers' Wayshell. Blow it under open sky, think of a Tidestone you've woken, and the sky-rays will carry you there."
+WAYSHELL_3,"Take the keepers' old Wayshell. Blow it under open sky and it'll carry you to a woken Tidestone."
 NARRATE_GOT_WAYSHELL,"Wren got the Wayshell. Outdoors, open the map and pick a woken Tidestone to travel there."
 WAYSHELL_4,"The next bell is crying out from the Kiln, in Cinderreach. Go on. I'll keep the lamp lit."
 HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp stays lit."
@@ -377,8 +377,8 @@ TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!
 GOT_GLOWMOTH_LANTERN_1,"The Glowmoth Lantern! Pale moths stir inside the glass, and the dark around you thins."
 GOT_GLOWMOTH_LANTERN_2,"Press its item key (U or I) to raise it, and again to lower it. Things that hide from the light can't hide from it."
 BOSS_PALE_CONGREGATION,The Pale Congregation
-BELL_MIRE_1,"You ring the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
-BELL_MIRE_2,"The wisps drift down and settle like snow. Far away, something huge turns over in its sleep, and lies still."
+BELL_MIRE_1,"Wren rings the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
+BELL_MIRE_2,"The wisps settle like snow. Far away, something huge turns over in its sleep, and lies still."
 CAPTION_FLAME,Flame catches
 CAPTION_HEARTBEAT,Heartbeat
 ROOM_FENMOUTH,Fenmouth
@@ -402,7 +402,7 @@ TOAST_GOT_KITE_CLOAK,You found the Kite Cloak!
 GOT_KITE_CLOAK_1,"The Kite Cloak! Old sailcloth stitched over a frame of cane, with a red kite painted on its back."
 GOT_KITE_CLOAK_2,"Press its item key (U or I) to throw it open and glide. A fan's wind will carry you further. Press the key again to come down."
 BOSS_STORMHERON,The Stormheron
-BELL_GALE_1,"You ring the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
+BELL_GALE_1,"Wren rings the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
 BELL_GALE_2,"Clouds part over the bay. Deep below, the great sleeper stirs."
 CAPTION_THUNDER,Thunder
 CAPTION_STORM,Storm gathering
@@ -420,8 +420,8 @@ TOAST_GOT_FROSTFANG_BOW,You found the Frostfang Bow!
 GOT_FROSTFANG_BOW_1,"The Frostfang Bow! Pale ash wood, tipped with two fangs of ice that never melt."
 GOT_FROSTFANG_BOW_2,"Press its item key (U or I) to loose an arrow of frost. It freezes water solid where it lands, and never runs out."
 BOSS_RIMEBACK,Rimeback
-BELL_GLACIER_1,"You ring the Frost Bell. Its note rings clear under the ice, and the old glacier creaks and settles."
-BELL_GLACIER_2,"Far out in the bay, the frost on the water melts away. Down in the deep, the great sleeper stops shivering."
+BELL_GLACIER_1,"Wren rings the Frost Bell. Its note rings clear under the ice, and the old glacier settles."
+BELL_GLACIER_2,"Out in the bay, the frost on the water melts. Down in the deep, the sleeper stops shivering."
 CAPTION_FREEZE,Water freezes
 CAPTION_ICE_GROAN,Ice groans
 CAPTION_WALRUS,Walrus bellows
@@ -439,8 +439,8 @@ TOAST_GOT_DIVERS_HELM,You found the Diver's Helm!
 GOT_DIVERS_HELM_1,"The Diver's Helm! Old brass, a round glass window, and a smell of the sea that never quite leaves it."
 GOT_DIVERS_HELM_2,"Now you can swim deep water. Press its item key (U or I) while swimming to dive under for a few breaths, and attack to slash underwater."
 BOSS_KNELL,Knell
-BELL_BELFRY_1,"You ring the Drowned Bell. Its note goes down and down through the green water, further than any bell should."
-BELL_BELFRY_2,"Far below, something vast turns over in its sleep, and settles. The tide along the Verge runs gentle again."
+BELL_BELFRY_1,"Wren rings the Drowned Bell. Its note sinks through the green water, deeper than a bell should."
+BELL_BELFRY_2,"Far below, something vast turns in its sleep and settles. The tide along the Verge runs gentle."
 CAPTION_VALVE,Valve turns
 CAPTION_WATER_RUSH,Water rushes
 CAPTION_GREAT_BELL,Great bell tolls
@@ -604,8 +604,8 @@ TOAST_GOT_ECHO_HORN,You found the Echo Horn!
 GOT_ECHO_HORN_1,"The Echo Horn! A curl of old bone bound in gold. Blow it, and the barrow answers."
 GOT_ECHO_HORN_2,"Press its item key (U or I) to blow one long note. Bone that hears it shatters, and things that hide are shown."
 BOSS_REGENT,The Hollow Regent
-BELL_TOMB_1,"You ring the Marrow Bell. Its note is soft, and it goes out over the dunes, over every bone lying in the sand."
-BELL_TOMB_2,"Your kin are sleeping too. Far away under the bay, the great sleeper breathes out, slow and easy, the way the tide goes out."
+BELL_TOMB_1,"Wren rings the Marrow Bell. Its soft note goes out over the dunes, over every bone in the sand."
+BELL_TOMB_2,"The Old One's kin sleep there too. Far under the bay, it breathes out, slow as an ebbing tide."
 CAPTION_HORN,Horn sounds
 CAPTION_BONE_CRUMBLE,Bones crumble
 CAPTION_SKULL_SING,Skull sings
@@ -654,6 +654,7 @@ CAPTION_ECHO_RISE,An echo rises
 CAPTION_ECHO_CALM,An echo sighs
 CAPTION_OLD_ONE_HUM,The Old One hums
 CAPTION_WISP,Wisp chimes
+CAPTION_GLASS_CHIME,Glass chime rings
 CAPTION_WINGBEAT,Wings beat
 CAPTION_ICE_SHATTER,Ice shatters
 CAPTION_EYE_OPEN,Ice eye opens
@@ -813,3 +814,33 @@ OTTILIE_TURNED,"Hessa, Vael and I trained in the old cave above. Cold years."
 OTTILIE_TURNED_2,"Vael would lie with his ear to the ice for hours. Listening."
 OTTILIE_TURNED_3,"He heard it first, you know. The Old One, grieving."
 OTTILIE_END,"The ice sings at night now. Soft, like someone humming."
+NAME_CORALIE,Coralie
+CORALIE_1,"Mind where you step, I've glass drying on the sand. I'm Coralie."
+CORALIE_1B,"Sea-glass. Old bottles the tide's tumbled smooth for years."
+CORALIE_2,"Hang it on a string and the wind makes it ring. Listen."
+CORALIE_2B,"My chime's bare, though. The sea hides its glass well."
+CORALIE_3,"Twelve strings. Bring me any glass you find. I'll pay for it."
+CORALIE_WAITING,"Twelve strings to fill. Glass hides in quiet corners."
+CORALIE_HANG,"Oh, lovely. Hear that? Every piece rings a little different."
+NARRATE_GOT_GLASS_PAY,Wren got 25 Glints for each piece.
+CORALIE_DONE_1,"That's twelve! Every string has its glass. Hush a moment."
+CORALIE_DONE_2,"Hear that? The whole shore's ringing with it."
+CORALIE_DONE_3,"Take the rest of my savings, too. Chimes don't need coin."
+NARRATE_GOT_CORALIE_SAVINGS,Wren got 100 Glints more.
+CORALIE_AFTER,"Every wind plays a different tune now. Today's is a slow one."
+CORALIE_TURNED,"The chime rang all by itself last night. Low, like a sigh."
+CORALIE_END,"The wind and the tide keep time together now. Hear them?"
+CORRIN_TURNED,"Felt the whole bay shift last night. Every boat dragged its anchor."
+CORRIN_END,"Nets are full again, keeper. Sea's breathing like it should."
+PELL_TURNED,"Did you feel the ground roll over? Mum says I dreamed it. I didn't."
+PELL_END,"Me and Mum listened to the sea all night. It snores!"
+NETTLE_TURNED,"The sea moved! I flashed 'I'm here' at it. Just in case."
+NETTLE_END,"Can I carry your lamp? Just to the end of the dock? Please?"
+AGNA_TURNED,"Felt the Old One turn from up here. Every coal in the Kiln rang."
+AGNA_END,"Every bell rings true now. Founders' work, and yours."
+MARGA_TURNED,"The racks shook in the night and the eels all fled. Is it waking?"
+MARGA_END,"Supper's on, keeper. Eel. Don't argue. Sit."
+DUNSTAN_TURNED,"Hm. Ground moved. Gulls went quiet. ...Tobin's out there somewhere."
+DUNSTAN_END,"Hm. Quiet now. The good kind."
+WICK_TURNED,"The fen shook in the night. Every lantern held. I counted."
+SORREL_TURNED,"The Storm Bell's rung and the gales have eased. I feel it in the cloth."

@@ -48,7 +48,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -130,6 +130,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _ottilie_shots()
+			"coralie":
+				game.queue_free()
+				await _wait(0.2)
+				await _coralie_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1540,6 +1544,40 @@ func _ottilie_shots() -> void:
 	await _wait(0.25)
 	await _capture("95_a_rimefin")
 	cove.queue_free()
+	await _wait(0.2)
+
+
+## Coralie on Saltmarrow Shore hanging Wren's sea-glass, and her chime
+## with all twelve strings filled.
+func _coralie_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag("met_hessa")
+	GameState.set_flag("coralie_asked")
+	GameState.set_flag("coralie_glass", 4)
+	GameState.give_item("sea_glass", 2, false)
+	GameState.set_checkpoint(StoryDirector.SHORE, StoryDirector.CORALIE_AT + Vector2(0, -18))
+	var shore: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(shore)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.6)
+	shore.player.facing = Vector2.DOWN
+	await _wait(0.05)
+	shore.player.try_interact()
+	await _wait(2.2)
+	await _capture("96_coralie_hangs_the_glass")
+	var box := _dialogue_box(shore)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	GameState.set_flag("coralie_glass", SeaGlass.TOTAL)
+	shore.player.global_position = shore.current_room.global_position + StoryDirector.CHIME_AT + Vector2(-26, 20)
+	shore.player.facing = Vector2.RIGHT
+	await _wait(1.6)
+	await _capture("97_twelve_strings_ringing")
+	shore.queue_free()
 	await _wait(0.2)
 
 

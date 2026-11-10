@@ -246,6 +246,7 @@ func _die() -> void:
 		if not is_inside_tree():
 			return
 	# He falls apart into a heap of old bones, and the light goes out.
+	Audio.play_sfx("boss_fall", global_position, 0.8)
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.3, 0.2), 1.0)
 	tween.tween_property(self, "modulate:a", 0.0, 1.2)
