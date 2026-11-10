@@ -441,6 +441,157 @@ def liesl_frames():
 
 
 # --------------------------------------------------------------------------
+# Wick, Gloamfen's lamplighter child, about ten: a moss-green hooded cape,
+# a brown fringe, and a lighting pole twice their height with a little
+# brass lamp on its hook. Counts the fen's lanterns every night.
+# --------------------------------------------------------------------------
+WICK = [
+    "............QQQ.",
+    "............QJQ.",
+    "............QQQ.",
+    ".............d..",
+    ".............d..",
+    ".....mmmmmm..d..",
+    "....mmmmmmmm.d..",
+    "...mmMMMMMMmmd..",
+    "...mMAAAAAAMmd..",
+    "...mAAeAAeAAmd..",
+    "...mAAeAAeAAmd..",
+    "....AAAAAAAA.d..",
+    ".....AAAAAA..d..",
+    "...mmmmmmmmmmd..",
+    "..mmmmmmmmmmAd..",
+    "..mmmmmmmmmmmd..",
+    "..mmmmmmmmmmmd..",
+    "...mmmmmmmmm.d..",
+    "....pppppppp.d..",
+    "....pp....pp.d..",
+    "....pp....pp.d..",
+    "....AA....AA.d..",
+    "....bb....bb.d..",
+    "................",
+]
+
+
+def wick_frames():
+    idle = WICK
+    breathe = settle(idle, 13)
+    # The lamp's flame flickers while they breathe.
+    breathe = paint(breathe, [(0, 12, "QQQ"), (1, 12, "QJQ"), (2, 12, "QQQ")])
+    # Talking: a hand up, counting on their fingers.
+    talk = paint(idle, [(14, 2, "m"), (13, 1, "A"), (12, 1, "A"), (11, 1, "A")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
+# Gully, Brinewood's salvager: a coral knit cap pulled low, a grizzled
+# beard, a patched leather coat. Sleeps sat in the crook of a beached
+# figurehead's arm. Idle and breathe are dozing (chin down, eyes shut);
+# talk is awake, a hand up.
+# --------------------------------------------------------------------------
+GULLY = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "......RRRR......",
+    "....RRRRRRRR....",
+    "....RRRRRRRR....",
+    "....RwwwwwwR....",
+    "....ww-ww-ww....",
+    "....wwwwwwww....",
+    "....wZZZZZZw....",
+    ".....ZZZZZZ.....",
+    "...bbbZZZZbbb...",
+    "..bbbbbZZbbbbb..",
+    "..bbbjbbbbbbbb..",
+    "..wbbjbbbbbjbw..",
+    "..bbbbbbbbbjbb..",
+    "...bbbbbbbbbb...",
+    "...pppppppppp...",
+    "...pppppppppp...",
+    "...pp......pp...",
+    "...bb......bb...",
+    "..bbb......bbb..",
+    "................",
+]
+
+
+def gully_frames():
+    idle = GULLY
+    breathe = settle(idle, 12)
+    # Awake: eyes open, chin up, one hand raised.
+    talk = paint(idle, [(8, 6, "e"), (8, 9, "e"), (14, 2, "."), (15, 2, "."), (13, 1, "b"), (12, 1, "w"), (11, 1, "w")])
+    return [idle, breathe, talk]
+
+
+def figurehead():
+    """The Lantern Wake's figurehead, 24x40, washed up and planted upright in
+    the sand at a lean: a keeper carved holding her lamp high, eyes shut,
+    her dress the last of its red paint, standing on the curled scroll of
+    the ship's stem. Gully dozes against her."""
+    w, h = 24, 40
+    c = [["."] * w for _ in range(h)]
+
+    def ell(cx, cy, rx, ry, ch):
+        for y in range(h):
+            for x in range(w):
+                dx = (x + 0.5 - cx) / rx
+                dy = (y + 0.5 - cy) / ry
+                if dx * dx + dy * dy <= 1.0:
+                    c[y][x] = ch
+
+    def line(x0, y0, x1, y1, ch, thick=2):
+        steps = max(abs(x1 - x0), abs(y1 - y0)) * 2
+        for i in range(steps + 1):
+            t = i / steps
+            x = round(x0 + (x1 - x0) * t)
+            y = round(y0 + (y1 - y0) * t)
+            for dx in range(thick):
+                if 0 <= x + dx < w and 0 <= y < h:
+                    c[y][x + dx] = ch
+
+    # The curled scroll of the stem she stands on, half sunk in the sand.
+    ell(11.0, 34.0, 6.0, 5.0, "d")
+    ell(11.5, 34.0, 3.0, 2.5, "b")
+    ell(12.5, 34.0, 1.2, 1.2, "d")
+    # Her body, tapering down into the stem, leaning a little.
+    for y in range(14, 31):
+        half = 5.0 - (y - 14) * 0.17
+        cx = 11.5 + (30 - y) * 0.06
+        for x in range(w):
+            d = abs(x + 0.5 - cx)
+            if d <= half:
+                c[y][x] = "d"
+            if d <= half - 1.0 and y >= 17:
+                c[y][x] = "r"
+    for y in range(18, 30):                 # carved folds in her dress
+        for x in (10, 13):
+            if c[y][x] == "r":
+                c[y][x] = "-"
+    # The other arm across her breast.
+    line(8, 16, 13, 19, "d")
+    # Her head: carved hair, her face still painted pale, eyes shut.
+    ell(11.5, 10.0, 4.5, 5.0, "d")
+    ell(11.8, 10.6, 3.0, 3.4, "q")
+    c[10][10] = "-"
+    c[10][13] = "-"
+    c[12][11] = "-"
+    c[12][12] = "-"
+    # The arm raised over her head, and the lamp held high in her hand.
+    line(15, 16, 18, 6, "d")
+    for y in range(1, 6):
+        for x in range(16, 22):
+            c[y][x] = "Q"
+    for y in range(2, 5):
+        c[y][18] = "J"
+        c[y][19] = "J"
+    c[0][18] = "Q"
+    c[0][19] = "Q"
+    return ["".join(r) for r in c]
+
+
+# --------------------------------------------------------------------------
 # Tobin, Dunstan's son, about seventeen: the Choir's newest singer. A grey
 # robe too big for him, hood shoved down, a rope belt, his father's mop of
 # brown hair grown out. Rubs the back of his neck when he talks.
@@ -908,6 +1059,8 @@ SPRITES = {
     "tobin": tobin_frames,
     "ide": ide_frames,
     "liesl": liesl_frames,
+    "wick": wick_frames,
+    "gully": gully_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1122,6 +1275,32 @@ def portrait_liesl():
     return _rows(c)
 
 
+def portrait_wick():
+    c = _canvas()
+    _ellipse(c, 16, 32, 14, 8, "m")                    # moss-green cape
+    _ellipse(c, 16, 15, 13, 13, "m")                   # its hood, up
+    _face(c, "A", eye_row=17, cy=18, rx=7, ry=8)
+    _box(c, 9, 10, 14, 3, "M")                         # brown fringe under the hood
+    _dots(c, [(10, 13), (13, 13), (19, 13), (22, 13)], "M")
+    _box(c, 28, 4, 2, 28, "d")                         # the lighting pole
+    _box(c, 26, 0, 6, 5, "Q")                          # and its little lamp
+    _box(c, 28, 1, 2, 3, "J")
+    return _rows(c)
+
+
+def portrait_gully():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "b")                    # patched leather coat
+    _box(c, 9, 28, 3, 3, "j")                          # a canvas patch
+    _face(c, "w", eye_row=16, cy=17, rx=7, ry=8, mouth=False)
+    _ellipse(c, 16, 23, 8, 5, "Z")                     # grizzled beard
+    _box(c, 14, 21, 4, 1, "-")
+    _ellipse(c, 16, 9, 10, 6, "R")                     # coral knit cap, pulled low
+    _box(c, 6, 11, 20, 3, "R")
+    _dots(c, [(16, 2), (15, 2), (16, 1)], "R")         # its bobble
+    return _rows(c)
+
+
 def portrait_tobin():
     c = _canvas()
     _ellipse(c, 16, 32, 14, 8, "S")                    # grey robe, too big
@@ -1252,6 +1431,8 @@ PORTRAITS = {
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),
     "liesl": portrait_liesl(),
+    "wick": portrait_wick(),
+    "gully": portrait_gully(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

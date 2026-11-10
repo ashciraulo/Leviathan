@@ -178,7 +178,8 @@ func _finish() -> void:
 
 
 func _exit_tree() -> void:
-	if _caught is Crate and is_instance_valid(_caught):
+	# Something hauled in on the chain may be gone before the chain is.
+	if is_instance_valid(_caught) and _caught is Crate:
 		(_caught as Crate).stop_pull()
 	if is_instance_valid(_player):
 		_player.airborne = false
