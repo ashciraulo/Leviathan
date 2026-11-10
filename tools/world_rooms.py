@@ -18,7 +18,8 @@ Item gates (keep in step with the game):
   Tide Hook        zips Wren in a straight line to a hook post (O) up to
                    HOOK_RANGE tiles away, over water, lava, gaps and floor
   Kite Cloak       glides up to GLIDE_TILES straight ahead over holes, lava,
-                   water and low hazards (streams only blow in dungeons)
+                   water and low hazards; launched along a fan's stream
+                   (> <), it rides the stream to its far end
   Stonebreaker     breaks cracked boulders (Y)
   Glowmoth Lantern shows veiled planks (v)
   Frostfang Bow    freezes open water (~) into ice to walk on
@@ -89,6 +90,7 @@ SECRETS = {
     (5, 3): ("glowmoth_lantern", "frostfang_bow", "kite_cloak"),  # Lampless Sink (the braziers need the lantern)
     # Regional caves (2026-11-10).
     (9, 2): ("tide_hook", "frostfang_bow", "kite_cloak"),  # Saltpan Hollow: a bitter-sea islet with a hook post
+    (6, -3): ("kite_cloak",),                 # Sailwind Gallery: ride a fan's stream over the sky gap
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -200,12 +202,50 @@ def hook_hops(rows, x, y, items):
     return out
 
 
+FANS = {">": 1, "<": -1}
+FAN_REACH = 22
+
+
+def in_stream(rows, x, y, dx):
+    """True when (x, y) lies in the stream of a fan in its row blowing dx
+    (WindFan: a stream runs from the fan until a wall or the room's rim)."""
+    if not (0 < x < COLS - 1):
+        return False
+    for step in range(1, FAN_REACH + 1):
+        fx = x - dx * step
+        if not (0 <= fx < COLS):
+            return False
+        t = rows[y][fx]
+        if FANS.get(t) == dx:
+            return True
+        if t == "#":
+            return False
+    return False
+
+
+def stream_hops(rows, x, y, dx, items):
+    """Tiles a glide launched down a fan's stream can come down on: anywhere
+    along it that isn't water, to where the stream ends."""
+    out = []
+    tx = x + dx
+    while 0 < tx < COLS - 1 and rows[y][tx] != "#":
+        if stops_flight(rows[y][tx]):
+            break
+        if rows[y][tx] != "~" and walkable(rows[y][tx], items):
+            out.append((tx, y))
+        tx += dx
+    return out
+
+
 def glide_hops(rows, x, y, items):
     """Tiles the Kite Cloak sets Wren down on from (x, y). Only walls and
     solid scenery stop it; it can come down early anywhere that isn't water."""
     if "kite_cloak" not in items:
         return []
     out = []
+    for dx in (1, -1):
+        if in_stream(rows, x, y, dx):
+            out += stream_hops(rows, x, y, dx, items)
     for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         for step in range(1, GLIDE_WATER_TILES + 1):
             tx, ty = x + dx * step, y + dy * step

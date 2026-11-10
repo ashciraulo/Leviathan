@@ -4252,10 +4252,57 @@ func _test_regional_caves() -> void:
 	await _wait(0.1)
 	_check(hold.get_node_or_null("Tide") != null and hold.chest_item == "glint", "Wreckers' Hold is tidal, with a glint chest")
 	hold.queue_free()
-	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4), Vector2i(2, 4), Vector2i(3, 4), Vector2i(9, 2)]:
+	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4), Vector2i(2, 4), Vector2i(3, 4), Vector2i(9, 2), Vector2i(8, -4)]:
 		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
 		_check(probe.cave, "%s is a cave" % coord)
 		probe.free()
+	await _wait(0.1)
+	# The Clinker Vault: two braziers out on lava islets, hook posts there and back.
+	GameState.reset_new_game()
+	var vault: Room = (load("res://rooms/room_8_-4.tscn") as PackedScene).instantiate()
+	add_child(vault)
+	await _wait(0.2)
+	var fires := _child_of(vault, Brazier)
+	bars = _child_of(vault, Bars)
+	var rows := Room.parse_layout(vault.layout)
+	_check(vault.gate == "braziers" and fires.size() == 2 and bars.size() == 2 and not bars[0].is_open, "the Clinker Vault bars its chest behind two braziers")
+	_check(rows[6].substr(2, 7) == "O.^^^^." and rows[6].substr(16, 6) == ".^^^.O" and rows[7][9] == "O" and rows[7][14] == "O", "each islet has a hook post out and one back")
+	for brazier in fires:
+		brazier.light(true)
+	await _wait(0.3)
+	_check(bars[0].is_open and bars[1].is_open, "both braziers lit open the vault")
+	vault.queue_free()
+	await _wait(0.1)
+	# The Sailwind Gallery: too wide to glide, but a fan's stream carries Wren
+	# over the sky to the chest ledge, and another blows them home.
+	GameState.reset_new_game()
+	GameState.give_item("kite_cloak", 1, false)
+	GameState.set_checkpoint(Vector2i(6, -3), Vector2(4 * Room.TILE + 8, 5 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var gallery: Room = game.current_room
+	var player: Player = game.player
+	var before := GameState.bubbles
+	var ends: Array[Vector2] = []
+	for ride: Array in [[Vector2i(4, 5), Vector2.RIGHT], [Vector2i(20, 9), Vector2.LEFT]]:
+		player.global_position = _tile_pos(gallery, ride[0])
+		player.facing = ride[1]
+		await _wait(0.1)
+		player.use_item("kite_cloak")
+		await _wait(3.0)
+		ends.append(player.global_position - gallery.global_position)
+	_check(gallery.coord == Vector2i(6, -3) and gallery.layout.count("_") > 80, "the Sailwind Gallery opens on a wide drop of sky")
+	_check(ends[0].x > 18 * Room.TILE, "the stream carries Wren over to the chest ledge (at %s)" % ends[0])
+	_check(ends[1].x < 7 * Room.TILE, "and the low stream blows them home (at %s)" % ends[1])
+	_check(GameState.bubbles == before and game.current_room == gallery, "both rides without a fall")
+	player.global_position = _tile_pos(gallery, Vector2i(5, 7))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(2.5)
+	_check(GameState.bubbles == before - 1, "off the stream, the glide falls short into the sky")
+	game.queue_free()
 	await _wait(0.1)
 
 
