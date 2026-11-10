@@ -4641,14 +4641,18 @@ func _test_ottilie() -> void:
 	await _play_scene(game, 10.0)
 	_check(GameState.has_flag("ottilie_paid") and GameState.item_count("glint") == glints + 200, "Ottilie pays in old keepers' coin")
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
-	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_TURNED", "after the turn she remembers training with Hessa and Vael")
 	GameState.set_flag("seen_ending")
-	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_END", "and after the ending the ice hums")
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_TURNED", "after the turn she remembers training with Hessa and Vael, even after the ending")
+	Conversations.talk("ottilie")
+	await _play_scene(game, 10.0)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_END", "and then the ice hums")
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
-	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "met after the turn, Hessa sent Wren")
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_1", "met after the turn but before Hessa's word, she's a stranger")
+	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "once Hessa's sent Wren, she knows")
 
 
 func _enemies_away() -> void:
