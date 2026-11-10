@@ -76,6 +76,7 @@ page.on("console", (msg) => {
   if (/SCRIPT ERROR|Parse Error|Failed to load|failed to fetch/i.test(text) || /^(USER )?ERROR:/.test(text)) failures.push(text);
 });
 page.on("pageerror", (err) => failures.push(`page error: ${err.message}`));
+page.on("crash", () => failures.push("the browser tab crashed"));
 page.on("requestfailed", (req) => failures.push(`request failed: ${req.url()} ${req.failure()?.errorText}`));
 
 await page.goto(`http://127.0.0.1:${port}/`);
