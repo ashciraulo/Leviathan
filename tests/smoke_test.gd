@@ -4307,7 +4307,7 @@ func _test_regional_caves() -> void:
 	await _wait(0.1)
 	_check(hold.get_node_or_null("Tide") != null and hold.chest_item == "glint", "Wreckers' Hold is tidal, with a glint chest")
 	hold.queue_free()
-	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4), Vector2i(2, 4), Vector2i(3, 4), Vector2i(9, 2), Vector2i(8, -4)]:
+	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4), Vector2i(2, 4), Vector2i(3, 4), Vector2i(9, 2), Vector2i(8, -4), Vector2i(2, -1), Vector2i(6, 2)]:
 		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
 		_check(probe.cave, "%s is a cave" % coord)
 		probe.free()
@@ -4361,6 +4361,25 @@ func _test_regional_caves() -> void:
 	await _wait(2.5)
 	_check(GameState.bubbles == before - 1, "off the stream, the glide falls short into the sky")
 	game.queue_free()
+	await _wait(0.1)
+	# Rootbound Hollow: the chest is walled in by cracked boulders.
+	GameState.reset_new_game()
+	var hollow: Room = (load("res://rooms/room_2_-1.tscn") as PackedScene).instantiate()
+	rows = Room.parse_layout(hollow.layout)
+	_check(hollow.cave and rows[2][4] == "C" and rows[2][8] == "Y" and rows[5][4] == "Y" and rows[5][23] == ".", "Rootbound Hollow keeps its chest behind cracked boulders, off Brinewood's west edge")
+	hollow.free()
+	# The Sporecap Warren: shut in with the fen's foes, the chest shows once they're down.
+	var warren: Room = (load("res://rooms/room_6_2.tscn") as PackedScene).instantiate()
+	add_child(warren)
+	await _wait(0.2)
+	var hidden: Chest = _child_of(warren, Chest)[0]
+	_check(warren.gate == "clear" and Room.parse_layout(warren.layout)[1].count("|") == 2 and not hidden.visible and _child_of(warren, Enemy).size() >= 5, "the Sporecap Warren hides its chest behind a fight")
+	for enemy in _child_of(warren, Enemy):
+		enemy.queue_free()
+	warren.get_node("Puzzle").set("_shut_in", true)
+	await _wait(0.3)
+	_check(hidden.visible, "with the warren cleared its chest appears")
+	warren.queue_free()
 	await _wait(0.1)
 
 
