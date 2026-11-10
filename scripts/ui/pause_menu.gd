@@ -110,6 +110,7 @@ func close() -> void:
 
 
 func _quit_to_title() -> void:
+	SaveManager.save_clock()
 	get_tree().paused = false
 	Engine.time_scale = 1.0
 	get_tree().change_scene_to_file(TITLE_SCENE)

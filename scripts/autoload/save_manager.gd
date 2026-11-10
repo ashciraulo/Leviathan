@@ -43,6 +43,28 @@ func save_game(slot: int = -1) -> bool:
 		"state": GameState.to_dict(),
 		"summary": summary(),
 	}
+	if not _write(slot, data):
+		return false
+	Events.game_saved.emit()
+	return true
+
+
+## Leaving a file without saving (to the title, or closing the game): keep
+## the time played and the hidden playtime record, so they still count,
+## but nothing else. Wren still wakes at the last real save.
+func save_clock(slot: int = -1) -> bool:
+	var data := _read_slot(slot)
+	if data.is_empty() or is_newer(data):
+		return false
+	data["state"]["play_time"] = GameState.play_time
+	data["state"]["area_stats"] = GameState.area_stats.duplicate(true)
+	if data.get("summary") is Dictionary:
+		data["summary"]["play_time"] = GameState.play_time
+	return _write(slot, data)
+
+
+## Writes a save safely: a checked .tmp first, the old save kept as .bak.
+func _write(slot: int, data: Dictionary) -> bool:
 	var path := slot_path(slot)
 	var tmp := path + ".tmp"
 	var file := FileAccess.open(tmp, FileAccess.WRITE)
@@ -66,7 +88,6 @@ func save_game(slot: int = -1) -> bool:
 	if DirAccess.rename_absolute(_abs(tmp), _abs(path)) != OK:
 		push_error("Could not move the new save into place: %s" % path)
 		return false
-	Events.game_saved.emit()
 	return true
 
 

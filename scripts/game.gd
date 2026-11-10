@@ -24,6 +24,12 @@ var _game_over := false
 var _hatch_blocked := [Vector2i.ZERO, 0]
 
 
+func _notification(what: int) -> void:
+	# Closing the window mid-play keeps the time played (see save_clock).
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		SaveManager.save_clock()
+
+
 func _ready() -> void:
 	camera = GameCamera.new()
 	add_child(camera)
@@ -34,6 +40,7 @@ func _ready() -> void:
 	add_child(PauseMenu.new())
 	add_child(DialogueBox.new())
 	add_child(StoryDirector.new())
+	add_child(_ReadingClock.new())
 	var fade_layer := CanvasLayer.new()
 	fade_layer.layer = 30
 	add_child(fade_layer)
@@ -99,7 +106,7 @@ func _on_boss_defeated() -> void:
 func _process(delta: float) -> void:
 	# The game scene stops while paused, so menus don't count.
 	if not _game_over:
-		GameState.play_time += delta
+		_count_time(delta)
 	# A boss that falls without sending boss_defeated still hands the room
 	# back its own music.
 	if Audio.music_cue == "boss" and not busy and current_room and not _room_has_boss():
@@ -258,8 +265,35 @@ func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 	busy = false
 
 
+func _count_time(delta: float) -> void:
+	GameState.play_time += delta
+	GameState.count_area_time(_area(), delta)
+
+
+## Conversations and the shop pause the game, but reading them is playing:
+## this counts that time (the pause menu still doesn't count).
+class _ReadingClock extends Node:
+	func _ready() -> void:
+		process_mode = Node.PROCESS_MODE_ALWAYS
+
+	func _process(delta: float) -> void:
+		var game := get_parent()
+		if get_tree().paused and not game._game_over \
+				and (DialogueBox.is_open or get_tree().get_first_node_in_group("shop_menu") != null):
+			game._count_time(delta)
+
+
+## The part of the world Wren is in, for the hidden playtime record:
+## "travel" between rooms (the Wayshell's flight).
+func _area() -> String:
+	if current_room == null:
+		return "travel"
+	return Audio.cue_for_room(current_room.biome, current_room.dungeon)
+
+
 func _on_player_died() -> void:
 	busy = true
+	GameState.count_area_death(_area())
 	Audio.play_jingle("jingle_game_over")
 	# Real-time waits: hitstop may still have the game frozen.
 	await get_tree().create_timer(0.6, false, false, true).timeout
@@ -285,6 +319,8 @@ func _on_player_died() -> void:
 	if wake:
 		respawn()
 	else:
+		# The attempt and the death still count in the time played.
+		SaveManager.save_clock()
 		get_tree().change_scene_to_file(TITLE_SCENE)
 
 
@@ -297,9 +333,11 @@ func respawn() -> void:
 		await tween.finished
 	# Time played keeps counting across deaths.
 	var played := GameState.play_time
+	var stats := GameState.area_stats.duplicate(true)
 	if not SaveManager.load_game():
 		GameState.reset_new_game()
 	GameState.play_time = played
+	GameState.area_stats = stats
 	GameState.refill()
 	world.queue_free()
 	world = null
