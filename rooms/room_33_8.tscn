@@ -7,10 +7,9 @@ script = ExtResource("1_room")
 name_key = "ROOM_GLACIER_SLIDE"
 biome = "glacier"
 dungeon = "glacier"
-chest_item = "big_key"
 gate = "plates"
-layout = "########################
-#...............#.C.#..#
+layout = "##################..####
+#...............#...#..#
 #...............#...#..#
 #...............#|||#..#
 #..IIIIIIIIIIIIIIIIII..#

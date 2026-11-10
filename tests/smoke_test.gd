@@ -1579,7 +1579,63 @@ func _test_glacier_dungeon() -> void:
 	await _wait(1.5)
 	crate_tile = floori(crate.position.x / Room.TILE)
 	_check(crate_tile == 18, "over the frozen pool it slides on to the plate (col %d)" % crate_tile)
-	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "the plate opens the bars to the big key")
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "the plate opens the bars north to the Rime Vault")
+
+	# The Rime Vault: freeze out to the middle of the lake, then a lane
+	# west, east and north for the arrows; all three eyes at once from the
+	# middle open the bars on the big key.
+	room = await _goto(game, Vector2i(33, 7), Vector2i(18, 11))
+	await _calm(room)
+	var vault_eyes := _child_of(room, IceEye)
+	_check(vault_eyes.size() == 3, "three ice eyes look onto the Rime Vault's lake")
+	var vault_bars: Bars = _child_of(room, Bars)[0]
+	for i in 2:
+		await _shoot(room, player, Vector2i(11, 10), Vector2.UP)
+	_check(room.is_frozen(Vector2i(11, 9)) and room.is_frozen(Vector2i(11, 8)), "two arrows freeze a way out to the middle")
+	player.global_position = _tile_pos(room, Vector2i(11, 10))
+	player.velocity = Vector2.ZERO
+	Input.action_press("move_up")
+	await _wait(0.8)
+	Input.action_release("move_up")
+	await _wait(0.4)
+	local = player.global_position - room.global_position
+	_check(local.y < 8 * Room.TILE and local.y > 6 * Room.TILE, "Wren crosses the ice to the middle (at %s)" % local)
+	for lane: Array in [[Vector2i(11, 6), Vector2.LEFT, Vector2i(7, 6)], [Vector2i(12, 6), Vector2.RIGHT, Vector2i(16, 6)], [Vector2i(11, 6), Vector2.UP, Vector2i(11, 3)]]:
+		for i in 4:
+			await _shoot(room, player, lane[0], lane[1])
+		_check(room.is_frozen(lane[2]), "arrow by arrow, a lane freezes out to an eye (%s)" % lane[2])
+	_check(not vault_bars.is_open, "frozen lanes alone don't open the bars")
+	await _wait(IceEye.OPEN_TIME + 0.2)
+	# From the top edge of the middle (where walking up the ice stops Wren),
+	# the arrows still fly down the lanes' middles to the eyes.
+	for lane: Array in [[Vector2(11, 6), Vector2.LEFT], [Vector2(12.4, 6), Vector2.RIGHT], [Vector2(11.4, 6), Vector2.UP]]:
+		player.global_position = room.global_position + Vector2(lane[0].x * Room.TILE + 8, lane[0].y * Room.TILE + 6.5)
+		player.velocity = Vector2.ZERO
+		player.facing = lane[1]
+		await _wait(0.1)
+		player.global_position = room.global_position + Vector2(lane[0].x * Room.TILE + 8, lane[0].y * Room.TILE + 6.5)
+		player.use_item("frostfang_bow")
+		await _wait(0.5)
+	await _wait(0.5)
+	_check(vault_eyes.all(func(e: IceEye) -> bool: return e.lit) and vault_bars.is_open, "three arrows from the middle wake every eye, and the bars open")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Rime Vault's chest holds the big key")
+
+	# The Frost Ford: each pond is small enough to freeze whole.
+	room = await _goto(game, Vector2i(33, 10), Vector2i(1, 6))
+	await _calm(room)
+	await _shoot(room, player, Vector2i(3, 5), Vector2.RIGHT)
+	_check(room.is_frozen(Vector2i(4, 5)) and room.is_frozen(Vector2i(5, 6)) and not room.is_frozen(Vector2i(7, 5)), "one arrow freezes the first pond whole, and only it")
+	for x in [6, 9, 12, 15]:
+		await _shoot(room, player, Vector2i(x, 5), Vector2.RIGHT)
+	_check(room.is_frozen(Vector2i(17, 6)), "pond by pond, the ford freezes over")
+	player.global_position = _tile_pos(room, Vector2i(3, 6))
+	player.velocity = Vector2.ZERO
+	Input.action_press("move_right")
+	await _wait(4.0)
+	Input.action_release("move_right")
+	local = player.global_position - room.global_position
+	_check(local.x > 18 * Room.TILE, "Wren crosses the frozen ford (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "glint"), "glints wait across the ford")
 
 	# Rimeback.
 	GameState.refill()
@@ -2405,6 +2461,16 @@ func _test_foes_dungeon() -> void:
 	game.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)
+
+
+## Wren looses a frost arrow from a tile, facing a way, and waits for it.
+func _shoot(room: Room, player: Player, tile: Vector2i, facing: Vector2) -> void:
+	player.global_position = _tile_pos(room, tile)
+	player.velocity = Vector2.ZERO
+	player.facing = facing
+	await _wait(0.1)
+	player.use_item("frostfang_bow")
+	await _wait(0.5)
 
 
 func _tile_pos(room: Room, tile: Vector2i) -> Vector2:

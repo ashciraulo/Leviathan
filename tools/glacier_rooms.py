@@ -15,9 +15,13 @@ The way through:
   Pool (freeze a way out to the island; small key) -> unlock the Hall's
   hatch north into the Eye Gallery (open all three ice eyes at once; small
   key) -> unlock its east hatch into the Slide Hall (freeze the pool in the
-  crate's way and slide it onto the plate; big key) -> the Gallery's great
-  door -> Rimeback.
-  Off the main path: the Frozen Pond west of the Entry (compass).
+  crate's way and slide it onto the plate; the bars open north) -> the
+  Rime Vault (freeze a way out to the middle of the lake, then freeze a
+  lane west, east and north for the arrows and wake all three eyes at once
+  from there; big key) -> the Gallery's great door -> Rimeback.
+  Off the main path: the Frozen Pond west of the Entry (compass); the Frost
+  Ford east of the Entry (ponds small enough to freeze whole, one per
+  arrow; glints).
 """
 
 import os
@@ -45,9 +49,9 @@ ROOMS = {
 #..I.III......III.II...#
 #.IIIIII......IIIIII...#
 #..IIII........IIII....#
-...........T...........#
-.......................#
-.......................#
+...........T............
+........................
+........................
 #.....~~.......~~......#
 #.....~~...a...~~......#
 #......................#
@@ -123,9 +127,9 @@ ROOMS = {
 #..........C...........#
 #E.....................#
 ###########..###########"""),
-    (33, 8): ("ROOM_GLACIER_SLIDE", {"chest_item": '"big_key"', "gate": '"plates"'}, """
-########################
-#...............#.C.#..#
+    (33, 8): ("ROOM_GLACIER_SLIDE", {"gate": '"plates"'}, """
+##################..####
+#...............#...#..#
 #...............#...#..#
 #...............#|||#..#
 #..IIIIIIIIIIIIIIIIII..#
@@ -136,6 +140,34 @@ ROOMS = {
 #..........a...........#
 #......................#
 #......................#
+########################"""),
+    (33, 7): ("ROOM_GLACIER_RIME_VAULT", {"chest_item": '"big_key"', "gate": '"eyes"'}, """
+########################
+############C###########
+###########E|###########
+#######~~~~~~~~~~#######
+#######~~~~~~~~~~#######
+#######~~~~~~~~~~#######
+######E~~~~..~~~~E######
+#######~~~~..~~~~#######
+#######~~~~~~~~~~#######
+#######~~~~~~~~~~#######
+#...a..................#
+#......................#
+##################..####"""),
+    (33, 10): ("ROOM_GLACIER_FROST_FORD", {"chest_item": '"glint"', "chest_count": "100"}, """
+########################
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~....#
+#...###############....#
+....~~.~~.~~.~~.~~.....#
+....~~.~~.~~.~~.~~...C.#
+....###############....#
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~..a.#
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~....#
 ########################"""),
     (32, 7): ("ROOM_GLACIER_BOSS", OUTSIDE, """
 ########################

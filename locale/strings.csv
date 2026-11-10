@@ -485,6 +485,8 @@ CAPTION_STORM,Storm gathering
 CAPTION_HERON,Heron screeches
 ROOM_GLACIER_ENTRY,Hollow Glacier
 ROOM_GLACIER_POND,Hollow Glacier: Frozen Pond
+ROOM_GLACIER_RIME_VAULT,Hollow Glacier: Rime Vault
+ROOM_GLACIER_FROST_FORD,Hollow Glacier: Frost Ford
 ROOM_GLACIER_HALL,Hollow Glacier: Crevasse Hall
 ROOM_GLACIER_BOWYER,Hollow Glacier: Bowyer's Cave
 ROOM_GLACIER_POOL,Hollow Glacier: Black Pool

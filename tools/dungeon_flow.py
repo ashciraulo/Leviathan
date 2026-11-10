@@ -18,9 +18,10 @@ Checks, per dungeon:
 
 Tools (hook, mallet, lantern, horn, helm...) are assumed in hand once the
 dungeon gives them: this is about keys, doors and dead ends, not item order.
-Rooms are whole: hatches and bars inside a room aren't modelled (all of them
-stand in border gaps today), keys count once their room is reached, and a
-dungeon room is read by its starting layout.
+Rooms are whole: hatches and bars inside a room aren't modelled (hatches all
+stand in border gaps; bars that guard a way on, like the Glacier Slide Hall's
+cage, are checked by the smoke test instead), keys count once their room is
+reached, and a dungeon room is read by its starting layout.
 """
 
 import glob
