@@ -244,12 +244,14 @@ func _move_state() -> void:
 		velocity = Vector2.ZERO
 	elif Input.is_action_just_pressed("item_2") and use_item(GameState.item_slots[1]):
 		velocity = Vector2.ZERO
-	elif _hum_requested() and not GameState.can_hum():
-		# Don't leave Hum toggled on; it would start by itself later.
-		_hum_latched = false
-	elif _hum_requested() and GameState.can_hum():
-		_enter(State.HUM)
-		velocity = Vector2.ZERO
+	# Asked once a frame: with Hum on toggle, each ask on a press flips it.
+	elif _hum_requested():
+		if GameState.can_hum():
+			_enter(State.HUM)
+			velocity = Vector2.ZERO
+		else:
+			# Don't leave Hum toggled on; it would start by itself later.
+			_hum_latched = false
 
 
 ## The point just in front of Wren that Interact reaches.
