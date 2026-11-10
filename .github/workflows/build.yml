@@ -9,10 +9,16 @@ name: Build PC
 # downloads attached; the newest is always at
 #   https://github.com/ashciraulo/Leviathan/releases/latest
 # Run it from the Actions tab (Build PC > Run workflow) for builds on demand:
-# they're attached to the run as downloadable artifacts.
+# they're attached to the run as downloadable artifacts. Fill in "release"
+# (say v0.2.0) there to publish them as that release, tag and all.
 
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish as this release (a tag like v0.2.0); leave empty for builds only"
+        required: false
+        default: ""
   pull_request:
   push:
     branches: [main]
@@ -191,7 +197,7 @@ jobs:
 
   release:
     name: Publish the release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || startsWith(inputs.release, 'v')
     needs: boot
     runs-on: ubuntu-latest
     permissions:
@@ -217,7 +223,9 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          name: Leviathan ${{ github.ref_name }}
+          name: Leviathan ${{ inputs.release || github.ref_name }}
+          tag_name: ${{ inputs.release || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           body_path: notes.md
           files: |
             dist/Leviathan-windows.zip
