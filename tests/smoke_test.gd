@@ -4897,6 +4897,16 @@ func _test_murmur_and_dace() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
+	for flag in [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT + Vector2(0, 20))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "dace") == null, "before the ending, Dace isn't back at the mural")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
 	for flag in [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG]:
 		GameState.set_flag(flag)
 	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT + Vector2(0, 20))
@@ -4914,8 +4924,8 @@ func _test_murmur_and_dace() -> void:
 	GameState.reset_new_game()
 
 
-## No talk branch is hidden for good behind an earlier one: a branch that
-## matches whenever a later one does would make the later one unreachable.
+## No talk branch is hidden for good behind a single earlier one: a branch
+## that matches whenever a later one does makes the later one unreachable.
 func _test_talk_order() -> void:
 	var hidden := 0
 	for who: String in Conversations.TALKS:

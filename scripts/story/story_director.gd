@@ -147,7 +147,7 @@ const LOWE_AT := Vector2(16 * 16 + 8, 8 * 16 + 10)
 const BAY_ANSWER := Vector2(12 * 16, 12 * 16 + 10)
 ## Murmur, out of the Choir after the calf, helps Wick tend Fenmouth's
 ## lanterns.
-const MURMUR_FEN_AT := Vector2(8 * 16 + 8, 3 * 16 + 10)
+const MURMUR_FEN_AT := Vector2(14 * 16 + 8, 4 * 16 + 10)
 ## After the ending, Mother Dace sits with the bones by the last mural.
 const DACE_AFTER_AT := Vector2(12 * 16 + 8, 2 * 16 + 10)
 ## How near the post counts as there.
