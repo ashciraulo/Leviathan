@@ -350,8 +350,8 @@ def main():
     for coord in sorted(rooms):
         rows = rows_for(rooms[coord], final_items)
         for y in range(2):
-            # The bubble plate grows with Wren's breath: ten bubbles reach x 127.
-            for x in list(range(0, 8)) + list(range(20, COLS)):
+            # The bubble plate grows with Wren's breath: thirteen bubbles reach x 161.
+            for x in list(range(0, 11)) + list(range(20, COLS)):
                 if rows[y][x] in "C*Tn":
                     problems.append("screen %s: '%s' at (%d,%d) sits under the HUD" % (coord, rows[y][x], x, y))
     # Every signpost in a room reads the room's one sign_key: one per room.
