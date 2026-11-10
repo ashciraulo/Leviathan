@@ -1,0 +1,12 @@
+<style>
+/* The loading bar under the splash, in the game's colours. When the size of
+   the download isn't known the bar has no value, so a glint slides along it. */
+#status-progress{appearance:none;-webkit-appearance:none;height:6px;max-width:320px;border:0;border-radius:3px;background:rgba(232,224,208,.15);overflow:hidden}
+#status-progress::-webkit-progress-bar{background:rgba(232,224,208,.15);border-radius:3px}
+#status-progress::-webkit-progress-value{background:#7fd3e8;border-radius:3px}
+#status-progress::-moz-progress-bar{background:#7fd3e8;border-radius:3px}
+#status-progress:indeterminate{background:linear-gradient(90deg,rgba(232,224,208,.15) 0%,rgba(232,224,208,.15) 35%,#7fd3e8 50%,rgba(232,224,208,.15) 65%,rgba(232,224,208,.15) 100%);background-size:300% 100%;animation:lv-load 1.6s linear infinite}
+#status-progress:indeterminate::-webkit-progress-bar{background:transparent}
+#status-progress:indeterminate::-moz-progress-bar{background:transparent}
+@keyframes lv-load{from{background-position:100% 0}to{background-position:0 0}}
+</style>
