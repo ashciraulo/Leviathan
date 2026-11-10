@@ -72,7 +72,7 @@ const SFX := {
 	"brazier_catch": {"wave": "noise", "f0": 900.0, "f1": 2400.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_FLAME"},
 	"wisp_chime": {"wave": "triangle", "f0": 1568.0, "f1": 1568.0, "dur": 0.25, "vol": 0.2, "steps": 2, "caption": "CAPTION_WISP"},
 	"heart_beat": {"wave": "triangle", "f0": 110.0, "f1": 70.0, "dur": 0.22, "vol": 0.5, "caption": "CAPTION_HEARTBEAT"},
-	"cloak_open": {"wave": "noise", "f0": 1400.0, "f1": 500.0, "dur": 0.2, "vol": 0.3},
+	"cloak_open": {"wave": "noise", "f0": 1400.0, "f1": 500.0, "dur": 0.2, "vol": 0.3, "caption": "CAPTION_CLOAK"},
 	"thunder": {"wave": "noise", "f0": 300.0, "f1": 40.0, "dur": 0.9, "vol": 0.7, "caption": "CAPTION_THUNDER"},
 	"storm_gather": {"wave": "noise", "f0": 2000.0, "f1": 4000.0, "dur": 1.2, "vol": 0.25, "caption": "CAPTION_STORM"},
 	"heron_cry": {"wave": "square", "f0": 900.0, "f1": 500.0, "dur": 0.35, "vol": 0.35, "caption": "CAPTION_HERON"},
@@ -134,7 +134,7 @@ const SFX := {
 	"boss_fall": {"wave": "noise", "f0": 800.0, "f1": 60.0, "dur": 1.6, "vol": 0.6, "caption": "CAPTION_BOSS_FALL"},
 	# Combat
 	"hit_flesh": {"wave": "noise", "f0": 900.0, "f1": 300.0, "dur": 0.08, "vol": 0.5},
-	"hit_shell": {"wave": "square", "f0": 1600.0, "f1": 1100.0, "dur": 0.07, "vol": 0.4},
+	"hit_shell": {"wave": "square", "f0": 1600.0, "f1": 1100.0, "dur": 0.07, "vol": 0.4, "caption": "CAPTION_CLANG"},
 	"block": {"wave": "square", "f0": 2200.0, "f1": 1800.0, "dur": 0.05, "vol": 0.35, "caption": "CAPTION_BLOCK"},
 	"enemy_die": {"wave": "noise", "f0": 1200.0, "f1": 120.0, "dur": 0.25, "vol": 0.45, "caption": "CAPTION_ENEMY_DIE"},
 	"enemy_tell": {"wave": "square", "f0": 300.0, "f1": 600.0, "dur": 0.2, "vol": 0.3, "caption": "CAPTION_TELL"},
