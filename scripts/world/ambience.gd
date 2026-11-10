@@ -15,17 +15,19 @@ const CRAB := preload("res://assets/ambient/crab.png")
 const BUTTERFLY := preload("res://assets/ambient/butterfly.png")
 const FISH := preload("res://assets/ambient/fish.png")
 const SPLASH := preload("res://assets/ambient/splash.png")
+const HARE := preload("res://assets/ambient/hare.png")
+const LIZARD := preload("res://assets/ambient/lizard.png")
 
 ## How much of each kind of life a biome has.
 const LIFE := {
 	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2},
-	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3},
-	"cinderreach": {"embers": 14, "ash": 40},
-	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4},
-	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5},
-	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60},
+	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3, "reeds": 10},
+	"cinderreach": {"embers": 14, "ash": 40, "lizards": 2},
+	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4, "reeds": 12},
+	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5, "hares": 2, "reeds": 14},
+	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60, "hares": 2},
 	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2},
-	"ossuary": {"buzzards": 2, "gusts": 4},
+	"ossuary": {"buzzards": 2, "gusts": 4, "lizards": 3},
 }
 ## Wind streak colours: sea air is white, the dunes blow sand.
 const GUST_COLOUR := {"ossuary": Color(0.7, 0.55, 0.36), "cinderreach": Color(0.75, 0.7, 0.68)}
@@ -36,6 +38,17 @@ const CRAB_SHY := 40.0
 const CRAB_CALM := 72.0
 const CRAB_SPEED := 70.0
 const FISH_SPEED := 14.0
+## Hares and lizards bolt when Wren comes this close, and settle again
+## once Wren is this far off.
+const RUNNER_SHY := {"hare": 52.0, "lizard": 36.0}
+const RUNNER_CALM := {"hare": 110.0, "lizard": 70.0}
+const RUNNER_SPEED := {"hare": 105.0, "lizard": 120.0}
+## Reed and grass colours per region: blade, and the seed head (alpha 0 for none).
+const REED_COLOURS := {
+	"brinewood": [Color(0.24, 0.42, 0.22), Color(0, 0, 0, 0)],
+	"gloamfen": [Color(0.36, 0.42, 0.2), Color(0.42, 0.26, 0.14)],
+	"windmere": [Color(0.78, 0.72, 0.46), Color(0.9, 0.84, 0.6)],
+}
 
 var _room: Room
 var _rnd := RandomNumberGenerator.new()
@@ -52,6 +65,11 @@ var fireflies: Array[Dictionary] = []
 var embers: Array[Dictionary] = []
 var buzzards: Array[Dictionary] = []
 var splashes: Array[Dictionary] = []
+## Hares (Frostspine, Windmere) and lizards (the Ossuary, Cinderreach):
+## they sit, potter, and bolt from Wren.
+var runners: Array[Dictionary] = []
+## Reeds by the water and long grass on the heights, swaying in the wind.
+var reeds: Array[Dictionary] = []
 ## Weather: low mist drifting through the woods and fens, and wind streaks
 ## racing over the heights.
 var mist: Array[Dictionary] = []
@@ -96,6 +114,16 @@ func _ready() -> void:
 	if not _water.is_empty():
 		for i in int(life.get("embers", 0)):
 			embers.append(_new_ember(true))
+	if not _floor.is_empty():
+		for kind in ["hare", "lizard"]:
+			for i in int(life.get(kind + "s", 0)):
+				runners.append(_new_runner(kind))
+	# Reeds stand at the water's edge; on the heights, long grass anywhere.
+	var stems := _floor if _room and _room.biome == "windmere" else _sand
+	if not stems.is_empty():
+		for i in int(life.get("reeds", 0)):
+			reeds.append({"pos": _pick(stems) + Vector2(_rnd.randf_range(-5.0, 5.0), _rnd.randf_range(2.0, 6.0)),
+				"height": _rnd.randf_range(7.0, 12.0), "phase": _rnd.randf() * TAU, "blades": _rnd.randi_range(3, 4)})
 	for i in int(life.get("mist", 0)):
 		mist.append(_new_mist(true))
 	for i in int(life.get("gusts", 0)):
@@ -211,6 +239,11 @@ func _new_crab() -> Dictionary:
 
 
 ## A butterfly (kind 0) or a firefly (kind 1): wanders near a spot of floor.
+func _new_runner(kind: String) -> Dictionary:
+	var at := _pick(_floor)
+	return {"kind": kind, "pos": at, "clock": _rnd.randf() * 4.0, "fleeing": false, "dir": Vector2.RIGHT if _rnd.randf() < 0.5 else Vector2.LEFT, "moving": false}
+
+
 func _new_flutter(kind: int) -> Dictionary:
 	var at := _pick(_floor)
 	return {"pos": at, "home": at, "clock": _rnd.randf() * 10.0, "colour": _rnd.randi_range(0, 2), "kind": kind}
@@ -238,6 +271,8 @@ func _process(delta: float) -> void:
 		_move_crab(c, delta, wren)
 	for b in butterflies + fireflies:
 		_move_flutter(b, delta)
+	for r in runners:
+		_move_runner(r, delta, wren)
 	for i in embers.size():
 		var e := embers[i]
 		e["age"] = float(e["age"]) + delta
@@ -343,6 +378,47 @@ func _move_crab(c: Dictionary, delta: float, wren: Vector2) -> void:
 			c["pos"] = pos + side * CRAB_SPEED * delta
 
 
+func _move_runner(r: Dictionary, delta: float, wren: Vector2) -> void:
+	r["clock"] = float(r["clock"]) + delta
+	var kind: String = r["kind"]
+	var pos: Vector2 = r["pos"]
+	var away := wren.distance_to(pos) if wren != Vector2.INF else INF
+	if away < float(RUNNER_SHY[kind]):
+		r["fleeing"] = true
+		r["dir"] = (pos - wren).normalized()
+	elif away > float(RUNNER_CALM[kind]):
+		r["fleeing"] = false
+	var clock := float(r["clock"])
+	var speed := 0.0
+	if bool(r["fleeing"]):
+		# Hares go in bounds; lizards in a flat-out dash.
+		speed = float(RUNNER_SPEED[kind]) * (1.0 if kind == "lizard" or fmod(clock * 3.0, 1.0) < 0.65 else 0.3)
+	else:
+		# Pottering: a hop or a dart now and then, a new way each time.
+		var cycle := 3.5 if kind == "hare" else 2.2
+		var phase := fmod(clock, cycle)
+		if phase < 0.3:
+			speed = 30.0 if kind == "hare" else 55.0
+		elif phase < 0.3 + delta:
+			r["dir"] = Vector2.from_angle(_rnd.randf() * TAU)
+	r["moving"] = speed > 0.0
+	if speed <= 0.0:
+		return
+	var dir: Vector2 = r["dir"]
+	var next := pos + dir * speed * delta
+	if _crab_can_stand(next):
+		r["pos"] = next
+	else:
+		# Up against water or a wall: run along it, else turn about.
+		var side := Vector2(-dir.y, dir.x)
+		if _crab_can_stand(pos + side * speed * delta):
+			r["pos"] = pos + side * speed * delta
+		elif _crab_can_stand(pos - side * speed * delta):
+			r["pos"] = pos - side * speed * delta
+		elif not bool(r["fleeing"]):
+			r["dir"] = -dir
+
+
 func _crab_can_stand(at: Vector2) -> bool:
 	if _room == null:
 		return false
@@ -389,6 +465,46 @@ func _draw_low() -> void:
 		_blit(_low, CRAB, Vector2i(10, 7), Vector2i(frame, 0), c["pos"], false, Color.WHITE)
 	for b in butterflies:
 		_shadow(_low, (b["pos"] as Vector2) + Vector2(0, 12), Vector2(2, 1), 0.18)
+	for r in runners:
+		var hare: bool = r["kind"] == "hare"
+		var row := 0 if (_room and _room.biome in ["frostspine", "ossuary"]) else 1
+		var frame := 0
+		if bool(r["moving"]):
+			frame = 1 if hare else int(float(r["clock"]) * 16.0) % 2
+		var flip := (r["dir"] as Vector2).x < 0.0
+		_shadow(_low, (r["pos"] as Vector2) + Vector2(0, 4 if hare else 2), Vector2(5 if hare else 4, 1.5), 0.22)
+		if hare:
+			_blit(_low, HARE, Vector2i(12, 10), Vector2i(frame, row), (r["pos"] as Vector2) - Vector2(0, 3.0 if frame == 1 else 0.0), flip, Color.WHITE)
+		else:
+			_blit(_low, LIZARD, Vector2i(12, 6), Vector2i(frame, row), r["pos"], flip, Color.WHITE)
+	_draw_reeds()
+
+
+## Each tuft is a few blades bending with the wind, the tips swinging most;
+## a gust through the room bends them all one way for a moment.
+func _draw_reeds() -> void:
+	if reeds.is_empty():
+		return
+	var colours: Array = REED_COLOURS.get(_room.biome if _room else "", [Color(0.3, 0.45, 0.25), Color(0, 0, 0, 0)])
+	var blade: Color = colours[0]
+	var head: Color = colours[1]
+	var push := 0.0
+	for g in gusts:
+		if float(g["wait"]) <= 0.0:
+			push += sin(clampf(float(g["age"]) / float(g["life"]), 0.0, 1.0) * PI) * 0.8
+	for r in reeds:
+		var base: Vector2 = (r["pos"] as Vector2).floor()
+		var height := float(r["height"])
+		for k in int(r["blades"]):
+			var lean := (k - 1.5) * 1.2
+			var sway := sin(_time * 1.7 + float(r["phase"]) + k * 0.8) * 1.4 + minf(push, 2.0) * 2.0
+			var tip := base + Vector2(lean * 1.5 + sway, -height + absf(k - 1.5) * 1.5)
+			var mid := base + Vector2(lean * 0.6 + sway * 0.35, -height * 0.5)
+			var shade := blade.darkened(0.25 if k % 2 == 0 else 0.0)
+			_low.draw_line(base, mid, shade, 1.0)
+			_low.draw_line(mid, tip, shade.lightened(0.12), 1.0)
+			if head.a > 0.0 and k == 1:
+				_low.draw_rect(Rect2(tip.floor() + Vector2(-1, 0), Vector2(2, 3)), head)
 
 
 ## Over everything: gulls, butterflies, fireflies and embers.

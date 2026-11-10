@@ -12,6 +12,7 @@ extends Node2D
 ##          e  Slagbeetle (charger; flip it against a wall)   y  geyser
 ##          q  Sporecap (bursts spores when Wren is close)
 ##          t  Tumbleburr (rolls with the wind)   J  windmill
+##          0  Galehawk (circles high, stoops on Wren)
 ##          x  slick ice (Wren slides; regions with "ice" tiles)
 ##          g  Sledgeseal (rears, then slides at Wren)
 ##          r  tide flat (sand at low tide, water at high; see Tide)
@@ -588,6 +589,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Sporecap.new()
 		"t":
 			node = Tumbleburr.new()
+		"0":
+			node = Galehawk.new()
 		"g":
 			node = Sledgeseal.new()
 		"d":

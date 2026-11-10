@@ -73,6 +73,23 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=life: overworld critters, reeds, and the newer foes per region.
+	if OS.get_environment("SHOTS_ONLY") == "life":
+		await _room_shots(game, {
+			Vector2i(4, -3): ["life_windmere_galehawk", Vector2i(13, 4)],
+			Vector2i(5, -3): ["life_windmere_grass", Vector2i(6, 8)],
+			Vector2i(1, -2): ["life_frostspine_hares", Vector2i(12, 8)],
+			Vector2i(8, 1): ["life_ossuary_lizards", Vector2i(11, 10)],
+			Vector2i(8, -2): ["life_cinder_lizards", Vector2i(11, 11)],
+			Vector2i(3, 0): ["life_brinewood_reeds", Vector2i(7, 6)],
+			Vector2i(4, 1): ["life_gloamfen_reeds", Vector2i(11, 1)],
+			Vector2i(2, 2): ["life_verge_shellback", Vector2i(6, 6)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=challenges: the optional challenges, each with a Breath Pearl.
 	if OS.get_environment("SHOTS_ONLY") == "challenges":
 		for item in ["kite_cloak", "glowmoth_lantern", "frostfang_bow", "tide_hook"]:

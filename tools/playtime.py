@@ -44,7 +44,7 @@ RATES = {
     "words_per_second": 3.0,  # reading dialogue
 }
 
-OVERWORLD_ENEMIES = set("csbmweqtgdA")
+OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
 DUNGEON_ENEMIES = set("csbmwekqxaMU@&+")
 DUNGEON_PUZZLE = set("=KOYizjvE<>RL|G%$Z")
 # Text that isn't dialogue (menus, names, captions, hints).
