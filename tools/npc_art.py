@@ -356,6 +356,48 @@ def lowe_frames():
 
 
 # --------------------------------------------------------------------------
+# Ide the ferrywoman, at Causeway End: a red headscarf, a long grey braid
+# over one shoulder, a sea-green coat and her oar stood upright beside her.
+# Beckons Wren aboard with her free hand when she talks.
+# --------------------------------------------------------------------------
+IDE = [
+    "................",
+    ".d..............",
+    ".d....rrrr......",
+    ".d...rrrrrr.....",
+    ".d..rrrrrrrr....",
+    ".d..rVVVVVVr....",
+    ".d..VVeVVeVV....",
+    ".d..VVeVVeVV....",
+    ".d..VVVVVVVV....",
+    ".d...VVVVVVZ....",
+    ".d....VVVVZZ....",
+    ".d.tttttttttZ...",
+    ".VttttttttttZt..",
+    ".dtttttttttttZ..",
+    ".dtttttttttttV..",
+    ".dttttjjjttttt..",
+    ".dtttttttttttt..",
+    ".dtttttttttttt..",
+    ".d.tttttttttt...",
+    ".d.tttttttttt...",
+    ".d..pppppppp....",
+    ".d..ppp..ppp....",
+    "....bbb..bbb....",
+    "................",
+]
+
+
+def ide_frames():
+    # The oar's blade, broad at the foot.
+    idle = paint(IDE, [(17, 0, "dd"), (18, 0, "ddd"), (19, 0, "ddd"), (20, 0, "ddd"), (21, 0, "dd"), (22, 1, "d")])
+    breathe = settle(idle, 11)
+    # Talking: her free hand comes up, beckoning.
+    talk = paint(idle, [(14, 13, "t"), (13, 14, "V"), (12, 14, "V"), (11, 14, "V")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
 # Tobin, Dunstan's son, about seventeen: the Choir's newest singer. A grey
 # robe too big for him, hood shoved down, a rope belt, his father's mop of
 # brown hair grown out. Rubs the back of his neck when he talks.
@@ -821,6 +863,7 @@ SPRITES = {
     "murmur": murmur_frames,
     "lowe": lowe_frames,
     "tobin": tobin_frames,
+    "ide": ide_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1002,6 +1045,23 @@ def portrait_lowe():
     return _rows(c)
 
 
+def portrait_ide():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "t")                    # sea-green coat
+    _box(c, 13, 25, 6, 1, "j")                         # coat ties
+    _face(c, "V", eye_row=16, cy=17, rx=7, ry=8)
+    _ellipse(c, 16, 9, 10, 5, "r")                     # headscarf
+    _box(c, 6, 11, 20, 2, "r")
+    _dots(c, [(25, 15), (26, 16)], "r")                # its knot
+    for y in range(18, 30):
+        _box(c, 21 + (y % 2), y, 3, 1, "Z")            # the braid, over her shoulder
+        if y % 3 == 0:
+            _box(c, 21 + (y % 2), y, 3, 1, "H")
+    _box(c, 3, 0, 2, 22, "d")                          # the oar's loom
+    _box(c, 2, 22, 4, 10, "d")                         # and its blade
+    return _rows(c)
+
+
 def portrait_tobin():
     c = _canvas()
     _ellipse(c, 16, 32, 14, 8, "S")                    # grey robe, too big
@@ -1130,6 +1190,7 @@ PORTRAITS = {
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),
     "tobin": portrait_tobin(),
+    "ide": portrait_ide(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

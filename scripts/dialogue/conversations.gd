@@ -34,6 +34,7 @@ const SPEAKERS := {
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 	"marlo": ["NAME_MARLO", Art.PORTRAIT_MARLO],
 	"tobin": ["NAME_TOBIN", Art.PORTRAIT_TOBIN],
+	"ide": ["NAME_IDE", Art.PORTRAIT_IDE],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -99,6 +100,15 @@ const TALKS := {
 	"tobin": [
 		{"if": ["seen_ending"], "lines": ["TOBIN_END"]},
 		{"lines": ["TOBIN_AFTER"]},
+	],
+	# Ide, the Causeway End ferrywoman: her boat stays tied up while the
+	# Belfry's bell rings wrong under the channel. Asking sets ide_ferry,
+	# and StoryDirector rows Wren over.
+	"ide": [
+		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
+		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		{"if": ["seen_ending"], "set": ["ide_ferry"], "lines": ["IDE_END"]},
+		{"set": ["ide_ferry"], "lines": ["IDE_FERRY_AGAIN"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},

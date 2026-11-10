@@ -88,6 +88,17 @@ const ROWED_FLAG := "hessa_rowed"
 const BOAT_AT := Vector2(6 * 16 + 8, 6 * 16 + 4)
 const WREN_AT_BOAT := Vector2(6 * 16 + 8, 8 * 16 + 12)
 const BOAT_LEAVES := Vector2(-40, 6 * 16 + 8)
+## Ide's ferry over the Causeway End channel, once the Verge has risen.
+## Talking to her, or ringing the bell on the far landing, sets FERRY_FLAG.
+const CAUSEWAY_END := Vector2i(1, 2)
+const FERRY_FLAG := "ide_ferry"
+const IDE_AT := Vector2(19 * 16 + 8, 2 * 16 + 10)
+const FERRY_NORTH := Vector2(19 * 16 + 8, 3 * 16 + 12)
+const FERRY_SOUTH := Vector2(19 * 16 + 8, 8 * 16 + 4)
+const WREN_NORTH := Vector2(17 * 16 + 8, 2 * 16 + 10)
+const WREN_SOUTH := Vector2(21 * 16 + 8, 9 * 16 + 12)
+const FERRY_BELL_AT := Vector2(17 * 16 + 4, 9 * 16 + 14)
+const FERRY_ROW_TIME := 3.0
 ## Cutscene 18, Vael's choir: the first time Wren walks into Vael's hall,
 ## the whole Choir is singing the Waking Song. More singers than fight him
 ## stand along the hall (tiles), and slip away once his song is broken.
@@ -163,6 +174,11 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_up_journal(coord)
 	if coord == SALTMARROW and GameState.has_flag(TOBIN_HOME_FLAG):
 		_put_tobin_home()
+	if coord == CAUSEWAY_END and GameState.has_flag(TURNED_FLAG):
+		# A ride the game closed partway through: she's home again.
+		if GameState.has_flag(FERRY_FLAG):
+			GameState.clear_flag(FERRY_FLAG)
+		_put_ide()
 	# The game closed partway through the ending: the Heart sleeps, so pick
 	# the ending up again.
 	if GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and not GameState.has_flag(ENDING_FLAG) and _heart_here():
@@ -203,6 +219,14 @@ func _on_room_entered(coord: Vector2i) -> void:
 
 
 func _on_flag_changed(flag: String, _value: Variant) -> void:
+	if flag == FERRY_FLAG:
+		if not GameState.has_flag(FERRY_FLAG):
+			return
+		if Cutscene.active or GameState.room_coord != CAUSEWAY_END:
+			GameState.clear_flag.call_deferred(FERRY_FLAG)
+		else:
+			ide_ferries()
+		return
 	if Cutscene.active:
 		return
 	if flag == PaleCongregation.DEFEATED_FLAG and GameState.room_coord == MIRE_BOSS and not GameState.has_flag(CALF_FLAG):
@@ -759,6 +783,115 @@ func hessa_at_the_maw(rowed: bool, carried: Cutscene = null) -> void:
 	await away.finished
 	boat.queue_free()
 	scene.finish()
+
+
+## Ide on the north shore of Causeway End, her boat tied up below her, and
+## once the Belfry's bell is quiet, a hand bell on the far landing to call
+## her over with.
+func _put_ide() -> void:
+	var room: Node = game.current_room
+	if room == null or _find_npc("ide"):
+		return
+	var ide := Npc.new("ide")
+	ide.position = IDE_AT
+	room.add_child(ide)
+	var boat := Rowboat.new()
+	boat.rider_kind = ""
+	boat.position = FERRY_NORTH
+	room.add_child(boat)
+	if GameState.has_flag("tidebell_belfry"):
+		var bell := FerryBell.new()
+		bell.position = FERRY_BELL_AT
+		room.add_child(bell)
+
+
+func _ferry_boat() -> Rowboat:
+	for child in game.current_room.get_children():
+		if child is Rowboat:
+			return child
+	return null
+
+
+## Ide rows Wren over the Causeway End channel: to the south landing, or,
+## when Wren rings the bell over there, back to her own shore. The crossing
+## itself is dark water and the sound of her oars.
+func ide_ferries() -> void:
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# The flag is set just before her words open: let her finish them first.
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	var ide := _find_npc("ide")
+	var boat := _ferry_boat()
+	if ide == null or boat == null or not is_instance_valid(game.player):
+		GameState.clear_flag(FERRY_FLAG)
+		scene.finish()
+		return
+	var at := room.global_position
+	var from_south: bool = game.player.global_position.y > at.y + 6 * Room.TILE
+	if from_south:
+		# She hears the bell, steps down into her boat and rows across.
+		scene.face(Vector2.UP)
+		await scene.wait(0.5)
+		ide.visible = false
+		boat.set_rider("ide")
+		await scene.wait(0.3)
+		await _row(boat, FERRY_SOUTH, scene)
+		await _wave(boat, scene)
+	else:
+		await scene.walk_route(at + WREN_NORTH)
+		scene.face(Vector2.DOWN)
+		ide.visible = false
+		boat.set_rider("ide")
+		await scene.wait(0.5)
+	await scene.darken(0.8)
+	for i in 3:
+		Audio.play_sfx("splash", null, 0.55 + 0.05 * (i % 2))
+		await scene.wait(0.7)
+	if not is_instance_valid(room) or not is_instance_valid(boat):
+		GameState.clear_flag(FERRY_FLAG)
+		scene.finish()
+		return
+	boat.position = FERRY_NORTH if from_south else FERRY_SOUTH
+	game.player.global_position = at + (WREN_NORTH if from_south else WREN_SOUTH)
+	scene.face(Vector2.DOWN if from_south else Vector2.UP)
+	await scene.wait(0.2)
+	await scene.lift_veil(1.0)
+	await scene.wait(0.4)
+	if not from_south:
+		# A wave from the oars, and she rows home.
+		await _wave(boat, scene)
+		await _row(boat, FERRY_NORTH, scene)
+	if is_instance_valid(boat):
+		boat.set_rider("")
+	if is_instance_valid(ide):
+		ide.visible = true
+	GameState.clear_flag(FERRY_FLAG)
+	scene.finish()
+
+
+## Ide pulls the boat across to `to`, the oars splashing as she goes.
+func _row(boat: Rowboat, to: Vector2, scene: Cutscene) -> void:
+	var tween := boat.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(boat, "position", to, Cutscene.scaled(FERRY_ROW_TIME)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for i in 3:
+		if not is_instance_valid(boat):
+			return
+		Audio.play_sfx("splash", boat.global_position, 0.6 + 0.05 * (i % 2))
+		await scene.wait(FERRY_ROW_TIME / 3.0)
+	if tween.is_valid() and tween.is_running():
+		await tween.finished
+
+
+## She lifts a hand from the oars.
+func _wave(boat: Rowboat, scene: Cutscene) -> void:
+	if not is_instance_valid(boat) or boat.rider == null:
+		return
+	boat.rider.talking = true
+	await scene.wait(0.7)
+	if is_instance_valid(boat) and boat.rider:
+		boat.rider.talking = false
 
 
 ## Cutscene 18, "Vael's choir": deep in the Maw the whole Choir is singing
