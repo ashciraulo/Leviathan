@@ -1,13 +1,16 @@
 class_name Rowboat
 extends Node2D
-## Hessa's rowboat, with Hessa at the oars: it bobs on the swell, and leaves
-## a widening wake behind it while it moves (cutscene 17, StoryDirector).
+## A rowboat with someone at the oars (Hessa in cutscene 17, Ide on the
+## Causeway End ferry): it bobs on the swell, and leaves a widening wake
+## behind it while it moves (StoryDirector).
 
 ## Where she sits, from the boat's middle.
 const SEAT := Vector2(1, 4)
 const BOB := 1.2
 
-var hessa: ChoirFigure
+## Who rows it (a ChoirFigure kind); "" leaves it empty, tied up.
+var rider_kind := "hessa"
+var rider: ChoirFigure
 var _sprite: Sprite2D
 ## Under the hull: the swell lapping round it and the wake.
 var _water: Node2D
@@ -20,13 +23,9 @@ var _wake: Array = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# Behind her, then Hessa sat low in it, then the near gunwale over her.
-	hessa = ChoirFigure.new("hessa")
-	hessa.position = SEAT
-	hessa.sunk = 9.0
-	hessa.ripples = false
-	hessa.face(true)
-	add_child(hessa)
+	# Behind them, then the rower sat low in it, then the near gunwale over them.
+	if rider_kind != "":
+		set_rider(rider_kind)
 	_water = Node2D.new()
 	_water.show_behind_parent = true
 	_water.draw.connect(_draw_water)
@@ -43,7 +42,8 @@ func _process(delta: float) -> void:
 	_time += delta
 	var bob := sin(_time * 2.2) * BOB
 	_sprite.position.y = 2.0 + bob
-	hessa.position.y = SEAT.y + bob
+	if is_instance_valid(rider):
+		rider.position.y = SEAT.y + bob
 	if delta > 0.0:
 		_speed = lerpf(_speed, global_position.distance_to(_last) / delta, 0.2)
 	if _speed > 4.0 and (_wake.is_empty() or (_wake[-1][0] as Vector2).distance_to(global_position) > 5.0):
@@ -53,6 +53,24 @@ func _process(delta: float) -> void:
 	_wake = _wake.filter(func(spot: Array) -> bool: return spot[1] < 1.6)
 	_last = global_position
 	_water.queue_redraw()
+
+
+## Puts `kind` at the oars ("" to leave the boat empty).
+func set_rider(kind: String) -> void:
+	rider_kind = kind
+	if is_instance_valid(rider):
+		rider.queue_free()
+		rider = null
+	if kind == "":
+		return
+	rider = ChoirFigure.new(kind)
+	rider.position = SEAT
+	rider.sunk = 9.0
+	rider.ripples = false
+	rider.face(true)
+	add_child(rider)
+	# Under the boat's own sprite children, so the gunwale covers their legs.
+	move_child(rider, 0)
 
 
 func _draw_water() -> void:

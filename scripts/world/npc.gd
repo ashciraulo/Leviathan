@@ -29,6 +29,8 @@ const KINDS := {
 	"marlo": {"texture": Art.VILLAGER_MARLO, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Home from the Choir once the Tomb's bell has rung (StoryDirector).
 	"tobin": {"texture": Art.VILLAGER_TOBIN, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# The Causeway End ferrywoman, once the Verge has risen (StoryDirector).
+	"ide": {"texture": Art.VILLAGER_IDE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.
