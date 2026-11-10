@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	if room:
 		var local := to - room.global_position + Vector2(0, 7)
 		var tile := Vector2i(floori(local.x / Room.TILE), floori(local.y / Room.TILE))
-		if room.tile_at(tile.x, tile.y) == "~":
+		if room.tile_at(tile.x, tile.y) == "~" and not room.is_lava():
 			global_position = to
 			room.freeze(tile)
 			Audio.play_sfx("ice_freeze", to)
