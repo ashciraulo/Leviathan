@@ -23,9 +23,11 @@ The first open imports the translation file, which takes a few seconds.
 **Download:** <https://github.com/ashciraulo/Leviathan/releases/latest> has
 the newest release for Windows (`Leviathan-windows.zip`), macOS
 (`Leviathan-macos.zip`) and Linux (`Leviathan-linux.tar.gz`). A release is
-published when a tag like `v0.2.0` is pushed. The first time, Windows may warn
-about an unknown app (*More info > Run anyway*), and on macOS right-click the
-app and choose *Open* (it isn't notarised).
+published when a tag like `v0.2.0` is pushed, or from the Actions tab
+(**Build PC > Run workflow** with *release* set to the new version). The
+first time, Windows may warn about an unknown app (*More info > Run
+anyway*), and on macOS right-click the app and choose *Open* (it isn't
+notarised).
 
 Every PR and push to `main` also exports all three (**Build PC** workflow)
 and starts each on its own system, a Windows, a Mac and a Linux runner, where
@@ -60,8 +62,16 @@ presets are in `export_presets.cfg`.
 | Talk / open | K | A / South |
 | Hum (heal) | Hold H | Right shoulder |
 | Pause | Esc | Start |
+| Items | U, I | X, Y |
+| Map | M | Back |
+| Menu tabs | Q, E | LT, RT (or LB) |
 
-Item slots (U, I) and map (M) are bound but not used yet.
+Prompts in menus show keyboard keys or pad buttons, whichever was used last.
+Every key and button can be changed in **Options > Controls**.
+
+On a phone or tablet the web build shows touch controls once the screen is
+touched: a stick on the left, J, K, U, I and H on the right, and Esc, Q, E
+and M in the top corners. The game scales to fit small screens.
 
 ## What's in the prototype
 

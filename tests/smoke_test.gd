@@ -2814,7 +2814,15 @@ func _test_items() -> void:
 	Settings.using_pad = false
 	var key_prompt := MenuKit.key_name("interact")
 	Settings.using_pad = pad_was_used
+	Settings.using_pad = true
+	var tabs := "%s %s" % [MenuKit.key_name("tab_prev"), MenuKit.key_name("tab_next")]
+	Settings.using_pad = pad_was_used
 	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
+	_check(tabs == "LB RT", "the menu tabs show their pad buttons (%s)" % tabs)
+	var game := Vector2(384, 216)
+	_check(Settings.stretch_for(Vector2(844, 390), game) == Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+		and Settings.stretch_for(Vector2(1152, 648), game) == Window.CONTENT_SCALE_STRETCH_INTEGER,
+		"a phone-sized window scales the game to fit; a big one keeps whole pixels")
 	for id: String in Items.DEFS:
 		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
 	SaveManager.delete_save()
