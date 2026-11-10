@@ -3,7 +3,7 @@ extends Node
 ## story flags (keys, bells, tide). SaveManager saves all of it.
 
 const START_BUBBLES := 5
-const MAX_BUBBLES := 10
+const MAX_BUBBLES := 13
 const START_RESONANCE_MAX := 30.0
 ## Resonance gained per sword hit that connects.
 const RESONANCE_PER_HIT := 3.0

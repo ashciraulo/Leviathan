@@ -4222,6 +4222,20 @@ func _test_satchel_sea_glass() -> void:
 	_check(shown.call(), "found sea-glass shows in the satchel")
 	page._cursor = page._cells.size() - 1
 	_check(page._owned_id(page._cells[page._cursor]) == "sea_glass", "the sea-glass cell can be looked at")
+	# Every Breath Pearl there is: the most breath, and a full shelf that
+	# stays inside its panel.
+	GameState.give_item("breath_pearl", Items.max_count("breath_pearl"), false)
+	_check(GameState.max_bubbles == GameState.MAX_BUBBLES and GameState.START_BUBBLES + Items.max_count("breath_pearl") == GameState.MAX_BUBBLES,
+		"every Breath Pearl together gives the most breath (%d)" % GameState.max_bubbles)
+	page.on_open()
+	var pearls := page._cells.filter(func(c: Dictionary) -> bool: return c["role"] == "pearl")
+	_check(pearls.size() == Items.max_count("breath_pearl"), "the satchel has a place for every Breath Pearl")
+	for cell: Dictionary in page._cells:
+		var drawn := Rect2(cell["rect"].position, (cell["rect"].size as Vector2).max(Vector2(16, 16)))
+		_check(SatchelPage.KEEPER_PANEL.encloses(drawn) or SatchelPage.TOOLS_PANEL.encloses(drawn) or SatchelPage.GEAR_PANEL.encloses(drawn),
+			"satchel cell %s %d sits inside its panel" % [cell["role"], cell["index"]])
+	# The plate behind the breath bubbles stops short of the item keys.
+	_check(2 + GameState.MAX_BUBBLES * Hud.BUBBLE_SPACING + 5 < ItemSlotsHud.SLOT_AT[0].x - 4, "the most breath fits beside the item keys")
 	page.queue_free()
 	GameState.reset_new_game()
 

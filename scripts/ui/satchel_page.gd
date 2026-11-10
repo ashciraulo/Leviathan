@@ -36,10 +36,11 @@ func _build_cells() -> void:
 	_add(Vector2(152, 124), "lamp", "keeper_lamp", 0)
 	for i in 2:
 		_add(Vector2(256 + i * 40, 40), "slot", "", i)
-	for i in 7:
-		_add(Vector2(249 + i * 17, 77), "bell", "tidebell", i, 16)
-	for i in 5:
-		_add(Vector2(249 + i * 17, 107), "pearl", "breath_pearl", i, 16)
+	# 15 apart, so all eight Breath Pearls fit across the shelf.
+	for i in Items.max_count("tidebell"):
+		_add(Vector2(249 + i * 15, 77), "bell", "tidebell", i, 15)
+	for i in Items.max_count("breath_pearl"):
+		_add(Vector2(249 + i * 15, 107), "pearl", "breath_pearl", i, 15)
 	_add(Vector2(249, 128), "glint", "glint", 0, 16)
 	# Sea-glass shows beside the glints once Wren has found a piece: until
 	# then nothing says there's a set to find.
