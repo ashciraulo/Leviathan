@@ -148,7 +148,12 @@ async function saveCheck() {
   await key("k"); // Import, into File 1
   await key("k");
   for (let i = 0; i < 20 && !picker; i++) await tab.waitForTimeout(250);
-  if (!picker) return failures.push("saves: Import didn't open the browser's file picker");
+  if (!picker) {
+    // What the page saw, and a picture of the menu, for working out why.
+    const seen = await tab.evaluate(() => JSON.stringify({ importing: window.__lvImport, active: navigator.userActivation && navigator.userActivation.isActive }));
+    fs.writeFileSync("web_saves.png", await tab.screenshot());
+    return failures.push(`saves: Import didn't open the browser's file picker (${seen}; see web_saves.png)`);
+  }
   const original = fs.readFileSync(path.resolve("tests/web_save.json"), "utf8");
   await picker.setFiles({ name: "web_save.json", mimeType: "application/json", buffer: Buffer.from(original) });
   // Wait until the browser's storage holds the file (Godot copies user://
