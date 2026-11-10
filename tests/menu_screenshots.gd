@@ -63,6 +63,12 @@ func _ready() -> void:
 	_press(pause, "move_right")
 	await _wait(0.1)
 	await _capture("34_satchel_gear")
+	# The sea-glass found so far, beside the glints.
+	var satchel: SatchelPage = pause._pages[PauseMenu.Tab.SATCHEL]
+	satchel._cursor = satchel._cells.size() - 1
+	satchel.queue_redraw()
+	await _wait(0.1)
+	await _capture("34b_satchel_sea_glass")
 	pause.show_tab(PauseMenu.Tab.MAP)
 	_press(pause, "move_left")
 	await _wait(0.5)
@@ -131,6 +137,7 @@ func _ready() -> void:
 
 func _mid_game_state() -> void:
 	GameState.reset_new_game()
+	GameState.give_item("sea_glass", 7, false)
 	for id: String in ["tide_hook", "stonebreaker", "glowmoth_lantern", "wayshell", "frostfang_bow"]:
 		GameState.give_item(id, 1, false)
 	GameState.give_item("puffer_bombs", 12, false)

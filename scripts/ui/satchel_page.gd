@@ -41,6 +41,10 @@ func _build_cells() -> void:
 	for i in 5:
 		_add(Vector2(249 + i * 17, 107), "pearl", "breath_pearl", i, 16)
 	_add(Vector2(249, 128), "glint", "glint", 0, 16)
+	# Sea-glass shows beside the glints once Wren has found a piece: until
+	# then nothing says there's a set to find.
+	if GameState.item_count("sea_glass") > 0:
+		_add(Vector2(312, 128), "count", "sea_glass", 0, 16)
 	_rects = _cells.map(func(c: Dictionary) -> Rect2: return c["rect"])
 
 
@@ -49,6 +53,7 @@ func _add(pos: Vector2, role: String, id: String, index: int, size: int = MenuKi
 
 
 func on_open() -> void:
+	_build_cells()
 	_cursor = clampi(_cursor, 0, _cells.size() - 1)
 
 
@@ -113,6 +118,8 @@ func _owned_id(cell: Dictionary) -> String:
 			return cell["id"] if cell["index"] < GameState.item_count(cell["id"]) else ""
 		"glint":
 			return "glint"
+		"count":
+			return cell["id"] if GameState.item_count(cell["id"]) > 0 else ""
 		_:
 			var id: String = cell["id"]
 			return id if id != "" and GameState.has_item(id) else ""
@@ -173,9 +180,9 @@ func _draw_cell(cell: Dictionary) -> void:
 				MenuKit.draw_icon(self, cell["id"], rect.position)
 			else:
 				MenuKit.draw_icon(self, cell["id"], rect.position, Color(0.2, 0.25, 0.4, 0.7))
-		"glint":
-			MenuKit.draw_icon(self, "glint", rect.position)
-			MenuKit.draw_text(self, "x %d" % GameState.item_count("glint"), rect.position + Vector2(19, 4))
+		"glint", "count":
+			MenuKit.draw_icon(self, cell["id"], rect.position)
+			MenuKit.draw_text(self, "x %d" % GameState.item_count(cell["id"]), rect.position + Vector2(19, 4))
 
 
 func _draw_count(rect: Rect2, count: int) -> void:
@@ -203,8 +210,8 @@ func _draw_info() -> void:
 			title = tr("ITEM_JAR_" + str(GameState.jars[cell["index"]]).to_upper())
 		"bell":
 			title = tr("SATCHEL_BELL_COUNT") % [title, GameState.item_count("tidebell"), Items.max_count("tidebell")]
-		"pearl":
-			title = tr("SATCHEL_BELL_COUNT") % [title, GameState.item_count("breath_pearl"), Items.max_count("breath_pearl")]
+		"pearl", "count":
+			title = tr("SATCHEL_BELL_COUNT") % [title, GameState.item_count(cell["id"]), Items.max_count(cell["id"])]
 	MenuKit.draw_text(self, title, at, MenuKit.TEXT_GOLD)
 	var desc := Items.desc_key(id)
 	if cell["role"] == "jar":

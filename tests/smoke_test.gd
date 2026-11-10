@@ -60,6 +60,7 @@ func _ready() -> void:
 		await _test_equipment()
 		await _test_side_quests()
 		await _test_shop()
+		_test_satchel_sea_glass()
 		await _test_dream()
 		await _test_journal()
 		await _test_tobin()
@@ -3955,6 +3956,24 @@ func _test_equipment() -> void:
 
 ## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
 ## bought with glints.
+## Sea-glass shows in the satchel, with its count, only once a piece is found.
+func _test_satchel_sea_glass() -> void:
+	GameState.reset_new_game()
+	var page := SatchelPage.new()
+	add_child(page)
+	page.on_open()
+	var shown := func() -> bool:
+		return page._cells.any(func(c: Dictionary) -> bool: return c["id"] == "sea_glass")
+	_check(not shown.call(), "no sea-glass in the satchel before any is found")
+	GameState.give_item("sea_glass", 3, false)
+	page.on_open()
+	_check(shown.call(), "found sea-glass shows in the satchel")
+	page._cursor = page._cells.size() - 1
+	_check(page._owned_id(page._cells[page._cursor]) == "sea_glass", "the sea-glass cell can be looked at")
+	page.queue_free()
+	GameState.reset_new_game()
+
+
 func _test_shop() -> void:
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
