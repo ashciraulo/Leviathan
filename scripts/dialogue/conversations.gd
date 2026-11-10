@@ -28,6 +28,11 @@ extends Object
 ## Coralie takes Wren's sea-glass for her chime, 25 glints a piece.
 const GLASS_TRADE := {"take": "sea_glass", "tally": "coralie_glass", "each": {"glint": 25}}
 
+## Set once the Old One has turned (StoryDirector.ENDING_FLAG).
+const ENDING_FLAG := "seen_ending"
+## Speakers who look different after the ending: Murmur without the robe.
+const LATER_PORTRAITS := {"murmur": Art.PORTRAIT_MURMUR_PLAIN}
+
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
 	"corrin": ["NAME_CORRIN", Art.PORTRAIT_CORRIN],
@@ -69,7 +74,14 @@ const TALKS := {
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
 		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
 		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
+		# Once Wren has the Wayshell, Hessa always has a word on where the
+		# next bell is, for anyone who asks her.
+		{"if": ["hessa_rowed"], "lines": ["HESSA_HINT_MAW"]},
+		{"if": ["tidebell_belfry"], "lines": ["HESSA_HINT_TOMB_1", "HESSA_HINT_TOMB_2"]},
+		{"if": ["tidebell_glacier"], "lines": ["HESSA_HINT_BELFRY_1", "HESSA_HINT_BELFRY_2"]},
 		{"if": ["seen_hessa_confession"], "lines": ["HESSA_AFTER_TURN"]},
+		{"if": ["tidebell_mire", "seen_wayshell"], "lines": ["HESSA_HINT_GALE_1", "HESSA_HINT_GALE_2"]},
+		{"if": ["tidebell_kiln", "seen_wayshell"], "lines": ["HESSA_HINT_MIRE_1", "HESSA_HINT_MIRE_2"]},
 		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},
 		{"if": ["tidebell_hull"], "unless": ["freed_mantle"], "lines": ["HESSA_MANTLE_1", "HESSA_MANTLE_2"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_hessa_hull"], "set": ["heard_hessa_hull"], "lines": ["HESSA_HULL_1", "HESSA_HULL_2"]},
@@ -314,7 +326,10 @@ static func pages(speaker: String, branch: Dictionary) -> Array:
 			who = line[0]
 			key = line[1]
 		var spec: Array = SPEAKERS.get(who, ["", null])
-		out.append({"name": spec[0], "portrait": spec[1], "text": key})
+		var portrait: Variant = spec[1]
+		if LATER_PORTRAITS.has(who) and GameState.has_flag(ENDING_FLAG):
+			portrait = LATER_PORTRAITS[who]
+		out.append({"name": spec[0], "portrait": portrait, "text": key})
 	return out
 
 

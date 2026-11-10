@@ -55,6 +55,7 @@ func _ready() -> void:
 		await _test_overworld_secrets()
 		await _test_tide_turning()
 		await _test_sea_bed()
+		await _test_tidestone_carvings()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -79,6 +80,7 @@ func _ready() -> void:
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
+		_test_hessa_hints()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -3849,6 +3851,47 @@ func _test_sea_bed() -> void:
 	GameState.reset_new_game()
 
 
+## Every Tidestone has a keeper's line cut into it. Interact reads it; after
+## the turn, a stone already read turns the tide instead.
+func _test_tidestone_carvings() -> void:
+	GameState.reset_new_game()
+	var stones := 0
+	for file in DirAccess.get_files_at("res://rooms"):
+		file = file.trim_suffix(".remap")
+		if not file.ends_with(".tscn"):
+			continue
+		var parts := file.trim_prefix("room_").trim_suffix(".tscn").split("_")
+		var coord := Vector2i(int(parts[0]), int(parts[1]))
+		var room: Room = (load("res://rooms/" + file) as PackedScene).instantiate()
+		if (room.layout + room.alt_layout).contains("T"):
+			stones += 1
+			var carving: Array = Tidestone.CARVINGS.get(coord, [])
+			_check(not carving.is_empty(), "the Tidestone in room %s has a carving" % coord)
+			for key: String in carving:
+				_check(tr(key) != key, "%s has its text" % key)
+		room.free()
+	_check(stones == Tidestone.CARVINGS.size(), "every carving belongs to a stone (%d stones)" % stones)
+	var shown: Array = []
+	var catch := func(pages: Array) -> void: shown.append_array(pages)
+	Events.conversation_requested.connect(catch)
+	var stone := Tidestone.new()
+	stone.room_coord = Vector2i(5, -4)
+	add_child(stone)
+	stone.awake = true
+	stone.interact()
+	_check(shown.size() == 2 and shown[1]["text"] == "STONE_SPIRE_FOOT", "facing a stone, Wren reads what's cut into it")
+	GameState.set_flag("old_one_turned")
+	stone.interact()
+	_check(shown.size() == 2 and Tide.held() == "high", "after the turn, a stone already read turns the tide")
+	stone.room_coord = Vector2i(0, 0)
+	stone.interact()
+	_check(shown.size() == 4 and Tide.held() == "high", "an unread stone shows its carving first, even after the turn")
+	Events.conversation_requested.disconnect(catch)
+	stone.queue_free()
+	Tide.offset = 0.0
+	GameState.reset_new_game()
+
+
 ## Overworld secrets: chests hold what their room says, a cache holds a
 ## count, and the Ember Ridge jar sits behind a cracked boulder.
 func _test_overworld_secrets() -> void:
@@ -4959,6 +5002,13 @@ func _test_murmur_and_dace() -> void:
 	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_TURNED"], "Murmur feels the turn")
 	GameState.set_flag(StoryDirector.ENDING_FLAG)
 	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_END"], "and sees the lights go out to sea")
+	var robed: Npc = _find_kind(room, "murmur")
+	_check(robed._sprite.texture == Art.VILLAGER_MURMUR, "met before the ending, Murmur still wears the robe")
+	var plain := Npc.new("murmur")
+	room.add_child(plain)
+	_check(plain._sprite.texture == Art.VILLAGER_MURMUR_PLAIN, "after the ending, Murmur has put the Choir robe away")
+	_check(Conversations.pages("murmur", {"lines": ["MURMUR_END"]})[0]["portrait"] == Art.PORTRAIT_MURMUR_PLAIN, "and the portrait matches")
+	plain.queue_free()
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
@@ -5042,6 +5092,25 @@ func _test_errands() -> void:
 	_check(first.call("murmur") == "MURMUR_TURNED", "and still feels the turn afterwards")
 	GameState.clear_flag(StoryDirector.TURNED_FLAG)
 	_check(first.call("murmur") == "MURMUR_LANTERN_AGAIN", "before the turn, Murmur keeps the lantern lit")
+	GameState.reset_new_game()
+
+
+## Hessa always has a word on where the next bell is, if Wren asks.
+func _test_hessa_hints() -> void:
+	GameState.reset_new_game()
+	var first := func() -> String: return str(Conversations.branch_for("hessa").get("lines", [""])[0])
+	for flag in ["met_hessa", "entered_hull", "heard_hessa_hull", "tidebell_hull", "freed_mantle", "seen_wayshell"]:
+		GameState.set_flag(flag)
+	var expect := [
+		["", "HESSA_AFTER_BELL"], ["tidebell_kiln", "HESSA_HINT_MIRE_1"], ["tidebell_mire", "HESSA_HINT_GALE_1"],
+		["seen_hessa_confession", "HESSA_AFTER_TURN"], ["tidebell_glacier", "HESSA_HINT_BELFRY_1"],
+		["tidebell_belfry", "HESSA_HINT_TOMB_1"], ["tidebell_tomb", "HESSA_ROW_1"], ["hessa_rows", "HESSA_HINT_TOMB_1"],
+		["hessa_rowed", "HESSA_HINT_MAW"], ["seen_ending", "HESSA_AFTER_END"],
+	]
+	for step: Array in expect:
+		if step[0] != "":
+			GameState.set_flag(step[0])
+		_check(first.call() == step[1], "with %s, Hessa says %s (got %s)" % [step[0], step[1], first.call()])
 	GameState.reset_new_game()
 
 
