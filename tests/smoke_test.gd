@@ -63,6 +63,7 @@ func _ready() -> void:
 		await _test_shop()
 		_test_satchel_sea_glass()
 		await _test_save_transfer()
+		await _test_area_stats()
 		await _test_dream()
 		await _test_journal()
 		await _test_tobin()
@@ -5268,3 +5269,31 @@ func _test_save_transfer() -> void:
 	await get_tree().process_frame
 	SaveManager.delete_save(TEST_SLOT)
 	SaveManager.restore_aside(OTHER, "testtransfer")
+
+
+## The hidden playtime record: time and deaths by region and dungeon, kept
+## through saving, loading and dying.
+func _test_area_stats() -> void:
+	GameState.reset_new_game()
+	_check(GameState.area_stats.is_empty(), "a new file has no playtime record")
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(1.0)
+	var area := Audio.cue_for_room(game.current_room.biome, game.current_room.dungeon)
+	var counted := float(GameState.area_stats.get(area, {}).get("time", 0.0))
+	# Everything played so far was in this one area.
+	_check(counted > 0.0 and absf(counted - GameState.play_time) < 0.01,
+		"time in %s is counted (%.2f of %.2f s)" % [area, counted, GameState.play_time])
+	GameState.count_area_death(area)
+	GameState.count_area_time("dungeon_hull", 60.0)
+	SaveManager.save_game()
+	var before := GameState.area_stats.duplicate(true)
+	GameState.reset_new_game()
+	SaveManager.load_game()
+	_check(int(GameState.area_stats.get(area, {}).get("deaths", 0)) == 1
+		and is_equal_approx(float(GameState.area_stats.get("dungeon_hull", {}).get("time", 0.0)), 60.0)
+		and GameState.area_stats.size() == before.size(), "the playtime record survives saving (%s)" % GameState.area_stats)
+	game.queue_free()
+	await _wait(0.1)
+	SaveManager.delete_save()
+

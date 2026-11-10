@@ -100,6 +100,7 @@ func _process(delta: float) -> void:
 	# The game scene stops while paused, so menus don't count.
 	if not _game_over:
 		GameState.play_time += delta
+		GameState.count_area_time(_area(), delta)
 	# A boss that falls without sending boss_defeated still hands the room
 	# back its own music.
 	if Audio.music_cue == "boss" and not busy and current_room and not _room_has_boss():
@@ -258,8 +259,16 @@ func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 	busy = false
 
 
+## The part of the world Wren is in, for the hidden playtime record.
+func _area() -> String:
+	if current_room == null:
+		return ""
+	return Audio.cue_for_room(current_room.biome, current_room.dungeon)
+
+
 func _on_player_died() -> void:
 	busy = true
+	GameState.count_area_death(_area())
 	Audio.play_jingle("jingle_game_over")
 	# Real-time waits: hitstop may still have the game frozen.
 	await get_tree().create_timer(0.6, false, false, true).timeout
@@ -297,9 +306,11 @@ func respawn() -> void:
 		await tween.finished
 	# Time played keeps counting across deaths.
 	var played := GameState.play_time
+	var stats := GameState.area_stats.duplicate(true)
 	if not SaveManager.load_game():
 		GameState.reset_new_game()
 	GameState.play_time = played
+	GameState.area_stats = stats
 	GameState.refill()
 	world.queue_free()
 	world = null
