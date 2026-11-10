@@ -82,6 +82,11 @@ func _ready() -> void:
 			Vector2i(2, -3): ["rcave_rimefall_way_in", Vector2i(18, 3)],
 			Vector2i(2, -4): ["rcave_rimefall_steps", Vector2i(18, 10)],
 			Vector2i(1, -4): ["rcave_icefall_grotto", Vector2i(21, 6)],
+			Vector2i(2, 3): ["rcave_wreckers_way_in", Vector2i(18, 10)],
+			Vector2i(2, 4): ["rcave_wreckers_stair", Vector2i(17, 2)],
+			Vector2i(3, 4): ["rcave_wreckers_hold", Vector2i(1, 9)],
+			Vector2i(9, 1): ["rcave_saltpan_way_in", Vector2i(7, 9)],
+			Vector2i(9, 2): ["rcave_saltpan_hollow", Vector2i(7, 2)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
