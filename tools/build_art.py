@@ -676,6 +676,7 @@ def build_props():
     return {
         "pot": sheet([[lit(POT, 11)]], 16, 14),
         "market_stall": sheet([[lit(npc_art.market_stall(), 7)]], 48, 46),
+        "journal_ice": sheet([[lit(npc_art.journal_ice(), 3)]], 16, 20),
         "barrel": sheet([[lit(BARREL, 12)]], 16, 14),
         "fence": sheet([[lit(FENCE, 13)]], 16, 14),
         "sign": sheet([[lit(SIGN, 14)]], 16, 14),

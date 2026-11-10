@@ -33,6 +33,10 @@ const SPEAKERS := {
 	"marga": ["NAME_MARGA", Art.PORTRAIT_MARGA],
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
 	"marlo": ["NAME_MARLO", Art.PORTRAIT_MARLO],
+	"tobin": ["NAME_TOBIN", Art.PORTRAIT_TOBIN],
+	# The frozen journal: pages in young Hessa's and young Vael's hands.
+	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
+	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
 }
 
 const TALKS := {
@@ -89,6 +93,11 @@ const TALKS := {
 		{"if": ["entered_kiln"], "lines": ["AGNA_KILN_1", "AGNA_KILN_2"]},
 		{"lines": ["AGNA_AGAIN"]},
 	],
+	# Tobin, home from the Choir, hauling rope with his dad.
+	"tobin": [
+		{"if": ["seen_ending"], "lines": ["TOBIN_END"]},
+		{"lines": ["TOBIN_AFTER"]},
+	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
 		{"if": ["marga_thanked", "tidebell_hull"], "set": ["marga_gave_jar"], "give": {"jar": 1}, "lines": ["MARGA_EEL_1", "MARGA_EEL_2", ["", "NARRATE_GOT_JAR"]]},
@@ -98,6 +107,7 @@ const TALKS := {
 		{"set": ["asked_for_rope"], "lines": ["MARGA_1", "MARGA_2", "MARGA_2B", ["", "NARRATE_WREN_NODS"]]},
 	],
 	"dunstan": [
+		{"if": ["tobin_home"], "lines": ["DUNSTAN_TOBIN_AFTER"]},
 		{"if": ["rope_promised"], "lines": ["DUNSTAN_AGAIN"]},
 		{
 			"if": ["asked_for_rope"],

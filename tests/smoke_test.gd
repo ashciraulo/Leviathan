@@ -61,6 +61,8 @@ func _ready() -> void:
 		await _test_side_quests()
 		await _test_shop()
 		await _test_dream()
+		await _test_journal()
+		await _test_tobin()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -1636,11 +1638,37 @@ func _test_belfry_dungeon() -> void:
 		_check(knell.mode == Knell.Mode.ARMS and knell.arms.size() == 3 and not knell.arms[0].severed, "after two hits it drags itself back and grows new arms")
 		knell.mode = Knell.Mode.DAZED
 		knell._timer = 10.0
+		# Stand where the last blow lands, on the island by the bell.
+		player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 8)
+		Cutscene.fast = true
 		while knell.hp > 0:
 			knell._stun = 0.0
 			knell._hits_this_daze = 0
 			knell.take_hit(1, Vector2.UP)
 		_check(GameState.flags.get(Knell.DEFEATED_FLAG, false), "enough hits bring Knell down")
+		# Cutscene 14: Lowe comes up in the water, and Wren hauls her out.
+		_check(Cutscene.active and GameState.has_flag(StoryDirector.LOWE_WATER_FLAG), "Knell's end brings Lowe up in the water")
+		var lowe: ChoirFigure = null
+		var in_water := false
+		var hauled := false
+		var waited := 0.0
+		while Cutscene.active and waited < 25.0:
+			await _wait(0.05)
+			waited += 0.05
+			for child in room.get_children():
+				if child is ChoirFigure:
+					lowe = child
+			if lowe and is_instance_valid(lowe):
+				var tile := Vector2i(floori(lowe.position.x / Room.TILE), floori(lowe.position.y / Room.TILE))
+				if lowe.sunk > 10.0 and room.tile_at(tile.x, tile.y) == "Q":
+					in_water = true
+				if in_water and lowe.sunk == 0.0 and room.tile_at(tile.x, tile.y) == ".":
+					hauled = true
+		_check(in_water, "she surfaces in deep water, half under")
+		_check(hauled, "and is pulled out onto the stone")
+		_check(not Cutscene.active and (lowe == null or not is_instance_valid(lowe)), "then she's gone, out the door (%.1fs)" % waited)
+		_check(game.player.global_position.distance_to(room.global_position + StoryDirector.WREN_REACHES) < 6.0, "Wren went to the edge to reach her")
+		Cutscene.fast = false
 		await _wait(3.0)
 		var bell: Tidebell = null
 		for child in room.get_children():
@@ -3947,5 +3975,115 @@ func _test_dream() -> void:
 	await _wait(0.3)
 	_check(get_tree().get_first_node_in_group("lighthouse_beam") == null, "and the lighthouse rests")
 	home.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+
+
+## Cutscene 13: young Hessa's and Vael's journal, frozen through the Hollow
+## Glacier, and the vision after Rimeback.
+func _test_journal() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(32, 10), GameState.NO_POSITION)
+	var glacier: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(glacier)
+	await _wait(0.3)
+	var page := get_tree().get_first_node_in_group("journal_page") as JournalPage
+	_check(page != null and page.page == 1, "the first page lies frozen at the glacier's mouth")
+	for child in glacier.get_children():
+		if child is DialogueBox:
+			for number in JournalPage.PAGES:
+				for p: Dictionary in JournalPage.pages_for(number):
+					_check(child.lines_for(p["text"], p["portrait"] != null) <= DialogueBox.MAX_LINES, "%s fits the box" % p["text"])
+					_check(TranslationServer.translate(p["text"]) != p["text"], "%s is in strings.csv" % p["text"])
+	if page:
+		glacier.player.global_position = page.global_position + Vector2(0, 14)
+		glacier.player.facing = Vector2.UP
+		await _wait(0.1)
+		_check(glacier.player.try_interact() and DialogueBox.is_open, "Wren reads it where it lies")
+		_finish_talk(glacier)
+		_check(GameState.has_flag(JournalPage.flag_for(1)), "and it stays read")
+	glacier.queue_free()
+	await _wait(0.1)
+	# Every page has a floor to lie on.
+	for coord: Vector2i in StoryDirector.JOURNAL_PAGES:
+		var tile: Vector2i = StoryDirector.JOURNAL_PAGES[coord][0]
+		var row: String = RoomInfo.get_room(coord).get("rows", [])[tile.y] if RoomInfo.get_room(coord).has("rows") else ""
+		_check(row == "" or row[tile.x] == ".", "page %d lies on open floor" % StoryDirector.JOURNAL_PAGES[coord][1])
+	# Rimeback calmed: the last page rises out of the ice.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.GLACIER_BOSS, Vector2(5 * Room.TILE + 8, 3 * Room.TILE + 12))
+	var hall: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hall)
+	await _wait(0.3)
+	_check(get_tree().get_first_node_in_group("journal_page") == null, "no last page while Rimeback is up")
+	# As Rimeback itself does: the flag written quietly, then the fight's end.
+	GameState.flags[Rimeback.DEFEATED_FLAG] = true
+	Events.boss_defeated.emit()
+	await _wait(0.2)
+	var last := get_tree().get_first_node_in_group("journal_page") as JournalPage
+	_check(last != null and last.page == JournalPage.LAST, "once it calms, the last page rises out of the ice")
+	if last:
+		await _wait(2.0)
+		hall.player.global_position = last.global_position + Vector2(0, 14)
+		hall.player.facing = Vector2.UP
+		await _wait(0.1)
+		hall.player.try_interact()
+		await _wait(0.1)
+		_check(Cutscene.active and GameState.has_flag(StoryDirector.JOURNAL_FLAG), "reading it brings the vision")
+		var pages := await _play_scene(hall, 30.0)
+		_check(pages == 4 and not Cutscene.active, "Vael's last page, and Hessa's later words (%d pages)" % pages)
+		_check(not hall.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "the young keepers fade with the vision")
+	hall.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+
+
+## Cutscene 16: Tobin meets Wren on Skull Rise once the seventh bell rings,
+## then comes home to Dunstan, and stays on the dock after.
+func _test_tobin() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(12 * Room.TILE + 8, 7 * Room.TILE + 10))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(not Cutscene.active and not GameState.has_flag(StoryDirector.TOBIN_WARNED_FLAG), "no Tobin on Skull Rise before the Tomb's bell")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag(StoryDirector.TOMB_BELL_FLAG)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.TOBIN_WARNED_FLAG), "with the seventh bell rung, Tobin comes running over the dunes")
+	var room: Room = game.current_room
+	for point: Vector2 in StoryDirector.TOBIN_RUNS_IN.slice(1) + StoryDirector.TOBIN_LEAVES.slice(0, 1):
+		var tile := Vector2i(floori(point.x / Room.TILE), floori(point.y / Room.TILE))
+		_check(room.tile_at(tile.x, tile.y) == ".", "Tobin's path crosses open sand at %s" % tile)
+	var pages := await _play_scene(game, 30.0)
+	_check(pages == 5 and not Cutscene.active, "he tells Wren where the Choir went and how singers go in (%d pages)" % pages)
+	_check(not room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "and heads off west, home")
+	game.queue_free()
+	await _wait(0.1)
+	# Home: Tobin on the dock by his dad.
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(12 * Room.TILE + 8, 11 * Room.TILE + 10))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(Cutscene.active, "back in Saltmarrow, Tobin's home")
+	pages = await _play_scene(game, 30.0)
+	_check(pages >= 6 and not Cutscene.active and GameState.has_flag(StoryDirector.TOBIN_HOME_FLAG), "Dunstan finds his words (%d pages)" % pages)
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_AT_DOCK) < 6.0, "Wren walks up to the pair (%s)" % (game.player.global_position - game.current_room.global_position))
+	var tobins: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is Npc and c.kind == "tobin")
+	_check(tobins.size() == 1, "Tobin stays on the dock, someone to talk to")
+	_check(Conversations.branch_for("dunstan").get("lines", []) == ["DUNSTAN_TOBIN_AFTER"], "and Dunstan has a new line about him")
+	game.queue_free()
+	await _wait(0.1)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(not Cutscene.active, "the homecoming plays once")
+	_check(game.current_room.get_children().filter(func(c: Node) -> bool: return c is Npc and c.kind == "tobin").size() == 1, "and Tobin's still there next time")
+	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false

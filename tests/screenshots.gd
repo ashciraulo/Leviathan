@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -98,6 +98,18 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _dream_shots()
+			"belfry_lowe":
+				game.queue_free()
+				await _wait(0.2)
+				await _belfry_lowe_shots()
+			"tobin":
+				game.queue_free()
+				await _wait(0.2)
+				await _tobin_shots()
+			"journal":
+				game.queue_free()
+				await _wait(0.2)
+				await _journal_shots()
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -405,6 +417,7 @@ func _ready() -> void:
 	await _ending_shots()
 	await _shop_shots()
 	await _dream_shots()
+	await _journal_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -1206,6 +1219,151 @@ func _mural_shots() -> void:
 		await _wait(0.2)
 	await _skip_scene(barrow)
 	barrow.queue_free()
+	await _wait(0.2)
+
+
+## The frozen journal: a page in the ice, then the vision of young Hessa
+## and Vael in Rimeback's hall.
+func _journal_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(31, 10), Vector2(21 * Room.TILE + 8, 2 * Room.TILE + 14))
+	var pond: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(pond)
+	await _wait(0.5)
+	pond.player.facing = Vector2.UP
+	await _wait(0.2)
+	await _capture("59_a_page_in_the_ice")
+	pond.player.try_interact()
+	await _wait(1.6)
+	await _capture("60_young_vael_writes")
+	var box := _dialogue_box(pond)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.05)
+	pond.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.set_flag(Rimeback.DEFEATED_FLAG)
+	GameState.set_checkpoint(StoryDirector.GLACIER_BOSS, Vector2(5 * Room.TILE + 8, 2 * Room.TILE + 14))
+	var hall: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hall)
+	await _wait(0.6)
+	hall.player.facing = Vector2.UP
+	await _wait(0.1)
+	hall.player.try_interact()
+	box = _dialogue_box(hall)
+	await _wait(0.3)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	# The vision: both fade in, Hessa signals, Vael bows his head.
+	await _wait(3.1)
+	await _capture("61_the_vision_in_the_ice")
+	await _wait(2.6)
+	await _capture("62_vael_hears_it")
+	await _skip_scene(hall)
+	hall.queue_free()
+	await _wait(0.2)
+
+
+## Cutscene 14: Knell gone, Lowe comes up in the water and Wren hauls her
+## out. She leaves without a word.
+func _belfry_lowe_shots() -> void:
+	GameState.reset_new_game()
+	for item in ["divers_helm", "stonebreaker"]:
+		GameState.give_item(item)
+	GameState.set_checkpoint(StoryDirector.BELFRY_BOSS, Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 8))
+	var hall: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hall)
+	await _wait(0.6)
+	hall.player._invuln = 600.0
+	var knell: Knell = null
+	for child in hall.current_room.get_children():
+		if child is Knell:
+			knell = child
+	if knell == null:
+		hall.queue_free()
+		return
+	await _wait(1.5)
+	for a: Tentacle in knell.arms:
+		a.dive_hit(Vector2.UP)
+	await _wait(0.2)
+	knell.bell.mallet_hit(Vector2.UP)
+	await _wait(0.3)
+	hall.player.global_position = hall.current_room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 8)
+	hall.player.facing = Vector2.UP
+	knell._timer = 10.0
+	while knell.hp > 0:
+		knell._stun = 0.0
+		knell._hits_this_daze = 0
+		knell.take_hit(1, Vector2.UP)
+	# Nothing left to hurt Wren; stop the blinking.
+	hall.player._invuln = 0.0
+	var lowe: ChoirFigure = null
+	var shots := {"63_lowe_in_the_water": false, "64_hauled_out": false, "65_not_a_word": false, "66_the_long_way_out": false}
+	var hauled_at := -1.0
+	var time := 0.0
+	while Cutscene.active and time < 40.0:
+		await _wait(0.05)
+		time += 0.05
+		if lowe == null:
+			for child in hall.current_room.get_children():
+				if child is ChoirFigure:
+					lowe = child
+			continue
+		if not is_instance_valid(lowe):
+			break
+		if not shots["63_lowe_in_the_water"] and lowe.struggling and hall.player.global_position.distance_to(hall.current_room.global_position + StoryDirector.WREN_REACHES) < 3.0:
+			await _wait(0.3)
+			shots["63_lowe_in_the_water"] = true
+			await _capture("63_lowe_in_the_water")
+		elif not shots["64_hauled_out"] and lowe.dripping and lowe.position.distance_to(StoryDirector.LOWE_HAULED) < 1.5:
+			shots["64_hauled_out"] = true
+			hauled_at = time
+			await _capture("64_hauled_out")
+		elif not shots["65_not_a_word"] and hauled_at > 0.0 and time - hauled_at > 2.6:
+			shots["65_not_a_word"] = true
+			await _capture("65_not_a_word")
+		elif not shots["66_the_long_way_out"] and lowe.dripping and lowe.position.y > 11 * Room.TILE and lowe.position.x < 15 * Room.TILE:
+			shots["66_the_long_way_out"] = true
+			await _capture("66_the_long_way_out")
+	hall.queue_free()
+	await _wait(0.2)
+
+
+## Cutscene 16: Tobin on Skull Rise, then home on the dock with Dunstan.
+func _tobin_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.TOMB_BELL_FLAG)
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(12 * Room.TILE + 8, 7 * Room.TILE + 10))
+	var rise: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(rise)
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(0.6)
+	await _capture("67_tobin_on_the_dunes")
+	await _skip_scene(rise)
+	rise.queue_free()
+	await _wait(0.2)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(12 * Room.TILE + 8, 11 * Room.TILE + 10))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(0.6)
+	await _capture("68_dunstan_finds_his_words")
+	var box := _dialogue_box(home)
+	for i in 2:
+		box.advance()
+		box.advance()
+		await _wait(0.6)
+	await _capture("69_every_week")
+	await _skip_scene(home)
+	await _wait(0.6)
+	await _capture("70_tobin_home")
+	home.queue_free()
 	await _wait(0.2)
 
 
