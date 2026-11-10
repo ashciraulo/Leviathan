@@ -39,6 +39,9 @@ ROOM_HULL_LISTING,The Rotting Hull: Listing Deck
 ROOM_HULL_CABIN,The Rotting Hull: Captain's Cabin
 ROOM_HULL_FLOODED,The Rotting Hull: Flooded Hold
 ROOM_HULL_BRIG,The Rotting Hull: Brig
+ROOM_HULL_KEEL,The Rotting Hull: Keel
+ROOM_HULL_SAIL_LOFT,The Rotting Hull: Sail Loft
+ROOM_HULL_CHAIN_LOCKER,The Rotting Hull: Chain Locker
 ROOM_HULL_BOSS,The Rotting Hull: Figurehead Hold
 TOAST_GOT_TIDE_HOOK,You found the Tide Hook!
 GOT_TIDE_HOOK_1,"The Tide Hook! A barbed iron hook on a long chain, still cold from the sea."

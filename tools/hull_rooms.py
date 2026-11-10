@@ -10,9 +10,15 @@ The way through:
   Cargo Hold (map; shove the crate onto the plate) -> Rope Locker (beat
   everything; the Tide Hook) -> hook across the Orlop's broken deck
   (small key) -> Listing Deck -> hatch -> Captain's Cabin (hook a crate out
-  of its nook; small key) -> down to the Galley's hatch -> Flooded Hold
-  (hook from post to post; big key) -> Listing Deck's great door ->
-  the Matriarch. The Brig, east of the Entry, holds the compass.
+  of its nook; small key) -> down to the Galley -> Flooded Hold (hook from
+  post to post; glints) -> west from the Galley -> the Keel (hook
+  over the trench, drag two crates out of their nooks onto the plates) ->
+  Sail Loft (hook from island to island over the hold; big key) ->
+  Listing Deck's great door -> the Matriarch.
+  The Brig, east of the Entry, holds the compass. The Chain Locker, east
+  of the Orlop, holds glints across two hooked crossings.
+  (No hatches lead to the hook-only rooms: a key spent on one before the
+  Tide Hook would strand Wren without it.)
 """
 
 import os
@@ -64,9 +70,9 @@ ROOMS = {
 #..u.u.........C.....u.#
 #......................#
 #...####......####.....#
-#...####......####......
-#.....b.................
-#.......................
+....####......####......
+......b.................
+........................
 #..........c...........#
 #....~~~~.......~~~~...#
 #....~~~~...o...~~~~...#
@@ -106,9 +112,9 @@ ROOMS = {
 #......................#
 #...s............C.....#
 #......................#
-.......................#
-...........O...........#
-.......................#
+........................
+...........O............
+........................
 #______________________#
 #______________________#
 #......................#
@@ -142,7 +148,7 @@ X.......................
 #..................|||.#
 #..................|C|.#
 ###..###################"""),
-    (9, 10): ("ROOM_HULL_FLOODED", {"chest_item": '"big_key"'}, """
+    (9, 10): ("ROOM_HULL_FLOODED", {"chest_item": '"glint"', "chest_count": "50"}, """
 ###########..###########
 #~~~~~~~~~~..~~~~~~~~~~#
 #~~~~~~~~~~..~~~~~~~~~~#
@@ -169,6 +175,48 @@ X.......................
 #######..##............#
 #..!..!..!...s.........#
 #..!..!..!.............#
+########################"""),
+    (8, 9): ("ROOM_HULL_KEEL", {"gate": '"plates"'}, """
+###########||###########
+#u#K#..........__.....u#
+#.#.#..........__......#
+#..............__......#
+#............O.__......#
+#..............__.......
+#.....=........__.......
+#..............__.......
+#..............__.O....#
+#..c.....=.....__......#
+#......b....#.#__......#
+#u..........#K#__.....u#
+########################"""),
+    (8, 8): ("ROOM_HULL_SAIL_LOFT", {"chest_item": '"big_key"'}, """
+########################
+#u.................c..u#
+#_.C..O._______________#
+#_......_______________#
+#______________________#
+#______________________#
+#___...___.O.__________#
+#___.O.___...__________#
+#______________________#
+#______________________#
+#.....#................#
+#u....#...O...........u#
+###########..###########"""),
+    (12, 8): ("ROOM_HULL_CHAIN_LOCKER", {"chest_item": '"glint"', "chest_count": "100", "gate": '"clear"', "chest_hidden": "true"}, """
+########################
+#u......_________......#
+#......._________......#
+#......._________......#
+#.....O.___...___.O....#
+........___...___......#
+........___..O___...C..#
+........___...___......#
+#.......___O..___.....c#
+#......._________......#
+#......._________...c..#
+#u......_________......#
 ########################"""),
     (10, 7): ("ROOM_HULL_BOSS", {"door_to": "Vector2i(5, 0)", "door_spawn": "Vector2i(11, 8)"}, """
 ########################

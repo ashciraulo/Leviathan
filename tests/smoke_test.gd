@@ -2359,7 +2359,7 @@ func _test_hull_dungeon() -> void:
 	_check(player.state == Player.State.MOVE and not player.airborne, "Wren lands and can move again")
 
 	# The Flooded Hold: a sideways throw from the middle of a row still bites
-	# the post, and carries Wren over the water to the big key's island.
+	# the post, and carries Wren over the water to the chest's island.
 	room = await _goto(game, Vector2i(9, 10), Vector2i(12, 11))
 	await _calm(room)
 	player.global_position = _tile_pos(room, Vector2i(12, 11))
@@ -2408,6 +2408,68 @@ func _test_hull_dungeon() -> void:
 	await _wait(1.5)
 	_check(nook.position.x > start.x + Room.TILE, "the hook drags a crate (%s -> %s)" % [start, nook.position])
 	_check(player.state == Player.State.MOVE, "the hook comes home after a drag")
+
+	# The Keel: hook over the trench, drag both crates out of their nooks,
+	# and the plates open the way up to the Sail Loft.
+	room = await _goto(game, Vector2i(8, 9), Vector2i(17, 4))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(17, 4))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 14 and player.state == Player.State.MOVE, "the hook crosses the Keel's trench (at %s)" % local)
+	for crate_tile: Vector2i in [Vector2i(3, 6), Vector2i(13, 6)]:
+		var stuck: Crate = null
+		for c in _child_of(room, Crate):
+			if int(c.position.x) / Room.TILE == crate_tile.x:
+				stuck = c
+		start = stuck.position
+		player.global_position = _tile_pos(room, crate_tile)
+		player.facing = Vector2.UP if crate_tile.x == 3 else Vector2.DOWN
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.5)
+		_check(absf(stuck.position.y - start.y) >= Room.TILE * 2, "the hook drags a Keel crate out of its nook (%s -> %s)" % [start, stuck.position])
+	var keel_plates: Array = _child_of(room, PressurePlate)
+	var keel_crates: Array = _child_of(room, Crate)
+	_check(keel_plates.size() == 2 and keel_crates.size() == 2, "the Keel has two crates for two plates")
+	player.global_position = _tile_pos(room, Vector2i(18, 2))
+	for i in keel_plates.size():
+		keel_crates[i].position = Vector2(keel_plates[i].tile.x * Room.TILE + 8, keel_plates[i].tile.y * Room.TILE + 12)
+	await _wait(0.3)
+	_check(_child_of(room, Bars).all(func(b: Bars) -> bool: return b.is_open), "both plates open the Keel's bars")
+
+	# The Sail Loft: three hooks, island to island, up to the big key.
+	room = await _goto(game, Vector2i(8, 8), Vector2i(11, 10))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(11, 10))
+	for step: Array in [[Vector2.UP, Vector2i(11, 7)], [Vector2.LEFT, Vector2i(6, 7)], [Vector2.UP, Vector2i(6, 3)]]:
+		player.facing = step[0]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.3)
+		local = player.global_position - room.global_position
+		_check(Vector2i(local / Room.TILE) == step[1] and player.state == Player.State.MOVE and not player.airborne, "the Sail Loft's hook lands Wren on %s (at %s)" % [step[1], local])
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Sail Loft's chest holds the big key")
+
+	# The Chain Locker: hook to the island, then on to the far deck.
+	room = await _goto(game, Vector2i(12, 8), Vector2i(7, 6))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(7, 6))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(Vector2i(local / Room.TILE) == Vector2i(12, 6), "the hook reaches the Chain Locker's island (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(12, 4))
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(Vector2i(local / Room.TILE) == Vector2i(17, 4), "the hook reaches the Chain Locker's far deck (at %s)" % local)
 
 	# The Rope Locker shuts Wren in until it's cleared, then shows its chest.
 	GameState.inventory.erase("tide_hook")

@@ -614,6 +614,9 @@ func _hull_shots(game: Node) -> void:
 		Vector2i(9, 8): ["34_hull_captains_cabin", Vector2i(12, 7)],
 		Vector2i(9, 10): ["35_hull_flooded_hold", Vector2i(12, 2)],
 		Vector2i(11, 10): ["36_hull_brig", Vector2i(3, 6)],
+		Vector2i(8, 9): ["36b_hull_keel", Vector2i(20, 6)],
+		Vector2i(8, 8): ["36c_hull_sail_loft", Vector2i(12, 10)],
+		Vector2i(12, 8): ["36d_hull_chain_locker", Vector2i(3, 6)],
 	}
 	for coord: Vector2i in rooms:
 		var at := await _jump(game, coord, rooms[coord][1])
