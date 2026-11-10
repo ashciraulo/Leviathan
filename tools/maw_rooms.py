@@ -7,7 +7,8 @@ Run from the repo root:  python3 tools/maw_rooms.py
 (--check only verifies that the committed rooms match.)
 
 "," is the palate floor: the Old One's breathing floods it (deep water)
-and drains it again on one clock for the whole Maw (see MawBreath). Every
+and drains it again on one clock for the whole Maw (see MawBreath). "+" is
+a Gumleech swimming in that floor (its tile is ","). Every
 tool Wren has found is needed somewhere.
 
 The way through:
@@ -44,7 +45,7 @@ ROOMS = {
 #......................#
 #,,,,,,,,,,,,,,,,,,,,,,#
 #,,,,,,,,,,,,,,,,,,,,,,#
-#,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,+,,,,,,#
 #,,,,,,,,,,,,,,,,,,,,,,#
 #......................#
 #..##..............##..#
@@ -98,14 +99,14 @@ ROOMS = {
     (45, 10): ("ROOM_MAW_TIDEWELL", {"chest_item": '"tidecaller_sword"'}, """
 ###################..###
 #...,,,,,,,,,,,,,,,....#
-#...,,,,,,,,,,,,,,,....#
+#...,,,+,,,,,,,,,,,....#
 #.x.,,,,,,,,,,,,,,,....#
 #...,,,,,,...,,,,,,....#
 #...,,,,,,.O.,,,,,,....#
 #.C.,,,,,,...,,,,,,....#
 #...,,,,,,...,,,,,,....#
 #...,,,,,,,,,,,,,,,....#
-#.x.,,,,,,,,,,,,,,,....#
+#.x.,,,,,,,,,,,+,,,....#
 #...,,,,,,,,,,,,,,,....#
 #...,,,,,,,,,,,,,,,....#
 ########################"""),
@@ -115,7 +116,7 @@ ROOMS = {
 #..C...................#
 #......................#
 #,,,,,,,,,,,,,,,,,,,,,,#
-#,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,+,,,,,#
 #,,,,,,,,,,,,,,,,,,,,,,#
 #......M...............#
 #......................#

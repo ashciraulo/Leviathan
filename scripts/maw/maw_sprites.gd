@@ -5,3 +5,4 @@ extends RefCounted
 const NOTE := preload("res://assets/maw/note.png")
 const DREAMING_HEART := preload("res://assets/maw/dreaming_heart.png")
 const CHANT_MARK := preload("res://assets/maw/chant_mark.png")
+const GUMLEECH := preload("res://assets/maw/gumleech.png")

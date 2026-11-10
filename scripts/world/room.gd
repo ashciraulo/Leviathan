@@ -56,6 +56,7 @@ extends Node2D
 ##          M  Marrowguard (bone shield)   U  the Hush (unseen till an echo)
 ##          @  Tollshell (tolls a ring of sound, then opens)
 ##          &  Puffwisp (floats, draws breath, blows Wren back)
+##          +  Gumleech (swims in the Maw's palate floor ",", rears and bites)
 ##          ,  floor the water rises over: deep water while the dungeon's
 ##             water is high (see flooded())
 ##          (a signpost n reads out sign_key when Wren faces it)
@@ -124,6 +125,8 @@ var _water_frame := 0
 ## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
 ## ice (I) until it thaws, and goes back to water when the room reloads.
 var _frozen: Dictionary = {}
+## Where the layout put swimmers (+, Gumleeches): palate floor under them.
+var _swimmers: Array[Vector2i] = []
 ## Floor set pieces laid in this room: [top-left tile, which piece].
 var _set_pieces: Array = []
 ## Tufts of grass (and ferns, scrub...) cut down in this visit: tile -> true.
@@ -264,6 +267,7 @@ func _ready() -> void:
 		layout = alt_layout
 	add_to_group("rooms")
 	_rows = parse_layout(layout)
+	_lift_swimmers()
 	_place_set_pieces()
 	_has_ice_tiles = "I" in "".join(_rows)
 	var problem := validate_layout(_rows)
@@ -332,6 +336,8 @@ func _build() -> void:
 				continue
 			_spawn(tile, Vector2(x * TILE + TILE / 2.0, y * TILE + TILE - 4))
 			x += 1
+	for at: Vector2i in _swimmers:
+		_spawn("+", Vector2(at.x * TILE + TILE / 2.0, at.y * TILE + TILE - 4))
 	_build_water()
 	DungeonTiles.finish(self)
 	# Inside the Old One, its breath floods the palate floor.
@@ -626,6 +632,18 @@ func _tile_at(x: int, y: int) -> String:
 		# Floor the water rises over: deep while the dungeon's water is high.
 		return "Q" if flooded() else "."
 	return letter
+
+
+## A Gumleech (+) lives in the palate floor, so its tile is "," in the
+## layout as far as the floor and water go; it is spawned after the rest.
+func _lift_swimmers() -> void:
+	_swimmers.clear()
+	for y in _rows.size():
+		var at := _rows[y].find("+")
+		while at != -1:
+			_swimmers.append(Vector2i(at, y))
+			_rows[y] = _rows[y].substr(0, at) + "," + _rows[y].substr(at + 1)
+			at = _rows[y].find("+", at + 1)
 
 
 ## Picks where this room's floor set pieces go (biomes with "set_pieces"):

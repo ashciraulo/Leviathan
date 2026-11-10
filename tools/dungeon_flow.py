@@ -35,7 +35,7 @@ DUNGEONS = ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw"]
 # Tiles that block a crossing for good ($ comes down to the Echo Horn).
 SOLID = set("#!")
 # Anything the "clear" gate can count, the boss (V) included.
-ENEMIES = set("csbmweqtgdAkxaMUV@&")
+ENEMIES = set("csbmweqtgdAkxaMUV@&+")
 
 
 def parse_vec(text, key):

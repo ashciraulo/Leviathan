@@ -171,6 +171,8 @@ const SFX := {
 	"toll_ring": {"wave": "triangle", "f0": 523.0, "f1": 520.0, "dur": 0.8, "vol": 0.3, "caption": "CAPTION_BELL_QUIET"},
 	"puff_inhale": {"wave": "noise", "f0": 400.0, "f1": 1600.0, "dur": 0.5, "vol": 0.2, "caption": "CAPTION_GUST"},
 	"puff_blow": {"wave": "noise", "f0": 1600.0, "f1": 400.0, "dur": 0.5, "vol": 0.3, "caption": "CAPTION_GUST"},
+	"leech_rise": {"wave": "noise", "f0": 400.0, "f1": 1400.0, "dur": 0.5, "vol": 0.25, "caption": "CAPTION_TELL"},
+	"leech_bite": {"wave": "noise", "f0": 2400.0, "f1": 700.0, "dur": 0.12, "vol": 0.3, "caption": "CAPTION_SNAP"},
 	"bell_quiet": {"wave": "triangle", "f0": 392.0, "f1": 390.0, "dur": 0.6, "vol": 0.2, "caption": "CAPTION_BELL_QUIET"},
 	"bell_ring": {"wave": "triangle", "f0": 784.0, "f1": 780.0, "dur": 1.2, "vol": 0.5, "caption": "CAPTION_BELL"},
 	"choir_waking": {"wave": "sine", "f0": 220.0, "f1": 330.0, "dur": 2.4, "vol": 0.35, "steps": 4, "caption": "CAPTION_CHOIR"},
