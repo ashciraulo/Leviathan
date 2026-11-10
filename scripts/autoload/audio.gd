@@ -157,6 +157,7 @@ const SFX := {
 	"seal_bark": {"wave": "square", "f0": 330.0, "f1": 220.0, "dur": 0.25, "vol": 0.3, "caption": "CAPTION_TELL"},
 	"tide_rise": {"wave": "noise", "f0": 400.0, "f1": 1400.0, "dur": 1.6, "vol": 0.3, "caption": "CAPTION_TIDE"},
 	"tide_ebb": {"wave": "noise", "f0": 1400.0, "f1": 300.0, "dur": 1.6, "vol": 0.3, "caption": "CAPTION_TIDE_EBB"},
+	"fish_jump": {"wave": "noise", "f0": 2400.0, "f1": 900.0, "dur": 0.18, "vol": 0.12},
 	"tide_sweep": {"wave": "noise", "f0": 1600.0, "f1": 300.0, "dur": 0.5, "vol": 0.4},
 	"sand_hiss": {"wave": "noise", "f0": 3000.0, "f1": 1800.0, "dur": 0.5, "vol": 0.2, "caption": "CAPTION_SAND"},
 	"jaw_rattle": {"wave": "noise", "f0": 900.0, "f1": 700.0, "dur": 0.5, "vol": 0.3, "steps": 5, "caption": "CAPTION_TELL"},
