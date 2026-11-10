@@ -7,6 +7,7 @@ extends Object
 ##
 ##   "if":     flags that must all be set
 ##   "unless": flags that must all be unset
+##   "has":    items Wren must be carrying
 ##   "set":    flags to set when this branch is spoken
 ##   "lines":  the pages, in order
 ##   "give":   items handed to Wren, {id: count} (a narration line in
@@ -130,6 +131,7 @@ const TALKS := {
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
 		{"if": ["sorrel_won"], "set": ["sorrel_paid"], "give": {"glint": 150}, "lines": ["SORREL_WON_1", "SORREL_WON_2", ["", "NARRATE_GOT_COURIER_PAY"]]},
+		{"if": ["sorrel_race"], "lines": ["SORREL_FLYING"]},
 		{"if": ["sorrel_raced"], "has": ["kite_cloak"], "set": ["sorrel_race"], "lines": ["SORREL_AGAIN", "SORREL_GO"]},
 		{"has": ["kite_cloak"], "set": ["sorrel_asked", "sorrel_raced", "sorrel_race"], "lines": ["SORREL_CLOAK_1", "SORREL_CLOAK_1B", "SORREL_CLOAK_2", "SORREL_GO"]},
 		{"if": ["sorrel_asked"], "lines": ["SORREL_WAITING"]},

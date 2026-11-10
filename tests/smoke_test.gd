@@ -4542,6 +4542,7 @@ func _test_sorrel() -> void:
 	game.player.try_interact()
 	await _play_scene(game, 10.0)
 	_check(GameState.has_flag(StoryDirector.RACE_FLAG), "she'll race again")
+	_check(Conversations.branch_for("sorrel").get("lines") == ["SORREL_FLYING"], "and while her kite's up she just says go")
 	# Straight across: from the near bank, glide over the water.
 	game.player.global_position = room.global_position + Vector2(post_tile.x * Room.TILE + 8, 4 * Room.TILE + 6)
 	game.player.facing = Vector2.DOWN

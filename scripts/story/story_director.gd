@@ -130,7 +130,7 @@ const KITE_ROUTE := [
 	Vector2(22 * 16, 6 * 16),
 	Vector2(20 * 16 + 8, 9 * 16 + 4),
 ]
-const KITE_TIME := 3.4
+const KITE_TIME := 3.0
 ## How near the post counts as there.
 const POST_REACH := 16.0
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
@@ -963,7 +963,7 @@ func sorrel_race() -> void:
 				GameState.clear_flag(RACE_FLAG)
 			return
 		var wren: Player = game.player
-		if is_instance_valid(wren) and not wren.airborne and wren.global_position.distance_to(post_at) <= POST_REACH:
+		if is_instance_valid(wren) and wren.state == Player.State.MOVE and not wren.airborne and wren.global_position.distance_to(post_at) <= POST_REACH:
 			won = true
 			break
 		if kite.arrived:
@@ -977,7 +977,7 @@ func sorrel_race() -> void:
 		Audio.play_jingle("jingle_secret")
 	else:
 		Audio.play_sfx("bell_quiet", post_at)
-	# The kite drifts down onto the post either way, and is gathered in.
+	# The kite drifts down (onto the post, if it got there) and is gathered in.
 	kite.arrived = true
 	await get_tree().create_timer(1.6).timeout
 	if is_instance_valid(kite):
