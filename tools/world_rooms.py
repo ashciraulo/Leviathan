@@ -71,7 +71,14 @@ SECRETS = {
     (6, -4): ("kite_cloak", "frostfang_bow"), # Windmere: glints on a sea stack
     (1, -3): ("kite_cloak", "frostfang_bow"), # Frostspine: glints on an islet
     (0, 3): ("kite_cloak", "frostfang_bow"),  # the Verge: Scaleweave on a skerry
+    # Side areas off the main path (their way in is gated too, see below).
+    (1, -1): ("frostfang_bow",),              # Rime Hollow: glints in a frozen pool
+    (7, -1): ("tide_hook", "kite_cloak"),     # Cinder Hollow: glints on a lava islet
+    (3, 3): ("kite_cloak", "frostfang_bow"),  # Glowworm Hollow: glints on a fen islet
 }
+# Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
+# glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
+# planks: the Glowmoth Lantern), Cinder Hollow west of (8,-1) (open).
 # The Ossuary's jar (7, 1) needs no tool: it sits inside a ring of sinking
 # sand, and the challenge is walking in without being swallowed.
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
@@ -101,7 +108,9 @@ def load_rooms():
         door = re.search(r"^door_to = Vector2i\((-?\d+), (-?\d+)\)", text, re.M)
         flag = re.search(r'^alt_flag = "(.*?)"', text, re.M)
         chest = re.search(r'^chest_item = "(.*?)"', text, re.M)
+        biome = re.search(r'^biome = "(.*?)"', text, re.M)
         rooms[coord] = {
+            "biome": biome.group(1) if biome else "saltmarrow",
             "layout": field("layout"),
             "alt": field("alt_layout"),
             "alt_flag": flag.group(1) if flag else "",
@@ -112,10 +121,16 @@ def load_rooms():
     return rooms
 
 
+# Regions whose "~" is lava: the Frostfang Bow can't freeze it, so it acts
+# like dungeon lava (^): the chain and the cloak cross it, nothing walks it.
+LAVA_BIOMES = {"cinderreach"}
+
+
 def rows_for(room, items):
-    if room["alt"] and room["alt_flag"] in items:
-        return room["alt"]
-    return room["layout"]
+    rows = room["alt"] if room["alt"] and room["alt_flag"] in items else room["layout"]
+    if room["biome"] in LAVA_BIOMES:
+        return [r.replace("~", "^") for r in rows]
+    return rows
 
 
 def walkable(tile, items):

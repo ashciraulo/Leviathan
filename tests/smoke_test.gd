@@ -3682,6 +3682,8 @@ func _test_overworld_secrets() -> void:
 	var expect := {
 		Vector2i(8, -3): "jar", Vector2i(7, 1): "jar", Vector2i(4, 2): "coral_buckler",
 		Vector2i(0, 3): "scaleweave", Vector2i(6, -4): "glint", Vector2i(1, -3): "glint",
+		# Side areas off the main path.
+		Vector2i(1, -1): "glint", Vector2i(7, -1): "glint", Vector2i(3, 3): "glint",
 	}
 	for coord: Vector2i in expect:
 		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
@@ -3696,7 +3698,14 @@ func _test_overworld_secrets() -> void:
 			_check(_walkable_from(broken, Vector2i(10, 7)).has(Vector2i(2, 2)), "breaking the boulder opens the nook")
 		if coord == Vector2i(6, -4):
 			_check(room.chest_count == 30, "the Windmere sea stack holds 30 glints")
+		if coord in [Vector2i(1, -1), Vector2i(7, -1), Vector2i(3, 3)]:
+			_check(room.chest_count >= 100 and tr(room.name_key) != room.name_key, "side area %s has a name and a cache of %d glints" % [coord, room.chest_count])
 		room.free()
+	# Frost can't freeze lava: Cinder Hollow's islet still needs the hook or cloak.
+	var hollow: Room = (load("res://rooms/room_7_-1.tscn") as PackedScene).instantiate()
+	add_child(hollow)
+	_check(hollow.is_lava() and hollow.freeze(Vector2i(9, 5)).is_empty() and hollow.tile_at(9, 5) == "~", "a frost arrow leaves Cinderreach's lava alone")
+	hollow.queue_free()
 	# A cache gives its whole count at once.
 	GameState.reset_new_game()
 	var chest := Chest.new()
