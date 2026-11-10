@@ -2074,7 +2074,7 @@ func _sea_glass_shots(game: Node) -> void:
 
 func _pacing_shots(game: Node) -> void:
 	var shots := {
-		Vector2i(2, 0): ["pacing_barnacle_wall", Vector2i(8, 10)],
+		Vector2i(2, 0): ["pacing_barnacle_wall", Vector2i(8, 8)],
 		Vector2i(2, 2): ["pacing_wrack_shore", Vector2i(5, 9)],
 		Vector2i(3, 0): ["pacing_brinewood_edge", Vector2i(6, 6)],
 		Vector2i(3, -2): ["pacing_hollow_bole", Vector2i(12, 6)],
