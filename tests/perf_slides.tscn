@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/perf_slides.gd" id="1_slides"]
+
+[node name="PerfSlides" type="Node"]
+script = ExtResource("1_slides")
