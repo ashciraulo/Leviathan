@@ -2083,7 +2083,7 @@ func _pacing_shots(game: Node) -> void:
 		Vector2i(4, -2): ["pacing_mothlight", Vector2i(12, 11)],
 		Vector2i(5, 1): ["pacing_stillwater", Vector2i(8, 3)],
 		Vector2i(6, -2): ["pacing_brine_spring", Vector2i(16, 9)],
-		Vector2i(6, -1): ["pacing_rootmaze", Vector2i(20, 3)],
+		Vector2i(6, -1): ["pacing_rootmaze", Vector2i(21, 2)],
 		Vector2i(6, 0): ["pacing_tangle_shore", Vector2i(12, 3)],
 		Vector2i(7, -2): ["pacing_ashfall_gate", Vector2i(5, 6)],
 		Vector2i(7, 0): ["pacing_bleached_strand", Vector2i(16, 5)],

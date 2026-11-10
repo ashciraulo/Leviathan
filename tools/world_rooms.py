@@ -334,6 +334,10 @@ def main():
             if need:
                 if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
+    # Every signpost in a room reads the room's one sign_key: one per room.
+    for coord in sorted(rooms):
+        if sum(r.count("n") for r in rows_for(rooms[coord], final_items)) > 1:
+            problems.append("screen %s has more than one signpost (they'd all say the same)" % (coord,))
     # Sea-glass: how many, where, and the hidden ones need their tool.
     glass = [(coord, (x, y)) for coord in sorted(rooms) for y in range(ROWS) for x in range(COLS)
              if rows_for(rooms[coord], final_items)[y][x] == "*"]
