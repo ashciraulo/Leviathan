@@ -2068,6 +2068,61 @@ func _test_tomb_dungeon() -> void:
 		_check(hush.shown > 0.0, "the horn's echo shows the Hush")
 		_check(hush.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "shown, the sword finds it")
 
+	# The Skull Choir: two skulls in each bay, too far apart to wake
+	# together. The horn brings the barricades on the short way down; then
+	# a blast in each bay, walked between inside the song, opens the chest.
+	room = await _goto(game, Vector2i(41, 8), Vector2i(18, 11))
+	await _calm(room)
+	var choir_skulls := _child_of(room, SingingSkull)
+	_check(choir_skulls.size() == 4, "four skulls sit in the Skull Choir")
+	var choir_chest: Chest = _child_of(room, Chest)[0]
+	_check(_child_of(room, BoneWall).size() == 2 and not choir_chest.visible, "bone barricades shut the short way between the bays")
+	for spot in [Vector2i(4, 4), Vector2i(19, 4)]:
+		player.global_position = _tile_pos(room, spot)
+		player.velocity = Vector2.ZERO
+		await _wait(0.15)
+		player.use_item("echo_horn")
+		await _wait(SingingSkull.SING_TIME + 0.5)
+	_check(_child_of(room, BoneWall).is_empty(), "a blast in each bay brings its barricade down")
+	_check(not choir_chest.visible, "one bay at a time, the skulls' song never meets")
+	player.global_position = _tile_pos(room, Vector2i(4, 4))
+	player.velocity = Vector2.ZERO
+	await _wait(0.15)
+	player.use_item("echo_horn")
+	await _wait(0.45)
+	Input.action_press("move_right")
+	await _wait(2.6)
+	Input.action_release("move_right")
+	local = player.global_position - room.global_position
+	_check(local.x > 18 * Room.TILE, "Wren runs the short way across (at %s)" % local)
+	player.velocity = Vector2.ZERO
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(choir_chest.visible and choir_chest.item == "big_key", "both bays singing at once, the big key appears")
+
+	# The Bone Orchard: one hidden wall behind another.
+	room = await _goto(game, Vector2i(39, 10), Vector2i(22, 6))
+	await _calm(room)
+	_check(_child_of(room, BoneWall).size() == 2, "two hidden bone walls in the Bone Orchard")
+	player.global_position = _tile_pos(room, Vector2i(7, 8))
+	player.velocity = Vector2.ZERO
+	await _wait(0.15)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(_child_of(room, BoneWall).size() == 1 and room.tile_at(5, 8) == ".", "a blast nearby finds the first")
+	player.global_position = _tile_pos(room, Vector2i(2, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.15)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(_child_of(room, BoneWall).is_empty(), "and from behind it, the second")
+	Input.action_press("move_up")
+	await _wait(1.2)
+	Input.action_release("move_up")
+	local = player.global_position - room.global_position
+	_check(local.y < 4 * Room.TILE, "Wren steps through into the sealed chamber (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "glint"), "glints wait in the Orchard's chamber")
+
 	# The Hollow Regent. (The last mural has its own test in _test_story.)
 	GameState.refill()
 	GameState.set_flag(StoryDirector.MURAL_FLAG)

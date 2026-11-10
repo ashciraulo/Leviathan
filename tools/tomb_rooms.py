@@ -16,8 +16,14 @@ The way through:
   Marrowguards; the Echo Horn) -> the horn brings down the Hall's north
   barricade -> the Echo Chamber (wake all three skulls at once; small key)
   -> its west wall is hidden bone: the Forgotten Ossuary behind it
-  (compass) -> the Hall's east hatch into the Bone Pit (big key) -> the
-  Chamber's great door -> the Hollow Regent.
+  (compass) -> the Hall's east hatch into the Bone Pit (beat everything;
+  glints, and the bars north open) -> the Skull Choir (four skulls in two
+  bays, too far apart to wake together: the horn brings down the bone
+  barricades on the short way between them, then a blast in each bay
+  inside the skulls' song; big key) -> the Chamber's great door -> the
+  Hollow Regent.
+  Off the main path: the Bone Orchard west of the Entry (two hidden bone
+  walls, one behind the other, to a sealed chamber; glints).
 """
 
 import os
@@ -45,9 +51,9 @@ ROOMS = {
 #..##..............##..#
 #..##..............##..#
 #......................#
-#......................#
-#..........M...........#
-#......................#
+.......................#
+...........M...........#
+.......................#
 #......................#
 #..##..............##..#
 #..##..............##..#
@@ -109,11 +115,11 @@ $......................#
 #......................#
 #......................#
 ########################"""),
-    (41, 9): ("ROOM_TOMB_PIT", {"chest_item": '"big_key"', "gate": '"clear"', "chest_hidden": "true"}, """
-########################
-#......................#
-#..................C...#
-#......##......##......#
+    (41, 9): ("ROOM_TOMB_PIT", {"chest_item": '"glint"', "chest_count": "50", "gate": '"clear"', "chest_hidden": "true"}, """
+##################..####
+##################||####
+##################..####
+#......##......##..C...#
 #......##......##......#
 .|.....................#
 .|.........M...U.......#
@@ -138,6 +144,34 @@ $......................#
 #.......#......#.......#
 #.......###%%###.......#
 #....M.................#
+########################"""),
+    (41, 8): ("ROOM_TOMB_SKULL_CHOIR", {"chest_item": '"big_key"', "gate": '"skulls"', "chest_hidden": "true"}, """
+########################
+#....Z..########..Z....#
+#.......########.......#
+#.......########.......#
+#.......%......%.......#
+#.......########.......#
+#..Z....########....Z..#
+#.......########.......#
+#.####################.#
+#......................#
+#..........C...........#
+#.....U................#
+##################..####"""),
+    (39, 10): ("ROOM_TOMB_BONE_ORCHARD", {"chest_item": '"glint"', "chest_count": "100"}, """
+########################
+#.C..###...............#
+#....###...............#
+#....###..M............#
+##$#####...............#
+#....###................
+#....###.......U........
+#....###................
+#....$.................#
+#....#.........M.......#
+######.................#
+######.................#
 ########################"""),
     (40, 7): ("ROOM_TOMB_BOSS", OUTSIDE, """
 ########################

@@ -339,6 +339,10 @@ func _items_and_glints() -> void:
 	await _play_scene(20.0)
 	_keep_safe()
 	var wren: Player = _game.player
+	# Eight dungeons' chests can leave the purse near full: spend down so
+	# there's room to count what's picked up here.
+	if GameState.item_count("glint") > 500:
+		GameState.take_item("glint", GameState.item_count("glint") - 500)
 	var start := GameState.item_count("glint")
 	# Enemies: ten Scuttlers fall, and glints are left.
 	for i in 10:

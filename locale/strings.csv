@@ -699,6 +699,8 @@ ROOM_TOMB_CRYPT,The Marrow Tomb: Horn Crypt
 ROOM_TOMB_ECHO,The Marrow Tomb: Echo Chamber
 ROOM_TOMB_HIDDEN,The Marrow Tomb: Forgotten Ossuary
 ROOM_TOMB_PIT,The Marrow Tomb: Bone Pit
+ROOM_TOMB_SKULL_CHOIR,The Marrow Tomb: Skull Choir
+ROOM_TOMB_BONE_ORCHARD,The Marrow Tomb: Bone Orchard
 ROOM_TOMB_BOSS,The Marrow Tomb: the Regent's Barrow
 DUNGEON_TOMB,The Marrow Tomb
 TOAST_GOT_ECHO_HORN,You found the Echo Horn!

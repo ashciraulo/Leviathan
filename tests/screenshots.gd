@@ -996,6 +996,8 @@ func _tomb_shots(game: Node) -> void:
 		[Vector2i(40, 8), "138_tomb_echo_chamber", Vector2i(11, 11)],
 		[Vector2i(39, 8), "139_tomb_forgotten_ossuary", Vector2i(21, 6)],
 		[Vector2i(41, 9), "140_tomb_bone_pit", Vector2i(3, 6)],
+		[Vector2i(41, 8), "140b_tomb_skull_choir", Vector2i(18, 11)],
+		[Vector2i(39, 10), "140c_tomb_bone_orchard", Vector2i(21, 6)],
 	]
 	for shot: Array in rooms:
 		var at := await _jump(game, shot[0], shot[2])

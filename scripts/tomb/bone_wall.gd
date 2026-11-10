@@ -49,7 +49,9 @@ func _draft() -> void:
 	add_child(dust)
 
 
-## Which way the room is from this wall tile (it sits in the room's border).
+## Which way the room is from this wall tile. A wall in the room's border
+## faces in; one inside the room faces the first open tile beside it, down
+## and across before up, so the dust drifts out where Wren comes upon it.
 func _into_room() -> Vector2:
 	if tile.x <= 0:
 		return Vector2.RIGHT
@@ -57,6 +59,13 @@ func _into_room() -> Vector2:
 		return Vector2.LEFT
 	if tile.y <= 0:
 		return Vector2.DOWN
+	if tile.y >= Room.ROWS - 1:
+		return Vector2.UP
+	var room := get_parent() as Room
+	if room:
+		for dir in [Vector2i.DOWN, Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP]:
+			if not room.tile_at(tile.x + dir.x, tile.y + dir.y) in ["#", "$", "%", "!"]:
+				return Vector2(dir)
 	return Vector2.UP
 
 
