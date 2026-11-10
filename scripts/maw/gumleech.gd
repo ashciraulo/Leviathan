@@ -21,6 +21,10 @@ const BITE_SPEED := 120.0
 const RETURN_SPEED := 55.0
 ## Waits under the water after a bite before it can rear again.
 const COOLDOWN := 1.3
+## Swimming, it holds off this far from Wren rather than slide under them.
+const HOLD_OFF := 22.0
+## A squirm home that takes longer than this heads for the nearest palate.
+const RETURN_LIMIT := 1.5
 
 var mode := Mode.SWIM
 ## Which way it bites (set as it rears).
@@ -28,6 +32,8 @@ var aim := Vector2.RIGHT
 ## Where it last swam: it squirms back here after a bite.
 var home := Vector2.ZERO
 var _timer := 0.0
+## Whether this squirm home has already given up on `home` once.
+var _retargeted := false
 var _wiggle := 0.0
 var _shadow: Node2D
 
@@ -75,6 +81,7 @@ func _think(delta: float) -> void:
 				return
 			if not _palate(position):
 				_set_mode(Mode.RETURN)
+				_timer = RETURN_LIMIT
 				return
 			home = position
 			velocity = Vector2.ZERO
@@ -89,7 +96,8 @@ func _think(delta: float) -> void:
 				_timer = RISE_TIME
 				Audio.play_sfx("leech_rise", global_position)
 				return
-			velocity = _keep_to_palate(to.normalized() * SWIM_SPEED, delta)
+			if to.length() > HOLD_OFF:
+				velocity = _keep_to_palate(to.normalized() * SWIM_SPEED, delta)
 		Mode.RISE:
 			velocity = Vector2.ZERO
 			if player != null:
@@ -102,7 +110,14 @@ func _think(delta: float) -> void:
 			velocity = aim * BITE_SPEED
 			if _timer <= 0.0:
 				_set_mode(Mode.RETURN)
+				_timer = RETURN_LIMIT
 		Mode.RETURN:
+			if _timer <= 0.0:
+				# Blocked on the way home (a post, another leech): make for the
+				# nearest palate floor instead, and failing that settle here.
+				home = _nearest_palate() if not _retargeted else position
+				_retargeted = true
+				_timer = RETURN_LIMIT
 			var back := home - position
 			if back.length() < 2.0:
 				position = home
@@ -113,8 +128,12 @@ func _think(delta: float) -> void:
 				velocity = back.normalized() * RETURN_SPEED
 		Mode.STRANDED:
 			if flooded:
-				_set_mode(Mode.SWIM if _palate(position) else Mode.RETURN)
-				_timer = COOLDOWN * 0.5
+				if _palate(position):
+					_set_mode(Mode.SWIM)
+					_timer = COOLDOWN * 0.5
+				else:
+					_set_mode(Mode.RETURN)
+					_timer = RETURN_LIMIT
 				return
 			velocity = Vector2.ZERO
 			if player != null and player.global_position.distance_to(global_position) < SIGHT:
@@ -135,16 +154,47 @@ func _keep_to_palate(want: Vector2, delta: float) -> Vector2:
 	return Vector2.ZERO
 
 
+## The middle of the palate tile nearest the leech (room-local feet).
+func _nearest_palate() -> Vector2:
+	var room := get_parent() as Room
+	var best := home
+	var best_d := INF
+	if room == null:
+		return best
+	for y in Room.ROWS:
+		for x in Room.COLS:
+			if room.raw_tile(x, y) != ",":
+				continue
+			var at := Vector2(x * Room.TILE + Room.TILE / 2.0, y * Room.TILE + Room.TILE - 4)
+			var d := at.distance_squared_to(position)
+			if d < best_d:
+				best_d = d
+				best = at
+	return best
+
+
+## Under the water nothing reaches it: not the sword, nor a hook, arrow,
+## bomb or a diver's strike.
+func take_hit(damage: int, direction: Vector2) -> HitResult:
+	if mode == Mode.SWIM:
+		return HitResult.IGNORED
+	return super.take_hit(damage, direction)
+
+
 func _set_mode(next: Mode) -> void:
 	mode = next
+	_retargeted = false
 	_apply_mode()
 
 
-## Under the water nothing reaches it, and it touches nothing.
+## Under the water nothing reaches it, and it touches nothing. Only the
+## bite itself hurts (and touching it stranded): rearing is the tell, and
+## squirming home it keeps its mouth shut.
 func _apply_mode() -> void:
 	var under := mode == Mode.SWIM
 	_hurtbox.set_deferred("monitorable", not under)
-	_contact.active = not under
+	_hurtbox.set_deferred("collision_layer", 0 if under else 1 << (Layers.ENEMY_HURTBOX - 1))
+	_contact.active = mode in [Mode.BITE, Mode.STRANDED]
 	if _shadow:
 		_shadow.visible = not under
 	z_index = -1 if under else 0

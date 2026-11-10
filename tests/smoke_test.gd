@@ -2181,13 +2181,15 @@ func _test_foes_dungeon() -> void:
 	if leeches.size() == 1:
 		var leech: Gumleech = leeches[0]
 		_check(leech.is_submerged(), "with the palate flooded, it swims under the water")
-		_check(not leech._hurtbox.monitorable, "and under the water the sword can't reach it")
+		_check(not leech._hurtbox.monitorable and leech._hurtbox.collision_layer == 0, "and under the water the sword can't reach it")
+		_check(leech.take_hit(1, Vector2.UP) == Enemy.HitResult.IGNORED, "nor a hook, arrow or bomb")
 		player.global_position = _tile_pos(room, Vector2i(16, 3))
 		var start := leech.global_position
 		var deadline := Time.get_ticks_msec() + 3000
 		while Time.get_ticks_msec() < deadline and leech.mode != Gumleech.Mode.RISE:
 			await _wait(0.05)
 		_check(leech.mode == Gumleech.Mode.RISE, "Wren near the water, it rears up")
+		_check(not leech._contact.active, "rearing is only the tell: it doesn't sting yet")
 		await _wait(Gumleech.RISE_TIME + 0.1)
 		_check(leech.mode in [Gumleech.Mode.BITE, Gumleech.Mode.RETURN], "then lunges to bite")
 		_check(leech.global_position.y < start.y - 8.0, "out toward Wren (%.0f px)" % (start.y - leech.global_position.y))

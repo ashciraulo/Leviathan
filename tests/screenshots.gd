@@ -1530,7 +1530,7 @@ func _maw_shots(game: Node) -> void:
 			child.aim = Vector2.DOWN
 			child._set_mode(Gumleech.Mode.RISE)
 	await _wait(0.2)
-	await _capture("154_maw_gumleech_rearing")
+	await _capture("175_maw_gumleech_rearing")
 	MawBreath.elapsed = 0.0
 
 	# Cantor Vael and his singers.
