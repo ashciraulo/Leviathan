@@ -127,7 +127,14 @@ async function saveCheck() {
     const until = Date.now() + BOOT_TIMEOUT_MS;
     while (!up && Date.now() < until) await tab.waitForTimeout(500);
     tab.off("console", seen);
-    await tab.waitForTimeout(6000);
+    // The title says when its menu takes keys (slow CI can take a while to
+    // get there); a key pressed before that could be lost.
+    let ready = false;
+    while (up && !ready && Date.now() < until + 60000) {
+      ready = await tab.evaluate(() => window.__lvTitleReady === true).catch(() => false);
+      if (!ready) await tab.waitForTimeout(250);
+    }
+    await tab.waitForTimeout(ready ? 500 : 6000);
     return up;
   };
   // CI draws in software at a few frames a second: hold each key for a
