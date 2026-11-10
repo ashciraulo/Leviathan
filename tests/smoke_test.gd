@@ -15,10 +15,11 @@ func _ready() -> void:
 	# Slot 2 is File 3 on the file select: keep a real save safe.
 	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
-	# SMOKE_ONLY=tomb runs just _test_tomb_dungeon (for quick local runs).
+	# SMOKE_ONLY=tomb runs just _test_tomb_dungeon, SMOKE_ONLY=equipment just
+	# _test_equipment (for quick local runs).
 	var only := OS.get_environment("SMOKE_ONLY")
 	if only != "":
-		await call("_test_%s_dungeon" % only)
+		await call(("_test_" + only) if has_method("_test_" + only) else ("_test_%s_dungeon" % only))
 	else:
 		_test_room_layouts()
 		_test_game_state()
@@ -38,6 +39,8 @@ func _ready() -> void:
 		await _test_belfry_dungeon()
 		await _test_tomb_dungeon()
 		await _test_maw_dungeon()
+		await _test_extras_dungeon()
+		await _test_echoes_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -53,7 +56,9 @@ func _ready() -> void:
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
+		await _test_equipment()
 		await _test_side_quests()
+		await _test_shop()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -733,6 +738,86 @@ func _test_story() -> void:
 	turned_home.queue_free()
 	await _wait(0.1)
 
+	# The Marrow Tomb: with the Regent gone to bones, Dace shows Wren the
+	# last mural.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
+	var barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(barrow)
+	await _wait(0.3)
+	_check(not barrow.current_room.get_children().any(func(c: Node) -> bool: return c is LastMural), "the mural is walled up before the fight")
+	for child in barrow.current_room.get_children():
+		if child is HollowRegent:
+			child.ai_enabled = false
+			child.mode = HollowRegent.Mode.OPEN
+			for blow in 30:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child._stun = 0.0
+				child._hits_this_open = 0
+				child.take_hit(1, Vector2.UP)
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.MURAL_FLAG), "the Regent's fall starts the last mural")
+	var mural_pages := await _play_scene(barrow, 20.0)
+	_check(mural_pages == 4, "Dace speaks four times (%d)" % mural_pages)
+	_check(not Cutscene.active and not barrow.player.in_cutscene, "the mural scene hands Wren back")
+	var murals: Array = barrow.current_room.get_children().filter(func(c: Node) -> bool: return c is LastMural)
+	_check(murals.size() == 1 and not murals[0].is_showing(), "the mural stays carved on the wall, the close view gone")
+	_check(not barrow.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "Dace leaves the tomb")
+	await _wait(4.0)
+	_check(barrow.current_room.get_children().any(func(c: Node) -> bool: return c is Tidebell), "the Marrow Bell waits to be rung")
+	barrow.queue_free()
+	await _wait(0.1)
+
+	# The ending: the Heart sleeps, Vael stays, Mantle carries Wren home.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(44, 6), Vector2(11 * Room.TILE + 8, 10 * Room.TILE + 12))
+	DreamingHeart.roll_credits = false
+	var heart_room: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart_room)
+	await _wait(0.3)
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	Events.game_finished.emit()
+	await _wait(0.1)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.ENDING_FLAG), "when the Old One sleeps, the ending begins")
+	var end_pages := await _play_scene(heart_room, 40.0)
+	_check(end_pages == 5, "Vael speaks, then home is told (%d pages)" % end_pages)
+	_check(not Cutscene.active and GameState.room_coord == StoryDirector.SALTMARROW, "the ending carries Wren home to Saltmarrow")
+	_check(GameState.checkpoint_room == StoryDirector.SALTMARROW, "after the credits, Continue starts at home")
+	_check(heart_room.current_room.coord == StoryDirector.SALTMARROW and not heart_room.current_room.get_children().any(func(c: Node) -> bool: return c is ChoirFigure), "Vael stays behind in the Maw: no one follows Wren home")
+	_check(GameState.has_flag(StoryDirector.CONFESSION_FLAG) and GameState.has_flag("seen_wayshell"), "no older scene waits at home after the credits")
+	Events.game_finished.emit()
+	await _wait(0.1)
+	_check(not Cutscene.active, "the ending only plays once")
+	heart_room.queue_free()
+	await _wait(0.1)
+	# Closed partway through the ending: Continue picks it up again.
+	GameState.reset_new_game()
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_checkpoint(Vector2i(44, 6), GameState.NO_POSITION)
+	var heart_again: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart_again)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.ENDING_FLAG), "a save from mid-ending starts the ending again")
+	await _play_scene(heart_again, 40.0)
+	_check(GameState.room_coord == StoryDirector.SALTMARROW, "and it still ends at home")
+	DreamingHeart.roll_credits = true
+	heart_again.queue_free()
+	await _wait(0.1)
+
+	# A door opening under Wren mid-scene doesn't carry them off.
+	GameState.reset_new_game()
+	GameState.set_flag(HollowRegent.DEFEATED_FLAG)
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 1 * Room.TILE + 12))
+	var old_barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(old_barrow)
+	await _wait(0.3)
+	_check(Cutscene.active and GameState.has_flag(StoryDirector.MURAL_FLAG), "an older save still sees the last mural on the way back in")
+	var old_pages := await _play_scene(old_barrow, 20.0)
+	_check(old_pages == 4 and GameState.room_coord == StoryDirector.TOMB_BOSS, "standing on the way out, Wren stays for the whole scene (%d pages)" % old_pages)
+	old_barrow.queue_free()
+	await _wait(0.1)
+
 	# The Kiln's crucible: Lowe's smiths stoke it until the slag wakes.
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.KILN_BOSS, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 12))
@@ -927,6 +1012,8 @@ func _test_play() -> void:
 	spitter.position = Vector2(200, row_y)
 	room.add_child(spitter)
 	player.global_position = room.global_position + Vector2(120, row_y)
+	# Back to it: facing it, the cork buckler would turn the shot aside.
+	player.facing = Vector2.LEFT
 	await _wait(3.0)
 	_check(GameState.bubbles < 3 or _count_projectiles(room) > 0, "Spitter shoots at Wren")
 	spitter.queue_free()
@@ -1692,8 +1779,9 @@ func _test_tomb_dungeon() -> void:
 		_check(hush.shown > 0.0, "the horn's echo shows the Hush")
 		_check(hush.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "shown, the sword finds it")
 
-	# The Hollow Regent.
+	# The Hollow Regent. (The last mural has its own test in _test_story.)
 	GameState.refill()
+	GameState.set_flag(StoryDirector.MURAL_FLAG)
 	room = await _goto(game, Vector2i(40, 7), Vector2i(11, 11))
 	var bosses := _child_of(room, HollowRegent)
 	_check(bosses.size() == 1, "the Hollow Regent waits in his barrow")
@@ -1903,6 +1991,138 @@ func _test_maw_dungeon() -> void:
 		_check(not GameState.final_line, "Hum goes back to normal")
 	DreamingHeart.roll_credits = true
 	game.queue_free()
+	await _wait(0.1)
+
+
+## Dungeon completeness: the optional rooms with the finest gear, and the
+## map screen in every dungeon with its map and compass.
+func _test_extras_dungeon() -> void:
+	# Each optional room, its way in, and its chest.
+	var extras := [
+		[Vector2i(36, 10), Vector2i(37, 9), Vector2i(37, 10), "nacre_buckler"],
+		[Vector2i(40, 10), Vector2i(41, 9), Vector2i(41, 10), "abyssal"],
+		[Vector2i(44, 10), Vector2i(45, 9), Vector2i(45, 10), "tidecaller_sword"],
+	]
+	for extra: Array in extras:
+		GameState.reset_new_game()
+		GameState.set_checkpoint(extra[0], GameState.NO_POSITION)
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.6)
+		var player: Player = game.player
+		player._invuln = 600.0
+		var room := await _goto(game, extra[1], Vector2i(11, 6))
+		await _calm(room)
+		var below: String = RoomInfo.get_room(extra[2])["rows"][0]
+		var above: String = RoomInfo.get_room(extra[1])["rows"][12]
+		_check(above[19] != "#" and above[20] != "#" and below[19] == "." and below[20] == ".", "%s opens south to %s" % [room.name_key, extra[2]])
+		if extra[3] == "abyssal":
+			var walls := _child_of(room, BoneWall).filter(func(w: BoneWall) -> bool: return w.concealed and w.tile.y == 12)
+			_check(walls.size() == 2, "a concealed wall hides the Ossuary")
+			for wall: BoneWall in walls:
+				wall.horn_hit(Vector2.ZERO)
+			await _wait(0.3)
+			_check(_child_of(room, BoneWall).filter(func(w: BoneWall) -> bool: return w.tile.y == 12 and not w.is_queued_for_deletion()).is_empty(), "the Echo Horn brings it down")
+		room = await _goto(game, extra[2], Vector2i(19, 1))
+		await _calm(room)
+		var chests := _child_of(room, Chest)
+		_check(chests.size() == 1 and chests[0].item == extra[3], "%s keeps the %s" % [room.name_key, extra[3]])
+		if chests.size() == 1:
+			chests[0].interact()
+			await _wait(1.0)
+			await _close_dialogue(game)
+			_check(GameState.equipped_item(Items.kind(extra[3])) == extra[3], "Wren takes up the %s" % extra[3])
+		game.queue_free()
+		await _wait(0.1)
+
+	# The map screen in each dungeon: the map shows every room, the compass
+	# every chest and the boss until it is calmed.
+	GameState.reset_new_game()
+	for dungeon: String in MapPage.BOSS_FLAGS:
+		var rooms := RoomInfo.in_area(dungeon)
+		GameState.dungeon = dungeon
+		GameState.room_coord = rooms[0]
+		var page := MapPage.new()
+		add_child(page)
+		page.on_open()
+		_check(page._rooms.size() == 1, "%s: with no map, only the room Wren stands in" % dungeon)
+		GameState.give_item(Items.dungeon_item(dungeon, "map"))
+		GameState.give_item(Items.dungeon_item(dungeon, "compass"))
+		page.on_open()
+		_check(page._rooms.size() == rooms.size(), "%s: the map shows all %d rooms" % [dungeon, rooms.size()])
+		var bosses := rooms.filter(func(c: Vector2i) -> bool: return RoomInfo.get_room(c)["boss"] != Vector2i(-1, -1))
+		_check(bosses.size() >= 1 and not page._boss_calmed(bosses[0]), "%s: the compass points to its boss" % dungeon)
+		GameState.set_flag(MapPage.BOSS_FLAGS[dungeon])
+		_check(page._boss_calmed(bosses.filter(func(c: Vector2i) -> bool: return RoomInfo.get_room(c)["name_key"] != "ROOM_MAW_HEART")[0]), "%s: and stops once it is calmed" % dungeon)
+		page.queue_free()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
+## After the end: the echo stones round the sleeping Heart, a remembered
+## fight with a boss in its own room, and the way home.
+func _test_echoes_dungeon() -> void:
+	GameState.reset_new_game()
+	for id: String in EchoTrial.BOSSES:
+		GameState.set_flag(EchoTrial.BOSSES[id][1])
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	GameState.set_checkpoint(EchoTrial.HEART_ROOM, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	var room: Room = game.current_room
+	_check(room.coord == EchoTrial.HEART_ROOM, "after the end, Continue starts by the sleeping Heart")
+	await _wait(1.0 + EchoHall.RISE_GAP * 8 + 0.5)
+	var stones := _child_of(room, EchoStone)
+	_check(stones.size() == 8 and GameState.has_flag(EchoTrial.WOKEN_FLAG), "eight echo stones rise round the Heart")
+	_check(Audio.music_cue != "boss", "the sleeping Heart's chamber is no fight (%s)" % Audio.music_cue)
+	_check(stones.all(func(s: EchoStone) -> bool: return room.tile_at(s.return_tile.x, s.return_tile.y) == "."), "every stone sends Wren home onto floor")
+	if stones.size() == 8:
+		var stone: EchoStone = stones.filter(func(s: EchoStone) -> bool: return s.id == "hull")[0]
+		var back := stone.return_tile
+		stone.activate()
+		await _wait(1.0)
+		room = game.current_room
+		_check(room.coord == EchoTrial.BOSSES["hull"][0] and EchoTrial.boss == "hull", "a stone carries Wren into the Matriarch's echo")
+		var bosses := _child_of(room, BarnacleMatriarch)
+		_check(bosses.size() == 1 and _child_of(room, BossAftermath).is_empty(), "she is there again, and no bell")
+		_check(_child_of(room, CanvasModulate).size() == 1, "the room is washed in dream-light")
+		Events.boss_defeated.emit()
+		await _wait(EchoTrial.RETURN_DELAY + 1.2)
+		room = game.current_room
+		_check(room.coord == EchoTrial.HEART_ROOM and EchoTrial.boss == "", "calmed, Wren is carried back to the Heart")
+		_check(GameState.has_flag(EchoTrial.cleared_flag("hull")), "and the stone remembers it")
+		var local := player.global_position - room.global_position
+		_check(Vector2i(local / Room.TILE) == back, "Wren comes back in front of the stone (at %s)" % local)
+		# Vael's echo: no words before the song.
+		var vael_stone: EchoStone = _child_of(room, EchoStone).filter(func(s: EchoStone) -> bool: return s.id == "vael")[0]
+		var talked := [false]
+		var listen := func(_pages: Array) -> void: talked[0] = true
+		Events.conversation_requested.connect(listen)
+		vael_stone.activate()
+		await _wait(1.2)
+		Events.conversation_requested.disconnect(listen)
+		room = game.current_room
+		var vaels := _child_of(room, CantorVael)
+		_check(vaels.size() == 1 and not talked[0], "Vael's echo sings without a word")
+		# Leaving the room ends the echo.
+		room = await _goto(game, Vector2i(44, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "walking out of a remembered fight ends it")
+		room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))
+		_check(_child_of(room, CantorVael).is_empty(), "and the room is as Wren left it")
+		# Walking out in the wait after a calm ends the echo all the same.
+		EchoTrial.begin("kiln", Vector2i(4, 7))
+		await _wait(1.0)
+		Events.boss_defeated.emit()
+		await _wait(0.3)
+		room = await _goto(game, Vector2i(21, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "leaving before the trip home ends the echo too")
+	game.queue_free()
+	EchoTrial.end()
+	GameState.reset_new_game()
 	await _wait(0.1)
 
 
@@ -3449,3 +3669,172 @@ func _test_maw_approach() -> void:
 	_check(_walkable_from(rows, Vector2i(2, 9)).has(Vector2i(11, 5)) and _walkable_from(rows, Vector2i(2, 9)).has(Vector2i(10, 5)), "its back makes a path out to the mouth")
 	risen.free()
 	GameState.clear_flag(flag)
+
+
+## Equipment does something: swords hit harder by tier (bosses capped),
+## shields turn shots aside when Wren faces them, tunics soak up hits.
+func _test_equipment() -> void:
+	GameState.reset_new_game()
+	_check(GameState.equipped_item(Items.SHIELD) == "cork_buckler", "a new file starts with the cork buckler")
+	_check(Player.sword_damage() == 1 and Player.sword_damage(null, true) == 2, "the driftwood sword: 1 a slash, 2 a spin")
+	GameState.give_item("brinesteel_sword", 1, false)
+	_check(GameState.equipped_item(Items.SWORD) == "brinesteel_sword" and Player.sword_damage() == 2, "brinesteel hits for 2")
+	GameState.give_item("tidecaller_sword", 1, false)
+	_check(Player.sword_damage() == 3 and Player.sword_damage(null, true) == 6, "the tidecaller hits for 3, a spin for 6")
+	var boss := Node.new()
+	boss.add_to_group("boss")
+	_check(Player.sword_damage(boss) == 1 and Player.sword_damage(boss, true) == 2, "a boss takes 1 from a slash and 2 from a spin, whatever the sword")
+	boss.free()
+
+	# Tunics: of four one-bubble hits, oilskin pops 4, scaleweave 3, abyssal 2.
+	for tunic: Array in [["oilskin", 4], ["scaleweave", 3], ["abyssal", 2]]:
+		GameState.give_item(tunic[0], 1, false)
+		GameState.equip(tunic[0])
+		GameState.refill()
+		GameState._hurt_owed = 0.0
+		var popped := 0
+		for i in 4:
+			popped += GameState.hurt(1)
+		_check(popped == tunic[1] and GameState.bubbles == GameState.max_bubbles - tunic[1], "%s: four hits pop %d bubbles (%d)" % [tunic[0], tunic[1], popped])
+	GameState.equip("abyssal")
+	GameState._hurt_owed = 0.0
+	_check(GameState.hurt(2) == 1, "the abyssal tunic halves a heavy hit")
+
+	# A file from before shields mattered gets the cork buckler on load.
+	GameState.reset_new_game()
+	var old := GameState.to_dict()
+	old["inventory"].erase("cork_buckler")
+	old["equipped"].erase(Items.SHIELD)
+	GameState._hurt_owed = 0.4
+	GameState.from_dict(old)
+	_check(GameState.equipped_item(Items.SHIELD) == "cork_buckler", "an older file is given the cork buckler")
+	_check(GameState._hurt_owed == 0.0, "loading a file forgets a part-paid hit")
+
+	# Shields, in play.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i.ZERO, Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var room: Room = game.current_room
+	await _calm(room)
+	var player: Player = game.player
+	player.facing = Vector2.UP
+	var bubbles := GameState.bubbles
+	var shot := Projectile.new()
+	room.add_child(shot)
+	shot.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(not is_instance_valid(shot) and GameState.bubbles == bubbles, "the cork buckler turns aside a bubble shot from the front")
+	var behind := Projectile.new()
+	room.add_child(behind)
+	behind.global_position = player.global_position + Vector2(0, -1)
+	await _wait(0.15)
+	_check(GameState.bubbles == bubbles - 1, "a shot from behind still hurts")
+	player._invuln = 0.0
+	await _wait(0.4)
+	GameState.refill()
+	bubbles = GameState.bubbles
+	var ice := IceChunk.new()
+	room.add_child(ice)
+	ice.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(GameState.bubbles == bubbles - 1, "cork can't stop a chunk of ice")
+	player._invuln = 0.0
+	await _wait(0.4)
+	GameState.give_item("coral_buckler", 1, false)
+	GameState.refill()
+	bubbles = GameState.bubbles
+	player.facing = Vector2.UP
+	var ice2 := IceChunk.new()
+	room.add_child(ice2)
+	ice2.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(GameState.equipped_item(Items.SHIELD) == "coral_buckler" and GameState.bubbles == bubbles, "the coral buckler does")
+	var slag := SlagGlob.new()
+	room.add_child(slag)
+	slag.global_position = player.global_position + Vector2(0, -10)
+	await _wait(0.15)
+	_check(GameState.bubbles == bubbles - 1, "molten slag gets through coral")
+
+	# A soaked hit still breaks a hum and makes Wren reel, but pops nothing.
+	await _wait(0.5)
+	GameState.give_item("abyssal", 1, false)
+	GameState.refill()
+	GameState._hurt_owed = 0.0
+	player._invuln = 0.0
+	player.take_damage(1, player.global_position + Vector2(10, 0))
+	_check(GameState.bubbles == GameState.max_bubbles - 1, "abyssal: the first hit pops a bubble")
+	await _wait(0.6)
+	player._invuln = 0.0
+	player._enter(Player.State.HUM)
+	player.take_damage(1, player.global_position + Vector2(10, 0))
+	_check(GameState.bubbles == GameState.max_bubbles - 1 and player.state == Player.State.HURT, "the next is soaked up, but it breaks the hum")
+	game.queue_free()
+	await _wait(0.1)
+
+
+## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
+## bought with glints.
+func _test_shop() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var stall := get_tree().get_first_node_in_group("market_stall") as MarketStall
+	_check(stall != null and game.current_room.is_ancestor_of(stall), "Marlo Pike's stall stands in Saltmarrow")
+	if stall == null:
+		game.queue_free()
+		return
+	var feet: float = stall.marlo.get_global_transform_with_canvas().origin.y
+	_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "Marlo stays clear of the dialogue box (%d vs %d)" % [feet + Room.TILE, DialogueBox.HIGHEST_POINT])
+	for child in game.get_children():
+		if child is DialogueBox:
+			_check(child.lines_for("MARLO_THANKS", true) <= DialogueBox.MAX_LINES, "Marlo's thanks fit the box")
+	_check(ShopMenu.rows().all(func(r: Dictionary) -> bool: return r.get("id", "") != "puffer_bombs"), "no puffer bombs before the Hull")
+	# Wren steps up to the counter and talks.
+	game.player.global_position = stall.global_position + Vector2(0, 14)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	GameState.give_item("glint", 100, false)
+	_check(game.player.try_interact(), "Wren can talk across the counter")
+	_check(DialogueBox.is_open and GameState.has_flag("met_marlo"), "Marlo introduces himself")
+	_finish_talk(game)
+	await _wait(0.3)
+	var menu := get_tree().get_first_node_in_group("shop_menu") as ShopMenu
+	_check(menu != null and get_tree().paused, "then his wares come up, with the game paused")
+	if menu == null:
+		game.queue_free()
+		return
+	var oil := -1
+	var tonic := -1
+	var rows := ShopMenu.rows()
+	for i in rows.size():
+		if rows[i].get("id", "") == "lamp_oil":
+			oil = i
+		elif rows[i].has("jar"):
+			tonic = i
+	_check(menu.buy(oil) and GameState.item_count("lamp_oil") == 3 and GameState.item_count("glint") == 85, "lamp oil costs 15 glints")
+	_check(not "lamp_oil" in GameState.item_slots, "bought goods wait in the satchel, off the item slots")
+	_check(ShopMenu.blocked(rows[tonic]) == "SHOP_NO_JAR" and not menu.buy(tonic) and GameState.item_count("glint") == 85, "no tonic without an empty jar")
+	GameState.give_item("jar", 1, false)
+	_check(menu.buy(tonic) and GameState.jars[0] == Items.JAR_POTION and GameState.item_count("glint") == 55, "kelp tonic fills the jar for 30")
+	_check(ShopMenu.blocked(rows[tonic]) == "SHOP_NO_JAR", "a full jar takes no more")
+	GameState.take_item("glint", 50)
+	_check(not menu.buy(oil) and GameState.item_count("lamp_oil") == 3 and GameState.item_count("glint") == 5, "Marlo gives no credit")
+	GameState.give_item("lamp_oil", 5, false)
+	_check(GameState.item_count("lamp_oil") == 8 and ShopMenu.blocked(rows[oil]) == "SHOP_FULL", "no paying for three when only two more fit")
+	menu.close()
+	_check(ShopMenu.recently_closed(), "the press that closes the shop doesn't reach Wren")
+	await _wait(0.1)
+	_check(DialogueBox.is_open, "Marlo thanks Wren for the trade")
+	_finish_talk(game)
+	await _wait(0.1)
+	_check(not get_tree().paused and get_tree().get_first_node_in_group("shop_menu") == null, "the game carries on after the shop")
+	# After the Hull, puffers.
+	GameState.set_flag("tidebell_hull")
+	_check(ShopMenu.rows()[0]["id"] == "puffer_bombs", "puffer bombs are stocked after the Hull")
+	_check(Conversations.branch_for("marlo")["lines"][0] == "MARLO_PUFFERS_1", "and Marlo says so")
+	game.queue_free()
+	await _wait(0.1)

@@ -428,6 +428,14 @@ SOUNDS = {
     "ui_move": S(0.25, L("square", 880, dur=0.035, duty=0.25, decay=0.012)),
     "ui_select": S(0.3, L("square", 660, 990, dur=0.09, duty=0.25, decay=0.04)),
     "ui_back": S(0.3, L("square", 660, 440, dur=0.09, duty=0.25, decay=0.04)),
+    # Coins counted onto the counter, and a refusal when the purse is short.
+    "shop_buy": S(0.4,
+        L("fm", 1568, dur=0.12, ratio=3.1, index=1.6, decay=0.05),
+        L("fm", 2093, dur=0.18, at=0.07, ratio=3.1, index=1.4, decay=0.07),
+        L("noise", dur=0.05, at=0.07, hp=5000, vol=0.25, decay=0.02, seed=92)),
+    "shop_short": S(0.3,
+        L("square", 196, 175, dur=0.08, duty=0.4, lp=1200, decay=0.03),
+        L("square", 196, 175, dur=0.1, at=0.1, duty=0.4, lp=1200, decay=0.04)),
     "ui_open": S(0.35,
         L("tri", 440, 660, dur=0.12, decay=0.05),
         L("noise", dur=0.08, lp=2000, hp=400, vol=0.2, decay=0.03, seed=91)),
@@ -584,6 +592,20 @@ def main():
         for name in SOUNDS:
             if name not in known:
                 stale.append("%s has no entry in Audio.SFX (scripts/autoload/audio.gd)" % name)
+        # And every sound the code plays by name needs an entry, or it's silent.
+        import glob
+        for path in sorted(glob.glob(os.path.join(ROOT, "scripts", "**", "*.gd"), recursive=True)):
+            with open(path, encoding="utf-8") as f:
+                # The id the call opens with, and the other side of an
+                # `"a" if x else "b"` (not literals the condition compares).
+                calls = re.findall(r'\bplay_(?:sfx|jingle)\(([^()]*)', f.read())
+                names = []
+                for args in calls:
+                    names += re.findall(r'^\s*"([a-z0-9_]+)"', args)
+                    names += re.findall(r'\belse\s+"([a-z0-9_]+)"', args)
+                for name in names:
+                    if name not in known:
+                        stale.append("%s plays \"%s\", which isn't in Audio.SFX" % (os.path.relpath(path, ROOT), name))
         if stale:
             print("Sounds out of date (run python3 tools/sfx_gen.py):")
             for p in stale:

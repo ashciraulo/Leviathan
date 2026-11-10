@@ -49,12 +49,15 @@ var _facing := 1.0
 ## What a V tile becomes in Gale Spire: the heron, or, once it's beaten,
 ## the Storm Bell and the way out.
 static func spawn_in(room: Room, pos: Vector2) -> Node2D:
-	if GameState.flags.get(DEFEATED_FLAG, false):
+	# Beaten for good, unless Wren has come back to its echo (EchoTrial).
+	if GameState.flags.get(DEFEATED_FLAG, false) and not EchoTrial.here(room):
 		var after := BossAftermath.new()
 		after.room = room
 		after.boss_spot = pos
 		return after
 	var boss := Stormheron.new()
+	if EchoTrial.here(room):
+		EchoTrial.dress(room)
 	boss._room = room
 	return boss
 
@@ -112,8 +115,9 @@ func _ground_spot(on: LightningRod) -> Vector2:
 func _think(delta: float) -> void:
 	velocity = Vector2.ZERO
 	_timer -= delta
-	# Only its flight and its dive hurt to touch; perched, it's far above.
-	_contact.active = mode in [Mode.FLY, Mode.SWOOP]
+	# Only its dive hurts to touch: perched or flying it's far above, and
+	# taking off it gets clear before it can be blamed for a hit.
+	_contact.active = mode == Mode.SWOOP
 	var wren := get_player()
 	var to_wren := Vector2.ZERO if wren == null else wren.global_position - global_position
 	match mode:

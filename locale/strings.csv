@@ -535,6 +535,18 @@ NARRATE_WREN_FLASH_ONCE,Wren flashes the lamp once.
 NETTLE_BELL_2,Yes! I knew you saw.
 NETTLE_WAYSHELL_1,"Hessa gave you the old keepers' shell? Then you're a proper keeper now."
 NETTLE_WAYSHELL_2,"When you're old, I'll take over. That's the plan."
+NAME_MARLO,Marlo Pike
+MARLO_1,"Pike's the name, Marlo Pike. If it's worth having in Saltmarrow, it crosses this counter first."
+MARLO_2,"Glints only, mind. Shells and promises I can pick up off the beach for nothing."
+MARLO_AGAIN,"Back again, young keeper? Go on, have a look."
+MARLO_PUFFERS_1,"You cracked that old hull open! The puffers are back in the shallows, fat as you like."
+MARLO_PUFFERS_2,"Dried, and stuffed with blast-salt. Keep them well away from that lamp of yours."
+MARLO_THANKS,"Pleasure doing business. Mind how you go."
+MARLO_END,"Quiet tides now. Good for trade. Good for sleeping, too, I find."
+SHOP_TITLE,Pike's Wares
+SHOP_LEAVE,Leave
+SHOP_FULL,Full
+SHOP_NO_JAR,No empty jar
 NAME_AGNA,Agna Holt
 AGNA_1,"A keeper's cap. Haven't seen one of those up the pass in years."
 AGNA_2,"This is the Kiln. All seven bells were cast in there, from bronze and the Old One's shed scale."
@@ -619,3 +631,26 @@ CAPTION_HEART_ROAR,The Heart roars
 CAPTION_ECHO_RISE,An echo rises
 CAPTION_ECHO_CALM,An echo sighs
 CAPTION_OLD_ONE_HUM,The Old One hums
+NAME_DACE,Mother Dace
+DACE_MURAL_1,"So the Regent's gone to bones at last. Then you've earned this. Come, look."
+DACE_MURAL_2,Those bones out on the dunes were its family. It lay down beside them to grieve.
+DACE_MURAL_3,"The Regent wanted a weapon. All it ever wanted was to sleep where they sleep."
+DACE_MURAL_4,"Whatever that Choir hears weeping, child, it isn't anger. Go and ring your bell."
+ROOM_BELFRY_UNDERCROFT,The Drowned Belfry: Undercroft
+ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
+ROOM_MAW_TIDEWELL,The Maw: Tidewell
+TOAST_GOT_NACRE_BUCKLER,You found the Nacre Buckler!
+TOAST_GOT_ABYSSAL,You found the Abyssal Coat!
+TOAST_GOT_TIDECALLER_SWORD,You found the Tidecaller!
+GOT_NACRE_BUCKLER_1,"The Nacre Buckler! Mother-of-pearl, grown over a bell-ringer's shield in the dark."
+GOT_ABYSSAL_1,"The Abyssal Coat! Cut from something that lived far deeper than this. It is heavier than it looks."
+GOT_TIDECALLER_SWORD_1,"The Tidecaller! A keeper's blade, lost in the Old One's mouth long ago. It hums with the tide."
+VAEL_END_1,"It's asleep. Really asleep. I've never once heard it this quiet."
+VAEL_END_2,"I'll stay. Someone should sit with it while it dreams. I'll know if it stirs."
+VAEL_END_3,"Tell Hessa I'm listening now. She'll know what that means. Go home, keeper."
+ENDING_DAWN_1,"At dawn, Mantle came gliding down to the mouth of the Maw."
+ENDING_DAWN_2,"Wren rode home over a calm sea, with the sun coming up behind them."
+ENDING_HOME_1,"Hessa knelt on the warm boards, laid her palm flat on them, and waited."
+ENDING_HOME_2,"Far off under the bay, the Point Bell rang. She felt every note of it."
+ENDING_SLEEP_1,"The boats went out on a gentle tide. The grey robes were folded away."
+ENDING_SLEEP_2,"And far below, the Old One slept, and dreamed of nothing at all."

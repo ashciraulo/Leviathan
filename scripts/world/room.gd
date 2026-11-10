@@ -26,6 +26,7 @@ extends Node2D
 ##             (big props: put the letter where the base centre stands;
 ##             the art rises above)
 ##          h  Old Hessa      1 2 3 4  villagers (see Npc.LETTERS)
+##          7  Marlo Pike's market stall (MarketStall)
 ##          k  Pell's three-clawed crab (shows once Pell asks for it)
 ##          C  chest (holds chest_item)
 ##          :  boardwalk over water (walkable; regions with "boardwalk" tiles)
@@ -184,48 +185,56 @@ const BIOMES := {
 		"floor_overlay": ["sanddrift_%d", 7], "door": "exit_glow",
 	},
 	"hull": {
+		"wall_deco": "hull",
 		"floor": "plank_%d", "wall_top": "hull_top_%d", "wall_face": "hull_face_%d",
 		"water": "bilge_%d", "water_edge": "brine_%s_%d", "damp": "soak_%s",
 		"wet_deco": "barnacles_%d", "dry_deco": "rope_%d",
 		"floor_overlay": ["shaft_%d", 9], "door": "exit_glow",
 	},
 	"kiln": {
+		"wall_deco": "kiln",
 		"floor": "kiln_floor_%d", "wall_top": "kiln_top_%d", "wall_face": "kiln_face_%d",
 		"water": "quench_%d", "water_edge": "kerb_%s_%d", "damp": "kiln_scorch_%s",
 		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
 		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
 	},
 	"mire": {
+		"wall_deco": "mire",
 		"floor": "mire_floor_%d", "wall_top": "mire_top_%d", "wall_face": "mire_face_%d",
 		"water": "murk_%d", "water_edge": "murkbank_%s_%d", "damp": "mirewet_%s",
 		"wet_deco": "shrooms_%d", "dry_deco": "spores_%d",
 		"floor_overlay": ["grave_lamp_%d", 29], "door": "exit_glow",
 	},
 	"gale": {
+		"wall_deco": "gale",
 		"floor": "gale_floor_%d", "wall_top": "gale_top_%d", "wall_face": "gale_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
 		"floor_overlay": ["lichen_%d", 17], "door": "exit_glow", "gap": "galesky",
 	},
 	"glacier": {
+		"wall_deco": "glacier",
 		"floor": "glacier_floor_%d", "wall_top": "icecave_top_%d", "wall_face": "icecave_face_%d",
 		"water": "icewater_%d", "water_edge": "foam_%s_%d", "damp": "rime_%s",
 		"wet_deco": "frostcrack_%d", "dry_deco": "snowdrift_%d",
 		"floor_overlay": ["snowdrift_%d", 19], "door": "exit_glow", "gap": "crevasse",
 	},
 	"belfry": {
+		"wall_deco": "belfry",
 		"floor": "belfry_floor_%d", "wall_top": "belfry_top_%d", "wall_face": "belfry_face_%d",
 		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "seaweed_%d", "dry_deco": "seashell_%d",
 		"floor_overlay": ["seashell_%d", 23], "door": "exit_glow",
 	},
 	"tomb": {
+		"wall_deco": "tomb",
 		"floor": "tomb_floor_%d", "wall_top": "tomb_top_%d", "wall_face": "tomb_face_%d",
 		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "bonechips_%d", "dry_deco": "bonechips_%d",
 		"floor_overlay": ["ribs_%d", 37], "door": "exit_glow",
 	},
 	"maw": {
+		"wall_deco": "maw",
 		"floor": "maw_floor_%d", "wall_top": "maw_top_%d", "wall_face": "maw_face_%d",
 		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "vein_%d", "dry_deco": "dreammote_%d",
@@ -512,6 +521,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = door
 		"k":
 			node = QuestCrab.new()
+		"7":
+			node = MarketStall.new()
 		_ when Npc.LETTERS.has(tile):
 			node = Npc.new(Npc.LETTERS[tile])
 		_ when Prop.is_prop(tile):
@@ -579,6 +590,21 @@ func _hash(x: int, y: int) -> int:
 	return absi((x * 73856093) ^ (y * 19349663) ^ (coord.x * 83492791) ^ (coord.y * 2654435))
 
 
+## Dungeon wall lights hang in pairs, mirrored across the room (x 5 and 18,
+## clear of the HUD), on straight runs of wall face: both neighbours are
+## faces, and so is the mirrored spot.
+func _lit_face(x: int, y: int) -> bool:
+	if not x in [5, 18]:
+		return false
+	for fx in [x, 23 - x]:
+		if _tile_at(fx, y) != "#" or _tile_at(fx, y + 1) == "#":
+			return false
+		for dx in [-1, 1]:
+			if _tile_at(fx + dx, y) != "#" or _tile_at(fx + dx, y + 1) == "#":
+				return false
+	return true
+
+
 func _near_water(x: int, y: int) -> bool:
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
@@ -603,6 +629,14 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["wall_top"] % (h % 2), x, y)
 				else:
 					_draw_tile(tiles["wall_face"] % (h % 2), x, y)
+					if tiles.has("wall_deco"):
+						# Dungeon walls: now and then a crack, something growing,
+						# or a light set into the face.
+						var pick := (h >> 5) % 12
+						if _lit_face(x, y):
+							_draw_tile("%s_walllight" % tiles["wall_deco"], x, y)
+						elif pick < 3:
+							_draw_tile("%s_%s" % [tiles["wall_deco"], ["wallcrack", "wallgrowth", "wallgrowth"][pick]], x, y)
 			elif tile == ":" and tiles.has("boardwalk"):
 				# Planks over the water: the water still shows round them.
 				_draw_tile(tiles["water"] % _water_frame, x, y)
@@ -637,6 +671,13 @@ func _draw_ground() -> void:
 						_draw_tile(tiles["damp"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
+					# A wall light's glow pooled below it; elsewhere, now and
+					# then, debris fallen at the foot of a dungeon wall.
+					if tiles.has("wall_deco") and _rows[y][x] == "." and _lit_face(x, y - 1):
+						_draw_tile("%s_lightpool" % tiles["wall_deco"], x, y)
+					elif tiles.has("wall_deco") and _rows[y][x] == "." and x > 0 and x < _rows[y].length() - 1 \
+							and y < _rows.size() - 1 and (h >> 4) % 6 == 0:
+						_draw_tile("%s_rubble_%d" % [tiles["wall_deco"], (h >> 7) % 2], x, y)
 				if _tile_at(x - 1, y) == "#":
 					_draw_tile("shade_left", x, y)
 				if tile == "I":

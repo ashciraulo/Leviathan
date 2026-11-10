@@ -91,7 +91,7 @@ func _strike() -> void:
 		if target.has_method("dive_hit"):
 			target.dive_hit(_player.facing)
 		elif target is Enemy:
-			(target as Enemy).take_hit(Player.SWORD_DAMAGE, _player.facing)
+			(target as Enemy).take_hit(Player.sword_damage(target), _player.facing)
 	Audio.play_sfx("sword_swing", _player.global_position, 0.7)
 
 

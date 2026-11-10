@@ -234,35 +234,37 @@ BARS = [
 
 
 def big_door_half():
-    """Left half of the great door (the right half is mirrored): tall
-    vertical planks under a dark arch, heavy iron hinges, gilt rivets, and
-    half of a big brass lock with a keyhole at the seam. 16x16."""
+    """Left half of the great door (the right half is mirrored): heavy
+    vertical planks with grain under a dark arch, two iron straps with gilt
+    rivets, and half of a big brass lock plate at the seam with a round
+    keyhole and its slot. 16x16."""
     c = canvas(16, 16)
     fill_rect(c, 0, 0, 16, 16, "3")
     # Arched opening: the doorway's top corner curves in.
     for y in range(16):
-        inset = max(0, 4 - y) if y < 4 else 0
+        inset = (4, 2, 1, 1)[y] if y < 4 else 0
         for x in range(1 + inset, 16):
             c[y][x] = "8"
-    # Vertical planks with dark seams.
+    # Vertical planks with dark seams and a little grain.
     for x in (5, 10):
         for y in range(16):
             if c[y][x] == "8":
                 c[y][x] = "3"
-    # Iron hinge straps.
-    for y in (4, 11):
-        for x in range(2, 14):
+    # Iron hinge straps, with a curl at the hinge end.
+    for y in (3, 12):
+        for x in range(2, 16):
             if c[y][x] in ("8", "3"):
                 c[y][x] = "S"
+        put(c, 2, y - 1, "S")
         put(c, 2, y + 1, "S")
-    # Gilt rivets on the straps.
-    for (x, y) in ((4, 4), (8, 4), (12, 4), (4, 11), (8, 11), (12, 11)):
+    for (x, y) in ((4, 3), (8, 3), (4, 12), (8, 12)):
         put(c, x, y, "7")
-    # The lock: half of a brass plate with the big keyhole at the seam.
-    fill_rect(c, 11, 6, 5, 4, "Q")
-    put(c, 15, 7, "3")
-    put(c, 15, 8, "3")
-    put(c, 14, 8, "3")
+    # The lock plate: brass, riveted, with half a round keyhole and slot.
+    fill_rect(c, 11, 5, 5, 6, "Q")
+    put(c, 12, 6, "7")
+    put(c, 12, 9, "7")
+    for (x, y) in ((14, 6), (15, 6), (14, 7), (15, 7), (15, 8), (15, 9)):
+        put(c, x, y, "3")
     return rows_of(c)
 
 
@@ -446,6 +448,13 @@ def tidebell(rung):
 # under her. Planks strapped on top are drawn separately (they come off).
 # 64x48 frames, feet on row 45.
 # --------------------------------------------------------------------------
+def barnacle(c, x, y):
+    """A little barnacle cone: a white rim round a dark mouth."""
+    for (dx, dy) in ((-1, 0), (1, 0), (0, -1), (-1, 1), (0, 1), (1, 1)):
+        put(c, x + dx, y + dy, "$")
+    put(c, x, y, "3")
+
+
 def _figurehead(c, lift=0, tilt=0):
     """The shell: a carved figurehead lying on its back. Her head is at the
     front left, face turned up and calm; gilt hair streams back over the
@@ -453,9 +462,17 @@ def _figurehead(c, lift=0, tilt=0):
     cy = 17 - lift
     cx = 34 + tilt
     fill_ellipse(c, cx, cy, 21, 12, "8")
-    # Faded gown paint across the middle of the carving.
-    fill_ellipse(c, cx + 6, cy + 3, 11, 6, "6", only=("8",))
-    line(c, cx - 3, cy + 6, cx + 14, cy, "0", 2)
+    # Faded sea-green gown across the middle of the carving, a gilt hem.
+    fill_ellipse(c, cx + 6, cy + 3, 11, 6, "0", only=("8",))
+    for x in range(cx - 5, cx + 18):
+        y = cy + 3 + round(5.5 * math.sqrt(max(0.0, 1 - ((x - cx - 6) / 11.0) ** 2)))
+        if c[y - 1][x] == "0":
+            c[y - 1][x] = "7"
+    # Carved folds in the gown.
+    for fx in (cx + 2, cx + 7, cx + 12):
+        for fy in range(cy, cy + 6):
+            if c[fy][fx] == "0":
+                c[fy][fx] = "8"
     # Hair: a few long locks flowing back from the head.
     for i, (dy, bend) in enumerate(((-9, 2), (-6, 3), (-3, 2))):
         for x in range(cx - 12, cx + 14):
@@ -471,22 +488,25 @@ def _figurehead(c, lift=0, tilt=0):
     put(c, hx, hy, "8")
     put(c, hx + 1, hy, "8")
     put(c, hx - 1, hy + 3, "5")
-    # Barnacles crusting the rim, weed hanging off.
-    for x in (20, 24, 41, 46, 50):
-        put(c, x + tilt, cy + 10, "$")
-        put(c, x + 1 + tilt, cy + 10, "$")
-    for x in (cx + 18, cx + 20):
-        for i in range(4):
-            put(c, x, cy + 3 + i, "X")
+    # Barnacles crusting the wood in clusters, weed hanging off.
+    for (bx, by) in ((cx - 8, cy - 9), (cx + 2, cy - 11), (cx + 12, cy - 8),
+                     (cx + 17, cy - 3), (cx - 12, cy + 8), (cx + 8, cy + 9), (cx + 15, cy + 7)):
+        barnacle(c, bx, by)
+    for x, n in ((cx + 18, 6), (cx + 20, 4)):
+        for i in range(n):
+            put(c, x + (i // 3), cy + 3 + i, "X")
 
 
 def _crab(c, step=0, claw="rest", mouth=False, out=False):
     """Everything of the crab that shows in front of the shell."""
     base = 33
     fill_ellipse(c, 33, base, 17, 6, "5")
-    # Barnacle spots on the carapace.
-    for (x, y) in ((24, 32), (40, 31), (36, 35)):
-        put(c, x, y, "$")
+    # Soft pink flecks along the carapace's crown.
+    for x in range(22, 45):
+        if c[base - 4][x] == "5":
+            c[base - 4][x] = "&" if x % 5 == 0 else c[base - 4][x]
+    for (x, y) in ((22, 32), (44, 31)):
+        barnacle(c, x, y)
     if out:
         # Lurched half out: the soft pink abdomen curls up behind.
         fill_ellipse(c, 50, base - 8, 10, 9, "&")
@@ -518,12 +538,13 @@ def _crab(c, step=0, claw="rest", mouth=False, out=False):
     if claw == "rest":
         line(c, 22, base + 2, 17, base + 4, "5", 3)
         fill_ellipse(c, 13, 39, 9, 6, "5")
-        # Two pincer fingers, open a crack.
+        # Two pincer fingers, open a crack: they rise from the claw's tip.
         line(c, 5, 32, 9, 37, "5", 3)
         line(c, 3, 38, 8, 40, "5", 2)
         put(c, 8, 38, "3")
-        for (x, y) in ((12, 36), (16, 39), (10, 42)):
-            put(c, x, y, "$")
+        put(c, 7, 37, "3")
+        barnacle(c, 14, 37)
+        barnacle(c, 18, 41)
     elif claw == "up":
         line(c, 22, base, 14, 20, "5", 3)
         fill_ellipse(c, 11, 12, 9, 8, "5")

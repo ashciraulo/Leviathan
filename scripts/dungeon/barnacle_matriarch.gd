@@ -60,12 +60,15 @@ var _room: Room
 ## What a V tile becomes: the boss, or, once she's beaten, the Tidebell she
 ## guarded and the way out.
 static func spawn_in(room: Room, pos: Vector2) -> Node2D:
-	if GameState.flags.get(DEFEATED_FLAG, false):
+	# Beaten for good, unless Wren has come back to its echo (EchoTrial).
+	if GameState.flags.get(DEFEATED_FLAG, false) and not EchoTrial.here(room):
 		var after := BossAftermath.new()
 		after.room = room
 		after.boss_spot = pos
 		return after
 	var boss := BarnacleMatriarch.new()
+	if EchoTrial.here(room):
+		EchoTrial.dress(room)
 	boss._room = room
 	return boss
 
@@ -140,12 +143,12 @@ func _think(delta: float) -> void:
 					_enter(Mode.STALK, 0.5)
 				else:
 					_lunge = to_player.normalized()
-					_enter(Mode.WINDUP, WINDUP_TIME / rage)
+					_enter(Mode.WINDUP, maxf(WINDUP_TIME / rage, 0.5))
 					Audio.play_sfx("matriarch_tell", global_position, rage)
 		Mode.WINDUP:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
-				_contact.damage = 2
+				_contact.damage = 1
 				_enter(Mode.SLAM, SLAM_TIME)
 		Mode.SLAM:
 			velocity = _lunge * SLAM_SPEED

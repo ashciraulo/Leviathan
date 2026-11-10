@@ -15,5 +15,7 @@ func _ready() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if body is Player:
+	# A story scene never walks Wren out of the room: a door that opens
+	# under them mid-scene (a boss's way out) waits until they step on it.
+	if body is Player and not body.in_cutscene:
 		Events.door_entered.emit(target_room, target_tile)

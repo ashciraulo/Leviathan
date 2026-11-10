@@ -3,6 +3,11 @@ extends Projectile
 ## A chunk of ice Rimeback spits. It flies over water; walls stop it.
 
 
+## A chunk of ice is too heavy for cork.
+func _init() -> void:
+	shield_tier = 2
+
+
 func _ready() -> void:
 	super._ready()
 	_sprite.texture = GlacierSprites.ICE_CHUNK

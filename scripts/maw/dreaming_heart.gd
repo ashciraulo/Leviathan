@@ -79,7 +79,9 @@ static func spawn_in(room: Room, pos: Vector2) -> Node2D:
 
 
 func _ready() -> void:
-	add_to_group("boss")
+	# Asleep, the Heart is no fight (no boss music in its chamber).
+	if mode != Mode.SLEEP:
+		add_to_group("boss")
 	if _room == null:
 		_room = get_parent() as Room
 	add_child(Art.shadow(true))
@@ -91,6 +93,10 @@ func _ready() -> void:
 	body.add_child(Layers.rect_shape(Vector2(48, 14), Vector2(0, -7)))
 	add_child(body)
 	if mode == Mode.SLEEP:
+		# After the end (once the ending is told), the echo stones keep watch
+		# round the Heart.
+		if GameState.has_flag(StoryDirector.ENDING_FLAG):
+			get_parent().add_child.call_deferred(EchoHall.new())
 		return
 	Events.toast.emit("BOSS_HEART")
 	Audio.play_sfx("heart_roar", global_position)
@@ -173,6 +179,10 @@ func _start_stage() -> void:
 	_bell.heart = self
 	var tile: Vector2i = BELL_TILES[stage]
 	_bell.position = Vector2(tile.x * Room.TILE + Room.TILE / 2.0, tile.y * Room.TILE + Room.TILE - 4)
+	# Never rise up on top of Wren: shift two tiles toward the middle.
+	var wren := get_tree().get_first_node_in_group("player") as Node2D
+	if wren and _room and (wren.global_position - _room.global_position).distance_to(_bell.position) < 20.0:
+		_bell.position.x += signf(Room.SIZE.x / 2.0 - _bell.position.x) * 2.0 * Room.TILE
 	get_parent().add_child(_bell)
 
 
@@ -199,6 +209,9 @@ func _start_eighth() -> void:
 	mode = Mode.EIGHTH
 	hum_held = 0.0
 	GameState.final_line = true
+	# Nothing left in the air while Wren stands still to hum.
+	for shot in get_tree().get_nodes_in_group("enemy_shots"):
+		shot.queue_free()
 
 
 func _eighth(delta: float) -> void:
@@ -220,6 +233,9 @@ func _sleep() -> void:
 	mode = Mode.SLEEP
 	GameState.final_line = false
 	GameState.set_flag(DEFEATED_FLAG)
+	# Not boss_defeated: the ending keeps its own music. Clear stray shots.
+	for shot in get_tree().get_nodes_in_group("enemy_shots"):
+		shot.queue_free()
 	# Keep the ending: Continue after the credits starts here, not before
 	# the Maw.
 	GameState.set_checkpoint(_room.coord if _room else GameState.room_coord, GameState.NO_POSITION)
@@ -238,7 +254,8 @@ func _sleep() -> void:
 	if not is_inside_tree():
 		return
 	Events.game_finished.emit()
-	if roll_credits:
+	# With the story running, the ending scene rolls the credits itself.
+	if roll_credits and get_tree().get_first_node_in_group("story_director") == null:
 		get_tree().change_scene_to_file.call_deferred(CREDITS_SCENE)
 
 

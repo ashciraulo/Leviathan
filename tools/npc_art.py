@@ -479,7 +479,164 @@ def vael_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# Mother Dace, who walks the Ossuary Dunes: very old, small and bent, in
+# sand-coloured wraps with a dusk-purple scarf over grey hair, leaning on a
+# long staff of pale bone. Lifts the staff to point when she speaks.
+# --------------------------------------------------------------------------
+DACE = [
+    "................",
+    "................",
+    "................",
+    "......pppp......",
+    ".....pppppp...s.",
+    "....ppZZZZpp..s.",
+    "....pVVVVVVp..s.",
+    "....pVeVVeVp..s.",
+    "....pVVVVVVp..s.",
+    ".....pV--Vp...s.",
+    "......pppp....s.",
+    "....jjjjjjjj.Vs.",
+    "...jjjjjjjjjjVs.",
+    "...jjjjjjjjjjjs.",
+    "...jjjjjjjjjjjs.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "...jjjjjjjjjj.s.",
+    "....jjjjjjjj..s.",
+    ".....VV..VV...s.",
+]
+
+
+def dace_frames():
+    # A purple sash, its end hanging, and a string of small bones at the neck.
+    idle = paint(DACE, [(15, 3, "pppppppppp"), (16, 9, "p"), (17, 9, "p"),
+                        (11, 6, "s.s.s")])
+    breathe = settle(idle, 11)
+    # Talking: the staff comes up off the sand to point.
+    talk = [r[:13] + "..." for r in idle]
+    talk = paint(talk, [(r, 14, "s") for r in range(1, 21)] + [(11, 13, "V"), (12, 13, "V")])
+    return [idle, breathe, talk]
+
+
+
+# Vael at the end, with the grey robe dropped: under it all along, the
+# keepers' navy coat he trained in, its lamp badge polished again.
+def vael_keeper_frames():
+    coat = [r.replace("S", "D") for r in VAEL]
+    # Brass buttons down the front, and the badge bright on the chest.
+    coat = paint(coat, [(12, 9, "QQ"), (13, 9, "QQ"), (15, 7, "Q"), (17, 7, "Q"), (19, 7, "Q")])
+    breathe = settle(coat, 10)
+    talk = paint(coat, [(13, 14, "D."), (14, 14, "D."), (15, 14, "D."), (13, 14, "DV"), (12, 15, "V")])
+    return [coat, breathe, talk]
+
+# --------------------------------------------------------------------------
+# Marlo Pike, Saltmarrow's trader. Bald as an egg, with ginger mutton chops
+# and a moustache to match, a sea-green waistcoat with brass buttons over a
+# round belly. Talks with a glint held up between finger and thumb. Stands
+# behind the market stall (market_stall below).
+# --------------------------------------------------------------------------
+def _mirror(halves):
+    return [h + h[::-1] for h in halves]
+
+
+MARLO = paint(_mirror([
+    "........", "........",
+    "......ww", ".....www", "....wwww", "...^wwww",
+    "...^wwew", "...^wwew", "...^^www", "...^^^^^", "....^^ww",
+    "....qq00", "...qqq00", "..qqq000", "..qq0000", ".wqq0000", ".w.00000",
+    "...00000", "...bbbbb", "....8888", "....8888", "....888.", "....vvv.", "........",
+]), [(13, 7, "Q"), (15, 7, "Q"), (17, 7, "Q"), (18, 7, "GG"), (9, 7, "ww"), (5, 5, "^^"), (5, 9, "^^")])
+
+
+def marlo_frames():
+    idle = MARLO
+    breathe = settle(idle, 11)
+    talk = paint(idle, [(15, 14, "."), (16, 14, "."), (14, 14, "q."), (13, 14, "qq"), (12, 14, "qw"),
+                        (11, 14, "w"), (10, 14, "wG"), (9, 15, "G")])
+    return [idle, breathe, talk]
+
+
+def market_stall():
+    """Marlo's stall, 48x46 with its foot on row 44: a striped awning on two
+    posts, wares on the counter, and a puffer painted on the front."""
+    W, H = 48, 46
+    c = [["."] * W for _ in range(H)]
+
+    def box(x, y, w, h, m):
+        for yy in range(max(y, 0), min(y + h, H)):
+            for xx in range(max(x, 0), min(x + w, W)):
+                c[yy][xx] = m
+
+    def dots(pts, m):
+        for x, y in pts:
+            if 0 <= x < W and 0 <= y < H:
+                c[y][x] = m
+
+    box(3, 8, 2, 36, "[")                                   # posts
+    box(43, 8, 2, 36, "[")
+    # The striped canvas awning, sloping out, with a scalloped hem.
+    for y in range(1, 10):
+        inset = max(0, 3 - y)
+        for x in range(inset, W - inset):
+            c[y][x] = "r" if (x // 4) % 2 == 0 else "]"
+    for x in range(W):
+        if (x % 6) in (1, 2, 3, 4):
+            c[10][x] = "r" if (x // 4) % 2 == 0 else "]"
+        if (x % 6) in (2, 3):
+            c[11][x] = c[10][x]
+    # Dried fish strung under the left of the awning.
+    for x in (7, 10, 13):
+        box(x, 12, 1, 2, "B")
+        box(x, 14, 2, 4, "T")
+        dots([(x - 1, 18), (x + 2, 18), (x, 17), (x + 1, 17)], "T")
+    # A little lantern on the right.
+    box(39, 12, 1, 2, "B")
+    box(38, 14, 3, 4, "Q")
+    dots([(39, 15), (39, 16)], "*")
+    # The counter: a top board and a planked front.
+    box(0, 27, W, 3, "b")
+    box(1, 30, W - 2, 14, "[")
+    for y in (34, 39):
+        box(1, y, W - 2, 1, "b")
+    for x in (12, 24, 36):
+        box(x, 30, 1, 14, "b")
+    # A puffer painted on the front: the stall's sign.
+    for y in range(31, 43):
+        for x in range(17, 31):
+            if ((x + 0.5 - 24) / 5.5) ** 2 + ((y + 0.5 - 37) / 4.5) ** 2 <= 1.0:
+                c[y][x] = ";"
+    dots([(21, 35), (21, 36)], "e")
+    for i in range(5):                                      # its tail
+        box(30 + i // 2, 37 - i // 2 - 1, 1, 2 + i, ";")
+    dots([(18, 31), (21, 30), (24, 30), (27, 30), (30, 31), (17, 42), (30, 42)], ";")
+    # Wares: two puffer bombs on the left, bottles of lamp oil and a jar of
+    # kelp tonic on the right.
+    for cx in (6, 13):
+        for y in range(20, 27):
+            for x in range(cx - 4, cx + 4):
+                if ((x + 0.5 - cx) / 3.5) ** 2 + ((y + 0.5 - 23.5) / 3.5) ** 2 <= 1.0:
+                    c[y][x] = ";"
+        dots([(cx - 4, 22), (cx + 3, 22), (cx - 1, 19), (cx + 1, 19), (cx, 26)], ";")
+        dots([(cx - 2, 22), (cx - 2, 23)], "e")
+        box(cx + 1, 18, 1, 2, "B")                          # the fuse
+    for bx in (32, 36):
+        box(bx, 20, 3, 7, "x")
+        box(bx + 1, 18, 1, 2, "x")
+        box(bx + 1, 17, 1, 1, "b")                          # cork
+    box(40, 21, 5, 6, "L")
+    box(41, 20, 3, 1, "b")
+    return ["".join(r) for r in c]
+
+
 SPRITES = {
+    "marlo": marlo_frames,
+    "dace": dace_frames,
+    "vael_keeper": vael_keeper_frames,
     "vael": vael_frames,
     "murmur": murmur_frames,
     "lowe": lowe_frames,
@@ -690,7 +847,64 @@ def portrait_vael():
     return _rows(c)
 
 
+def portrait_dace():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "j")                    # sand wraps
+    _ellipse(c, 16, 15, 12, 11, "p")                   # dusk-purple scarf
+    _box(c, 4, 15, 24, 13, "p")
+    _ellipse(c, 16, 12, 8, 3, "Z")                     # grey hair under it
+    _face(c, "V", eye_row=17, cy=18, rx=7, ry=8, cheeks=False)
+    _box(c, 10, 21, 2, 1, "-")                         # deep lines by the mouth
+    _box(c, 20, 21, 2, 1, "-")
+    _box(c, 27, 4, 2, 28, "s")                         # the bone staff
+    return _rows(c)
+
+
+def portrait_vael_keeper():
+    # The same face over the keepers' navy coat, the badge bright again.
+    c = [list(r) for r in portrait_vael()]
+    c = [["D" if ch == "S" else ("Q" if ch == "T" else ch) for ch in r] for r in c]
+    return ["".join(r) for r in c]
+
+
+def portrait_marlo():
+    c = _canvas()
+    _ellipse(c, 16, 32, 16, 9, "q")                    # shirt, sleeves rolled
+    _ellipse(c, 16, 33, 11, 9, "0")                    # sea-green waistcoat
+    for i in range(6):                                 # its V opening
+        _box(c, 16 - (6 - i) // 2, 24 + i, (6 - i) // 2 * 2, 1, "q")
+    _dots(c, [(11, 27), (11, 30), (20, 27), (20, 30)], "Q")   # brass buttons
+    _box(c, 15, 24, 2, 1, "R")                         # a red neckerchief knot
+    _face(c, "w", mouth=False, cheeks=False, rx=8, ry=9, cy=14)
+    # Bald crown, shining.
+    _dots(c, [(13, 7), (14, 6), (15, 6)], "q")
+    # Ginger mutton chops down to the jaw, and a big moustache.
+    for side in (8, 22):
+        _box(c, side, 12, 2, 8, "^")
+        _box(c, side + (1 if side == 8 else -1), 17, 3, 4, "^")
+    _box(c, 12, 19, 8, 2, "^")
+    _dots(c, [(11, 20), (20, 20), (11, 21), (20, 21)], "^")
+    _dots(c, [(15, 22), (16, 22)], "-")
+    # Little round spectacles on the end of the nose.
+    for x in (11, 18):
+        _box(c, x, 14, 3, 1, "Q")
+        _box(c, x, 17, 3, 1, "Q")
+        _dots(c, [(x - 1, 15), (x - 1, 16), (x + 3, 15), (x + 3, 16)], "Q")
+    _dots(c, [(15, 15)], "Q")
+    _box(c, 11, 12, 3, 1, "^")                         # bushy ginger brows
+    _box(c, 18, 12, 3, 1, "^")
+    _dots(c, [(15, 17), (16, 17), (15, 18), (16, 18)], "%")   # a round nose
+    # A pencil behind one ear.
+    for i in range(5):
+        _dots(c, [(24 + i // 2, 9 + i)], "F")
+    _dots(c, [(26, 14)], "-")
+    return _rows(c)
+
+
 PORTRAITS = {
+    "marlo": portrait_marlo(),
+    "dace": portrait_dace(),
+    "vael_keeper": portrait_vael_keeper(),
     "vael": portrait_vael(),
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),

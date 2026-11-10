@@ -28,11 +28,21 @@ const SPEAKERS := {
 	"lowe": ["NAME_LOWE", Art.PORTRAIT_LOWE],
 	"murmur": ["NAME_MURMUR", Art.PORTRAIT_MURMUR],
 	"vael": ["NAME_VAEL", Art.PORTRAIT_VAEL],
+	"dace": ["NAME_DACE", Art.PORTRAIT_DACE],
+	"vael_keeper": ["NAME_VAEL", Art.PORTRAIT_VAEL_KEEPER],
 	"marga": ["NAME_MARGA", Art.PORTRAIT_MARGA],
 	"dunstan": ["NAME_DUNSTAN", Art.PORTRAIT_DUNSTAN],
+	"marlo": ["NAME_MARLO", Art.PORTRAIT_MARLO],
 }
 
 const TALKS := {
+	# Marlo Pike talks across his stall's counter; his wares come after.
+	"marlo": [
+		{"if": ["seen_ending"], "lines": ["MARLO_END"]},
+		{"if": ["met_marlo", "tidebell_hull"], "unless": ["marlo_puffers"], "set": ["marlo_puffers"], "lines": ["MARLO_PUFFERS_1", "MARLO_PUFFERS_2"]},
+		{"if": ["met_marlo"], "lines": ["MARLO_AGAIN"]},
+		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
+	],
 	"hessa": [
 		{"if": ["seen_hessa_confession"], "lines": ["HESSA_AFTER_TURN"]},
 		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},

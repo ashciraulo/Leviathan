@@ -47,12 +47,15 @@ var _to_thaw: Array[Vector2i] = []
 ## What a V tile becomes in Hollow Glacier: the walrus, or, once it's
 ## beaten, the Frost Bell and the way out.
 static func spawn_in(room: Room, pos: Vector2) -> Node2D:
-	if GameState.flags.get(DEFEATED_FLAG, false):
+	# Beaten for good, unless Wren has come back to its echo (EchoTrial).
+	if GameState.flags.get(DEFEATED_FLAG, false) and not EchoTrial.here(room):
 		var after := BossAftermath.new()
 		after.room = room
 		after.boss_spot = pos
 		return after
 	var boss := Rimeback.new()
+	if EchoTrial.here(room):
+		EchoTrial.dress(room)
 	boss._room = room
 	return boss
 
@@ -103,7 +106,8 @@ func is_hole_frozen(i: int) -> bool:
 
 func _set_shown(shown: bool) -> void:
 	_hurtbox.collision_layer = (1 << (Layers.ENEMY_HURTBOX - 1)) if shown else 0
-	_contact.active = shown and mode in [Mode.UP, Mode.SPIT, Mode.RISE]
+	# Not while it's still rising: the splash is the warning, not a hit.
+	_contact.active = shown and mode in [Mode.UP, Mode.SPIT]
 
 
 func _think(delta: float) -> void:
@@ -157,7 +161,7 @@ func _think(delta: float) -> void:
 func _enter(new_mode: Mode, time: float) -> void:
 	mode = new_mode
 	_timer = time
-	_contact.active = _hurtbox.collision_layer != 0 and mode in [Mode.UP, Mode.SPIT, Mode.RISE]
+	_contact.active = _hurtbox.collision_layer != 0 and mode in [Mode.UP, Mode.SPIT]
 
 
 ## Up into an open hole, or, with every hole frozen, up through the ice.

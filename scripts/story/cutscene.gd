@@ -194,6 +194,11 @@ static func _open(room: Room, cell: Vector2i) -> bool:
 	for dx in range(-2, 3):
 		if "HLMWR".contains(room.tile_at(cell.x + dx, cell.y)):
 			return false
+	# Marlo's stall: three tiles wide, two deep.
+	for dx in range(-1, 2):
+		for dy in range(0, 2):
+			if room.tile_at(cell.x + dx, cell.y + dy) == "7":
+				return false
 	return true
 
 
@@ -258,6 +263,12 @@ func lift_veil(seconds: float = 1.2) -> void:
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(_veil, "color:a", 0.0, scaled(seconds))
 	await tween.finished
+
+
+## The veil's colour (black by default; the ending's dawn is white).
+func set_veil_colour(colour: Color) -> void:
+	_veil.color = Color(colour, _veil.color.a)
+	_veil_text.add_theme_color_override("font_color", Palette.NARRATION if colour.get_luminance() < 0.5 else Color("#4a3a58"))
 
 
 func darken(seconds: float = 0.0) -> void:

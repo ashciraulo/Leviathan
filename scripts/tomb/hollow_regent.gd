@@ -52,12 +52,15 @@ var _plate_sprites: Array[Sprite2D] = []
 ## What a V tile becomes in the Marrow Tomb: the Regent, or, once he's
 ## beaten, the Marrow Bell and the way out.
 static func spawn_in(room: Room, pos: Vector2) -> Node2D:
-	if GameState.flags.get(DEFEATED_FLAG, false):
+	# Beaten for good, unless Wren has come back to its echo (EchoTrial).
+	if GameState.flags.get(DEFEATED_FLAG, false) and not EchoTrial.here(room):
 		var after := BossAftermath.new()
 		after.room = room
 		after.boss_spot = pos
 		return after
 	var boss := HollowRegent.new()
+	if EchoTrial.here(room):
+		EchoTrial.dress(room)
 	boss._room = room
 	return boss
 
@@ -228,7 +231,10 @@ func _die() -> void:
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
-	GameState.flags[DEFEATED_FLAG] = true
+	set_deferred("collision_layer", 0)
+	# Through set_flag, so the story can answer (the last mural).
+	GameState.set_flag(DEFEATED_FLAG)
+	Events.boss_defeated.emit()
 	_sprite.position = _sprite_origin
 	_sprite.frame = 3
 	Audio.play_sfx("regent_roar", global_position, 0.5)

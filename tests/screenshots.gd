@@ -40,10 +40,12 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "mantle", "lowe", "crucible", "turn", "ambience"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "ambience"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
+			"hull":
+				await _hull_shots(game)
 			"kiln":
 				await _kiln_shots(game)
 			"mire":
@@ -58,6 +60,10 @@ func _ready() -> void:
 				await _tomb_shots(game)
 			"maw":
 				await _maw_shots(game)
+			"extras":
+				await _extras_shots(game)
+			"echoes":
+				await _echoes_shots(game)
 			"mantle":
 				game.queue_free()
 				await _wait(0.2)
@@ -74,6 +80,18 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _turn_shots()
+			"mural":
+				game.queue_free()
+				await _wait(0.2)
+				await _mural_shots()
+			"ending":
+				game.queue_free()
+				await _wait(0.2)
+				await _ending_shots()
+			"shop":
+				game.queue_free()
+				await _wait(0.2)
+				await _shop_shots()
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -340,6 +358,12 @@ func _ready() -> void:
 	# 8i. The Maw.
 	await _maw_shots(game)
 
+	# 8j. The optional rooms, and a dungeon map with its compass.
+	await _extras_shots(game)
+
+	# 8k. After the end: the echo stones, and a remembered fight.
+	await _echoes_shots(game)
+
 	# 9. Pause menu.
 	var pause: PauseMenu = null
 	for child in game.get_children():
@@ -370,6 +394,9 @@ func _ready() -> void:
 	await _lowe_shots()
 	await _crucible_shots()
 	await _turn_shots()
+	await _mural_shots()
+	await _ending_shots()
+	await _shop_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -453,7 +480,11 @@ func _hull_shots(game: Node) -> void:
 		Vector2i(11, 10): ["36_hull_brig", Vector2i(3, 6)],
 	}
 	for coord: Vector2i in rooms:
-		await _jump(game, coord, rooms[coord][1])
+		var at := await _jump(game, coord, rooms[coord][1])
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		game.player._invuln = 0.0
 		await _capture(rooms[coord][0])
 
 	# The Tide Hook mid-flight across the Orlop's broken deck.
@@ -530,7 +561,12 @@ func _kiln_shots(game: Node) -> void:
 		Vector2i(22, 7): ["59_kiln_bell_loft", Vector2i(11, 10)],
 	}
 	for coord: Vector2i in rooms:
-		await _jump(game, coord, rooms[coord][1])
+		var at := await _jump(game, coord, rooms[coord][1])
+		# Everyone holds still for the picture.
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		game.player._invuln = 0.0
 		await _wait(0.4)
 		await _capture(rooms[coord][0])
 
@@ -1090,6 +1126,121 @@ func _lowe_shots() -> void:
 	await _wait(0.2)
 
 
+## The ending: Vael stays as the Old One's keeper, dawn, and home.
+func _ending_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(44, 6), Vector2(11 * Room.TILE + 8, 10 * Room.TILE + 12))
+	DreamingHeart.roll_credits = false
+	var heart: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(heart)
+	await _wait(0.6)
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	Events.game_finished.emit()
+	var page := 0
+	var dawn_taken := false
+	var waited := 0.0
+	while Cutscene.active and waited < 90.0:
+		if DialogueBox.is_open:
+			await _wait(2.6)
+			if page == 0:
+				await _capture("50_vael_at_the_heart")
+			elif page == 1:
+				await _capture("51_vael_keeps_watch")
+			elif page == 3:
+				await _capture("53_home")
+			page += 1
+			var box := _dialogue_box(heart)
+			if box and DialogueBox.is_open:
+				box.advance()
+				box.advance()
+			await _wait(0.3)
+		elif page == 3 and not dawn_taken:
+			await _wait(3.2)
+			await _capture("52_dawn")
+			dawn_taken = true
+		else:
+			await _wait(0.1)
+			waited += 0.1
+	DreamingHeart.roll_credits = true
+	heart.queue_free()
+	await _wait(0.2)
+
+
+## The last mural in the Marrow Tomb: Dace, the carving close up.
+func _mural_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, Vector2(11 * Room.TILE + 8, 9 * Room.TILE + 12))
+	var barrow: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(barrow)
+	await _wait(0.5)
+	for child in barrow.current_room.get_children():
+		if child is HollowRegent:
+			child.ai_enabled = false
+			child.mode = HollowRegent.Mode.OPEN
+			for blow in 30:
+				if not is_instance_valid(child) or child.hp <= 0:
+					break
+				child._stun = 0.0
+				child._hits_this_open = 0
+				child.take_hit(1, Vector2.UP)
+	for page in 4:
+		while Cutscene.active and not DialogueBox.is_open:
+			await _wait(0.1)
+		await _wait(2.0)
+		if page == 0:
+			await _capture("48_dace_at_the_mural")
+		elif page == 1:
+			await _capture("49_the_last_mural")
+		var box := _dialogue_box(barrow)
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.2)
+	await _skip_scene(barrow)
+	barrow.queue_free()
+	await _wait(0.2)
+
+
+## Marlo Pike's stall in Saltmarrow: Marlo across the counter, then his wares.
+func _shop_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag("tidebell_hull")
+	GameState.give_item("glint", 45, false)
+	GameState.give_item("jar", 2, false)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var village: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(village)
+	await _wait(0.5)
+	var stall := get_tree().get_first_node_in_group("market_stall") as MarketStall
+	village.player.global_position = stall.global_position + Vector2(-6, 14)
+	village.player.facing = Vector2.UP
+	await _wait(0.4)
+	await _capture("54_marlos_stall")
+	village.player.try_interact()
+	await _wait(1.2)
+	await _capture("55_marlo_pike")
+	var box := _dialogue_box(village)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.05)
+	await _wait(0.4)
+	var menu := get_tree().get_first_node_in_group("shop_menu") as ShopMenu
+	if menu:
+		menu.buy(1)
+		menu._cursor = 0
+		await _wait(0.15)
+		await _capture("56_pikes_wares")
+		menu.close()
+	await _wait(0.2)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.05)
+	village.queue_free()
+	await _wait(0.2)
+
+
 ## The Old One turns after the Storm Bell rings, then Hessa's confession at
 ## home.
 func _turn_shots() -> void:
@@ -1190,6 +1341,65 @@ func _ambience_shots(game: Node) -> void:
 		game.respawn()
 		await _wait(2.2)
 		await _capture(shots[coord][0])
+
+
+func _echoes_shots(game: Node) -> void:
+	for flag in ["boss_hull", "boss_kiln", "boss_mire", "boss_gale", "boss_glacier", "boss_belfry", "boss_tomb", "boss_maw_vael", "the_end", StoryDirector.ENDING_FLAG]:
+		GameState.set_flag(flag)
+	GameState.clear_flag(EchoTrial.WOKEN_FLAG)
+	var room := await _jump(game, EchoTrial.HEART_ROOM, Vector2i(11, 11))
+	game.player._invuln = 600.0
+	# The stones rising, then all eight.
+	await _wait(1.0 + EchoHall.RISE_GAP * 3)
+	await _capture("163_echo_stones_rising")
+	await _wait(EchoHall.RISE_GAP * 5 + 1.5)
+	GameState.set_flag(EchoTrial.cleared_flag("kiln"))
+	await _capture("164_echo_stones")
+	# Into the Matriarch's echo.
+	for stone in room.get_children():
+		if stone is EchoStone and stone.id == "hull":
+			stone.activate()
+	await _wait(2.0)
+	game.player._invuln = 600.0
+	await _capture("165_echo_matriarch")
+	EchoTrial.end()
+
+
+func _extras_shots(game: Node) -> void:
+	for item in ["echo_horn", "divers_helm", "kite_cloak", "glowmoth_lantern", "tide_hook"]:
+		GameState.give_item(item)
+	MawBreath.elapsed = 0.0
+	var rooms := [
+		[Vector2i(37, 10), "159_belfry_undercroft", Vector2i(20, 1)],
+		[Vector2i(41, 10), "160_tomb_ossuary", Vector2i(19, 1)],
+		[Vector2i(45, 10), "161_maw_tidewell", Vector2i(20, 1)],
+	]
+	for shot: Array in rooms:
+		var at := await _jump(game, shot[0], shot[2])
+		game.player._invuln = 600.0
+		for child in at.get_children():
+			if child is Enemy:
+				child.ai_enabled = false
+		MawBreath.elapsed = 0.0
+		await _wait(0.5)
+		game.player._invuln = 0.0
+		await _wait(0.05)
+		await _capture(shot[1])
+	# The Marrow Tomb's map, with its map and compass: every room, and the
+	# chests and boss not yet found (earlier shots may have opened some).
+	await _jump(game, Vector2i(40, 10), Vector2i(11, 6))
+	GameState.give_item(Items.dungeon_item("tomb", "map"))
+	GameState.give_item(Items.dungeon_item("tomb", "compass"))
+	var pause: PauseMenu = null
+	for child in game.get_children():
+		if child is PauseMenu:
+			pause = child
+	if pause:
+		pause.open(PauseMenu.Tab.MAP)
+		await _wait(0.4)
+		await _capture("162_tomb_map_compass")
+		pause.close()
+		await _wait(0.1)
 
 
 func _maw_shots(game: Node) -> void:
