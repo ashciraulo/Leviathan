@@ -796,6 +796,9 @@ func vaels_choir() -> void:
 	# Wren comes up the hall into the song.
 	Audio.play_sfx("vael_sing", vael.global_position, 0.6)
 	await scene.walk_route(room.global_position + WATCH_FROM)
+	if not is_instance_valid(vael) or not vael.is_inside_tree():
+		scene.finish()
+		return
 	scene.face(Vector2.UP)
 	Audio.play_sfx("vael_sing", vael.global_position, 0.5)
 	await scene.wait(1.2)
@@ -814,13 +817,15 @@ func vaels_choir() -> void:
 	var order: Array = range(1, voices.size()).filter(func(i: int) -> bool: return is_instance_valid(voices[i]))
 	order.sort_custom(func(a: int, b: int) -> bool: return voices[a].position.distance_to(WATCH_FROM) > voices[b].position.distance_to(WATCH_FROM))
 	for i: int in order:
-		song.hush(i)
+		if is_instance_valid(song):
+			song.hush(i)
 		var figure := voices[i] as ChoirFigure
 		if is_instance_valid(figure):
 			figure.face(figure.position.x > WATCH_FROM.x)
 		await scene.wait(0.35)
 	await scene.wait(0.5)
-	song.hush(0)
+	if is_instance_valid(song):
+		song.hush(0)
 	await scene.wait(1.4)
 	await scene.speak("vael", ["VAEL_MAW_1", "VAEL_MAW_2"])
 	await scene.wait(0.3)

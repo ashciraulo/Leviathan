@@ -103,7 +103,11 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
-			if not asleep and _timer <= 0.0:
+			# Still waiting on a scene that never came (enemies don't think
+			# during scenes): don't wait for ever.
+			if asleep:
+				wake()
+			if _timer <= 0.0:
 				_enter(Mode.DRIFT, REST_TIME)
 		Mode.DRIFT:
 			# He keeps his distance, pacing along the head of the hall.
