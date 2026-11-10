@@ -4456,7 +4456,7 @@ func _test_gully() -> void:
 	await _wait(0.4)
 	var room: Room = game.current_room
 	_check(_find_kind(room, "gully") != null, "Gully dozes on Wreck Strand")
-	var boxes := get_tree().get_nodes_in_group("strongbox")
+	var boxes: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is Strongbox)
 	_check(boxes.size() == 1 and not (boxes[0] as Strongbox).visible, "his strongbox isn't out there until he's asked")
 	var gully_tile := Vector2i(StoryDirector.GULLY_AT / Room.TILE)
 	_check(gully_tile.y <= 8 and room.tile_at(gully_tile.x, gully_tile.y + 1) == ".", "Gully can be talked to from dry ground")
@@ -4496,7 +4496,7 @@ func _test_gully() -> void:
 	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.3)
-	_check(get_tree().get_nodes_in_group("strongbox").is_empty(), "the pool stays empty")
+	_check(game.current_room.get_children().filter(func(c: Node) -> bool: return c is Strongbox).is_empty(), "the pool stays empty")
 	game.queue_free()
 	await _wait(0.1)
 	GameState.set_flag(StoryDirector.TURNED_FLAG)

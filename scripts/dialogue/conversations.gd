@@ -123,8 +123,6 @@ const TALKS := {
 		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
 		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
 	],
-	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
-	# five that have gone dark (FenLantern).
 	# Gully on Wreck Strand, and his strongbox out in the pool (a Strongbox,
 	# hauled in with the Tide Hook).
 	"gully": [
@@ -135,6 +133,8 @@ const TALKS := {
 		{"if": ["gully_asked"], "lines": ["GULLY_WAITING"]},
 		{"set": ["gully_asked"], "lines": ["GULLY_1", "GULLY_1B", "GULLY_2", "GULLY_2B", "GULLY_3", "GULLY_3B"]},
 	],
+	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
+	# five that have gone dark (FenLantern).
 	"wick": [
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},

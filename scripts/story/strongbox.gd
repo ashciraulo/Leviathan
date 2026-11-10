@@ -12,8 +12,8 @@ const WOOD_LIGHT := Color("#8d6644")
 const BARNACLE := Color("#d8d0bc")
 const WEED := Color("#4e7a4a")
 const FOAM := Color(0.85, 0.95, 1.0, 0.55)
-## How fast it comes in when hauled, near the chain's reeling speed.
-const HAUL_SPEED := 300.0
+## It comes in on the chain, as fast as the chain reels.
+const HAUL_SPEED := TideHook.BACK_SPEED
 
 var _time := 0.0
 var _hauling := false
@@ -31,10 +31,11 @@ func _refresh() -> void:
 		return
 	var there := GameState.has_flag("gully_asked") and not GameState.has_flag("gully_box_hauled")
 	visible = there
-	if there and get_child_count() == 0:
+	if there:
 		Layers.assign(self, Layers.WORLD, [])
-		add_child(Layers.rect_shape(Vector2(14, 14), Vector2(0, -6)))
-	elif not there:
+		if get_child_count() == 0:
+			add_child(Layers.rect_shape(Vector2(14, 14), Vector2(0, -6)))
+	else:
 		collision_layer = 0
 
 
@@ -46,7 +47,8 @@ func hook_hit(direction: Vector2) -> bool:
 		return false
 	_hauling = true
 	collision_layer = 0
-	var to := wren.global_position + direction * 10.0
+	# It lands just short of Wren, on their side of the water's edge.
+	var to := wren.global_position + direction * 4.0
 	var tween := create_tween()
 	tween.tween_property(self, "global_position", to, global_position.distance_to(to) / HAUL_SPEED)
 	tween.tween_callback(_landed)
