@@ -41,7 +41,7 @@ static func reach(wren: Player) -> float:
 	return RADIUS * (OIL_BOOST if wren != null and wren.lantern_oil > 0.0 else 1.0)
 
 
-## A soft round light, for PointLight2D (256 px across, white in the
+## A soft round light, for a Glow (256 px across, white in the
 ## middle fading to nothing at the edge).
 static func light_texture() -> Texture2D:
 	if _light_texture:
@@ -60,12 +60,3 @@ static func light_texture() -> Texture2D:
 	_light_texture = texture
 	return texture
 
-
-## A PointLight2D of the given radius and colour.
-static func make_light(radius: float, color: Color, energy: float = 1.0) -> PointLight2D:
-	var light := PointLight2D.new()
-	light.texture = light_texture()
-	light.texture_scale = radius / 128.0
-	light.color = color
-	light.energy = energy
-	return light

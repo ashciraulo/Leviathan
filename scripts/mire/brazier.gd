@@ -10,7 +10,7 @@ const REACH := 26.0
 
 var lit := false
 var _sprite: Sprite2D
-var _light: PointLight2D
+var _light: Glow
 
 
 func _ready() -> void:
@@ -20,11 +20,9 @@ func _ready() -> void:
 	add_child(Art.shadow())
 	_sprite = Art.sprite(MireSprites.BRAZIER, 2, 1, 18)
 	add_child(_sprite)
-	_light = Lantern.make_light(48.0, Color(0.6, 1.0, 0.85), 0.9)
-	_light.position = Vector2(0, -12)
 	# Unlit, a few embers of moss still glow, so it can be found in the dark.
-	_light.texture_scale = 14.0 / 128.0
-	_light.energy = 0.5
+	_light = Glow.make(14.0, Color(0.6, 1.0, 0.85), 0.5)
+	_light.position = Vector2(0, -12)
 	add_child(_light)
 
 
@@ -42,7 +40,7 @@ func light(quiet := false) -> void:
 		return
 	lit = true
 	_sprite.frame = 1
-	_light.texture_scale = 48.0 / 128.0
+	_light.radius = 48.0
 	_light.energy = 0.9
 	if not quiet:
 		Audio.play_sfx("brazier_catch", global_position)
