@@ -109,15 +109,29 @@ def measured(paths):
     for path in paths:
         with open(path, encoding="utf-8") as f:
             save = json.load(f)
-        stats = save.get("state", save).get("area_stats", {})
+        state = save.get("state", save)
+        stats = state.get("area_stats", {})
+        counted = 0.0
         for area, entry in stats.items():
-            slot = totals.setdefault(area, {"time": 0.0, "deaths": 0, "files": 0})
+            slot = totals.setdefault(area, {"time": 0.0, "deaths": 0.0, "files": 0})
             slot["time"] += float(entry.get("time", 0.0))
-            slot["deaths"] += int(entry.get("deaths", 0))
+            slot["deaths"] += float(entry.get("deaths", 0))
+            slot["files"] += 1
+            counted += float(entry.get("time", 0.0))
+        # Time played before the record started (a file from an older
+        # version) belongs to no area, but still counts.
+        rest = float(state.get("play_time", 0.0)) - counted
+        if rest > 1.0:
+            slot = totals.setdefault(UNCOUNTED, {"time": 0.0, "deaths": 0.0, "files": 0})
+            slot["time"] += rest
             slot["files"] += 1
     for slot in totals.values():
         slot["time"] /= slot["files"]
+        slot["deaths"] /= slot["files"]
     return totals
+
+
+UNCOUNTED = "(before the record began)"
 
 
 def hms(seconds: float) -> str:
@@ -144,10 +158,11 @@ def main(argv) -> int:
                                      "%s short" % hms(TARGET_HOURS * 3600 - total)))
         return 0
     data = measured(argv)
-    if not data:
+    if not data or set(data) == {UNCOUNTED}:
         print("No playtime record in those files (saves from before the record started have none).")
         return 1
-    print("Measured playtime from %d file(s)\n" % len(argv))
+    print("Measured playtime from %d file(s), averaged over the files that reached each area." % len(argv))
+    print("Reading conversations counts in the area where they happen (the model prices it apart).\n")
     print("%-28s %10s %7s %10s %7s" % ("area", "time", "deaths", "model", "x model"))
     total = 0.0
     for area in sorted(data):
@@ -155,7 +170,8 @@ def main(argv) -> int:
         total += entry["time"]
         guess = model.get(area, {}).get("time", 0.0)
         ratio = "%.2f" % (entry["time"] / guess) if guess else "-"
-        print("%-28s %10s %7d %10s %7s" % (area, hms(entry["time"]), entry["deaths"], hms(guess) if guess else "-", ratio))
+        print("%-28s %10s %7s %10s %7s" % (area, hms(entry["time"]), ("%.1f" % entry["deaths"]).rstrip("0").rstrip("."),
+                                           hms(guess) if guess else "-", ratio))
     print("\n%-28s %10s" % ("total", hms(total)))
     print("Target %.0f h: %s" % (TARGET_HOURS, "reached" if total >= TARGET_HOURS * 3600 else
                                  "%s to go" % hms(TARGET_HOURS * 3600 - total)))

@@ -5293,6 +5293,25 @@ func _test_area_stats() -> void:
 	_check(int(GameState.area_stats.get(area, {}).get("deaths", 0)) == 1
 		and is_equal_approx(float(GameState.area_stats.get("dungeon_hull", {}).get("time", 0.0)), 60.0)
 		and GameState.area_stats.size() == before.size(), "the playtime record survives saving (%s)" % GameState.area_stats)
+	# Reading a conversation pauses the game but counts as playing.
+	var reading_from := float(GameState.area_stats[area]["time"])
+	Events.dialogue_requested.emit("NAME_HESSA", PackedStringArray(["HESSA_1"]))
+	await _wait(0.5)
+	_check(get_tree().paused and float(GameState.area_stats[area]["time"]) > reading_from + 0.3,
+		"time reading a conversation counts (%.2f to %.2f s)" % [reading_from, float(GameState.area_stats[area]["time"])])
+	for box in game.get_children():
+		if box is DialogueBox:
+			box.close()
+	get_tree().paused = false
+	# Leaving without saving keeps the time and deaths, not the rest.
+	GameState.count_area_death(area)
+	GameState.play_time += 100.0
+	GameState.give_item("glint", 50, false)
+	_check(SaveManager.save_clock(), "leaving keeps the time played")
+	GameState.reset_new_game()
+	SaveManager.load_game()
+	_check(int(GameState.area_stats.get(area, {}).get("deaths", 0)) == 2 and GameState.play_time > 100.0
+		and GameState.item_count("glint") == 0, "only the time and deaths are kept (%s)" % GameState.area_stats)
 	game.queue_free()
 	await _wait(0.1)
 	SaveManager.delete_save()
