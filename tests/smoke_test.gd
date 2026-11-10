@@ -66,6 +66,7 @@ func _ready() -> void:
 		await _test_rowing()
 		await _test_choir()
 		await _test_ide()
+		await _test_liesl()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4184,6 +4185,87 @@ func _test_rowing() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
+
+
+## Liesl in Drowned Lane, and her great-grandmother's door bell out on
+## Belfry Square's flats, there to find only at low tide.
+func _test_liesl() -> void:
+	GameState.reset_new_game()
+	var talk_at := Vector2(StoryDirector.LIESL_AT.x - 14, StoryDirector.LIESL_AT.y)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	_check(_find_kind(room, "liesl") != null, "Liesl sweeps at the head of Drowned Lane")
+	_check(room.tile_at(floori(StoryDirector.LIESL_AT.x / Room.TILE), floori(StoryDirector.LIESL_AT.y / Room.TILE)) == "." and StoryDirector.LIESL_AT.y < 9 * Room.TILE, "on dry ground, clear of the dialogue box")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("liesl_asked"), "she asks after her great-grandmother's door bell (%d pages)" % pages)
+	game.queue_free()
+	await _wait(0.1)
+	# Out on Belfry Square's flats: the bell is there only while the tide's out.
+	var was := Tide.offset
+	Tide.offset = Tide.offset_for(Tide.Phase.HIGH, 0.5)
+	var find_at := StoryDirector.DOORBELL_LOST_AT + Vector2(-14, 0)
+	GameState.set_checkpoint(StoryDirector.BELFRY_SQUARE, Vector2(12 * Room.TILE + 8, 5 * Room.TILE + 10))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	room = game.current_room
+	var bells: Array = room.get_children().filter(func(c: Node) -> bool: return c is Doorbell)
+	_check(bells.size() == 1 and not (bells[0] as Doorbell).visible, "at high tide the flats keep the bell")
+	_check(room.tile_at(floori(StoryDirector.DOORBELL_LOST_AT.x / Room.TILE), floori(StoryDirector.DOORBELL_LOST_AT.y / Room.TILE)) == "r", "it lies on the tide flats")
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	await _wait(0.6)
+	game.player.global_position = room.global_position + find_at
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	_check(bells.size() == 1 and (bells[0] as Doorbell).visible, "at low tide it glints in the sand")
+	game.player.try_interact()
+	await _wait(0.2)
+	_check(GameState.has_flag("found_doorbell"), "Wren picks it up")
+	await _close_dialogue(game)
+	await _wait(0.1)
+	_check(bells.size() == 1 and not (bells[0] as Doorbell).visible, "and it's gone from the sand")
+	game.queue_free()
+	await _wait(0.1)
+	# Back to Liesl with it.
+	var glints := GameState.item_count("glint")
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, talk_at)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	pages = await _play_scene(game, 10.0)
+	_check(GameState.has_flag("liesl_bell_hung") and GameState.item_count("glint") == glints + 50, "she takes it back and gives Wren 50 old coins")
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is Doorbell), "she hangs it once Wren's gone")
+	game.queue_free()
+	await _wait(0.1)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var hung: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is Doorbell and c.hung)
+	_check(hung.size() == 1, "next time, the bell hangs by the drowned cottage's door")
+	_check(Conversations.branch_for("liesl").get("lines") == ["LIESL_AFTER"], "and Liesl's glad of it")
+	GameState.set_flag("tidebell_belfry")
+	_check(Conversations.branch_for("liesl").get("lines") == ["LIESL_VERGE"], "with the Verge Bell rung, her little one rings back")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("liesl").get("lines") == ["LIESL_END"], "and after the ending she has her own word")
+	game.queue_free()
+	await _wait(0.1)
+	Tide.offset = was
+
+
+func _find_kind(room: Node, kind: String) -> Npc:
+	for child in room.get_children():
+		if child is Npc and child.kind == kind:
+			return child
+	return null
 
 
 ## Ide's ferry at Causeway End: tied up while the Belfry's bell rings
