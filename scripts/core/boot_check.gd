@@ -18,6 +18,8 @@ const SLOT := 2
 
 var _out := ""
 var _title: Node
+## True once a real file in SLOT is set aside (only then may it be wiped).
+var _aside := false
 
 
 ## Called by the title screen once it is up.
@@ -39,6 +41,7 @@ func _ready() -> void:
 		_finish(false, "the title screen went away")
 		return
 	SaveManager.set_aside(SLOT, "bootcheck")
+	_aside = true
 	_title.call("_on_file_chosen", SLOT, true)
 	var deadline := Time.get_ticks_msec() + int(TIMEOUT * 1000.0)
 	while Time.get_ticks_msec() < deadline:
@@ -58,8 +61,9 @@ func _ready() -> void:
 
 
 func _finish(ok: bool, why: String) -> void:
-	SaveManager.delete_save(SLOT)
-	SaveManager.restore_aside(SLOT, "bootcheck")
+	if _aside:
+		SaveManager.delete_save(SLOT)
+		SaveManager.restore_aside(SLOT, "bootcheck")
 	var verdict := "BOOT OK" if ok else "BOOT FAILED: " + why
 	print("Boot check: " + verdict)
 	var file := FileAccess.open(_out, FileAccess.WRITE)

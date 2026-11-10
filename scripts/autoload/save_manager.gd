@@ -230,17 +230,18 @@ func _read(path: String) -> Dictionary:
 func set_aside(slot: int, tag: String) -> void:
 	restore_aside(slot, tag)
 	var path := slot_path(slot)
-	for file in [path, path + ".bak"]:
+	for file in [path, path + ".bak", path + ".tmp"]:
 		if FileAccess.file_exists(file):
 			DirAccess.rename_absolute(_abs(file), _abs(file + "." + tag))
 
 
 func restore_aside(slot: int, tag: String) -> void:
 	var path := slot_path(slot)
-	if not (FileAccess.file_exists(path + "." + tag) or FileAccess.file_exists(path + ".bak." + tag)):
+	if not (FileAccess.file_exists(path + "." + tag) or FileAccess.file_exists(path + ".bak." + tag) \
+			or FileAccess.file_exists(path + ".tmp." + tag)):
 		return
 	delete_save(slot)
-	for file in [path, path + ".bak"]:
+	for file in [path, path + ".bak", path + ".tmp"]:
 		if FileAccess.file_exists(file + "." + tag):
 			DirAccess.rename_absolute(_abs(file + "." + tag), _abs(file))
 

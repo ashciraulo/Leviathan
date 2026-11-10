@@ -82,7 +82,9 @@ jobs:
         run: timeout 300 "$RUNNER_TEMP/godot" --headless --path . --import
 
       - name: Export
+        shell: bash
         run: |
+          set -o pipefail
           mkdir -p export/windows export/linux export/macos
           "$RUNNER_TEMP/godot" --headless --path . --export-release "Windows Desktop" export/windows/Leviathan.exe 2>&1 | tee export.log
           "$RUNNER_TEMP/godot" --headless --path . --export-release "Linux" export/linux/Leviathan.x86_64 2>&1 | tee -a export.log
