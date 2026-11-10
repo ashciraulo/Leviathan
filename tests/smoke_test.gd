@@ -4378,7 +4378,7 @@ func _test_regional_caves() -> void:
 		enemy.queue_free()
 	warren.get_node("Puzzle").set("_shut_in", true)
 	await _wait(0.3)
-	_check(hidden.visible, "with the warren cleared its chest appears")
+	_check(hidden.visible and GameState.has_flag(RoomPuzzle.flag_for(warren.coord)), "with the warren cleared its chest appears")
 	warren.queue_free()
 	await _wait(0.1)
 
