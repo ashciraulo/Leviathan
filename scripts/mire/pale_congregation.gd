@@ -320,5 +320,7 @@ func _draw_swarm() -> void:
 		var at: Vector2 = wisps[i]["at"] - origin
 		var glow := Color(0.56, 0.89, 0.78, 0.18 * bright)
 		_swarm.draw_circle(at, 6.0, glow)
+		if Settings.high_contrast:
+			_swarm.draw_arc(at + Vector2(0, -2), 7.0, 0.0, TAU, 16, Palette.CONTRAST_ENEMY, 1.0)
 		var frame := (int(_beat * 5.0) + i) % 2
 		_swarm.draw_texture_rect_region(MireSprites.WISP, Rect2(at - Vector2(5, 8), Vector2(10, 12)), Rect2(frame * 10, 0, 10, 12), Color(bright, bright, bright, 1.0))

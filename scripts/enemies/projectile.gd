@@ -24,7 +24,18 @@ func _ready() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture = Art.SHOT
 	_sprite.hframes = 2
+	# High contrast outlines enemy shots, as it does enemies.
+	_sprite.material = Art.flash_material()
+	_sprite.set_meta("contrast", Palette.CONTRAST_ENEMY)
 	add_child(_sprite)
+	Art.set_flash(_sprite, 0.0)
+
+
+func _process(_delta: float) -> void:
+	# The outline follows the shot's frame (subclasses swap the texture and
+	# move in their own _physics_process).
+	if Settings.high_contrast:
+		Art.set_flash(_sprite, 0.0)
 
 
 func _physics_process(delta: float) -> void:

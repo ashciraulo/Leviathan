@@ -449,6 +449,8 @@ func _draw_fx() -> void:
 		var at := _target - origin
 		var k := 1.0 - _timer / TELL_TIME
 		_fx.draw_circle(at + Vector2(0, -3), 6.0 + 12.0 * k, Color(1.0, 0.45, 0.15, 0.25 + 0.35 * k))
+		if Settings.high_contrast:
+			_fx.draw_arc(at + Vector2(0, -3), 6.0 + 12.0 * k, 0.0, TAU, 24, Palette.CONTRAST_ENEMY, 2.0)
 		for i in 6:
 			var dir := Vector2.from_angle(TAU * i / 6.0 + 0.4)
 			_fx.draw_line(at, at + dir * (8.0 + 14.0 * k), Color(1.0, 0.85, 0.4, 0.9), 1.0)

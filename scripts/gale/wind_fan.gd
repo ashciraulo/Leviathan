@@ -91,4 +91,7 @@ func _draw() -> void:
 		var t := _gusts[i]
 		var at := origin + direction * (Room.TILE * 0.5 + t * length) + across * (float(i % 3) - 1.0) * 4.0
 		var color := Color(1, 1, 1, 0.55 * sin(t * PI))
-		draw_line(at, at - direction * 6.0, color, 1.0)
+		if Settings.high_contrast:
+			draw_line(at, at - direction * 8.0, Color(1, 1, 1, minf(1.0, 0.9 * sin(t * PI) + 0.3)), 2.0)
+		else:
+			draw_line(at, at - direction * 6.0, color, 1.0)

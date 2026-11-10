@@ -66,4 +66,4 @@ func _draw() -> void:
 		for i in 3:
 			var a := t * 9.0 + i * 2.1
 			var p := Vector2(0, -38) + Vector2.from_angle(a) * (4.0 + fmod(t * 20.0 + i * 3.0, 6.0))
-			draw_rect(Rect2(p, Vector2(1, 1)), Color(1.0, 0.95, 0.5))
+			draw_rect(Rect2(p, Vector2(2, 2) if Settings.high_contrast else Vector2(1, 1)), Color(1.0, 0.95, 0.5))

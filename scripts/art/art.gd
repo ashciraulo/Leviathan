@@ -124,7 +124,9 @@ void fragment() {
 		float near = max(max(texture(TEXTURE, r).a * inside(r), texture(TEXTURE, l).a * inside(l)),
 			max(texture(TEXTURE, d).a * inside(d), texture(TEXTURE, u).a * inside(u)));
 		if (near > 0.5) {
-			COLOR = vec4(outline_color.rgb, outline_color.a * tint.a);
+			// A faded sprite (a shadow under the ice, a half-seen shade) keeps
+			// a clear outline; a near-invisible one (the Hush) only a faint one.
+			COLOR = vec4(outline_color.rgb, outline_color.a * max(tint.a, min(tint.a * 3.0, 0.8)));
 		}
 	} else {
 		COLOR = vec4(mix(COLOR.rgb, flash_color.rgb, flash), COLOR.a);

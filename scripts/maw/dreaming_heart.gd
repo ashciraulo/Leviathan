@@ -126,6 +126,7 @@ func _physics_process(delta: float) -> void:
 	_swell = maxf(_swell - delta * 4.0, 0.0)
 	_sprite.frame = 1 if _swell > 0.5 else 0
 	_sprite.scale = Vector2.ONE * (1.0 + _swell * 0.03)
+	Art.set_flash(_sprite, 0.0)
 	if Cutscene.active:
 		return
 	_timer -= delta

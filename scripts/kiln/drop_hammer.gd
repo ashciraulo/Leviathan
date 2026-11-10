@@ -35,6 +35,7 @@ func _ready() -> void:
 	_hazard.add_child(Layers.rect_shape(Vector2(14, 12), Vector2(0, -6)))
 	add_child(_hazard)
 	_head = Art.sprite(KilnSprites.HAMMER_HEAD, 1, 1, 15)
+	_head.set_meta("contrast", Palette.CONTRAST_ENEMY)
 	add_child(_head)
 	_base = _head.position
 	# Columns fall one after another, a third of a beat apart.
@@ -66,6 +67,7 @@ func _physics_process(delta: float) -> void:
 	_hazard.active = phase in [Phase.FALL, Phase.DOWN] and lift < 8.0
 	_lift = lift
 	_head.position = _base + Vector2(jitter, -lift)
+	Art.set_flash(_head, 0.0)
 	queue_redraw()
 
 

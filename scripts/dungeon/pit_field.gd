@@ -211,6 +211,37 @@ func _draw() -> void:
 					_tile("lava_right", x, y)
 				if not _is_lava(x, y + 1, first):
 					_tile("lava_bottom", x, y)
+	if Settings.high_contrast:
+		_draw_contrast_edges(first)
+
+
+## High contrast: a bright line round every pit and every pool of lava, on
+## the edges where it meets safe ground.
+func _draw_contrast_edges(first: int) -> void:
+	for y in Room.ROWS:
+		for x in Room.COLS:
+			var letter := _room.tile_at(x, y)
+			var hazard := letter == "_"
+			if not hazard and letter != "#" and (letter == "^" or y >= first):
+				hazard = true
+			if not hazard:
+				continue
+			var at := Vector2(x, y) * Room.TILE
+			var t := float(Room.TILE)
+			for side: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+				if _is_safe(x + side.x, y + side.y, first):
+					var a := at + Vector2(maxf(side.x, 0.0) * (t - 1.0), maxf(side.y, 0.0) * (t - 1.0))
+					var size := Vector2(1.0, t) if side.x != 0 else Vector2(t, 1.0)
+					draw_rect(Rect2(a, size), Palette.CONTRAST_HAZARD)
+
+
+func _is_safe(x: int, y: int, first: int) -> bool:
+	if x < 0 or y < 0 or x >= Room.COLS or y >= Room.ROWS:
+		return false
+	var letter := _room.tile_at(x, y)
+	if letter == "#" or letter == "_":
+		return false
+	return not (letter == "^" or y >= first)
 
 
 func _is_lava(x: int, y: int, first: int) -> bool:

@@ -27,6 +27,7 @@ var _time := 0.0
 func _ready() -> void:
 	z_index = 0
 	_sprite = Art.sprite(BelfrySprites.TENTACLE, 3, 1, 38)
+	_sprite.set_meta("contrast", Palette.CONTRAST_ENEMY)
 	add_child(_sprite)
 	_body = _area(DamageArea.new(), Layers.ENEMY_ATTACK, Vector2(10, 16), Vector2(0, -10)) as DamageArea
 	_slam = _area(DamageArea.new(), Layers.ENEMY_ATTACK, Vector2(20, 14), Vector2.ZERO) as DamageArea
@@ -58,6 +59,8 @@ func dive_hit(_direction: Vector2) -> void:
 	if severed:
 		return
 	severed = true
+	# A cut stump is harmless: no high contrast outline.
+	_sprite.set_meta("contrast", Color.TRANSPARENT)
 	_body.active = false
 	_slam.active = false
 	_root.set_deferred("monitorable", false)
@@ -71,6 +74,7 @@ func dive_hit(_direction: Vector2) -> void:
 
 func _physics_process(delta: float) -> void:
 	_time += delta
+	Art.set_flash(_sprite, 0.0)
 	if severed:
 		return
 	_timer -= delta
@@ -108,7 +112,10 @@ func _draw() -> void:
 	var r := 9.0 + sin(_time * 3.0) * 1.5
 	draw_arc(Vector2(0, -2), r, 0.0, TAU, 14, Color(0.7, 0.9, 0.9, 0.5), 1.0)
 	if _mode == "rear" and not severed:
-		draw_arc(_target, 10.0, 0.0, TAU, 14, Color(0.9, 0.95, 1.0, 0.35), 1.0)
+		if Settings.high_contrast:
+			draw_arc(_target, 10.0, 0.0, TAU, 14, Palette.CONTRAST_ENEMY, 2.0)
+		else:
+			draw_arc(_target, 10.0, 0.0, TAU, 14, Color(0.9, 0.95, 1.0, 0.35), 1.0)
 	if _mode == "slam" and not severed:
 		var spread := (1.0 - _timer / SLAM_TIME) * 14.0 + 4.0
 		draw_arc(_target, spread, 0.0, TAU, 16, Color(0.85, 0.95, 1.0, 0.8), 2.0)

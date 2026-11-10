@@ -48,7 +48,11 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
+<<<<<<< Updated upstream
 	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie"]:
+=======
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "contrast"]:
+>>>>>>> Stashed changes
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -70,6 +74,8 @@ func _ready() -> void:
 				await _maw_shots(game)
 			"extras":
 				await _extras_shots(game)
+			"contrast":
+				await _contrast_shots(game)
 			"goods":
 				await _goods_shots(game)
 			"echoes":
@@ -419,6 +425,7 @@ func _ready() -> void:
 
 	# 8i. The Maw.
 	await _maw_shots(game)
+	await _contrast_shots(game)
 
 	# 8j. The optional rooms, and a dungeon map with its compass.
 	await _extras_shots(game)
@@ -532,6 +539,28 @@ func _jump(game: Node, coord: Vector2i, tile: Vector2i) -> Room:
 	game.respawn()
 	await _wait(2.2)
 	return game.current_room
+
+
+## SHOTS_ONLY=contrast: dungeon hazards with high contrast on (enemy shots,
+## pits and lava edged, the Mire's dark a little lighter).
+func _contrast_shots(game: Node) -> void:
+	var contrast_was := Settings.high_contrast
+	Settings.high_contrast = true
+	var rooms := [
+		[Vector2i(22, 8), "180_contrast_kiln_lava", Vector2i(11, 11)],
+		[Vector2i(24, 8), "181_contrast_mire_dark", Vector2i(11, 11)],
+		[Vector2i(36, 7), "182_contrast_knell_arms", Vector2i(11, 11)],
+		[Vector2i(28, 7), "183_contrast_stormheron", Vector2i(11, 11)],
+	]
+	for entry in rooms:
+		await _jump(game, entry[0], entry[2])
+		game.player._invuln = 600.0
+		await _wait(2.0)
+		game.player._invuln = 0.0
+		await _wait(0.1)
+		await _capture(entry[1])
+	game.player._invuln = 0.0
+	Settings.high_contrast = contrast_was
 
 
 func _hull_shots(game: Node) -> void:
