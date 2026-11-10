@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room.gd" id="1_room"]
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1_room")
+name_key = "ROOM_GULLCRY_STACKS"
+biome = "windmere"
+wind = Vector2(-55, 0)
+chest_item = "breath_pearl"
+layout = "########################
+#______________________#
+#____________..___..C._#
+#____________..___...._#
+#_________________...._#
+#______________________#
+#______________________#
+#....___..___..________#
+.....___..___..________#
+.....___..___..________#
+#....__________________#
+#______________________#
+########################"

@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room.gd" id="1_room"]
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1_room")
+name_key = "ROOM_LAMPLESS_SINK"
+biome = "gloamfen"
+dark = true
+cave = true
+gate = "braziers"
+chest_hidden = true
+chest_item = "breath_pearl"
+layout = "###########..###########
+#~~~~~~~~~~..~~~~~~~~~~#
+#~j.~~~~~~~vv~~~~~~~.j~#
+#~..vvvv~~~vv~~~vvvv..~#
+#~~~~~~v~~~vv~~~v~~~~~~#
+#~~~~~~vvvvvvvvvv~~~~~~#
+#~~~~~~~~~~vv~~~~~~~~~~#
+#~j.vvvvvv....vvvvvv.j~#
+#~..~~~~~~.C..~~~~~~..~#
+#~~~~~~~~~.q..~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
+########################"

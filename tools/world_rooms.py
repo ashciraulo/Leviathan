@@ -84,6 +84,9 @@ SECRETS = {
     (2, 3): ("old_one_turned",),              # Weir Steps: glints on the sea bed
     (1, 4): ("old_one_turned",),              # the Ebb Shelf, south of Belfry Square
     (0, 4): ("old_one_turned",),              # Ebb Grotto, west of the Shelf
+    # Challenges, each with a Breath Pearl.
+    (7, -4): ("kite_cloak",),                 # Gullcry Stacks: glide stack to stack over the chasm
+    (5, 3): ("glowmoth_lantern", "frostfang_bow", "kite_cloak"),  # Lampless Sink (the braziers need the lantern)
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
