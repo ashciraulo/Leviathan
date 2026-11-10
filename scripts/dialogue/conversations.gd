@@ -35,6 +35,7 @@ const SPEAKERS := {
 	"marlo": ["NAME_MARLO", Art.PORTRAIT_MARLO],
 	"tobin": ["NAME_TOBIN", Art.PORTRAIT_TOBIN],
 	"ide": ["NAME_IDE", Art.PORTRAIT_IDE],
+	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -109,6 +110,16 @@ const TALKS := {
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
 		{"if": ["seen_ending"], "set": ["ide_ferry"], "lines": ["IDE_END"]},
 		{"set": ["ide_ferry"], "lines": ["IDE_FERRY_AGAIN"]},
+	],
+	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
+	# (a Doorbell out on Belfry Square's flats, there at low tide).
+	"liesl": [
+		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
+		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
+		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
+		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
+		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
+		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},

@@ -100,6 +100,14 @@ const WREN_NORTH_EAST := Vector2(21 * 16 + 8, 2 * 16 + 10)
 const WREN_SOUTH := Vector2(21 * 16 + 8, 9 * 16 + 12)
 const FERRY_BELL_AT := Vector2(17 * 16 + 4, 9 * 16 + 14)
 const FERRY_ROW_TIME := 3.0
+## Liesl at the head of Drowned Lane, looking out over the flats to her
+## great-grandmother's cottage; and that cottage's door bell, lost on Belfry
+## Square's flats until Wren finds it, then hung back by the door.
+const DROWNED_LANE := Vector2i(0, 3)
+const BELFRY_SQUARE := Vector2i(1, 3)
+const LIESL_AT := Vector2(10 * 16 + 8, 3 * 16 + 10)
+const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
+const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
 ## Cutscene 18, Vael's choir: the first time Wren walks into Vael's hall,
 ## the whole Choir is singing the Waking Song. More singers than fight him
 ## stand along the hall (tiles), and slip away once his song is broken.
@@ -175,6 +183,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_up_journal(coord)
 	if coord == SALTMARROW and GameState.has_flag(TOBIN_HOME_FLAG):
 		_put_tobin_home()
+	if coord == DROWNED_LANE or coord == BELFRY_SQUARE:
+		_put_liesl(coord)
 	if coord == CAUSEWAY_END and GameState.has_flag(TURNED_FLAG):
 		# A ride the game closed partway through: she's home again.
 		if GameState.has_flag(FERRY_FLAG):
@@ -804,6 +814,29 @@ func _put_ide() -> void:
 		var bell := FerryBell.new()
 		bell.position = FERRY_BELL_AT
 		room.add_child(bell)
+
+
+## Liesl and her great-grandmother's door bell: Liesl sweeping at the head
+## of Drowned Lane, and the bell out on Belfry Square's flats while she
+## waits for it, or back by the drowned cottage's door once she has it.
+func _put_liesl(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	if room == null:
+		return
+	if coord == DROWNED_LANE:
+		if not _find_npc("liesl"):
+			var liesl := Npc.new("liesl")
+			liesl.position = LIESL_AT
+			room.add_child(liesl)
+		if GameState.has_flag("liesl_bell_hung") and not room.get_children().any(func(c: Node) -> bool: return c is Doorbell):
+			var bell := Doorbell.new()
+			bell.hung = true
+			bell.position = DOORBELL_HUNG_AT
+			room.add_child(bell)
+	elif coord == BELFRY_SQUARE and GameState.has_flag("liesl_asked") and not GameState.has_flag("found_doorbell"):
+		var lost := Doorbell.new()
+		lost.position = DOORBELL_LOST_AT
+		room.add_child(lost)
 
 
 func _ferry_boat() -> Rowboat:

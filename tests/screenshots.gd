@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -106,6 +106,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _choir_shots()
+			"liesl":
+				game.queue_free()
+				await _wait(0.2)
+				await _liesl_shots()
 			"ide":
 				game.queue_free()
 				await _wait(0.2)
@@ -1406,6 +1410,57 @@ func _rowing_shots() -> void:
 	await _skip_scene(home)
 	home.queue_free()
 	await _wait(0.2)
+
+
+## Liesl in Drowned Lane, her great-grandmother's door bell glinting on
+## Belfry Square's flats at low tide, and the bell hung back by the door.
+func _liesl_shots() -> void:
+	GameState.reset_new_game()
+	var was := Tide.offset
+	Tide.offset = Tide.offset_for(Tide.Phase.HIGH, 0.5)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, Vector2(StoryDirector.LIESL_AT.x - 14, StoryDirector.LIESL_AT.y))
+	var lane: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(lane)
+	await _wait(0.6)
+	lane.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	lane.player.try_interact()
+	var box := _dialogue_box(lane)
+	await _wait(0.4)
+	box.advance()
+	box.advance()
+	await _wait(1.6)
+	await _capture("81_liesl_of_drowned_lane")
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	lane.queue_free()
+	await _wait(0.2)
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 1.0)
+	GameState.set_checkpoint(StoryDirector.BELFRY_SQUARE, StoryDirector.DOORBELL_LOST_AT + Vector2(-30, -6))
+	var square: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(square)
+	await _wait(1.2)
+	square.player.facing = Vector2.RIGHT
+	square.player._invuln = 0.0
+	await _capture("82_a_glint_at_low_tide")
+	square.queue_free()
+	await _wait(0.2)
+	for flag in ["found_doorbell", "liesl_bell_hung"]:
+		GameState.set_flag(flag)
+	# Just as the water goes out, her bell rings.
+	Tide.offset = Tide.offset_for(Tide.Phase.FALLING, Tide.FALLING_TIME - 0.6)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, StoryDirector.DOORBELL_HUNG_AT + Vector2(26, -6))
+	lane = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(lane)
+	await _wait(1.0)
+	lane.player.facing = Vector2.RIGHT
+	lane.player._invuln = 0.0
+	await _capture("83_her_bell_rings_again")
+	lane.queue_free()
+	await _wait(0.2)
+	Tide.offset = was
 
 
 ## Ide the ferrywoman at Causeway End: her offer, the far landing, and the

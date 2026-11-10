@@ -398,6 +398,49 @@ def ide_frames():
 
 
 # --------------------------------------------------------------------------
+# Liesl, of the Sunken Verge: a plum headscarf, a green knit shawl over a
+# dusk-coloured dress, a canvas apron, and her broom. Every low tide she
+# walks out to her great-grandmother's drowned door and sweeps the step.
+# --------------------------------------------------------------------------
+LIESL = [
+    "................",
+    "................",
+    "......PPPP......",
+    ".....PPPPPP.....",
+    "....PPPPPPPP....",
+    "....PAAAAAAP....",
+    "....AAeAAeAA....",
+    "....AAeAAeAA....",
+    "....AAAAAAAA....",
+    ".....AAAAAA.....",
+    "....YYYAAYYY....",
+    "...YYYYYYYYYY.d.",
+    "..YYYYYYYYYYYYd.",
+    "..YYYYYYYYYYYAd.",
+    "..AppjjjjjjppYd.",
+    "...ppjjjjjjpp.d.",
+    "...ppjjjjjjpp.d.",
+    "...ppjjjjjjpp.d.",
+    "...pppppppppp.d.",
+    "...pppppppppp.d.",
+    "....pppppppp.xdx",
+    "....ppppppppxxxx",
+    ".....bb..bbxxxxx",
+    "................",
+]
+
+
+def liesl_frames():
+    idle = LIESL
+    # Sweeping: the broom swung out to her side, bristles across the step.
+    sweep = paint(LIESL, [(r, 14, ".") for r in range(11, 20)] + [(20, 13, "..."), (21, 12, "...."), (22, 11, ".....")])
+    sweep = paint(sweep, [(14, 14, "d"), (15, 14, "d"), (16, 14, "d"), (17, 15, "d"), (18, 15, "d"), (19, 15, "d"), (20, 12, "xxxx"), (21, 11, "xxxxx"), (22, 11, "xxxxx")])
+    # Talking: leaning on the broom, her free hand up to her scarf.
+    talk = paint(LIESL, [(14, 2, "."), (13, 2, "."), (12, 2, "Y"), (11, 3, "A"), (10, 3, "A"), (9, 4, "A")])
+    return [idle, sweep, talk]
+
+
+# --------------------------------------------------------------------------
 # Tobin, Dunstan's son, about seventeen: the Choir's newest singer. A grey
 # robe too big for him, hood shoved down, a rope belt, his father's mop of
 # brown hair grown out. Rubs the back of his neck when he talks.
@@ -864,6 +907,7 @@ SPRITES = {
     "lowe": lowe_frames,
     "tobin": tobin_frames,
     "ide": ide_frames,
+    "liesl": liesl_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1062,6 +1106,22 @@ def portrait_ide():
     return _rows(c)
 
 
+def portrait_liesl():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "Y")                    # green knit shawl
+    _box(c, 9, 27, 14, 5, "j")                         # apron bib
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8)
+    _dots(c, [(9, 13), (9, 14), (10, 15), (23, 13), (23, 14), (22, 15)], "M")  # brown hair at her temples
+    _ellipse(c, 16, 8, 11, 5, "P")                     # plum headscarf, over the crown
+    _box(c, 6, 9, 20, 3, "P")
+    _dots(c, [(8, 12), (24, 12)], "P")
+    _box(c, 24, 12, 3, 3, "P")                         # knotted at the side
+    _box(c, 25, 15, 2, 6, "P")                         # and its ends down past her ear
+    _box(c, 27, 16, 1, 4, "P")
+    _box(c, 28, 2, 2, 30, "d")                         # the broom's handle, held close
+    return _rows(c)
+
+
 def portrait_tobin():
     c = _canvas()
     _ellipse(c, 16, 32, 14, 8, "S")                    # grey robe, too big
@@ -1191,6 +1251,7 @@ PORTRAITS = {
     "lowe": portrait_lowe(),
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),
+    "liesl": portrait_liesl(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),
