@@ -1333,6 +1333,8 @@ func _ambience_shots(game: Node) -> void:
 		Vector2i(4, 1): ["amb_fenmouth", Vector2i(11, 1)],
 		Vector2i(8, -2): ["amb_cinder_flats", Vector2i(11, 11)],
 		Vector2i(7, 0): ["amb_bleached_strand", Vector2i(11, 11)],
+		Vector2i(5, -3): ["amb_gale_flats", Vector2i(13, 4)],
+		Vector2i(0, -1): ["amb_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]

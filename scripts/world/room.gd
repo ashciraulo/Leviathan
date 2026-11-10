@@ -139,6 +139,7 @@ const BIOMES := {
 		"floor": "sand_%d", "wall_top": "cliff_top_%d", "wall_face": "cliff_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "shell_%d", "dry_deco": "grass_%d", "floor_overlay": ["ripple_%d", 7],
+		"water_overlay": ["tidepool_%d", 5],
 	},
 	"brinewood": {
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
@@ -649,7 +650,7 @@ func _draw_ground() -> void:
 				# Deep water is the same deep green wherever it is (Wren's
 				# waterline is drawn to match it).
 				_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
-				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
+				if tile != "Q" and tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					# Boardwalks sit on the water, so no bank line against them.
