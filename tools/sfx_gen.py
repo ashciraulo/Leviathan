@@ -583,6 +583,20 @@ AMBIENCE = {
         L("noise", dur=AMB_DUR, lp=400, vol=0.5, wobble=(0.2, 0.4), seed=212)),
     "wind": S(0.216,
         L("noise", dur=AMB_DUR, lp=(400, 1400), hp=120, wobble=(0.2, 0.85), seed=221)),
+    # The hollows and Ebb Grotto: close, still air, slow drips off the rock
+    # and a low hum the walls give back.
+    "hollow": S(0.249,
+        L("noise", dur=AMB_DUR, lp=220, hp=30, wobble=(0.08, 0.5), seed=231),
+        L("sine", 55, dur=AMB_DUR, vol=0.25, wobble=(0.1, 0.7)),
+        *_drips(232, 7, AMB_DUR, 1100.0)),
+    # The bared sea bed: the surf gone far out, shells and weed ticking as
+    # they drain, and under it all a slow, enormous swell (the Old One
+    # breathing, nearer than anywhere else on the coast).
+    "ebb": S(0.306,
+        L("noise", dur=AMB_DUR, lp=450, hp=60, wobble=(0.07, 0.8), seed=241),
+        L("noise", dur=AMB_DUR, hp=3500, rate=120, vol=0.06, seed=242),
+        L("sine", 38, dur=AMB_DUR, vol=0.35, wobble=(0.11, 0.95)),
+        *_drips(243, 4, AMB_DUR, 2200.0)),
 }
 
 

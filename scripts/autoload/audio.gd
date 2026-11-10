@@ -419,8 +419,12 @@ static func cue_for_room(biome: String, dungeon: String) -> String:
 
 ## The background loop for a room: dungeons share one, the overworld has
 ## one per region.
-static func ambience_for_room(biome: String, dungeon: String) -> String:
-	return "dungeon" if dungeon != "" else biome
+static func ambience_for_room(biome: String, dungeon: String, own: String = "", cave: bool = false) -> String:
+	if own != "":
+		return own
+	if dungeon != "":
+		return "dungeon"
+	return "hollow" if cave else biome
 
 
 ## Fades to an ambience loop (from audio/ambience/). "" fades it out.

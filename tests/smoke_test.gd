@@ -3920,6 +3920,12 @@ func _test_sea_bed() -> void:
 	GameState.clear_flag(Tide.HELD_IN_FLAG)
 	_check(map._joined(Vector2i(1, 3), Vector2i(1, 4), Vector2i.DOWN), "and joins it once the tide is held out")
 	map.free()
+	# The Ebb Shelf has its own bed of sound, and both new loops exist.
+	var shelf: Room = (load("res://rooms/room_1_4.tscn") as PackedScene).instantiate()
+	_check(Audio.ambience_for_room(shelf.biome, shelf.dungeon, shelf.ambience, shelf.cave) == "ebb", "the Ebb Shelf plays the ebb loop")
+	shelf.free()
+	for loop in ["ebb", "hollow"]:
+		_check(ResourceLoader.exists(Audio.AMBIENCE_DIR + loop + ".wav"), "the %s ambience loop is there" % loop)
 	# Frost can't make a path out to it: only open water freezes.
 	GameState.clear_flag(Tide.HELD_FLAG)
 	var steps: Room = (load("res://rooms/room_2_3.tscn") as PackedScene).instantiate()
@@ -3968,6 +3974,7 @@ func _test_overworld_secrets() -> void:
 		if coord in [Vector2i(1, -1), Vector2i(7, -1), Vector2i(3, 3)]:
 			_check(room.chest_count >= 100 and tr(room.name_key) != room.name_key, "side area %s has a name and a cache of %d glints" % [coord, room.chest_count])
 			_check(room.cave, "side area %s is shaded like a hollow" % coord)
+			_check(Audio.ambience_for_room(room.biome, room.dungeon, room.ambience, room.cave) == "hollow", "side area %s sounds like a hollow" % coord)
 		room.free()
 	# Frost can't freeze lava: Cinder Hollow's islet still needs the hook or cloak.
 	var hollow: Room = (load("res://rooms/room_7_-1.tscn") as PackedScene).instantiate()
