@@ -73,6 +73,21 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=regional_caves: the small caves off each region, and their ways in.
+	if OS.get_environment("SHOTS_ONLY") == "regional_caves":
+		GameState.give_item("frostfang_bow")
+		await _room_shots(game, {
+			Vector2i(0, 0): ["rcave_smugglers_way_in", Vector2i(4, 10)],
+			Vector2i(0, 1): ["rcave_smugglers_cut", Vector2i(4, 2)],
+			Vector2i(2, -3): ["rcave_rimefall_way_in", Vector2i(18, 3)],
+			Vector2i(2, -4): ["rcave_rimefall_steps", Vector2i(18, 10)],
+			Vector2i(1, -4): ["rcave_icefall_grotto", Vector2i(21, 6)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=life: overworld critters, reeds, and the newer foes per region.
 	if OS.get_environment("SHOTS_ONLY") == "life":
 		await _room_shots(game, {
