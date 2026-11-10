@@ -64,6 +64,8 @@ const TALKS := {
 		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
 	],
 	"hessa": [
+		# Ottilie's old cave sign, carried by Wren's lamp.
+		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "set": ["hessa_answered_ottilie"], "lines": [["", "NARRATE_WREN_OTTILIE_SIGNAL"], "HESSA_OTTILIE_1", "HESSA_OTTILIE_2"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
 		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
 		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
@@ -113,6 +115,7 @@ const TALKS := {
 	# lights her forge again and gives Wren a Brinesteel sword. She always
 	# introduces herself first, even if Wren walked past her into the Kiln.
 	"agna": [
+		{"if": ["sorrel_letters"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["agna_gave_sword", "seen_ending"], "lines": ["AGNA_END"]},
 		{"if": ["agna_gave_sword", "old_one_turned"], "lines": ["AGNA_TURNED"]},
 		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
@@ -138,6 +141,8 @@ const TALKS := {
 	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
 	"liesl": [
+		{"if": ["sorrel_letters"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
+		{"if": ["wick_murmur_ask"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
 		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
@@ -148,7 +153,12 @@ const TALKS := {
 	# Ottilie at Still Cove, who trained with Hessa and Vael, and three
 	# rimefin from her fishing hole (a FishingHole).
 	"ottilie": [
+		{"if": ["sorrel_letters"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
 		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
+		# Her old cave sign for Hessa (Wren shows it with the lamp), and the answer.
+		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": ["OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
+		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "lines": ["OTTILIE_SIGNAL_WAITING"]},
+		{"if": ["ottilie_paid", "seen_hessa_confession"], "unless": ["ottilie_signal"], "set": ["ottilie_signal"], "lines": ["OTTILIE_SIGNAL_1", "OTTILIE_SIGNAL_1B", "OTTILIE_SIGNAL_2", "OTTILIE_SIGNAL_2B"]},
 		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
 		{"if": ["ottilie_paid"], "lines": ["OTTILIE_AFTER"]},
 		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"]]},
@@ -159,6 +169,10 @@ const TALKS := {
 	# Captain Sorrel at Gullwatch Steps, and her kite race to the far post
 	# (StoryDirector.sorrel_race, started by the sorrel_race flag).
 	"sorrel": [
+		# The post's last three letters, never sent when it shut.
+		{"if": ["letter_ottilie", "letter_liesl", "letter_agna"], "unless": ["sorrel_letters_paid"], "set": ["sorrel_letters_paid"], "give": {"glint": 150}, "lines": ["SORREL_LETTERS_DONE_1", "SORREL_LETTERS_DONE_2", ["", "NARRATE_GOT_POSTAGE"]]},
+		{"if": ["sorrel_letters"], "unless": ["sorrel_letters_paid"], "lines": ["SORREL_LETTERS_WAITING"]},
+		{"if": ["sorrel_paid"], "unless": ["sorrel_letters"], "set": ["sorrel_letters"], "lines": ["SORREL_LETTERS_1", "SORREL_LETTERS_1B", "SORREL_LETTERS_2", "SORREL_LETTERS_2B", ["", "NARRATE_TAKE_LETTERS"]]},
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
 		{"if": ["sorrel_paid", "old_one_turned"], "lines": ["SORREL_AFTER", "SORREL_TURNED"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
@@ -177,6 +191,9 @@ const TALKS := {
 	# Murmur, who left the Choir at the calf, now helping Wick at Fenmouth.
 	"murmur": [
 		{"unless": ["murmur_met"], "set": ["murmur_met"], "lines": ["MURMUR_FEN_1", "MURMUR_FEN_2", "MURMUR_FEN_3"]},
+		# The Reed family's lantern, lit at last (Wick, Liesl and Wren).
+		{"if": ["murmur_lantern_lit"], "unless": ["murmur_saw_lantern"], "set": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_1", "MURMUR_LANTERN_2", "MURMUR_LANTERN_3"]},
+		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
 		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
 		{"lines": ["MURMUR_AGAIN"]},
@@ -218,6 +235,10 @@ const TALKS := {
 	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
 	# five that have gone dark (FenLantern).
 	"wick": [
+		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
+		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
+		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
+		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
 		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
