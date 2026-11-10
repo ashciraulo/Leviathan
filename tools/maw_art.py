@@ -267,10 +267,64 @@ def chant_mark():
     return rows_of(c)
 
 
+def gumleech(pose):
+    """A Gumleech: a fat, ridged leech of the Old One's palate, pale as gum,
+    with glowing spots down its back and a round mouth ringed with tiny
+    teeth. It swims under the flood. 16x16, four poses:
+    swim (only its back above the water), rise (reared, mouth open),
+    bite (lunging flat out), stranded (left on the drained floor, flopped)."""
+    c = canvas(16, 16)
+    if pose == "swim":
+        # A low hump breaking the surface, two spots showing.
+        fill_ellipse(c, 7.5, 12, 5.5, 2.0, "t")
+        for x in range(3, 13):
+            put(c, x, 13, ".")
+        put(c, 6, 11, "n")
+        put(c, 9, 11, "n")
+        return rows_of(c)
+    if pose == "rise":
+        # Reared up out of the water, the mouth a ring of teeth facing Wren.
+        for y in range(3, 14):
+            t = (y - 3) / 10.0
+            half = 2.5 + 2.0 * t
+            for x in range(int(8 - half), int(8 + half + 0.5)):
+                put(c, x, y, "t")
+        fill_ellipse(c, 7.5, 4.5, 3.2, 2.4, "h")
+        fill_ellipse(c, 7.5, 4.5, 1.8, 1.2, "_")
+        for y in (7, 10, 12):
+            for x in range(16):
+                if c[y][x] == "t" and x % 3 == 0:
+                    c[y][x] = "f"
+        put(c, 5, 8, "n")
+        put(c, 10, 9, "n")
+        return rows_of(c)
+    if pose == "bite":
+        # Stretched out flat along the floor, mouth wide at the front.
+        fill_ellipse(c, 8, 10, 7.2, 3.0, "t")
+        fill_ellipse(c, 12.5, 10, 2.6, 2.6, "h")
+        fill_ellipse(c, 12.8, 10, 1.4, 1.4, "_")
+        for x in range(2, 11, 3):
+            put(c, x, 8, "f")
+            put(c, x, 12, "f")
+        for x in (4, 7, 10):
+            put(c, x, 9, "n")
+        return rows_of(c)
+    # Stranded: flopped on its side on the wet floor, curled, spots dim.
+    fill_ellipse(c, 8, 11, 6.5, 2.6, "t")
+    fill_ellipse(c, 3.5, 10, 2.0, 2.0, "h")
+    put(c, 3, 10, "_")
+    for x in range(5, 14, 3):
+        put(c, x, 9, "f")
+    put(c, 8, 13, "f")
+    put(c, 11, 13, "f")
+    return rows_of(c)
+
+
 def build(lit, sheet):
     """Everything in assets/maw/, as {file name: pixels}."""
     return {
         "note": sheet([[lit(note(0), 130), lit(note(1), 130)]], 12, 12),
         "dreaming_heart": sheet([[lit(heart(False), 131), lit(heart(True), 131)]], 64, 56),
         "chant_mark": sheet([[lit(chant_mark(), 132)]], 16, 8),
+        "gumleech": sheet([[lit(gumleech(p), 133) for p in ("swim", "rise", "bite", "stranded")]], 16, 16),
     }

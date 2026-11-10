@@ -439,6 +439,13 @@ SOUNDS = {
         L("noise", dur=0.55, lp=(500, 2400), hp=300, attack=0.4, decay=0.1, seed=182)),
     "puff_blow": S(0.5,
         L("noise", dur=0.5, lp=(3000, 600), hp=200, decay=0.2, seed=183, wobble=(9, 0.3))),
+    # A Gumleech (the Maw): a wet gurgle as it rears, and its sucking snap.
+    "leech_rise": S(0.45,
+        L("noise", dur=0.55, lp=(400, 1400), hp=120, attack=0.2, decay=0.2, seed=184, wobble=(14, 0.6)),
+        L("sine", 140, 220, dur=0.5, vol=0.35, decay=0.25, vib=(12, 0.08))),
+    "leech_bite": S(0.5,
+        L("noise", dur=0.12, lp=(2400, 700), hp=300, decay=0.05, seed=185),
+        L("square", 330, 120, dur=0.12, duty=0.4, lp=1500, vol=0.4, decay=0.05)),
     "bell_quiet": S(0.3,
         L("fm", 392, 390, dur=0.9, ratio=3.5, index=0.6, decay=0.3)),
     "bell_ring": S(0.7,

@@ -1504,6 +1504,9 @@ func _maw_shots(game: Node) -> void:
 		for child in at.get_children():
 			if child is Enemy:
 				child.ai_enabled = false
+				# Wren lands beside the Palate's and the Veins' foes, who hit hard.
+				child._contact.active = false
+		GameState.refill()
 		MawBreath.elapsed = 0.0
 		await _wait(0.5)
 		game.player._invuln = 0.0
@@ -1520,6 +1523,15 @@ func _maw_shots(game: Node) -> void:
 	await _wait(0.4)
 	game.player._invuln = 0.0
 	await _capture("154_maw_breath_flooded")
+	# A Gumleech rears out of the flood at Wren, mouth open.
+	for child in room.get_children():
+		if child is Gumleech:
+			game.player.global_position = child.global_position + Vector2(10, 34)
+			child.ai_enabled = false
+			child.aim = Vector2.DOWN
+			child._set_mode(Gumleech.Mode.RISE)
+	await _wait(0.2)
+	await _capture("175_maw_gumleech_rearing")
 	MawBreath.elapsed = 0.0
 
 	# Cantor Vael and his singers.
