@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "ambience"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -94,6 +94,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _shop_shots()
+			"dream":
+				game.queue_free()
+				await _wait(0.2)
+				await _dream_shots()
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -400,6 +404,7 @@ func _ready() -> void:
 	await _mural_shots()
 	await _ending_shots()
 	await _shop_shots()
+	await _dream_shots()
 	GameState.reset_new_game()
 	GameState.set_flag("tidebell_hull")
 	GameState.set_flag("freed_mantle")
@@ -1201,6 +1206,26 @@ func _mural_shots() -> void:
 		await _wait(0.2)
 	await _skip_scene(barrow)
 	barrow.queue_free()
+	await _wait(0.2)
+
+
+## Home after the credits: the lighthouse turns out to sea, towards the Maw, and Hessa
+## felt the Old One dream.
+func _dream_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	# Where the ending leaves Wren: below Hessa.
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(18 * Room.TILE + 8, 6 * Room.TILE + 12))
+	var home: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(home)
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(1.5)
+	await _capture("57_the_old_one_dreams")
+	await _skip_scene(home)
+	await _wait(1.0)
+	await _capture("58_the_beam_points_to_sea")
+	home.queue_free()
 	await _wait(0.2)
 
 
