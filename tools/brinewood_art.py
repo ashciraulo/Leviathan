@@ -90,21 +90,21 @@ def roots_tile(seed):
             px[y][x] = LEAF[5]
     # A few dim leaves back in the shade.
     for _ in range(5):
-        px[rnd.randrange(4, 10)][rnd.randrange(T)] = LEAF[5]
-    # Roots: from a knot or two up in the shade, prop roots splay out and
-    # down like tent poles, lit on the left and shaded on the right. They run
-    # off the tile's sides, so neighbouring tiles knit into one tangle.
-    for apex in ((7 + seed * 5) % T,):
-        for drift in (-7, -1, 6):
-            for y in range(4, T - 1):
-                t = (y - 4) / (T - 6)
-                x = round(apex + drift * t ** 1.4)
-                for dx, colour in ((0, BARK[1]), (1, BARK[3])):
-                    px[y][(x + dx) % T] = colour
-        # The knot the roots spring from.
-        for dx in (-1, 0, 1):
-            px[4][(apex + dx) % T] = BARK[2]
-            px[3][(apex + dx) % T] = BARK[3]
+        px[rnd.randrange(4, 9)][rnd.randrange(T)] = LEAF[5]
+    # Roots: from a knot up in the shade, prop roots splay out and down like
+    # tent poles, lit on the left and shaded on the right. They stay inside
+    # the tile, so either variant sits next to the other.
+    apex = 6 + 3 * (seed % 2)
+    for drift in (-5, 0, 5):
+        for y in range(4, T - 1):
+            t = (y - 4) / (T - 6)
+            x = round(apex + drift * t ** 1.4)
+            px[y][x] = BARK[1]
+            px[y][x + 1] = BARK[3]
+    # The knot the roots spring from.
+    for dx in (-1, 0, 1, 2):
+        px[4][apex + dx] = BARK[2]
+        px[3][apex + dx] = BARK[3]
     # Leaf fringe hanging over the top edge.
     for x in range(T):
         depth = 2 + (1 if (x * 7 + seed) % 5 < 2 else 0)
@@ -114,7 +114,7 @@ def roots_tile(seed):
             px[depth][x] = LEAF[4]
     # Mud with a little moss at the foot.
     for x in range(T):
-        px[T - 1][x] = BARK[4] if px[T - 1][x] in BARK else (PEAT[4] if (x + seed) % 4 else PEAT[3])
+        px[T - 1][x] = PEAT[4] if x % 4 else PEAT[3]
     return px
 
 
