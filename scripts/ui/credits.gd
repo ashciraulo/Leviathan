@@ -26,15 +26,20 @@ var _height := 0.0
 ## The button that chose Credits may still be held: it only speeds the
 ## roll up once it has been let go.
 var _fast_armed := false
+## Once the game's been finished, the epilogue's little scenes come between
+## the names (CreditsVignettes). Not before: they'd give the ending away.
+var _vignettes := false
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Audio.play_music("credits")
 	Audio.play_ambience("")
+	_vignettes = GameState.has_flag("seen_ending")
 	_height = 216.0 + Art.TITLE_LOGO.get_height() + GAP
 	for section: Array in SECTIONS:
 		_height += LINE * section.size() + GAP
+	_height += _vignette_count() * (CreditsVignettes.SIZE.y + CreditsVignettes.GAP)
 	_height += 60.0
 
 
@@ -55,6 +60,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		Audio.play_sfx("ui_back")
 		_leave()
+
+
+## How many epilogue scenes this roll shows: one after each section but
+## the last, while there are scenes left.
+func _vignette_count() -> int:
+	if not _vignettes:
+		return 0
+	return mini(CreditsVignettes.KINDS.size(), SECTIONS.size() - 1)
 
 
 func _leave() -> void:
@@ -82,13 +95,19 @@ func _draw() -> void:
 	var y := roundf(216.0 - _scroll)
 	draw_texture(Art.TITLE_LOGO, Vector2(roundf((384 - Art.TITLE_LOGO.get_width()) / 2.0), y))
 	y += Art.TITLE_LOGO.get_height() + GAP
-	for section: Array in SECTIONS:
+	for s in SECTIONS.size():
+		var section: Array = SECTIONS[s]
 		for i in section.size():
 			var color := MenuKit.TEXT_DIM if i == 0 else MenuKit.TEXT
 			if y > -LINE and y < 216.0:
 				MenuKit.draw_text(self, section[i], Vector2(0, y), color, HORIZONTAL_ALIGNMENT_CENTER, 384)
 			y += LINE
 		y += GAP
+		if s < _vignette_count():
+			var size := CreditsVignettes.SIZE
+			if y > -size.y - 4.0 and y < 220.0:
+				CreditsVignettes.draw(self, CreditsVignettes.KINDS[s], Vector2(roundf((384 - size.x) / 2.0), y - 6.0), _time)
+			y += size.y + CreditsVignettes.GAP
 	y += 40.0
 	if y > -LINE and y < 216.0:
 		MenuKit.draw_text(self, "CREDITS_END", Vector2(0, y), MenuKit.TEXT, HORIZONTAL_ALIGNMENT_CENTER, 384)

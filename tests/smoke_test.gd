@@ -3209,10 +3209,22 @@ func _test_credits() -> void:
 	_check(credits._height > 216.0, "the credits have something to roll")
 	for key in ["CREDITS_DIRECTION", "CREDITS_END", "MENU_CREDITS", "GAMEOVER_WAKE"]:
 		_check(tr(key) != key, "%s is translated" % key)
+	_check(credits._vignette_count() == 0, "before the ending, the credits show no epilogue scenes")
+	var plain_height: float = credits._height
 	# Leaving would change scene and end the test: don't let it.
 	credits._leaving = true
 	credits.queue_free()
 	await _wait(0.1)
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	var after: Control = (load("res://scenes/credits.tscn") as PackedScene).instantiate()
+	add_child(after)
+	await _wait(0.2)
+	_check(after._vignette_count() == CreditsVignettes.KINDS.size(), "after the ending, the epilogue's scenes come between the names")
+	_check(after._height > plain_height, "and the roll makes room for them")
+	after._leaving = true
+	after.queue_free()
+	await _wait(0.1)
+	GameState.clear_flag(StoryDirector.ENDING_FLAG)
 ## Saltmarrow side quests: Pell's three-clawed crab (a Breath Pearl) and
 ## Marga's smoked eel after the Hull (a jar).
 func _test_side_quests() -> void:
