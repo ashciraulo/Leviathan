@@ -36,6 +36,8 @@ func _ready() -> void:
 		if get_viewport().gui_get_focus_owner() != null:
 			break
 		await _wait(0.1)
+	if get_viewport().gui_get_focus_owner() == null:
+		push_warning("The title menu never took focus; shooting it anyway.")
 	await _wait(0.2)
 	await _capture("30_title_menu")
 	GameState.reset_new_game()
