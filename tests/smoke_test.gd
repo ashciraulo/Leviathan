@@ -3896,9 +3896,6 @@ func _test_tide_turning() -> void:
 	GameState.reset_new_game()
 
 
-## The sea bed (;): under water while the tide breathes, even at its lowest;
-## bared only while Wren holds the tide out.
-
 ## The optional challenges: each holds a Breath Pearl behind its own test.
 func _test_challenges() -> void:
 	GameState.reset_new_game()
@@ -3912,6 +3909,8 @@ func _test_challenges() -> void:
 	add_child(ring)
 	await _wait(0.2)
 	var chest: Chest = _child_of(ring, Chest)[0]
+	# The bars sit on row 1, outside the shut-in line, so they never close on Wren.
+	_check(Room.parse_layout(ring.layout)[1].count("|") == 2, "the Bone Ring's bars stand clear of the arena")
 	_check(ring.gate == "clear" and not chest.visible and not _child_of(ring, Enemy).is_empty(), "the Bone Ring hides its pearl behind a fight")
 	for enemy in _child_of(ring, Enemy):
 		enemy.queue_free()
@@ -3935,11 +3934,13 @@ func _test_challenges() -> void:
 	sink.queue_free()
 	# Gullcry Stacks: a chasm course that only the kite cloak crosses, into the wind.
 	var stacks: Room = (load("res://rooms/room_7_-4.tscn") as PackedScene).instantiate()
-	_check(stacks.wind.x < 0 and stacks.layout.count("_") > 150, "Gullcry Stacks is a gusty chasm course")
+	_check(stacks.wind.x < 0 and stacks.layout.count("_") > 150 and Room.BIOMES["windmere"].get("gap") == "galesky", "Gullcry Stacks is a gusty chasm course, drawn as open sky")
 	stacks.free()
 	await _wait(0.1)
 
 
+## The sea bed (;): under water while the tide breathes, even at its lowest;
+## bared only while Wren holds the tide out.
 func _test_sea_bed() -> void:
 	GameState.reset_new_game()
 	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
