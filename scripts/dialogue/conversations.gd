@@ -38,6 +38,7 @@ const SPEAKERS := {
 	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
 	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
 	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
+	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -123,6 +124,17 @@ const TALKS := {
 		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
 		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
 	],
+	# Captain Sorrel at Gullwatch Steps, and her kite race to the far post
+	# (StoryDirector.sorrel_race, started by the sorrel_race flag).
+	"sorrel": [
+		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
+		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
+		{"if": ["sorrel_won"], "set": ["sorrel_paid"], "give": {"glint": 150}, "lines": ["SORREL_WON_1", "SORREL_WON_2", ["", "NARRATE_GOT_COURIER_PAY"]]},
+		{"if": ["sorrel_raced"], "has": ["kite_cloak"], "set": ["sorrel_race"], "lines": ["SORREL_AGAIN", "SORREL_GO"]},
+		{"has": ["kite_cloak"], "set": ["sorrel_asked", "sorrel_raced", "sorrel_race"], "lines": ["SORREL_CLOAK_1", "SORREL_CLOAK_1B", "SORREL_CLOAK_2", "SORREL_GO"]},
+		{"if": ["sorrel_asked"], "lines": ["SORREL_WAITING"]},
+		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
+	],
 	# Gully on Wreck Strand, and his strongbox out in the pool (a Strongbox,
 	# hauled in with the Tide Hook).
 	"gully": [
@@ -168,9 +180,17 @@ const TALKS := {
 ## The branch `speaker` would use right now, or {} if they have nothing to say.
 static func branch_for(speaker: String) -> Dictionary:
 	for branch: Dictionary in TALKS.get(speaker, []):
-		if GameState.flags_match(branch.get("if", []), branch.get("unless", [])):
+		if GameState.flags_match(branch.get("if", []), branch.get("unless", [])) and _has_all(branch.get("has", [])):
 			return branch
 	return {}
+
+
+## True when Wren carries every item in `items` (a branch's "has").
+static func _has_all(items: Array) -> bool:
+	for id: String in items:
+		if not GameState.has_item(id):
+			return false
+	return true
 
 
 ## Turns a branch into pages for the dialogue box. Each page is

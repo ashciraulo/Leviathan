@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -114,6 +114,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _gully_shots()
+			"sorrel":
+				game.queue_free()
+				await _wait(0.2)
+				await _sorrel_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1461,6 +1465,49 @@ func _wick_shots() -> void:
 	reach.player._invuln = 0.0
 	await _capture("86_it_catches")
 	reach.queue_free()
+	await _wait(0.2)
+
+
+## Captain Sorrel at Gullwatch Steps, her kite racing Wren across the
+## water, and Wren first to the far post.
+func _sorrel_shots() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("kite_cloak", 1, false)
+	GameState.set_checkpoint(StoryDirector.GULLWATCH_STEPS, StoryDirector.SORREL_AT + Vector2(0, 18))
+	var steps: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(steps)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.6)
+	steps.player.facing = Vector2.UP
+	await _wait(0.05)
+	steps.player.try_interact()
+	var box := _dialogue_box(steps)
+	await _wait(0.4)
+	box.advance()
+	box.advance()
+	await _wait(1.6)
+	await _capture("90_captain_sorrel_of_gullwatch")
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	var room: Node2D = steps.current_room
+	steps.player.global_position = room.global_position + Vector2(19 * 16 + 8, 4 * 16 + 6)
+	steps.player.facing = Vector2.DOWN
+	await _wait(0.5)
+	steps.player._invuln = 0.0
+	steps.player.use_item("kite_cloak")
+	await _wait(0.4)
+	await _capture("91_racing_sorrels_kite")
+	await _wait(0.8)
+	steps.player.global_position = room.global_position + StoryDirector.KITE_POST_AT + Vector2(-12, 10)
+	steps.player.facing = Vector2.RIGHT
+	await _wait(1.4)
+	steps.player._invuln = 0.0
+	await _capture("92_first_to_the_far_post")
+	steps.queue_free()
 	await _wait(0.2)
 
 

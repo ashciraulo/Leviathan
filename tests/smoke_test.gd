@@ -69,6 +69,7 @@ func _ready() -> void:
 		await _test_liesl()
 		await _test_wick()
 		await _test_gully()
+		await _test_sorrel()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4503,6 +4504,78 @@ func _test_gully() -> void:
 	_check(Conversations.branch_for("gully").get("lines")[0] == "GULLY_TURNED", "he felt the Old One turn")
 	GameState.set_flag("seen_ending")
 	_check(Conversations.branch_for("gully").get("lines")[0] == "GULLY_END", "and after the ending she sleeps too")
+
+
+func _test_sorrel() -> void:
+	GameState.reset_new_game()
+	var talk_at := StoryDirector.SORREL_AT + Vector2(0, 18)
+	GameState.set_checkpoint(StoryDirector.GULLWATCH_STEPS, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	_check(_find_kind(room, "sorrel") != null, "Captain Sorrel stands on Gullwatch Steps")
+	var posts: Array = room.get_children().filter(func(c: Node) -> bool: return c is KitePost)
+	_check(posts.size() == 1 and not (posts[0] as KitePost).won, "the far post flies her red pennant")
+	var post_tile := Vector2i(StoryDirector.KITE_POST_AT / Room.TILE)
+	_check(room.tile_at(post_tile.x, post_tile.y) == "." and room.tile_at(post_tile.x, 6) == "~", "the post is on the far bank, over the water")
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("sorrel_asked") and not GameState.has_flag(StoryDirector.RACE_FLAG), "no race without wings (%d pages)" % pages)
+	GameState.give_item("kite_cloak", 1, false)
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	await _wait(0.1)
+	var kites: Array = room.get_children().filter(func(c: Node) -> bool: return c is RaceKite)
+	_check(GameState.has_flag(StoryDirector.RACE_FLAG) and kites.size() == 1, "with the Kite Cloak she races: her kite's off")
+	# Standing still loses.
+	await _wait(StoryDirector.KITE_TIME + 0.3)
+	_check(not GameState.has_flag(StoryDirector.RACE_FLAG) and not GameState.has_flag(StoryDirector.RACE_WON_FLAG), "her kite gets there first")
+	await _wait(1.8)
+	_check(room.get_children().filter(func(c: Node) -> bool: return c is RaceKite).is_empty(), "and is gathered in")
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	_check(GameState.has_flag(StoryDirector.RACE_FLAG), "she'll race again")
+	# Straight across: from the near bank, glide over the water.
+	game.player.global_position = room.global_position + Vector2(post_tile.x * Room.TILE + 8, 4 * Room.TILE + 6)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.05)
+	_check(game.player.use_item("kite_cloak"), "Wren throws open the Kite Cloak")
+	await _wait(1.0)
+	var landed: Vector2 = game.player.global_position - room.global_position
+	_check(landed.y > 7 * Room.TILE, "and glides over the water to the far bank (%s)" % landed)
+	_check(GameState.has_flag(StoryDirector.RACE_FLAG) or GameState.has_flag(StoryDirector.RACE_WON_FLAG), "ahead of the kite")
+	game.player.global_position = room.global_position + StoryDirector.KITE_POST_AT + Vector2(0, 10)
+	await _wait(0.2)
+	_check(GameState.has_flag(StoryDirector.RACE_WON_FLAG) and (posts[0] as KitePost).won, "Wren's first to the post")
+	await _wait(2.0)
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	var glints := GameState.item_count("glint")
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	_check(GameState.has_flag("sorrel_paid") and GameState.item_count("glint") == glints + 150, "Sorrel pays a courier's wage")
+	game.queue_free()
+	await _wait(0.1)
+	# A race the game closed in the middle of is over when Wren comes back.
+	GameState.set_flag(StoryDirector.RACE_FLAG)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	_check(not GameState.has_flag(StoryDirector.RACE_FLAG), "an unfinished race is called off")
+	var again: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is KitePost)
+	_check(again.size() == 1 and (again[0] as KitePost).won, "Wren's pennant still flies")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_END", "after the ending she flies letters again")
 
 
 func _enemies_away() -> void:
