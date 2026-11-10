@@ -35,7 +35,16 @@ func _physics_process(delta: float) -> void:
 		var arrow := FrostArrow.new()
 		arrow.direction = direction
 		_player.get_parent().add_child(arrow)
-		arrow.global_position = _player.global_position + Vector2(0, -7) + direction * 8.0
+		# Loosed down the middle of the row (or column) Wren stands in, so an
+		# arrow along a one-tile lane, or at an eye in a niche, never clips
+		# the wall beside it wherever in the tile Wren's feet are.
+		var at := _player.global_position + Vector2(0, -7)
+		var tile := Vector2(floorf(_player.global_position.x / Room.TILE), floorf(_player.global_position.y / Room.TILE)) * Room.TILE
+		if direction.x != 0.0:
+			at.y = tile.y + Room.TILE - 11.0
+		else:
+			at.x = tile.x + Room.TILE * 0.5
+		arrow.global_position = at + direction * 8.0
 		Audio.play_sfx("bow_loose", _player.global_position)
 	if _time >= DRAW + RECOVER:
 		# Coming off the bow on ice, Wren keeps what slide they had.

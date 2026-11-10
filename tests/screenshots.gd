@@ -1155,6 +1155,8 @@ func _glacier_shots(game: Node) -> void:
 		[Vector2i(33, 9), "109_glacier_black_pool", Vector2i(1, 6)],
 		[Vector2i(32, 8), "110_glacier_eye_gallery", Vector2i(11, 11)],
 		[Vector2i(33, 8), "111_glacier_slide_hall", Vector2i(1, 7)],
+		[Vector2i(33, 7), "111b_glacier_rime_vault", Vector2i(18, 11)],
+		[Vector2i(33, 10), "111c_glacier_frost_ford", Vector2i(2, 6)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])
