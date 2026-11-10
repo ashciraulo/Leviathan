@@ -524,6 +524,16 @@ func _harden(node: Node) -> void:
 		enemy.contact_damage += DEPTH_DAMAGE[depth]
 
 
+## A boss keeps its own health (its fight is built round so many
+## openings), but deep down its touch hurts as much as the foes before it.
+func _harden_boss(node: Node) -> void:
+	if not node is Enemy or not DEPTH.has(dungeon):
+		return
+	var boss := node as Enemy
+	if boss.contact_damage > 0:
+		boss.contact_damage += DEPTH_DAMAGE[DEPTH[dungeon]]
+
+
 func _spawn(tile: String, pos: Vector2) -> void:
 	var node: Node2D = null
 	# Dungeon pieces win in a dungeon: some of their letters (k q x) mean
@@ -534,6 +544,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node.position = pos
 			if tile != "V":
 				_harden(node)
+			else:
+				_harden_boss(node)
 			add_child(node)
 		return
 	match tile:

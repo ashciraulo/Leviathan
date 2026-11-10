@@ -212,6 +212,7 @@ func _die() -> void:
 		if not is_inside_tree():
 			return
 	# It slips into the deep for good; the great bell sinks after it.
+	Audio.play_sfx("boss_fall", global_position, 0.6)
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "modulate:a", 0.0, 1.4)
 	if bell and is_instance_valid(bell):
