@@ -124,6 +124,8 @@ var _water_frame := 0
 ## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
 ## ice (I) until it thaws, and goes back to water when the room reloads.
 var _frozen: Dictionary = {}
+## Floor set pieces laid in this room: [top-left tile, which piece].
+var _set_pieces: Array = []
 ## Hidden bone walls ($) the Echo Horn has brought down.
 var _broken: Dictionary = {}
 ## Whether the layout has any I tiles (so ice checks can skip other rooms).
@@ -203,6 +205,7 @@ const BIOMES := {
 	},
 	"mire": {
 		"wall_deco": "mire",
+		"set_pieces": 2,
 		"floor": "mire_floor_%d", "wall_top": "mire_top_%d", "wall_face": "mire_face_%d",
 		"water": "murk_%d", "water_edge": "murkbank_%s_%d", "damp": "mirewet_%s",
 		"wet_deco": "shrooms_%d", "dry_deco": "spores_%d",
@@ -210,6 +213,7 @@ const BIOMES := {
 	},
 	"gale": {
 		"wall_deco": "gale",
+		"set_pieces": 2,
 		"floor": "gale_floor_%d", "wall_top": "gale_top_%d", "wall_face": "gale_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
@@ -217,6 +221,7 @@ const BIOMES := {
 	},
 	"glacier": {
 		"wall_deco": "glacier",
+		"set_pieces": 2,
 		"floor": "glacier_floor_%d", "wall_top": "icecave_top_%d", "wall_face": "icecave_face_%d",
 		"water": "icewater_%d", "water_edge": "foam_%s_%d", "damp": "rime_%s",
 		"wet_deco": "frostcrack_%d", "dry_deco": "snowdrift_%d",
@@ -224,6 +229,7 @@ const BIOMES := {
 	},
 	"belfry": {
 		"wall_deco": "belfry",
+		"set_pieces": 2,
 		"floor": "belfry_floor_%d", "wall_top": "belfry_top_%d", "wall_face": "belfry_face_%d",
 		"water": "deepwater_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "seaweed_%d", "dry_deco": "seashell_%d",
@@ -252,6 +258,7 @@ func _ready() -> void:
 		layout = alt_layout
 	add_to_group("rooms")
 	_rows = parse_layout(layout)
+	_place_set_pieces()
 	_has_ice_tiles = "I" in "".join(_rows)
 	var problem := validate_layout(_rows)
 	if problem != "":
@@ -615,6 +622,41 @@ func _tile_at(x: int, y: int) -> String:
 	return letter
 
 
+## Picks where this room's floor set pieces go (biomes with "set_pieces"):
+## up to two 2x2 pictures, each in the middle of a 4x4 stretch of plain
+## floor clear of the border, chosen by the room's hash so they stay put.
+func _place_set_pieces() -> void:
+	_set_pieces.clear()
+	var tiles: Dictionary = BIOMES.get(biome, {})
+	if not tiles.has("set_pieces") or _rows.size() != ROWS:
+		return
+	var spots: Array = []
+	for y in range(2, ROWS - 3):
+		for x in range(2, COLS - 3):
+			if _plain_block(x - 1, y - 1, 4):
+				spots.append(Vector2i(x, y))
+	# (_hash's low bits repeat from room to room, so mix the room in fully.)
+	var mix := func(v: Vector2i) -> int: return hash("%d,%d,%d,%d" % [v.x, v.y, coord.x, coord.y])
+	spots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return mix.call(a) < mix.call(b))
+	var kinds: int = tiles["set_pieces"]
+	var first := absi(hash(coord)) % kinds
+	for spot: Vector2i in spots:
+		if _set_pieces.size() >= 2:
+			break
+		if not _set_pieces.is_empty() and Vector2(spot - (_set_pieces[0][0] as Vector2i)).length() < 8.0:
+			continue
+		_set_pieces.append([spot, (first + _set_pieces.size()) % kinds])
+
+
+## True when every tile of the size x size block at x, y is plain floor.
+func _plain_block(x0: int, y0: int, size: int) -> bool:
+	for y in range(y0, y0 + size):
+		for x in range(x0, x0 + size):
+			if y < 0 or y >= _rows.size() or x < 0 or x >= _rows[y].length() or _rows[y][x] != ".":
+				return false
+	return true
+
+
 ## A stable pseudo-random number per tile, so variants don't flicker.
 func _hash(x: int, y: int) -> int:
 	return absi((x * 73856093) ^ (y * 19349663) ^ (coord.x * 83492791) ^ (coord.y * 2654435))
@@ -725,3 +767,9 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
 				elif not wet and h % 13 == 0:
 					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)
+	# The floor set pieces go over the floor they lie on.
+	var deco: String = tiles.get("wall_deco", "")
+	for piece: Array in _set_pieces:
+		var at: Vector2i = piece[0]
+		for q in 4:
+			_draw_tile("%s_set%d_%d" % [deco, piece[1], q], at.x + q % 2, at.y + q / 2)
