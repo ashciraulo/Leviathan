@@ -78,6 +78,9 @@ func _ready() -> void:
 			_check(Items.tier(worn) == 3, "the run ends with the best %s worn (%s)" % [kind, worn])
 	await _items_and_glints()
 	await _sweep_overworld()
+	_audit("the end of the run")
+	await _accessibility_runs()
+	_audit("the menus and options")
 	_game.queue_free()
 	await _wait(0.1)
 	SaveManager.delete_save()
@@ -288,7 +291,7 @@ func _save_and_reload(after: String) -> void:
 	before = _whole(before)
 	after_load = _whole(after_load)
 	for key: String in before:
-		if key == "play_time":
+		if key in ["play_time", "area_stats"]:
 			continue
 		# Compared as JSON, the way it's saved (a 2 comes back as 2.0).
 		var was := JSON.stringify(before[key], "", true)
@@ -303,6 +306,7 @@ func _save_and_reload(after: String) -> void:
 	await _play_scene(20.0)
 	_check(_game.current_room != null and _game.current_room.coord == GameState.room_coord, "after %s: the game picks up where it was saved" % after)
 	_check(_game.player != null and _can_step(), "after %s: Wren isn't stuck in a wall after loading" % after)
+	_audit("after %s" % after)
 
 
 ## A copy with every whole float turned back into an int.
@@ -597,3 +601,220 @@ func _check(condition: bool, what: String) -> void:
 ## Waits in real time, so hitstop can't stall the test.
 func _wait(seconds: float) -> void:
 	await get_tree().create_timer(seconds, true, false, true).timeout
+
+
+## Everything Wren carries adds up: real items, counts within what can be
+## carried, the gear worn and the tools on the item keys all owned, a jar
+## for each jar entry, breath that matches the Breath Pearls found, and
+## story flags that saved cleanly (true/false, a number or a name).
+func _audit(after: String) -> void:
+	for id: String in GameState.inventory:
+		var count := GameState.item_count(id)
+		_check(Items.exists(id), "%s: %s is a real item" % [after, id])
+		# Counted tools (bombs, arrows, oil) stay in the satchel at zero.
+		var least := 0 if Items.kind(id) in [Items.AMMO, Items.CURRENCY] else 1
+		_check(count >= least and count <= Items.max_count(id), "%s: %d %s is within %d..%d" % [after, count, id, least, Items.max_count(id)])
+	for kind: String in Items.EQUIPMENT_KINDS:
+		var worn := GameState.equipped_item(kind)
+		_check(GameState.has_item(worn) and Items.kind(worn) == kind, "%s: the %s worn (%s) is owned" % [after, kind, worn])
+	for id: String in GameState.item_slots:
+		_check(id == "" or (GameState.inventory.has(id) and Items.slottable(id)), "%s: %s on an item key is an owned tool" % [after, id])
+	_check(GameState.item_slots.size() == 2 and (GameState.item_slots[0] == "" or GameState.item_slots[0] != GameState.item_slots[1]),
+		"%s: the two item keys hold different tools (%s)" % [after, GameState.item_slots])
+	_check(GameState.jars.size() == GameState.item_count("jar"), "%s: one jar entry per jar (%d, %d)" % [after, GameState.jars.size(), GameState.item_count("jar")])
+	var pearls := GameState.item_count("breath_pearl")
+	_check(GameState.max_bubbles == mini(GameState.START_BUBBLES + pearls, GameState.MAX_BUBBLES),
+		"%s: %d breath bubbles for %d Breath Pearls" % [after, GameState.max_bubbles, pearls])
+	_check(GameState.bubbles >= 1 and GameState.bubbles <= GameState.max_bubbles, "%s: breath %d of %d" % [after, GameState.bubbles, GameState.max_bubbles])
+	_check(GameState.resonance >= 0.0 and GameState.resonance <= GameState.resonance_max + 0.001, "%s: Resonance within the meter" % after)
+	for key: String in GameState.tidestones:
+		var parts := key.split("_")
+		var coord := Vector2i(int(parts[0]), int(parts[1])) if parts.size() == 2 else Vector2i(9999, 9999)
+		_check(_rooms.has(coord), "%s: woken Tidestone %s is in a real room" % [after, key])
+	for flag: String in GameState.flags:
+		var value: Variant = GameState.flags[flag]
+		_check(value is bool or value is int or value is float or value is String, "%s: flag %s holds %s" % [after, flag, type_string(typeof(value))])
+		if flag.begins_with("keys_"):
+			_check(int(value) >= 0, "%s: %s isn't negative" % [after, flag])
+
+
+## Settings to play under, one set at a time: the defaults, then each
+## accessibility option.
+const PROFILES := [
+	{},
+	{"hitstop_scale": 0.0, "screen_shake_scale": 0.0, "flashes": false},
+	{"hum_toggle": true},
+	{"text_speed": 3, "large_text": true},
+	{"text_speed": 0, "captions": true},
+	{"high_contrast": true, "color_filter": 1},
+	{"color_filter": 2},
+	{"color_filter": 3},
+]
+
+
+## Under each set of settings: every menu page with the end-of-game
+## satchel and map, a hit and a Hum, a conversation, and the captions.
+func _accessibility_runs() -> void:
+	print("Playthrough: menus and accessibility options")
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	var had_settings := FileAccess.file_exists(settings_path)
+	var old_settings := FileAccess.get_file_as_string(settings_path) if had_settings else ""
+	# The defaults are the game's own, not whatever this machine has saved.
+	var fresh: Node = Settings.get_script().new()
+	var defaults := {}
+	for profile: Dictionary in PROFILES:
+		for key: String in profile:
+			defaults[key] = fresh.get(key)
+	fresh.free()
+	await _goto(Vector2i(0, 0))
+	await _play_scene(20.0)
+	for profile: Dictionary in PROFILES:
+		var label := "with %s" % (JSON.stringify(profile) if not profile.is_empty() else "the default settings")
+		for key: String in defaults:
+			Settings.set(key, profile.get(key, defaults[key]))
+		Settings.apply()
+		await _menu_sweep(label)
+		await _hit_and_hum(label)
+		await _conversation(label)
+		_check_captions(label)
+	for key: String in defaults:
+		Settings.set(key, defaults[key])
+	if had_settings:
+		var file := FileAccess.open(settings_path, FileAccess.WRITE)
+		file.store_string(old_settings)
+		file.close()
+	else:
+		DirAccess.remove_absolute(settings_path)
+	Settings.load_settings()
+	Settings.apply()
+
+
+## Every pause menu tab, walked in every direction (only up and down on
+## Options, so no setting changes or saves). On the Satchel, Interact on
+## every cell too (equipping, putting tools on keys, drinking): _audit
+## checks the satchel still adds up after.
+func _menu_sweep(label: String) -> void:
+	var pause := PauseMenu.new()
+	_game.add_child(pause)
+	for tab in PauseMenu.TABS.size():
+		pause.open(tab)
+		await _wait(0.05)
+		var page: MenuPage = pause._pages[tab]
+		var moves := ["move_down", "move_up"] if tab == PauseMenu.Tab.OPTIONS else ["move_right", "move_down", "move_left", "move_up"]
+		for action: String in moves:
+			for i in 12:
+				_send(pause, action)
+				_check_hint(page, label, tab)
+			await _wait(0.02)
+		if tab == PauseMenu.Tab.SATCHEL:
+			var satchel := page as SatchelPage
+			for cell in satchel._cells.size():
+				satchel._cursor = cell
+				_send(pause, "interact")
+				_read_dialogue()
+				_check_hint(page, label, tab)
+		_check(pause.visible and pause.current == tab, "%s: tab %s stays open while browsing" % [label, PauseMenu.TABS[tab]])
+	# Tab Next goes all the way round.
+	pause.open(PauseMenu.Tab.SATCHEL)
+	for i in PauseMenu.TABS.size():
+		_send(pause, "tab_next")
+		await _wait(0.02)
+	_check(pause.current == PauseMenu.Tab.SATCHEL, "%s: Tab Next comes back round to the Satchel" % label)
+	pause.close()
+	await _wait(0.05)
+	_check(not get_tree().paused, "%s: closing the menu unpauses" % label)
+	pause.queue_free()
+	_audit("the satchel %s" % label)
+
+
+func _check_hint(page: MenuPage, label: String, tab: int) -> void:
+	var hint := page.hint()
+	var shown := tr(hint) if hint != "" else ""
+	var missing := RegEx.create_from_string("^[A-Z][A-Z0-9_]+$").search(shown) != null
+	_check(not missing, "%s: %s's hint has text (%s)" % [label, PauseMenu.TABS[tab], shown])
+
+
+func _send(pause: PauseMenu, action: String) -> void:
+	var event := InputEventAction.new()
+	event.action = action
+	event.pressed = true
+	pause._unhandled_input(event)
+
+
+## Wren takes a hit, then hums a bubble back the way the setting says:
+## held down, or tapped on and off.
+func _hit_and_hum(label: String) -> void:
+	var wren: Player = _game.player
+	GameState.refill()
+	GameState.resonance = GameState.resonance_max
+	wren._invuln = 0.0
+	var before := GameState.bubbles
+	# 2: the tunic worn by the end of the game halves what a hit takes.
+	wren.take_damage(2, wren.global_position + Vector2(16, 0))
+	await _wait(0.6)
+	_check(GameState.bubbles < before, "%s: a hit costs breath (%d to %d)" % [label, before, GameState.bubbles])
+	var hurt := GameState.bubbles
+	wren._invuln = 60.0
+	_press_hum(true)
+	if Settings.hum_toggle:
+		await _wait(0.1)
+		_press_hum(false)
+		await _wait(Player.HUM_TIME + 0.4)
+		_press_hum(true)
+		await _wait(0.1)
+	else:
+		await _wait(Player.HUM_TIME + 0.4)
+	_press_hum(false)
+	await _wait(0.3)
+	_check(GameState.bubbles == hurt + 1, "%s: Hum brings a bubble back (%d to %d)" % [label, hurt, GameState.bubbles])
+	_check(wren.state == Player.State.MOVE, "%s: Wren stops humming (state %d)" % [label, wren.state])
+	_keep_safe()
+
+
+func _press_hum(down: bool) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = Settings.main_key("hum") as Key
+	event.keycode = event.physical_keycode
+	event.pressed = down
+	Input.parse_input_event(event)
+
+
+## A three-page conversation opens, types at the chosen speed, and closes.
+func _conversation(label: String) -> void:
+	var box: DialogueBox = null
+	for child in _game.get_children():
+		if child is DialogueBox:
+			box = child
+	if box == null:
+		_check(false, "%s: the game has a dialogue box" % label)
+		return
+	Events.dialogue_requested.emit("NAME_HESSA", PackedStringArray(["HESSA_1", "HESSA_2", "HESSA_3"]))
+	await _wait(0.05)
+	_check(DialogueBox.is_open, "%s: a conversation opens" % label)
+	await _wait(0.3)
+	var typed := box.page_done()
+	_check(typed == (Settings.text_speed == 3), "%s: text speed %d types the page %s" % [label, Settings.text_speed,
+		"at once" if Settings.text_speed == 3 else "a letter at a time"])
+	for i in 10:
+		if not DialogueBox.is_open:
+			break
+		box.advance()
+		box.advance()
+		await _wait(0.05)
+	_check(not DialogueBox.is_open and not get_tree().paused, "%s: the conversation closes and play goes on" % label)
+	# If it didn't, don't leave the rest of the run paused behind it.
+	if DialogueBox.is_open:
+		box.close()
+	get_tree().paused = false
+
+
+## Captioned sounds show a caption only with captions on.
+func _check_captions(label: String) -> void:
+	var heard := []
+	var listen := func(key: String, _side: int) -> void: heard.append(key)
+	Events.caption.connect(listen)
+	Audio._last_played.erase("hum")
+	Audio.play_sfx("hum")
+	Events.caption.disconnect(listen)
+	_check(heard.is_empty() != Settings.captions, "%s: the Hum caption %s" % [label, "shows" if Settings.captions else "stays hidden"])
+

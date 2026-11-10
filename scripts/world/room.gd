@@ -113,6 +113,16 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 @export var dark := false
 ## What signposts (n) in this room say: a translation key.
 @export var sign_key := ""
+## A hollow or grotto off the overworld: the light falls off toward its
+## rock walls (see CaveShade), so it feels tucked away.
+@export var cave := false
+## An ambience loop for this room alone (audio/ambience/<id>), in place of
+## its region's: "" uses the region's.
+@export var ambience := ""
+## Music for this room alone: a cue from audio/music/, or "none" to leave
+## only the ambience (the Ebb Shelf and Grotto, where the Old One lies
+## closest to the shore). "" plays its region's or dungeon's track.
+@export var music := ""
 ## Windmere: the direction and strength (px/s) of the gusts that sweep
 ## this room. Zero means calm.
 @export var wind := Vector2.ZERO
@@ -186,7 +196,7 @@ const BIOMES := {
 	"windmere": {
 		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
 		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
-		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d",
+		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d", "gap": "galesky",
 		"floor_overlay": ["gust_%d", 9], "door": "exit_glow",
 	},
 	"frostspine": {
@@ -325,6 +335,10 @@ static func is_solid(tile: String) -> bool:
 
 
 func _build() -> void:
+	if cave:
+		var shade := CaveShade.new()
+		shade.name = "CaveShade"
+		add_child(shade)
 	var walls := _make_static(Layers.WORLD, "Walls")
 	_water_body = _make_static(Layers.WATER, "Water")
 	_deep_body = _make_static(Layers.DEEP, "DeepWater")

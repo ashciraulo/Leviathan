@@ -8,6 +8,7 @@ name_key = "ROOM_RIME_HOLLOW"
 biome = "frostspine"
 chest_item = "glint"
 chest_count = 100
+cave = true
 layout = "###########..###########
 #####.......x......#####
 ####....xxxxxxxx....####

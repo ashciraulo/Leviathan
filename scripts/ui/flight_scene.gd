@@ -32,6 +32,7 @@ func _ready() -> void:
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_flight)
 	add_child(_canvas)
+	Audio.set_muffled(false, 0.4)
 	Audio.play_music("story_flight", 0.4)
 
 

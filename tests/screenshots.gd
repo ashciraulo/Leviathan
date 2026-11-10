@@ -55,6 +55,41 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=caves: the side areas and hidden nooks, and their ways in.
+	if OS.get_environment("SHOTS_ONLY") == "caves":
+		await _room_shots(game, {
+			Vector2i(1, -2): ["caves_rime_way_in", Vector2i(12, 6)],
+			Vector2i(1, -1): ["caves_rime_hollow", Vector2i(12, 10)],
+			Vector2i(8, -1): ["caves_cinder_way_in", Vector2i(3, 6)],
+			Vector2i(7, -1): ["caves_cinder_hollow", Vector2i(20, 5)],
+			Vector2i(3, 2): ["caves_glowworm_way_in", Vector2i(13, 8)],
+			Vector2i(3, 3): ["caves_glowworm_hollow", Vector2i(10, 2)],
+			Vector2i(8, -3): ["caves_ember_ridge", Vector2i(6, 6)],
+			Vector2i(7, 1): ["caves_ossuary_ring", Vector2i(12, 10)],
+			Vector2i(4, 2): ["caves_mural_lake", Vector2i(12, 7)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=challenges: the optional challenges, each with a Breath Pearl.
+	if OS.get_environment("SHOTS_ONLY") == "challenges":
+		for item in ["kite_cloak", "glowmoth_lantern", "frostfang_bow", "tide_hook"]:
+			GameState.give_item(item)
+		await _room_shots(game, {
+			Vector2i(8, 1): ["challenge_bone_ring_way_in", Vector2i(11, 10)],
+			Vector2i(8, 2): ["challenge_bone_ring", Vector2i(11, 4)],
+			Vector2i(6, -4): ["challenge_gullcry_way_in", Vector2i(19, 8)],
+			Vector2i(7, -4): ["challenge_gullcry_stacks", Vector2i(2, 8)],
+			Vector2i(5, 2): ["challenge_sink_way_in", Vector2i(11, 9)],
+			Vector2i(5, 3): ["challenge_lampless_sink", Vector2i(11, 7)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=pacing: the small finds in rooms that had nothing else.
 	if OS.get_environment("SHOTS_ONLY") == "pacing":
 		await _pacing_shots(game)
@@ -604,6 +639,9 @@ func _hull_shots(game: Node) -> void:
 		Vector2i(9, 8): ["34_hull_captains_cabin", Vector2i(12, 7)],
 		Vector2i(9, 10): ["35_hull_flooded_hold", Vector2i(12, 2)],
 		Vector2i(11, 10): ["36_hull_brig", Vector2i(3, 6)],
+		Vector2i(8, 9): ["36b_hull_keel", Vector2i(20, 6)],
+		Vector2i(8, 8): ["36c_hull_sail_loft", Vector2i(12, 10)],
+		Vector2i(12, 8): ["36d_hull_chain_locker", Vector2i(3, 6)],
 	}
 	for coord: Vector2i in rooms:
 		var at := await _jump(game, coord, rooms[coord][1])
@@ -685,6 +723,9 @@ func _kiln_shots(game: Node) -> void:
 		Vector2i(21, 8): ["57_kiln_gallery", Vector2i(11, 5)],
 		Vector2i(20, 8): ["58_kiln_pattern_shop", Vector2i(20, 6)],
 		Vector2i(22, 7): ["59_kiln_bell_loft", Vector2i(11, 10)],
+		Vector2i(23, 7): ["59b_kiln_chimney", Vector2i(2, 6)],
+		Vector2i(23, 8): ["59c_kiln_annealing_oven", Vector2i(11, 1)],
+		Vector2i(19, 9): ["59d_kiln_sprue", Vector2i(22, 6)],
 	}
 	for coord: Vector2i in rooms:
 		var at := await _jump(game, coord, rooms[coord][1])
@@ -2322,6 +2363,11 @@ func _pacing_shots(game: Node) -> void:
 		Vector2i(8, -1): ["pacing_geyser_basin", Vector2i(16, 11)],
 		Vector2i(8, 1): ["pacing_vertebra_road", Vector2i(8, 7)],
 	}
+	await _room_shots(game, shots)
+
+
+## One shot per room: Wren set down on the given tile.
+func _room_shots(game: Node, shots: Dictionary) -> void:
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
 		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))

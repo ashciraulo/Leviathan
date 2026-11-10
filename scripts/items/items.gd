@@ -68,7 +68,7 @@ const DEFS := {
 	"jar": {"kind": JAR, "icon": 24, "max": 4},
 	# Story and collectables.
 	"tidebell": {"kind": QUEST, "icon": 20, "max": 7},
-	"breath_pearl": {"kind": PEARL, "icon": 21, "max": 5},
+	"breath_pearl": {"kind": PEARL, "icon": 21, "max": 8},
 	"keeper_lamp": {"kind": QUEST, "icon": 22},
 	"glint": {"kind": CURRENCY, "icon": 23, "max": 999},
 	# Twelve pieces hidden off the beaten path (SeaGlass, room letter *).

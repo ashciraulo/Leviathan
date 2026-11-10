@@ -79,7 +79,7 @@ func _capture(event: InputEvent) -> bool:
 
 func hint() -> String:
 	if _waiting:
-		var cancel := tr("PAD_SHORT_%d" % JOY_BUTTON_START) if Settings.using_pad else OS.get_keycode_string(KEY_ESCAPE)
+		var cancel := tr(MenuKit.pad_key("PAD_SHORT_%d" % JOY_BUTTON_START)) if Settings.using_pad else OS.get_keycode_string(KEY_ESCAPE)
 		return tr("HINT_CONTROLS_WAIT") % cancel
 	return tr("HINT_CONTROLS") % [MenuKit.key_name("interact"), MenuKit.key_name("attack")]
 
@@ -87,9 +87,9 @@ func hint() -> String:
 static func pad_text(action: String) -> String:
 	for event in InputMap.action_get_events(action):
 		if event is InputEventJoypadButton:
-			return "PAD_BUTTON_%d" % event.button_index
+			return MenuKit.pad_key("PAD_BUTTON_%d" % event.button_index)
 		if event is InputEventJoypadMotion:
-			return "PAD_AXIS_%d" % event.axis
+			return MenuKit.pad_key("PAD_AXIS_%d" % event.axis)
 	return "-"
 
 

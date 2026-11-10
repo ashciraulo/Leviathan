@@ -56,6 +56,7 @@ func _ready() -> void:
 		await _test_tide_turning()
 		await _test_sea_bed()
 		await _test_tidestone_carvings()
+		await _test_challenges()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -64,6 +65,7 @@ func _ready() -> void:
 		await _test_shop()
 		_test_satchel_sea_glass()
 		await _test_save_transfer()
+		await _test_area_stats()
 		await _test_dream()
 		await _test_journal()
 		await _test_tobin()
@@ -1043,6 +1045,27 @@ func _test_play() -> void:
 	Input.action_release("hum")
 	_check(GameState.bubbles == 3, "humming restores a bubble (bubbles %d)" % GameState.bubbles)
 	_check(is_equal_approx(GameState.resonance, GameState.resonance_max * 2.0 / 3.0), "humming spends a third of the meter")
+	# Hum set to toggle (an accessibility option): one tap starts it, it
+	# keeps going with the key up, and a second tap stops it.
+	await _wait(0.3)
+	_check(player.state == Player.State.MOVE, "letting go of Hum ends the hum (state %d)" % player.state)
+	var was_toggle := Settings.hum_toggle
+	Settings.hum_toggle = true
+	var hum_key := Settings.main_key("hum") as Key
+	GameState.bubbles = 2
+	GameState.resonance = GameState.resonance_max
+	_press_key(hum_key, true)
+	await _wait(0.1)
+	_press_key(hum_key, false)
+	await _wait(1.0)
+	_check(player.state == Player.State.HUM and GameState.bubbles == 3,
+		"with Hum on toggle, a tap starts a hum that heals (state %d, bubbles %d)" % [player.state, GameState.bubbles])
+	_press_key(hum_key, true)
+	await _wait(0.1)
+	_press_key(hum_key, false)
+	await _wait(0.2)
+	_check(player.state == Player.State.MOVE, "a second tap stops the hum")
+	Settings.hum_toggle = was_toggle
 
 	# A Spitter fires a projectile.
 	var spitter := Spitter.new()
@@ -2366,7 +2389,7 @@ func _test_hull_dungeon() -> void:
 	_check(player.state == Player.State.MOVE and not player.airborne, "Wren lands and can move again")
 
 	# The Flooded Hold: a sideways throw from the middle of a row still bites
-	# the post, and carries Wren over the water to the big key's island.
+	# the post, and carries Wren over the water to the chest's island.
 	room = await _goto(game, Vector2i(9, 10), Vector2i(12, 11))
 	await _calm(room)
 	player.global_position = _tile_pos(room, Vector2i(12, 11))
@@ -2415,6 +2438,68 @@ func _test_hull_dungeon() -> void:
 	await _wait(1.5)
 	_check(nook.position.x > start.x + Room.TILE, "the hook drags a crate (%s -> %s)" % [start, nook.position])
 	_check(player.state == Player.State.MOVE, "the hook comes home after a drag")
+
+	# The Keel: hook over the trench, drag both crates out of their nooks,
+	# and the plates open the way up to the Sail Loft.
+	room = await _goto(game, Vector2i(8, 9), Vector2i(17, 4))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(17, 4))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 14 and player.state == Player.State.MOVE, "the hook crosses the Keel's trench (at %s)" % local)
+	for crate_tile: Vector2i in [Vector2i(3, 6), Vector2i(13, 6)]:
+		var stuck: Crate = null
+		for c in _child_of(room, Crate):
+			if int(c.position.x) / Room.TILE == crate_tile.x:
+				stuck = c
+		start = stuck.position
+		player.global_position = _tile_pos(room, crate_tile)
+		player.facing = Vector2.UP if crate_tile.x == 3 else Vector2.DOWN
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.5)
+		_check(absf(stuck.position.y - start.y) >= Room.TILE * 2, "the hook drags a Keel crate out of its nook (%s -> %s)" % [start, stuck.position])
+	var keel_plates: Array = _child_of(room, PressurePlate)
+	var keel_crates: Array = _child_of(room, Crate)
+	_check(keel_plates.size() == 2 and keel_crates.size() == 2, "the Keel has two crates for two plates")
+	player.global_position = _tile_pos(room, Vector2i(18, 2))
+	for i in keel_plates.size():
+		keel_crates[i].position = Vector2(keel_plates[i].tile.x * Room.TILE + 8, keel_plates[i].tile.y * Room.TILE + 12)
+	await _wait(0.3)
+	_check(_child_of(room, Bars).all(func(b: Bars) -> bool: return b.is_open), "both plates open the Keel's bars")
+
+	# The Sail Loft: three hooks, island to island, up to the big key.
+	room = await _goto(game, Vector2i(8, 8), Vector2i(11, 10))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(11, 10))
+	for step: Array in [[Vector2.UP, Vector2i(11, 7)], [Vector2.LEFT, Vector2i(6, 7)], [Vector2.UP, Vector2i(6, 3)]]:
+		player.facing = step[0]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.3)
+		local = player.global_position - room.global_position
+		_check(Vector2i(local / Room.TILE) == step[1] and player.state == Player.State.MOVE and not player.airborne, "the Sail Loft's hook lands Wren on %s (at %s)" % [step[1], local])
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Sail Loft's chest holds the big key")
+
+	# The Chain Locker: hook to the island, then on to the far deck.
+	room = await _goto(game, Vector2i(12, 8), Vector2i(7, 6))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(7, 6))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(Vector2i(local / Room.TILE) == Vector2i(12, 6), "the hook reaches the Chain Locker's island (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(12, 4))
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(Vector2i(local / Room.TILE) == Vector2i(17, 4), "the hook reaches the Chain Locker's far deck (at %s)" % local)
 
 	# The Rope Locker shuts Wren in until it's cleared, then shows its chest.
 	GameState.inventory.erase("tide_hook")
@@ -2703,6 +2788,58 @@ func _test_kiln_dungeon() -> void:
 			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 
+	# The Chimney: two boulders seal the way down to the Annealing Oven.
+	room = await _goto(game, Vector2i(23, 7), Vector2i(2, 6))
+	await _calm(room)
+	_check(_child_of(room, Boulder).size() == 2 and _child_of(room, DropHammer).size() == 4, "the Chimney has its hammers and boulders")
+	player.global_position = _tile_pos(room, Vector2i(10, 10))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("stonebreaker")
+	await _wait(0.5)
+	_check(_child_of(room, Boulder).size() == 1, "the mallet opens the Chimney's floor")
+
+	# The Annealing Oven: two pegs stand in the crate's one-tile channel;
+	# with them down, Wren shoves it along and down onto the plate, and the
+	# bars around the big key open.
+	room = await _goto(game, Vector2i(23, 8), Vector2i(11, 1))
+	await _calm(room)
+	var oven_pegs: Array = _child_of(room, Peg)
+	_check(oven_pegs.size() == 2, "two pegs stand in the Annealing Oven")
+	var oven_crate: Crate = _child_of(room, Crate)[0]
+	var oven_plate: PressurePlate = _child_of(room, PressurePlate)[0]
+	# With the pegs still up, the crate stops at the first one.
+	player.global_position = _tile_pos(room, Vector2i(4, 3))
+	Input.action_press("move_right")
+	await _wait(4.0)
+	Input.action_release("move_right")
+	_check(int(oven_crate.position.x) / Room.TILE == 9, "a standing peg stops the Oven's crate (at %s)" % oven_crate.position)
+	for oven_peg: Peg in oven_pegs:
+		var at := Vector2i(oven_peg.position / Room.TILE)
+		player.global_position = _tile_pos(room, at + Vector2i(0, -1))
+		player.facing = Vector2.DOWN
+		await _wait(0.1)
+		player.use_item("stonebreaker")
+		await _wait(0.5)
+		_check(oven_peg.down, "the mallet drives the Oven's peg at %s" % at)
+	player.global_position = _tile_pos(room, Vector2i(8, 3))
+	Input.action_press("move_right")
+	await _wait(7.0)
+	Input.action_release("move_right")
+	_check(Vector2i(oven_crate.position / Room.TILE) == Vector2i(18, 3), "the crate runs the channel to its corner (at %s)" % oven_crate.position)
+	player.global_position = _tile_pos(room, Vector2i(18, 2))
+	Input.action_press("move_down")
+	await _wait(5.0)
+	Input.action_release("move_down")
+	_check(oven_plate.pressed, "shoved down the chute, the crate weighs down the plate (at %s)" % oven_crate.position)
+	_check(_child_of(room, Bars).all(func(b: Bars) -> bool: return b.is_open), "the plate opens the bars around the big key")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Annealing Oven's chest holds the big key")
+
+	# The Sprue: sealed with boulders off the Mould Store.
+	room = await _goto(game, Vector2i(19, 9), Vector2i(22, 6))
+	await _calm(room)
+	_check(_child_of(room, Boulder).size() == 3, "three boulders seal the Sprue")
+
 	# The Bellows Room shuts Wren in; clearing it shows the mallet's chest.
 	GameState.inventory.erase("stonebreaker")
 	GameState.item_slots = ["", ""]
@@ -2829,6 +2966,25 @@ func _test_items() -> void:
 	Settings.using_pad = pad_was_used
 	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
 	_check(tabs == "LB RT", "the menu tabs show their pad buttons (%s)" % tabs)
+	# Prompts use the labels printed on the pad in use.
+	_check(Settings.pad_style_for("Xbox Series Controller") == "xbox"
+		and Settings.pad_style_for("PS5 Controller") == "playstation"
+		and Settings.pad_style_for("DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)") == "playstation"
+		and Settings.pad_style_for("Nintendo Switch Pro Controller") == "nintendo"
+		and Settings.pad_style_for("Generic USB Gamepad") == "xbox", "pads are told apart by name")
+	var style_was := Settings.pad_style
+	Settings.using_pad = true
+	var shown := {}
+	for style in ["xbox", "playstation", "nintendo"]:
+		Settings.pad_style = style
+		shown[style] = "%s %s %s %s" % [MenuKit.key_name("interact"), MenuKit.key_name("attack"),
+			MenuKit.key_name("tab_prev"), MenuKit.key_name("tab_next")]
+	shown["controls"] = tr(ControlsPage.pad_text("interact"))
+	Settings.pad_style = style_was
+	Settings.using_pad = pad_was_used
+	_check(shown["xbox"] == "A B LB RT" and shown["playstation"] == "✕ ○ L1 R2" and shown["nintendo"] == "B A L ZR",
+		"prompts match an Xbox, PlayStation or Nintendo pad (%s)" % shown)
+	_check(shown["controls"] == "B", "the controls page names the Nintendo button too (%s)" % shown["controls"])
 	var game := Vector2(384, 216)
 	_check(Settings.stretch_for(Vector2(844, 390), game) == Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 		and Settings.stretch_for(Vector2(1152, 648), game) == Window.CONTENT_SCALE_STRETCH_INTEGER,
@@ -2876,6 +3032,15 @@ func _test_menus() -> void:
 	await get_tree().process_frame
 	files.queue_free()
 	await get_tree().process_frame
+
+
+## A real key press or release, the way the keyboard sends it.
+func _press_key(key: Key, down: bool) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = key
+	event.keycode = key
+	event.pressed = down
+	Input.parse_input_event(event)
 
 
 func _pad_event(button: JoyButton) -> InputEventJoypadButton:
@@ -3133,6 +3298,29 @@ func _test_audio() -> void:
 	phrase = Audio._phrase.stream as AudioStreamPlaylist
 	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")
 	Audio._phrase.stop()
+	Audio.stop_music(0.01)
+	# A room can have its own track, or none (only the ambience).
+	_check(Audio.music_for_room("sunken_verge", "") == "region_sunken_verge"
+		and Audio.music_for_room("sunken_verge", "", "none") == ""
+		and Audio.music_for_room("sunken_verge", "", "story_flight") == "story_flight", "a room's own music overrides its region's")
+	var shelf: Room = (load("res://rooms/room_1_4.tscn") as PackedScene).instantiate()
+	var grotto: Room = (load("res://rooms/room_0_4.tscn") as PackedScene).instantiate()
+	_check(shelf.music == "none" and grotto.music == "none", "the Ebb Shelf and Grotto have only the sea's sound")
+	shelf.free()
+	grotto.free()
+	# Music in a hollow is muffled, and clears outside.
+	Audio.play_music("region_brinewood", 0.01)
+	await _wait(0.1)
+	var open_db: float = Audio._music[Audio._music_index].volume_db
+	Audio.set_muffled(true, 0.1)
+	await _wait(0.3)
+	var hollow_db: float = Audio._music[Audio._music_index].volume_db
+	_check(Audio._low_pass != null and Audio._low_pass.cutoff_hz < 1000.0 and hollow_db < open_db - 4.0,
+		"music in a hollow is quieter and dulled (%.1f to %.1f dB, %d Hz)" % [open_db, hollow_db, Audio._low_pass.cutoff_hz if Audio._low_pass else 0])
+	Audio.set_muffled(false, 0.1)
+	await _wait(0.3)
+	_check(Audio._low_pass.cutoff_hz > 19000.0 and is_equal_approx(Audio._music[Audio._music_index].volume_db, open_db),
+		"and clear again outside")
 	Audio.stop_music(0.01)
 
 
@@ -3811,6 +3999,49 @@ func _test_tide_turning() -> void:
 	GameState.reset_new_game()
 
 
+## The optional challenges: each holds a Breath Pearl behind its own test.
+func _test_challenges() -> void:
+	GameState.reset_new_game()
+	for coord: Vector2i in [Vector2i(8, 2), Vector2i(7, -4), Vector2i(5, 3)]:
+		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
+		_check(probe.chest_item == "breath_pearl" and probe.layout.count("C") == 1, "challenge %s holds one Breath Pearl" % coord)
+		probe.free()
+	# The Bone Ring: the bars stay open till Wren is in, then the ring shuts and
+	# the pearl only shows once every foe is down.
+	var ring: Room = (load("res://rooms/room_8_2.tscn") as PackedScene).instantiate()
+	add_child(ring)
+	await _wait(0.2)
+	var chest: Chest = _child_of(ring, Chest)[0]
+	# The bars sit on row 1, outside the shut-in line, so they never close on Wren.
+	_check(Room.parse_layout(ring.layout)[1].count("|") == 2, "the Bone Ring's bars stand clear of the arena")
+	_check(ring.gate == "clear" and not chest.visible and not _child_of(ring, Enemy).is_empty(), "the Bone Ring hides its pearl behind a fight")
+	for enemy in _child_of(ring, Enemy):
+		enemy.queue_free()
+	ring.get_node("Puzzle").set("_shut_in", true)
+	await _wait(0.3)
+	_check(chest.visible and GameState.has_flag(RoomPuzzle.flag_for(ring.coord)), "with the ring cleared the pearl appears")
+	ring.queue_free()
+	# The Lampless Sink: dark, veiled planks out to four braziers. (Rooms made
+	# here all sit at the same coord, so the ring's solved flag goes first.)
+	GameState.reset_new_game()
+	var sink: Room = (load("res://rooms/room_5_3.tscn") as PackedScene).instantiate()
+	add_child(sink)
+	await _wait(0.2)
+	var braziers := _child_of(sink, Brazier)
+	chest = _child_of(sink, Chest)[0]
+	_check(sink.dark and braziers.size() == 4 and sink.layout.count("v") > 20 and not chest.visible, "the Lampless Sink is dark, with four braziers over veiled planks")
+	for brazier in braziers:
+		brazier.light(true)
+	await _wait(0.2)
+	_check(chest.visible, "four braziers lit bring up its pearl")
+	sink.queue_free()
+	# Gullcry Stacks: a chasm course that only the kite cloak crosses, into the wind.
+	var stacks: Room = (load("res://rooms/room_7_-4.tscn") as PackedScene).instantiate()
+	_check(stacks.wind.x < 0 and stacks.layout.count("_") > 150 and Room.BIOMES["windmere"].get("gap") == "galesky", "Gullcry Stacks is a gusty chasm course, drawn as open sky")
+	stacks.free()
+	await _wait(0.1)
+
+
 ## The sea bed (;): under water while the tide breathes, even at its lowest;
 ## bared only while Wren holds the tide out.
 func _test_sea_bed() -> void:
@@ -3837,6 +4068,12 @@ func _test_sea_bed() -> void:
 	GameState.clear_flag(Tide.HELD_IN_FLAG)
 	_check(map._joined(Vector2i(1, 3), Vector2i(1, 4), Vector2i.DOWN), "and joins it once the tide is held out")
 	map.free()
+	# The Ebb Shelf has its own bed of sound, and both new loops exist.
+	var shelf: Room = (load("res://rooms/room_1_4.tscn") as PackedScene).instantiate()
+	_check(Audio.ambience_for_room(shelf.biome, shelf.dungeon, shelf.ambience, shelf.cave) == "ebb", "the Ebb Shelf plays the ebb loop")
+	shelf.free()
+	for loop in ["ebb", "hollow"]:
+		_check(ResourceLoader.exists(Audio.AMBIENCE_DIR + loop + ".wav"), "the %s ambience loop is there" % loop)
 	# Frost can't make a path out to it: only open water freezes.
 	GameState.clear_flag(Tide.HELD_FLAG)
 	var steps: Room = (load("res://rooms/room_2_3.tscn") as PackedScene).instantiate()
@@ -3925,6 +4162,8 @@ func _test_overworld_secrets() -> void:
 			_check(room.chest_count == 30, "the Windmere sea stack holds 30 glints")
 		if coord in [Vector2i(1, -1), Vector2i(7, -1), Vector2i(3, 3)]:
 			_check(room.chest_count >= 100 and tr(room.name_key) != room.name_key, "side area %s has a name and a cache of %d glints" % [coord, room.chest_count])
+			_check(room.cave, "side area %s is shaded like a hollow" % coord)
+			_check(Audio.ambience_for_room(room.biome, room.dungeon, room.ambience, room.cave) == "hollow", "side area %s sounds like a hollow" % coord)
 		room.free()
 	# Frost can't freeze lava: Cinder Hollow's islet still needs the hook or cloak.
 	var hollow: Room = (load("res://rooms/room_7_-1.tscn") as PackedScene).instantiate()
@@ -4127,6 +4366,20 @@ func _test_satchel_sea_glass() -> void:
 	_check(shown.call(), "found sea-glass shows in the satchel")
 	page._cursor = page._cells.size() - 1
 	_check(page._owned_id(page._cells[page._cursor]) == "sea_glass", "the sea-glass cell can be looked at")
+	# Every Breath Pearl there is: the most breath, and a full shelf that
+	# stays inside its panel.
+	GameState.give_item("breath_pearl", Items.max_count("breath_pearl"), false)
+	_check(GameState.max_bubbles == GameState.MAX_BUBBLES and GameState.START_BUBBLES + Items.max_count("breath_pearl") == GameState.MAX_BUBBLES,
+		"every Breath Pearl together gives the most breath (%d)" % GameState.max_bubbles)
+	page.on_open()
+	var pearls := page._cells.filter(func(c: Dictionary) -> bool: return c["role"] == "pearl")
+	_check(pearls.size() == Items.max_count("breath_pearl"), "the satchel has a place for every Breath Pearl")
+	for cell: Dictionary in page._cells:
+		var drawn := Rect2(cell["rect"].position, (cell["rect"].size as Vector2).max(Vector2(16, 16)))
+		_check(SatchelPage.KEEPER_PANEL.encloses(drawn) or SatchelPage.TOOLS_PANEL.encloses(drawn) or SatchelPage.GEAR_PANEL.encloses(drawn),
+			"satchel cell %s %d sits inside its panel" % [cell["role"], cell["index"]])
+	# The plate behind the breath bubbles stops short of the item keys.
+	_check(2 + GameState.MAX_BUBBLES * Hud.BUBBLE_SPACING + 5 < ItemSlotsHud.SLOT_AT[0].x - 4, "the most breath fits beside the item keys")
 	page.queue_free()
 	GameState.reset_new_game()
 
@@ -5314,3 +5567,50 @@ func _test_save_transfer() -> void:
 	await get_tree().process_frame
 	SaveManager.delete_save(TEST_SLOT)
 	SaveManager.restore_aside(OTHER, "testtransfer")
+
+
+## The hidden playtime record: time and deaths by region and dungeon, kept
+## through saving, loading and dying.
+func _test_area_stats() -> void:
+	GameState.reset_new_game()
+	_check(GameState.area_stats.is_empty(), "a new file has no playtime record")
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(1.0)
+	var area := Audio.cue_for_room(game.current_room.biome, game.current_room.dungeon)
+	var counted := float(GameState.area_stats.get(area, {}).get("time", 0.0))
+	# Everything played so far was in this one area.
+	_check(counted > 0.0 and absf(counted - GameState.play_time) < 0.01,
+		"time in %s is counted (%.2f of %.2f s)" % [area, counted, GameState.play_time])
+	GameState.count_area_death(area)
+	GameState.count_area_time("dungeon_hull", 60.0)
+	SaveManager.save_game()
+	var before := GameState.area_stats.duplicate(true)
+	GameState.reset_new_game()
+	SaveManager.load_game()
+	_check(int(GameState.area_stats.get(area, {}).get("deaths", 0)) == 1
+		and is_equal_approx(float(GameState.area_stats.get("dungeon_hull", {}).get("time", 0.0)), 60.0)
+		and GameState.area_stats.size() == before.size(), "the playtime record survives saving (%s)" % GameState.area_stats)
+	# Reading a conversation pauses the game but counts as playing.
+	var reading_from := float(GameState.area_stats[area]["time"])
+	Events.dialogue_requested.emit("NAME_HESSA", PackedStringArray(["HESSA_1"]))
+	await _wait(0.5)
+	_check(get_tree().paused and float(GameState.area_stats[area]["time"]) > reading_from + 0.3,
+		"time reading a conversation counts (%.2f to %.2f s)" % [reading_from, float(GameState.area_stats[area]["time"])])
+	for box in game.get_children():
+		if box is DialogueBox:
+			box.close()
+	get_tree().paused = false
+	# Leaving without saving keeps the time and deaths, not the rest.
+	GameState.count_area_death(area)
+	GameState.play_time += 100.0
+	GameState.give_item("glint", 50, false)
+	_check(SaveManager.save_clock(), "leaving keeps the time played")
+	GameState.reset_new_game()
+	SaveManager.load_game()
+	_check(int(GameState.area_stats.get(area, {}).get("deaths", 0)) == 2 and GameState.play_time > 100.0
+		and GameState.item_count("glint") == 0, "only the time and deaths are kept (%s)" % GameState.area_stats)
+	game.queue_free()
+	await _wait(0.1)
+	SaveManager.delete_save()
+

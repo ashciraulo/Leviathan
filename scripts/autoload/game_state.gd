@@ -3,7 +3,7 @@ extends Node
 ## story flags (keys, bells, tide). SaveManager saves all of it.
 
 const START_BUBBLES := 5
-const MAX_BUBBLES := 10
+const MAX_BUBBLES := 13
 const START_RESONANCE_MAX := 30.0
 ## Resonance gained per sword hit that connects.
 const RESONANCE_PER_HIT := 3.0
@@ -37,6 +37,11 @@ var jars: Array = []
 var tidestones: Dictionary = {}
 ## Seconds played on this file (counted by the game scene while unpaused).
 var play_time := 0.0
+## Hidden playtime record, by area ("region_<biome>" or "dungeon_<id>", the
+## same names as the music cues): {"time": seconds, "deaths": count}. Never
+## shown in the game; tools/playtime.py reads it from exported saves to
+## measure how long each part of the game really takes.
+var area_stats: Dictionary = {}
 ## True while the Dreaming Heart waits for the lullaby's eighth line: Hum
 ## always works then, whatever Wren's breath and Resonance (not saved).
 var final_line := false
@@ -48,6 +53,23 @@ const START_ITEMS := {"keeper_lamp": 1, "driftwood_sword": 1, "cork_buckler": 1,
 
 func _ready() -> void:
 	Events.room_entered.connect(_on_room_entered)
+
+
+## Time spent in an area (see area_stats).
+func count_area_time(area: String, seconds: float) -> void:
+	if area == "":
+		return
+	var entry: Dictionary = area_stats.get(area, {"time": 0.0, "deaths": 0})
+	entry["time"] = float(entry["time"]) + seconds
+	area_stats[area] = entry
+
+
+func count_area_death(area: String) -> void:
+	if area == "":
+		return
+	var entry: Dictionary = area_stats.get(area, {"time": 0.0, "deaths": 0})
+	entry["deaths"] = int(entry["deaths"]) + 1
+	area_stats[area] = entry
 
 
 func reset_new_game() -> void:
@@ -67,6 +89,7 @@ func reset_new_game() -> void:
 	jars = []
 	tidestones = {}
 	play_time = 0.0
+	area_stats = {}
 	for id: String in START_ITEMS:
 		give_item(id, START_ITEMS[id], false)
 
@@ -349,6 +372,7 @@ func to_dict() -> Dictionary:
 		"jars": jars.duplicate(),
 		"tidestones": tidestones.duplicate(true),
 		"play_time": play_time,
+		"area_stats": area_stats.duplicate(true),
 	}
 
 
@@ -401,6 +425,14 @@ func from_dict(data: Dictionary) -> void:
 	var saved_stones = data.get("tidestones", {})
 	tidestones = saved_stones if saved_stones is Dictionary else {}
 	play_time = maxf(float(data.get("play_time", 0.0)), 0.0)
+	area_stats = {}
+	var saved_stats = data.get("area_stats", {})
+	if saved_stats is Dictionary:
+		for area in saved_stats:
+			var entry = saved_stats[area]
+			if entry is Dictionary:
+				area_stats[str(area)] = {"time": maxf(float(entry.get("time", 0.0)), 0.0),
+					"deaths": maxi(int(entry.get("deaths", 0)), 0)}
 
 
 static func _to_vec2i(value: Variant) -> Vector2i:
