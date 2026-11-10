@@ -110,6 +110,8 @@ func _process(delta: float) -> void:
 ## swoops in and sets Wren down there.
 func _start(by_mantle: bool = false) -> void:
 	_hatch_blocked = [Vector2i.ZERO, 0]
+	# No remembered fight carries over into a load or a new game.
+	EchoTrial.end()
 	world = Node2D.new()
 	world.name = "World"
 	world.y_sort_enabled = true

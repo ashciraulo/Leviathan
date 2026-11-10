@@ -176,6 +176,8 @@ const SFX := {
 	"ui_move": {"wave": "square", "f0": 880.0, "f1": 880.0, "dur": 0.03, "vol": 0.18},
 	"ui_select": {"wave": "square", "f0": 660.0, "f1": 990.0, "dur": 0.08, "vol": 0.22},
 	"ui_back": {"wave": "square", "f0": 660.0, "f1": 440.0, "dur": 0.08, "vol": 0.22},
+	"shop_buy": {"wave": "square", "f0": 1320.0, "f1": 1760.0, "dur": 0.16, "vol": 0.25, "steps": 2},
+	"shop_short": {"wave": "square", "f0": 220.0, "f1": 180.0, "dur": 0.14, "vol": 0.25},
 	"ui_open": {"wave": "triangle", "f0": 440.0, "f1": 660.0, "dur": 0.1, "vol": 0.3},
 	"text_blip": {"wave": "square", "f0": 1100.0, "f1": 1100.0, "dur": 0.02, "vol": 0.1},
 	"pickup": {"wave": "square", "f0": 1320.0, "f1": 1760.0, "dur": 0.06, "vol": 0.25},

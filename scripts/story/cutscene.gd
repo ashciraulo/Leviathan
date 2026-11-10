@@ -194,6 +194,11 @@ static func _open(room: Room, cell: Vector2i) -> bool:
 	for dx in range(-2, 3):
 		if "HLMWR".contains(room.tile_at(cell.x + dx, cell.y)):
 			return false
+	# Marlo's stall: three tiles wide, two deep.
+	for dx in range(-1, 2):
+		for dy in range(0, 2):
+			if room.tile_at(cell.x + dx, cell.y + dy) == "7":
+				return false
 	return true
 
 

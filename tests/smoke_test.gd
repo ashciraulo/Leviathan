@@ -40,6 +40,7 @@ func _ready() -> void:
 		await _test_tomb_dungeon()
 		await _test_maw_dungeon()
 		await _test_extras_dungeon()
+		await _test_echoes_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -56,6 +57,7 @@ func _ready() -> void:
 		await _test_credits()
 		await _test_equipment()
 		await _test_side_quests()
+		await _test_shop()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -2056,6 +2058,73 @@ func _test_extras_dungeon() -> void:
 	await _wait(0.1)
 
 
+## After the end: the echo stones round the sleeping Heart, a remembered
+## fight with a boss in its own room, and the way home.
+func _test_echoes_dungeon() -> void:
+	GameState.reset_new_game()
+	for id: String in EchoTrial.BOSSES:
+		GameState.set_flag(EchoTrial.BOSSES[id][1])
+	GameState.set_flag(DreamingHeart.DEFEATED_FLAG)
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	GameState.set_checkpoint(EchoTrial.HEART_ROOM, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	var room: Room = game.current_room
+	_check(room.coord == EchoTrial.HEART_ROOM, "after the end, Continue starts by the sleeping Heart")
+	await _wait(1.0 + EchoHall.RISE_GAP * 8 + 0.5)
+	var stones := _child_of(room, EchoStone)
+	_check(stones.size() == 8 and GameState.has_flag(EchoTrial.WOKEN_FLAG), "eight echo stones rise round the Heart")
+	_check(Audio.music_cue != "boss", "the sleeping Heart's chamber is no fight (%s)" % Audio.music_cue)
+	_check(stones.all(func(s: EchoStone) -> bool: return room.tile_at(s.return_tile.x, s.return_tile.y) == "."), "every stone sends Wren home onto floor")
+	if stones.size() == 8:
+		var stone: EchoStone = stones.filter(func(s: EchoStone) -> bool: return s.id == "hull")[0]
+		var back := stone.return_tile
+		stone.activate()
+		await _wait(1.0)
+		room = game.current_room
+		_check(room.coord == EchoTrial.BOSSES["hull"][0] and EchoTrial.boss == "hull", "a stone carries Wren into the Matriarch's echo")
+		var bosses := _child_of(room, BarnacleMatriarch)
+		_check(bosses.size() == 1 and _child_of(room, BossAftermath).is_empty(), "she is there again, and no bell")
+		_check(_child_of(room, CanvasModulate).size() == 1, "the room is washed in dream-light")
+		Events.boss_defeated.emit()
+		await _wait(EchoTrial.RETURN_DELAY + 1.2)
+		room = game.current_room
+		_check(room.coord == EchoTrial.HEART_ROOM and EchoTrial.boss == "", "calmed, Wren is carried back to the Heart")
+		_check(GameState.has_flag(EchoTrial.cleared_flag("hull")), "and the stone remembers it")
+		var local := player.global_position - room.global_position
+		_check(Vector2i(local / Room.TILE) == back, "Wren comes back in front of the stone (at %s)" % local)
+		# Vael's echo: no words before the song.
+		var vael_stone: EchoStone = _child_of(room, EchoStone).filter(func(s: EchoStone) -> bool: return s.id == "vael")[0]
+		var talked := [false]
+		var listen := func(_pages: Array) -> void: talked[0] = true
+		Events.conversation_requested.connect(listen)
+		vael_stone.activate()
+		await _wait(1.2)
+		Events.conversation_requested.disconnect(listen)
+		room = game.current_room
+		var vaels := _child_of(room, CantorVael)
+		_check(vaels.size() == 1 and not talked[0], "Vael's echo sings without a word")
+		# Leaving the room ends the echo.
+		room = await _goto(game, Vector2i(44, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "walking out of a remembered fight ends it")
+		room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))
+		_check(_child_of(room, CantorVael).is_empty(), "and the room is as Wren left it")
+		# Walking out in the wait after a calm ends the echo all the same.
+		EchoTrial.begin("kiln", Vector2i(4, 7))
+		await _wait(1.0)
+		Events.boss_defeated.emit()
+		await _wait(0.3)
+		room = await _goto(game, Vector2i(21, 8), Vector2i(11, 1))
+		_check(EchoTrial.boss == "", "leaving before the trip home ends the echo too")
+	game.queue_free()
+	EchoTrial.end()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
 func _tile_pos(room: Room, tile: Vector2i) -> Vector2:
 	return room.global_position + Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
 
@@ -3658,3 +3727,68 @@ func _test_equipment() -> void:
 	game.queue_free()
 	await _wait(0.1)
 
+
+## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
+## bought with glints.
+func _test_shop() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var stall := get_tree().get_first_node_in_group("market_stall") as MarketStall
+	_check(stall != null and game.current_room.is_ancestor_of(stall), "Marlo Pike's stall stands in Saltmarrow")
+	if stall == null:
+		game.queue_free()
+		return
+	var feet: float = stall.marlo.get_global_transform_with_canvas().origin.y
+	_check(feet + Room.TILE < DialogueBox.HIGHEST_POINT, "Marlo stays clear of the dialogue box (%d vs %d)" % [feet + Room.TILE, DialogueBox.HIGHEST_POINT])
+	for child in game.get_children():
+		if child is DialogueBox:
+			_check(child.lines_for("MARLO_THANKS", true) <= DialogueBox.MAX_LINES, "Marlo's thanks fit the box")
+	_check(ShopMenu.rows().all(func(r: Dictionary) -> bool: return r.get("id", "") != "puffer_bombs"), "no puffer bombs before the Hull")
+	# Wren steps up to the counter and talks.
+	game.player.global_position = stall.global_position + Vector2(0, 14)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	GameState.give_item("glint", 100, false)
+	_check(game.player.try_interact(), "Wren can talk across the counter")
+	_check(DialogueBox.is_open and GameState.has_flag("met_marlo"), "Marlo introduces himself")
+	_finish_talk(game)
+	await _wait(0.3)
+	var menu := get_tree().get_first_node_in_group("shop_menu") as ShopMenu
+	_check(menu != null and get_tree().paused, "then his wares come up, with the game paused")
+	if menu == null:
+		game.queue_free()
+		return
+	var oil := -1
+	var tonic := -1
+	var rows := ShopMenu.rows()
+	for i in rows.size():
+		if rows[i].get("id", "") == "lamp_oil":
+			oil = i
+		elif rows[i].has("jar"):
+			tonic = i
+	_check(menu.buy(oil) and GameState.item_count("lamp_oil") == 3 and GameState.item_count("glint") == 85, "lamp oil costs 15 glints")
+	_check(not "lamp_oil" in GameState.item_slots, "bought goods wait in the satchel, off the item slots")
+	_check(ShopMenu.blocked(rows[tonic]) == "SHOP_NO_JAR" and not menu.buy(tonic) and GameState.item_count("glint") == 85, "no tonic without an empty jar")
+	GameState.give_item("jar", 1, false)
+	_check(menu.buy(tonic) and GameState.jars[0] == Items.JAR_POTION and GameState.item_count("glint") == 55, "kelp tonic fills the jar for 30")
+	_check(ShopMenu.blocked(rows[tonic]) == "SHOP_NO_JAR", "a full jar takes no more")
+	GameState.take_item("glint", 50)
+	_check(not menu.buy(oil) and GameState.item_count("lamp_oil") == 3 and GameState.item_count("glint") == 5, "Marlo gives no credit")
+	GameState.give_item("lamp_oil", 5, false)
+	_check(GameState.item_count("lamp_oil") == 8 and ShopMenu.blocked(rows[oil]) == "SHOP_FULL", "no paying for three when only two more fit")
+	menu.close()
+	_check(ShopMenu.recently_closed(), "the press that closes the shop doesn't reach Wren")
+	await _wait(0.1)
+	_check(DialogueBox.is_open, "Marlo thanks Wren for the trade")
+	_finish_talk(game)
+	await _wait(0.1)
+	_check(not get_tree().paused and get_tree().get_first_node_in_group("shop_menu") == null, "the game carries on after the shop")
+	# After the Hull, puffers.
+	GameState.set_flag("tidebell_hull")
+	_check(ShopMenu.rows()[0]["id"] == "puffer_bombs", "puffer bombs are stocked after the Hull")
+	_check(Conversations.branch_for("marlo")["lines"][0] == "MARLO_PUFFERS_1", "and Marlo says so")
+	game.queue_free()
+	await _wait(0.1)

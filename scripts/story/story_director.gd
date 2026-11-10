@@ -94,7 +94,9 @@ func _on_room_entered(coord: Vector2i) -> void:
 	# Old One has turned all the same, so Hessa still has her say at home.
 	if GameState.has_flag(GALE_BELL_FLAG) and not GameState.has_flag(TURNED_FLAG):
 		GameState.set_flag(TURNED_FLAG)
-	if coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG):
+	# A remembered fight (EchoTrial) is the room as it was before the mural.
+	var echo := EchoTrial.boss != ""
+	if coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not echo:
 		_put_up_mural()
 	# The game closed partway through the ending: the Heart sleeps, so pick
 	# the ending up again.
@@ -107,7 +109,7 @@ func _on_room_entered(coord: Vector2i) -> void:
 		the_wayshell()
 	elif coord == SALTMARROW and GameState.has_flag(TURNED_FLAG) and not GameState.has_flag(CONFESSION_FLAG):
 		hessas_confession()
-	elif coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not GameState.has_flag(MURAL_FLAG):
+	elif coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not GameState.has_flag(MURAL_FLAG) and not echo:
 		# A save from before the mural existed: show it on the way back in.
 		the_last_mural()
 	elif lowe_waits(coord):

@@ -33,17 +33,23 @@ var _home := Vector2.ZERO
 var _room: Room
 var _singers: Array[ChoirFigure] = []
 var _drift_dir := 1.0
+## A remembered fight (EchoTrial): no words, before or after.
+var _echo := false
 
 
 ## What a V tile becomes in Vael's hall: Vael, or once his song is broken,
 ## Vael standing quiet, listening to the Old One.
 static func spawn_in(room: Room, pos: Vector2) -> Node2D:
-	if GameState.has_flag(DEFEATED_FLAG):
+	# His song broken for good, unless Wren has come back to its echo.
+	if GameState.has_flag(DEFEATED_FLAG) and not EchoTrial.here(room):
 		var still := ChoirFigure.new("vael")
 		still.position = pos
 		return still
 	var boss := CantorVael.new()
 	boss._room = room
+	if EchoTrial.here(room):
+		boss._echo = true
+		EchoTrial.dress(room)
 	return boss
 
 
@@ -67,8 +73,9 @@ func _ready() -> void:
 		get_parent().add_child.call_deferred(singer)
 		_singers.append(singer)
 	Events.toast.emit("BOSS_VAEL")
-	# A few words before the song.
-	Events.conversation_requested.emit.call_deferred(_pages(["VAEL_MAW_1", "VAEL_MAW_2"]))
+	# A few words before the song (not in an echo of it).
+	if not _echo:
+		Events.conversation_requested.emit.call_deferred(_pages(["VAEL_MAW_1", "VAEL_MAW_2"]))
 
 
 func _think(delta: float) -> void:
@@ -205,7 +212,7 @@ func _listen() -> void:
 	Audio.play_sfx("vael_falter", global_position, 0.7)
 	_sprite.frame = 0
 	await get_tree().create_timer(1.2, false).timeout
-	if not is_inside_tree():
+	if not is_inside_tree() or _echo:
 		return
 	Events.conversation_requested.emit(_pages(["VAEL_MAW_END_1", "VAEL_MAW_END_2", "VAEL_MAW_END_3"]))
 	await Events.dialogue_finished

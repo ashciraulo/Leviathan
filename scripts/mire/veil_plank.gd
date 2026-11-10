@@ -5,10 +5,19 @@ extends StaticBody2D
 ## it. A plank Wren is standing on stays put until they step off.
 
 const FADE_SPEED := 4.0
+## Unlit, a plank shows only a few glints of wet wood on the black water,
+## slowly breathing: enough to say something
+## is there for the lantern to find.
+const GLIMMER := 0.8
+const GLIMMER_SPEED := 1.6
+const GLINTS := [Vector2(-5, -9), Vector2(2, -6), Vector2(-1, -2), Vector2(5, -1)]
 
 var _shape: CollisionShape2D
 var _shown := 0.0
 var _solid := true
+var _time := 0.0
+var _glint: Node2D
+var _glint_color := Color.WHITE
 
 
 func _ready() -> void:
@@ -18,6 +27,13 @@ func _ready() -> void:
 	_shape = Layers.rect_shape(Vector2(16, 16), Vector2(0, -4))
 	add_child(_shape)
 	z_index = -9
+	# In a dark room the glint is overbright, so the dark's tint leaves it
+	# pale; in a lit room it's plain wet light.
+	var room := get_parent() as Room
+	_glint_color = Color(2.6, 3.2, 3.4) if room != null and room.dark else Color(0.62, 0.78, 0.86)
+	_glint = Node2D.new()
+	_glint.draw.connect(_draw_glints)
+	add_child(_glint)
 
 
 func is_real() -> bool:
@@ -33,13 +49,27 @@ func _physics_process(delta: float) -> void:
 	if real == _solid:
 		_solid = not real
 		_shape.set_deferred("disabled", real)
+	_time += delta
 	var shown := move_toward(_shown, 1.0 if real else 0.0, FADE_SPEED * delta)
 	if shown != _shown:
 		_shown = shown
 		queue_redraw()
+	if _shown < 1.0:
+		_glint.queue_redraw()
 
 
 func _draw() -> void:
 	# The room draws the black water underneath.
 	if _shown > 0.0:
 		draw_texture(MireSprites.VEIL_PLANK, Vector2(-8, -12), Color(1, 1, 1, _shown))
+
+
+func _draw_glints() -> void:
+	# Each glint breathes a little out of step with the others, and they
+	# fade as the plank itself comes into the light.
+	var fade := 1.0 - _shown
+	for i in GLINTS.size():
+		var phase: float = _time * GLIMMER_SPEED + position.x * 0.07 + position.y * 0.11 + i * 1.9
+		var a := GLIMMER * fade * maxf(0.0, sin(phase))
+		if a > 0.02:
+			_glint.draw_rect(Rect2(GLINTS[i], Vector2(2, 1)), Color(_glint_color, a))
