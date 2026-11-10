@@ -846,7 +846,9 @@ func _draw_ground() -> void:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
-				if tile == "x" and tiles.has("ice"):
+				# Sea-glass out on the ice lies on ice.
+				var on_ice := tile == "*" and _tile_at(x - 1, y) == "x" and _tile_at(x + 1, y) == "x"
+				if (tile == "x" or on_ice) and tiles.has("ice"):
 					_draw_tile(tiles["ice"] % (h % 2), x, y)
 				elif Tide.is_flat(tile) and tiles.has("tidal"):
 					_draw_tile(tiles["tidal"] % (h % 2), x, y)
