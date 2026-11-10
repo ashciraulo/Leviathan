@@ -882,6 +882,8 @@ func _gale_shots(game: Node) -> void:
 		[Vector2i(28, 8), "95_gale_bell_shaft", Vector2i(11, 11)],
 		[Vector2i(29, 8), "96_gale_weathervane", Vector2i(2, 6)],
 		[Vector2i(27, 8), "97_gale_rookery", Vector2i(21, 6)],
+		[Vector2i(27, 7), "97b_gale_bell_cage", Vector2i(3, 10)],
+		[Vector2i(29, 10), "97c_gale_bellrope_walk", Vector2i(2, 6)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])

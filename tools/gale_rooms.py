@@ -15,10 +15,14 @@ The way through:
   small key) -> unlock the Fan Hall's hatch north into the Bell Shaft ->
   east to the Weathervane Room (glide out to the island; small key) -> back
   through the Shaft, unlock its west hatch into the Rookery (two glides,
-  the pillar catching you on the way; big key) -> ride the Shaft's updraft
-  to its top landing and the great door -> the Stormheron.
+  the pillar catching you on the way; glints) -> north into the Bell Cage
+  (three rides: up, across and down the fans' streams to the big key, and
+  the long stream home) -> ride the Shaft's updraft to its top landing and
+  the great door -> the Stormheron.
   Off the main path: the Rope Store west of the Entry (walk into the wind;
-  compass). The Fan Hall's map is up a nook against the wind.
+  compass); the Bellrope Walk east of the Entry (the stream runs on over
+  the sky: fold the cloak over the island; glints). The Fan Hall's map is
+  up a nook against the wind.
 """
 
 import os
@@ -52,9 +56,9 @@ ROOMS = {
 #..u..............u....#
 #......................#
 #....##..........##....#
-.....##.....T....##....#
-.......................#
-.......................#
+.....##.....T....##.....
+........................
+........................
 #......................#
 #..c...............&...#
 #......................#
@@ -144,9 +148,9 @@ X...________________....
 #....__________________#
 #....__________________#
 ########################"""),
-    (27, 8): ("ROOM_GALE_ROOKERY", dict(drops_to((27, 9), (11, 9)), chest_item='"big_key"'), """
-########################
-#__________________....#
+    (27, 8): ("ROOM_GALE_ROOKERY", dict(drops_to((27, 9), (11, 9)), chest_item='"glint"', chest_count="50"), """
+###..###################
+#....______________....#
 #....______________.&..#
 #...._____...._____....#
 #.C.._____<..._____....#
@@ -157,6 +161,34 @@ X...________________....
 #...._____...._____....#
 #....______________....#
 #__________________....#
+########################"""),
+    (27, 7): ("ROOM_GALE_BELL_CAGE", dict(drops_to((27, 8), (2, 9)), chest_item='"big_key"'), """
+########################
+#...>______________....#
+#...>______________....#
+#__________________SSSS#
+#______________________#
+#______________________#
+#______________________#
+#______________________#
+#NN....________________#
+#......__________<.....#
+#......__________<....C#
+#......__________<.....#
+###..###################"""),
+    (29, 10): ("ROOM_GALE_BELLROPE_WALK", {"chest_item": '"glint"', "chest_count": "100"}, """
+########################
+#....__________________#
+#....__________________#
+#....______...C._______#
+#....______....._______#
+....>______....._______#
+....>______....._______#
+.....______....._______#
+#....______<...._______#
+#....______<..&._______#
+#....__________________#
+#....__________________#
 ########################"""),
     (28, 7): ("ROOM_GALE_BOSS", OUTSIDE, """
 ########################
