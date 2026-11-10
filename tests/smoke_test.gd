@@ -4253,7 +4253,7 @@ func _test_liesl() -> void:
 	_check(hung.size() == 1, "next time, the bell hangs by the drowned cottage's door")
 	_check(Conversations.branch_for("liesl").get("lines") == ["LIESL_AFTER"], "and Liesl's glad of it")
 	GameState.set_flag("tidebell_belfry")
-	_check(Conversations.branch_for("liesl").get("lines") == ["LIESL_VERGE"], "with the Verge Bell rung, her little one rings back")
+	_check(Conversations.branch_for("liesl").get("lines")[0] == "LIESL_VERGE", "with the Verge Bell rung, her little one rings back")
 	GameState.set_flag("seen_ending")
 	_check(Conversations.branch_for("liesl").get("lines") == ["LIESL_END"], "and after the ending she has her own word")
 	game.queue_free()

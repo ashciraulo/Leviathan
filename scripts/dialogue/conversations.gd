@@ -115,11 +115,11 @@ const TALKS := {
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
 	"liesl": [
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
-		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE"]},
+		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
-		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", ["", "NARRATE_GOT_VERGE_COINS"]]},
+		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
 		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
-		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_2", "LIESL_3"]},
+		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
