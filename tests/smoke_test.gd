@@ -64,6 +64,7 @@ func _ready() -> void:
 		await _test_journal()
 		await _test_tobin()
 		await _test_rowing()
+		await _test_choir()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -1878,6 +1879,8 @@ func _close_dialogue(game: Node) -> void:
 func _test_maw_dungeon() -> void:
 	_check(ResourceLoader.exists("res://rooms/room_44_10.tscn"), "the Maw has an entry room")
 	GameState.reset_new_game()
+	# The choir's scene has its own test (_test_choir).
+	GameState.set_flag(StoryDirector.CHOIR_FLAG)
 	GameState.set_checkpoint(Vector2i(44, 10), GameState.NO_POSITION)
 	DreamingHeart.roll_credits = false
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
@@ -4177,6 +4180,51 @@ func _test_rowing() -> void:
 	pages = await _play_scene(game, 40.0)
 	_check(pages >= 4 and not Cutscene.active and GameState.has_flag(StoryDirector.ROWED_FLAG), "she says she came to find them (%d pages)" % pages)
 	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_AT_BOAT) < 4.0, "Wren walks down to the boat")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+
+
+## Cutscene 18: the Choir mid-song in Vael's hall; the fight waits for it.
+func _test_choir() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.MAW_VAEL, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 10))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	var vaels: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is CantorVael)
+	_check(vaels.size() == 1, "Vael is in his hall")
+	if vaels.is_empty():
+		game.queue_free()
+		return
+	var vael: CantorVael = vaels[0]
+	_check(Cutscene.active and vael.asleep and GameState.has_flag(StoryDirector.CHOIR_FLAG), "the first time in, the Choir is singing and the fight waits")
+	_check(Audio.music_cue != "boss", "no boss theme over the song (%s)" % Audio.music_cue)
+	await _wait(0.3)
+	_check(get_tree().get_nodes_in_group("choir_extra").size() == StoryDirector.CHOIR_EXTRAS.size(), "the whole Choir stands along the hall")
+	var pages := await _play_scene(game, 40.0)
+	_check(pages >= 1 and not Cutscene.active, "Vael has his say (%d pages)" % pages)
+	_check(not vael.asleep and Audio.music_cue == "boss", "then the duel begins (%s)" % Audio.music_cue)
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WATCH_FROM) < 6.0, "Wren walked up the hall into the song")
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is WakingSong), "the song's notes are gone once it's broken off")
+	# Break his song: the rest of the Choir slips away.
+	game.player._invuln = 60.0
+	while vael.hp > 0:
+		vael.note_hit(null)
+	await _wait(2.0)
+	await _play_scene(game, 10.0)
+	await _wait(1.5)
+	_check(get_tree().get_nodes_in_group("choir_extra").all(func(c: Node) -> bool: return not c.visible or c.modulate.a < 0.1), "with his song broken, the Choir slips away")
+	game.queue_free()
+	await _wait(0.1)
+	# Back again later: no second song.
+	GameState.clear_flag(CantorVael.DEFEATED_FLAG)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	_check(not Cutscene.active, "the choir scene plays once")
+	await _play_scene(game, 5.0)
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false

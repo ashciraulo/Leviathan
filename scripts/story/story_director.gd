@@ -88,6 +88,12 @@ const ROWED_FLAG := "hessa_rowed"
 const BOAT_AT := Vector2(6 * 16 + 8, 6 * 16 + 4)
 const WREN_AT_BOAT := Vector2(6 * 16 + 8, 8 * 16 + 12)
 const BOAT_LEAVES := Vector2(-40, 6 * 16 + 8)
+## Cutscene 18, Vael's choir: the first time Wren walks into Vael's hall,
+## the whole Choir is singing the Waking Song. More singers than fight him
+## stand along the hall (tiles), and slip away once his song is broken.
+const MAW_VAEL := Vector2i(44, 7)
+const CHOIR_FLAG := "seen_vaels_choir"
+const CHOIR_EXTRAS := [Vector2i(3, 5), Vector2i(7, 6), Vector2i(16, 6), Vector2i(20, 5)]
 const ENDING_FLAG := "seen_ending"
 ## Cutscene 13, the frozen journal: pages frozen through the Hollow Glacier
 ## (room: [tile, page]), and the last in the boss's room once Rimeback calms.
@@ -187,6 +193,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		tobins_warning()
 	elif coord == SALTMARROW and GameState.has_flag(TOBIN_WARNED_FLAG) and not GameState.has_flag(TOBIN_HOME_FLAG) and not GameState.has_flag(ENDING_FLAG):
 		tobin_comes_home()
+	elif coord == MAW_VAEL and choir_waits() and not echo:
+		vaels_choir()
 	elif lowe_waits(coord):
 		if coord == HULL_BOSS:
 			lowe_at_the_hull()
@@ -219,6 +227,17 @@ func _on_boss_defeated() -> void:
 		_put_up_journal(GLACIER_BOSS, true)
 	elif coord == BELFRY_BOSS and not GameState.has_flag(LOWE_WATER_FLAG):
 		lowe_in_the_water()
+	elif coord == MAW_VAEL:
+		# His song broken, the rest of the Choir slips away.
+		for singer in get_tree().get_nodes_in_group("choir_extra"):
+			var figure := singer as ChoirFigure
+			figure.walk_along([figure.position + Vector2(0, 5 * Room.TILE)], 26.0, -1)
+
+
+## True while Vael's choir is still to be heard: he waits, singing, until
+## the scene wakes him.
+static func choir_waits() -> bool:
+	return not GameState.has_flag(CHOIR_FLAG) and not GameState.has_flag(CantorVael.DEFEATED_FLAG)
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -739,6 +758,81 @@ func hessa_at_the_maw(rowed: bool, carried: Cutscene = null) -> void:
 		await scene.wait(1.2)
 	await away.finished
 	boat.queue_free()
+	scene.finish()
+
+
+## Cutscene 18, "Vael's choir": deep in the Maw the whole Choir is singing
+## the lullaby backwards, its notes falling cold into the floor, and the Old
+## One stirs under them. As Wren comes up with the lamp lit, the singers
+## fall silent one by one. Vael has his say, and the duel begins.
+func vaels_choir() -> void:
+	GameState.set_flag(CHOIR_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	var vael: CantorVael = null
+	for child in room.get_children():
+		if child is CantorVael:
+			vael = child
+	if vael == null:
+		scene.finish()
+		return
+	# Let his own two singers take their places.
+	await get_tree().process_frame
+	var voices: Array[Node2D] = [vael]
+	for child in room.get_children():
+		if child is ChoirFigure:
+			voices.append(child)
+	for tile: Vector2i in CHOIR_EXTRAS:
+		var singer := ChoirFigure.new("singer")
+		singer.position = Vector2(tile.x * Room.TILE + Room.TILE / 2.0, tile.y * Room.TILE + 12)
+		singer.face(tile.x > 11)
+		singer.add_to_group("choir_extra")
+		room.add_child(singer)
+		voices.append(singer)
+	var song := WakingSong.new()
+	for voice in voices:
+		song.sources.append(voice.position)
+	room.add_child(song)
+	# Wren comes up the hall into the song.
+	Audio.play_sfx("vael_sing", vael.global_position, 0.6)
+	await scene.walk_route(room.global_position + WATCH_FROM)
+	if not is_instance_valid(vael) or not vael.is_inside_tree():
+		scene.finish()
+		return
+	scene.face(Vector2.UP)
+	Audio.play_sfx("vael_sing", vael.global_position, 0.5)
+	await scene.wait(1.2)
+	# Under the floor, the Old One turns towards it.
+	Audio.play_sfx("old_one_hum", null, 0.6)
+	Feel.shake(2.5)
+	await scene.wait(1.6)
+	if not is_instance_valid(vael) or not vael.is_inside_tree():
+		scene.finish()
+		return
+	# Wren's lamp. The voices stop, nearest last, Vael's last of all.
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_HERE)
+	if not is_instance_valid(vael) or not vael.is_inside_tree():
+		scene.finish()
+		return
+	var order: Array = range(1, voices.size()).filter(func(i: int) -> bool: return is_instance_valid(voices[i]))
+	order.sort_custom(func(a: int, b: int) -> bool: return voices[a].position.distance_to(WATCH_FROM) > voices[b].position.distance_to(WATCH_FROM))
+	for i: int in order:
+		if is_instance_valid(song):
+			song.hush(i)
+		var figure := voices[i] as ChoirFigure
+		if is_instance_valid(figure):
+			figure.face(figure.position.x > WATCH_FROM.x)
+		await scene.wait(0.35)
+	await scene.wait(0.5)
+	if is_instance_valid(song):
+		song.hush(0)
+	await scene.wait(1.4)
+	await scene.speak("vael", ["VAEL_MAW_1", "VAEL_MAW_2"])
+	await scene.wait(0.3)
+	if is_instance_valid(song):
+		song.queue_free()
+	if is_instance_valid(vael) and vael.is_inside_tree():
+		vael.wake()
 	scene.finish()
 
 

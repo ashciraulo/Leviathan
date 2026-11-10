@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -102,6 +102,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _belfry_lowe_shots()
+			"choir":
+				game.queue_free()
+				await _wait(0.2)
+				await _choir_shots()
 			"rowing":
 				game.queue_free()
 				await _wait(0.2)
@@ -1337,6 +1341,26 @@ func _belfry_lowe_shots() -> void:
 	await _wait(0.2)
 
 
+## Cutscene 18: the Choir singing the Waking Song in Vael's hall.
+func _choir_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.MAW_VAEL, Vector2(11 * Room.TILE + 8, 11 * Room.TILE + 10))
+	var hall: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(hall)
+	await _wait(1.4)
+	await _capture("75_the_waking_song")
+	await _wait(3.4)
+	await _capture("76_the_lamp_hushes_them")
+	while Cutscene.active and not DialogueBox.is_open:
+		await _wait(0.1)
+	await _wait(0.8)
+	await _capture("77_vael_turns")
+	await _skip_scene(hall)
+	await _wait(0.4)
+	hall.queue_free()
+	await _wait(0.2)
+
+
 ## Cutscene 17: Hessa rows Wren out to the Maw.
 func _rowing_shots() -> void:
 	GameState.reset_new_game()
@@ -1698,6 +1722,8 @@ func _maw_shots(game: Node) -> void:
 	for item in ["echo_horn", "divers_helm", "kite_cloak", "glowmoth_lantern", "tide_hook"]:
 		GameState.give_item(item)
 	DreamingHeart.roll_credits = false
+	# The choir's own scene has its shots (SHOTS_ONLY=choir).
+	GameState.set_flag(StoryDirector.CHOIR_FLAG)
 	MawBreath.elapsed = 0.0
 	# coord: [file name, spawn tile]
 	var rooms := [
