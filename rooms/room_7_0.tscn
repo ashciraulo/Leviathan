@@ -6,10 +6,11 @@
 script = ExtResource("1_room")
 name_key = "ROOM_BLEACHED_STRAND"
 biome = "ossuary"
+sign_key = "SIGN_BLEACHED_STRAND"
 layout = "########################
 ######.........#########
 ###......U...U.....#####
-##...................###
+##..............n....###
 #.........A...........##
 #.....SS................
 #....SSSS...............

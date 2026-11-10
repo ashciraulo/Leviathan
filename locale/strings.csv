@@ -73,7 +73,7 @@ HINT_MAP,Move the cursor to look around
 HINT_MAP_FLY,%s: blow the Wayshell and fly here
 HINT_OPTIONS,Left / right: change
 HINT_CONTROLS,%s: change    %s: back
-HINT_CONTROLS_WAIT,Press the new key or button. Esc cancels.
+HINT_CONTROLS_WAIT,Press the new key or button. %s cancels.
 ITEM_TIDE_HOOK,Tide Hook
 ITEM_TIDE_HOOK_DESC,A barbed hook on a long line. Pulls small things in and Wren across gaps.
 ITEM_STONEBREAKER,Stonebreaker Mallet
@@ -295,6 +295,13 @@ NARRATE_WREN_NODS,Wren nods.
 NARRATE_WREN_LAMP_YES,Wren lifts the lamp and flashes it once: I'll go.
 NARRATE_DUNSTAN_ROPE,"Dunstan shoulders a coil of rope and wanders off towards the smokehouse, very slowly."
 SIGN_SALTMARROW,"Saltmarrow. Mind the lamp, mind the tide."
+SIGN_BARNACLE_WALL,"Barnacle Wall. Built to keep the sea out. The sea moved in anyway."
+SIGN_BRINEWOOD,"Brinewood. The roots drink the tide and give back only shade."
+SIGN_MILL_ROW,"Mill Row. The sails turn whichever way the Old One breathes."
+SIGN_BRINE_SPRING,"Brine Spring. Salt water, welling up a long way from the sea."
+SIGN_ASHFALL_GATE,"Ashfall Gate. The hills are warm here, like something asleep."
+SIGN_BLEACHED_STRAND,"Bleached Strand. Whatever these bones were, the sea wore them white."
+SIGN_VERTEBRA_ROAD,"Vertebra Road. Follow the spine. It goes all the way down."
 HESSA_HULL_1,You've been inside that old hull. I can smell the bilge on you from here.
 HESSA_HULL_2,"Keep going down, child. Bells like the dark, and the Choir likes it better."
 CORRIN_1,"Morning, keeper. Sea's gone flat as a plate. No birds, no fish. Not a ripple."
@@ -597,6 +604,12 @@ NAME_MURMUR,Murmur
 MURMUR_CALF_1,"Oh... look at them. Every light in the fen, dreaming the same shape."
 MURMUR_CALF_2,"That's a calf. The Old One isn't angry. It's grieving, and they're its dreams."
 MURMUR_CALF_3,"I sang them out of their lanterns for Vael. I won't do it again. Not for anyone."
+MURMUR_FEN_1,"Keeper. Wick lets me help with the lights now. I owe the fen that."
+MURMUR_FEN_2,"I sang the lights out of them once. Now I hum them home."
+MURMUR_FEN_3,"It's slower. The lights don't mind. Neither do I."
+MURMUR_AGAIN,"Wick counts the lanterns. I count with them. I keep losing count."
+MURMUR_TURNED,"It turned over in its sleep. I felt it in my teeth, like a low hymn."
+MURMUR_END,"The strange lights went out to sea last night. They were singing."
 ROOM_TOMB_ENTRY,The Marrow Tomb
 ROOM_TOMB_HALL,The Marrow Tomb: Hall of Ribs
 ROOM_TOMB_CRYPT,The Marrow Tomb: Horn Crypt
@@ -693,6 +706,9 @@ DACE_MURAL_1,"So the Regent's gone to bones at last. Then you've earned this. Co
 DACE_MURAL_2,Those bones out on the dunes were its family. It lay down beside them to grieve.
 DACE_MURAL_3,"The Regent wanted a weapon. All it ever wanted was to sleep where they sleep."
 DACE_MURAL_4,"Whatever that Choir hears weeping, child, it isn't anger. Go and ring your bell."
+DACE_END_1,"Back with the bones, child? They're quieter now. So is it."
+DACE_END_2,"It dreams of them, I think. Not grieving now. Remembering."
+DACE_AGAIN,"Sit a while, if you like. The dead don't mind company."
 ROOM_BELFRY_UNDERCROFT,The Drowned Belfry: Undercroft
 ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
 ROOM_MAW_TIDEWELL,The Maw: Tidewell

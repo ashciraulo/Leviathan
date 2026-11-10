@@ -1,0 +1,81 @@
+<style>
+#lv-touch{position:fixed;inset:0;z-index:50;pointer-events:none;display:none;user-select:none;-webkit-user-select:none;touch-action:none}
+#lv-touch.on{display:block}
+#lv-touch .b{position:absolute;pointer-events:auto;border-radius:50%;background:rgba(232,224,208,.16);border:2px solid rgba(232,224,208,.45);color:rgba(232,224,208,.85);font:bold 18px/1 monospace;display:flex;align-items:center;justify-content:center;box-sizing:border-box;touch-action:none}
+#lv-touch .b.down{background:rgba(127,211,232,.4);border-color:rgba(127,211,232,.9)}
+#lv-touch .s{width:44px;height:30px;border-radius:15px;font-size:13px}
+#lv-pad{position:absolute;left:18px;bottom:18px;width:136px;height:136px;border-radius:50%;pointer-events:auto;background:rgba(232,224,208,.1);border:2px solid rgba(232,224,208,.35);box-sizing:border-box;touch-action:none}
+#lv-knob{position:absolute;left:44px;top:44px;width:44px;height:44px;border-radius:50%;background:rgba(232,224,208,.35)}
+</style>
+<script>
+// On-screen controls for phones and tablets (Leviathan web build). They show
+// once the page is touched and press the game's default keys, so every
+// prompt and menu works as with a keyboard. Left: a stick for moving; right:
+// the four action keys and hum; top corners: pause, menu tabs and map.
+(function(){
+  var KEYS={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyJ:74,KeyK:75,KeyU:85,KeyI:73,KeyH:72,KeyM:77,KeyQ:81,KeyE:69,Escape:27};
+  var NAMES={ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight',Escape:'Escape'};
+  function send(code,down){
+    var c=document.getElementById('canvas')||document.querySelector('canvas');
+    if(!c)return;
+    var key=NAMES[code]||code.slice(3).toLowerCase();
+    c.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code:code,key:key,keyCode:KEYS[code],which:KEYS[code],bubbles:true,cancelable:true}));
+  }
+  function build(){
+    var root=document.createElement('div');root.id='lv-touch';
+    // Right: K (talk/use) right, J (sword) bottom, U and I left and top.
+    var R=[['KeyK','K',18,70],['KeyJ','J',70,18],['KeyU','U',122,70],['KeyI','I',70,122]];
+    R.forEach(function(r){var b=btn(r[0],r[1]);b.style.width=b.style.height='52px';b.style.right=r[2]+'px';b.style.bottom=r[3]+'px';root.appendChild(b);});
+    var hum=btn('KeyH','H');hum.style.width=hum.style.height='44px';hum.style.right='18px';hum.style.bottom='176px';root.appendChild(hum);
+    // Stacked down the edges so they stay off the HUD on wide phone screens.
+    var T=[['Escape','Esc','left',10],['KeyQ','Q','left',48],['KeyE','E','left',86],['KeyM','M','right',10]];
+    T.forEach(function(t){var b=btn(t[0],t[1]);b.className+=' s';b.style.top=t[3]+'px';b.style[t[2]]='10px';root.appendChild(b);});
+    var pad=document.createElement('div');pad.id='lv-pad';var knob=document.createElement('div');knob.id='lv-knob';pad.appendChild(knob);root.appendChild(pad);
+    stick(pad,knob);
+    document.body.appendChild(root);
+    return root;
+  }
+  function btn(code,label){
+    var b=document.createElement('div');b.className='b';b.textContent=label;
+    var held=0;
+    function down(e){e.preventDefault();if(!held++){b.classList.add('down');send(code,true);}}
+    function up(e){e.preventDefault();if(held&&!--held||e.type==='touchcancel'){held=0;b.classList.remove('down');send(code,false);}}
+    b.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++)down(e);},{passive:false});
+    b.addEventListener('touchend',function(e){for(var i=0;i<e.changedTouches.length;i++)up(e);},{passive:false});
+    b.addEventListener('touchcancel',up,{passive:false});
+    return b;
+  }
+  function stick(pad,knob){
+    var id=null,held={};
+    function set(want){
+      ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].forEach(function(k){
+        if(want[k]&&!held[k])send(k,true);
+        if(!want[k]&&held[k])send(k,false);
+      });
+      held=want;
+    }
+    function move(t){
+      var r=pad.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+      var dx=t.clientX-cx,dy=t.clientY-cy,d=Math.sqrt(dx*dx+dy*dy),max=r.width/2-22;
+      var k=d>max?max/d:1;knob.style.transform='translate('+dx*k+'px,'+dy*k+'px)';
+      var want={};
+      if(d>14){
+        // Eight ways: a direction is held when the stick leans within 67.5 degrees of it.
+        var a=Math.atan2(dy,dx),c=Math.cos(a),s=Math.sin(a),lim=0.38;
+        if(c>lim)want.ArrowRight=1;if(c<-lim)want.ArrowLeft=1;if(s>lim)want.ArrowDown=1;if(s<-lim)want.ArrowUp=1;
+      }
+      set(want);
+    }
+    pad.addEventListener('touchstart',function(e){e.preventDefault();if(id===null){var t=e.changedTouches[0];id=t.identifier;move(t);}},{passive:false});
+    pad.addEventListener('touchmove',function(e){e.preventDefault();for(var i=0;i<e.changedTouches.length;i++)if(e.changedTouches[i].identifier===id)move(e.changedTouches[i]);},{passive:false});
+    function end(e){e.preventDefault();for(var i=0;i<e.changedTouches.length;i++)if(e.changedTouches[i].identifier===id||e.type==='touchcancel'){id=null;knob.style.transform='';set({});}}
+    pad.addEventListener('touchend',end,{passive:false});pad.addEventListener('touchcancel',end,{passive:false});
+  }
+  window.addEventListener('DOMContentLoaded',function(){
+    var root=null;
+    window.addEventListener('touchstart',function(){if(!root)root=build();root.classList.add('on');},{passive:true,capture:true});
+    // Typing on a real keyboard hides them again.
+    window.addEventListener('keydown',function(e){if(root&&e.isTrusted)root.classList.remove('on');},true);
+  });
+})();
+</script>

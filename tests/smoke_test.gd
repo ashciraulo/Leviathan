@@ -74,6 +74,8 @@ func _ready() -> void:
 		await _test_ottilie()
 		await _test_coralie()
 		await _test_lowe_after()
+		await _test_murmur_and_dace()
+		_test_talk_order()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -430,7 +432,9 @@ func _test_villagers() -> void:
 			for page: Dictionary in Conversations.pages(who, branch):
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
-	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	for sign_name in ["SALTMARROW", "BARNACLE_WALL", "BRINEWOOD", "MILL_ROW", "BRINE_SPRING",
+			"ASHFALL_GATE", "BLEACHED_STRAND", "VERTEBRA_ROAD"]:
+		_check(fit_box.lines_for("SIGN_" + sign_name, false) <= DialogueBox.MAX_LINES, "the %s sign fits the box" % sign_name)
 	# The bells' narration and the Wayshell scene fit on one page each, too.
 	for k in ["HULL", "KILN", "MIRE", "GALE", "GLACIER", "BELFRY", "TOMB"]:
 		for part in [1, 2]:
@@ -2810,7 +2814,15 @@ func _test_items() -> void:
 	Settings.using_pad = false
 	var key_prompt := MenuKit.key_name("interact")
 	Settings.using_pad = pad_was_used
+	Settings.using_pad = true
+	var tabs := "%s %s" % [MenuKit.key_name("tab_prev"), MenuKit.key_name("tab_next")]
+	Settings.using_pad = pad_was_used
 	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
+	_check(tabs == "LB RT", "the menu tabs show their pad buttons (%s)" % tabs)
+	var game := Vector2(384, 216)
+	_check(Settings.stretch_for(Vector2(844, 390), game) == Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+		and Settings.stretch_for(Vector2(1152, 648), game) == Window.CONTENT_SCALE_STRETCH_INTEGER,
+		"a phone-sized window scales the game to fit; a big one keeps whole pixels")
 	for id: String in Items.DEFS:
 		_check(tr(Items.name_key(id)) != Items.name_key(id), "item %s has a name" % id)
 	SaveManager.delete_save()
@@ -4837,7 +4849,7 @@ func _test_lowe_after() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
-	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG]:
+	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG]:
 		GameState.set_flag(flag)
 	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-20, 0))
 	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
@@ -4858,6 +4870,93 @@ func _test_lowe_after() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
+
+
+## Murmur helps Wick at Fenmouth once out of the Choir; Mother Dace sits by
+## the last mural after the ending.
+func _test_murmur_and_dace() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT + Vector2(0, 20))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "murmur") == null, "Murmur isn't at Fenmouth while still in the Choir")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.CALF_FLAG)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT + Vector2(0, 20))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	_check(_find_kind(room, "murmur") != null, "after the calf, Murmur tends Fenmouth's lanterns with Wick")
+	var tile := Vector2i(StoryDirector.MURMUR_FEN_AT / Room.TILE)
+	_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == ".", "Murmur stands on dry ground, above the dialogue box")
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages == 3 and GameState.has_flag("murmur_met"), "Murmur hums the lights home now (%d pages)" % pages)
+	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_AGAIN"], "and helps Wick count")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_TURNED"], "Murmur feels the turn")
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_END"], "and sees the lights go out to sea")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	for flag in [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT + Vector2(0, 20))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "dace") == null, "before the ending, Dace isn't back at the mural")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	for flag in [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT + Vector2(0, 20))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	room = game.current_room
+	_check(_find_kind(room, "dace") != null, "after the ending, Mother Dace sits by the last mural")
+	tile = Vector2i(StoryDirector.DACE_AFTER_AT / Room.TILE)
+	_check(room.tile_at(tile.x, tile.y) == ".", "on open sand")
+	_check(Conversations.branch_for("dace").get("lines")[0] == "DACE_END_1", "she talks of the bones and the dreaming")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## No talk branch is hidden for good behind a single earlier one: a branch
+## that matches whenever a later one does makes the later one unreachable.
+func _test_talk_order() -> void:
+	var hidden := 0
+	for who: String in Conversations.TALKS:
+		var branches: Array = Conversations.TALKS[who]
+		for j in branches.size():
+			for k in j:
+				if _branch_covers(branches[k], branches[j]):
+					hidden += 1
+					_check(false, "%s's branch %d can never be reached: branch %d always comes first" % [who, j, k])
+	_check(hidden == 0, "every talk branch can be reached")
+
+
+## True when `first` matches in every state where `later` matches.
+func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
+	if first.has("reaches"):
+		return false
+	for key in ["if", "unless", "has"]:
+		for item in first.get(key, []):
+			if not item in later.get(key, []):
+				return false
+	return true
 
 
 ## Saltmarrow and the locals notice the Old One turn, and the ending.

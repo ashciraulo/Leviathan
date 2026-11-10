@@ -79,7 +79,8 @@ func _capture(event: InputEvent) -> bool:
 
 func hint() -> String:
 	if _waiting:
-		return tr("HINT_CONTROLS_WAIT")
+		var cancel := tr("PAD_SHORT_%d" % JOY_BUTTON_START) if Settings.using_pad else OS.get_keycode_string(KEY_ESCAPE)
+		return tr("HINT_CONTROLS_WAIT") % cancel
 	return tr("HINT_CONTROLS") % [MenuKit.key_name("interact"), MenuKit.key_name("attack")]
 
 

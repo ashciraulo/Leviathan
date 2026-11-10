@@ -174,6 +174,18 @@ const TALKS := {
 		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
 		{"lines": ["LOWE_END_AGAIN"]},
 	],
+	# Murmur, who left the Choir at the calf, now helping Wick at Fenmouth.
+	"murmur": [
+		{"unless": ["murmur_met"], "set": ["murmur_met"], "lines": ["MURMUR_FEN_1", "MURMUR_FEN_2", "MURMUR_FEN_3"]},
+		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
+		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
+		{"lines": ["MURMUR_AGAIN"]},
+	],
+	# Mother Dace by the last mural, after the ending.
+	"dace": [
+		{"unless": ["dace_sat"], "set": ["dace_sat"], "lines": ["DACE_END_1", "DACE_END_2"]},
+		{"lines": ["DACE_AGAIN"]},
+	],
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
 	# (GlassChime) and pays for every piece Wren brings her.
 	"coralie": [

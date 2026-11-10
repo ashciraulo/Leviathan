@@ -47,8 +47,16 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=pacing: the small finds in rooms that had nothing else.
+	if OS.get_environment("SHOTS_ONLY") == "pacing":
+		await _pacing_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "contrast"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -140,6 +148,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _lowe_after_shots()
+			"murmur_dace":
+				game.queue_free()
+				await _wait(0.2)
+				await _murmur_dace_shots()
 			"epilogue":
 				game.queue_free()
 				await _wait(0.2)
@@ -1644,10 +1656,39 @@ func _epilogue_shots() -> void:
 	GameState.reset_new_game()
 
 
+## Murmur tending Fenmouth's lanterns, and Mother Dace by the last mural.
+func _murmur_dace_shots() -> void:
+	for spot in [[StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT, [StoryDirector.CALF_FLAG], "epilogue_7_murmur_at_fenmouth"],
+			[StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT, [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG], "epilogue_8_dace_by_the_mural"]]:
+		GameState.reset_new_game()
+		for flag: String in spot[2]:
+			GameState.set_flag(flag)
+		GameState.set_checkpoint(spot[0], spot[1] + Vector2(0, 20))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.2)
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			enemy.queue_free()
+		# A dungeon opens on its name card: let it fade.
+		await _wait(3.0)
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		game.player.try_interact()
+		await _wait(2.4)
+		await _capture(spot[3])
+		var box := _dialogue_box(game)
+		while box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+			await _wait(0.1)
+		game.queue_free()
+		await _wait(0.2)
+
+
 ## Sister Lowe alone on Lullaby Point after the ending, watching the Maw.
 func _lowe_after_shots() -> void:
 	GameState.reset_new_game()
-	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG]:
+	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG]:
 		GameState.set_flag(flag)
 	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-20, 0))
 	var point: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
@@ -2142,6 +2183,35 @@ func _sea_glass_shots(game: Node) -> void:
 		await _capture("glass_overworld_map")
 		pause.close()
 		await _wait(0.1)
+
+
+func _pacing_shots(game: Node) -> void:
+	var shots := {
+		Vector2i(2, 0): ["pacing_barnacle_wall", Vector2i(8, 8)],
+		Vector2i(2, 2): ["pacing_wrack_shore", Vector2i(5, 9)],
+		Vector2i(3, 0): ["pacing_brinewood_edge", Vector2i(6, 6)],
+		Vector2i(3, -2): ["pacing_hollow_bole", Vector2i(12, 6)],
+		Vector2i(3, 2): ["pacing_witherroot", Vector2i(15, 6)],
+		Vector2i(4, -3): ["pacing_mill_row", Vector2i(12, 7)],
+		Vector2i(4, -2): ["pacing_mothlight", Vector2i(12, 11)],
+		Vector2i(5, 1): ["pacing_stillwater", Vector2i(8, 3)],
+		Vector2i(6, -2): ["pacing_brine_spring", Vector2i(16, 9)],
+		Vector2i(6, -1): ["pacing_rootmaze", Vector2i(21, 2)],
+		Vector2i(6, 0): ["pacing_tangle_shore", Vector2i(12, 3)],
+		Vector2i(7, -2): ["pacing_ashfall_gate", Vector2i(5, 6)],
+		Vector2i(7, 0): ["pacing_bleached_strand", Vector2i(16, 5)],
+		Vector2i(8, -2): ["pacing_cinder_flats", Vector2i(5, 3)],
+		Vector2i(8, -1): ["pacing_geyser_basin", Vector2i(16, 11)],
+		Vector2i(8, 1): ["pacing_vertebra_road", Vector2i(8, 7)],
+	}
+	for coord: Vector2i in shots:
+		var tile: Vector2i = shots[coord][1]
+		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		game.player._invuln = 600.0
+		await _wait(2.2)
+		await _capture(shots[coord][0])
 
 
 func _echoes_shots(game: Node) -> void:
