@@ -86,3 +86,7 @@ func _draw() -> void:
 			if _room.raw_tile(x, y) == ",":
 				var wobble := sin(elapsed * 14.0 + x + y * 2.0) * 1.5
 				draw_rect(Rect2(x * Room.TILE, y * Room.TILE + 6 + wobble, Room.TILE, 3), Color(0.11, 0.29, 0.36, alpha))
+				# Water welling up in the seams: pale beads that brighten as
+				# the flood comes, plain to see on the dark flesh.
+				if (x * 3 + y + int(elapsed * 6.0)) % 4 == 0:
+					draw_rect(Rect2(x * Room.TILE + 4, y * Room.TILE + 5 + wobble, Room.TILE - 8, 1), Color(0.78, 0.94, 0.92, 0.2 + 2.0 * alpha))

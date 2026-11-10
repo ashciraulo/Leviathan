@@ -9,6 +9,7 @@ const TOAST_COOLDOWN := 1.5
 var room_coord := Vector2i.ZERO
 var dungeon := ""
 var _touch: Area2D
+var _sprite: Sprite2D
 var _last_toast := -100000
 
 
@@ -26,6 +27,7 @@ func _ready() -> void:
 	var sprite := Art.sprite(Art.LOCKED_HATCH, 1, 1, 15)
 	sprite.position.y += 4
 	add_child(sprite)
+	_sprite = sprite
 	_touch = Area2D.new()
 	Layers.assign(_touch, 0, [Layers.PLAYER])
 	_touch.monitorable = false
@@ -47,6 +49,7 @@ func _on_touch(body: Node2D) -> void:
 	elif Time.get_ticks_msec() - _last_toast > TOAST_COOLDOWN * 1000.0:
 		_last_toast = Time.get_ticks_msec()
 		Audio.play_sfx("door_locked", global_position)
+		Art.rattle(_sprite)
 
 
 ## Opens every hatch in the room and remembers it.

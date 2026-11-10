@@ -284,8 +284,14 @@ func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
 	match mode:
-		Mode.FLARE, Mode.CROUCH:
+		Mode.FLARE:
 			_sprite.frame = FRAME_FLARE
+			_jitter(_timer)
+		Mode.CROUCH:
+			# About to dive: wings out and dropped low on the rod, a
+			# different shape from the feather flare.
+			_sprite.frame = FRAME_FLY
+			_sprite.position.y += 4.0
 			_jitter(_timer)
 		Mode.STORM:
 			_sprite.frame = FRAME_FLARE if int(_timer * 10.0) % 2 == 0 else FRAME_PERCH

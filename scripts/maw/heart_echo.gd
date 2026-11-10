@@ -44,6 +44,8 @@ func _physics_process(delta: float) -> void:
 	if _telling:
 		var flare := int(_time * 16.0) % 2 == 0
 		_sprite.modulate = Color(1.0, 0.55, 0.6, 0.95) if flare else Color(0.55, 0.95, 0.9, 0.75)
+		# It swells as it flares, so the tell isn't in the colour alone.
+		_sprite.scale = Vector2.ONE * (1.12 if flare else 1.0)
 	if _timer <= 0.0:
 		_fire()
 
@@ -58,6 +60,7 @@ func _fire() -> void:
 	_telling = false
 	_timer = shot_every
 	_sprite.modulate = Color(0.55, 0.95, 0.9, 0.75)
+	_sprite.scale = Vector2.ONE
 	var wren := get_tree().get_first_node_in_group("player") as Node2D
 	if wren == null:
 		return

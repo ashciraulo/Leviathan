@@ -76,4 +76,16 @@ func _draw() -> void:
 	var radius := 6.0 + 26.0 * (1.0 - phase)
 	var near := _dead <= 0.0 and heart.off_beat() <= DreamingHeart.BEAT_WINDOW
 	var color := Color(0.54, 0.94, 0.88, 0.85) if near else Color(0.82, 0.25, 0.31, 0.55)
-	draw_arc(Vector2(0, -16), radius, 0.0, TAU, 40, color, 2.0)
+	var center := Vector2(0, -16)
+	if near:
+		# Strike now: the ring thickens and the bell's heart lights up, so
+		# it reads by shape as well as colour.
+		draw_arc(center, radius, 0.0, TAU, 40, color, 3.0)
+		draw_circle(center, 2.0, color)
+	elif _dead > 0.0:
+		# Struck off the beat: the ring breaks up until the next beat.
+		for i in 12:
+			var from := TAU * i / 12.0
+			draw_arc(center, radius, from, from + TAU / 24.0, 4, color, 1.0)
+	else:
+		draw_arc(center, radius, 0.0, TAU, 40, color, 1.0)
