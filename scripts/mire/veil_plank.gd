@@ -17,6 +17,7 @@ var _shown := 0.0
 var _solid := true
 var _time := 0.0
 var _glint: Node2D
+var _glint_color := Color.WHITE
 
 
 func _ready() -> void:
@@ -26,6 +27,10 @@ func _ready() -> void:
 	_shape = Layers.rect_shape(Vector2(16, 16), Vector2(0, -4))
 	add_child(_shape)
 	z_index = -9
+	# In a dark room the glint is overbright, so the dark's tint leaves it
+	# pale; in a lit room it's plain wet light.
+	var room := get_parent() as Room
+	_glint_color = Color(2.6, 3.2, 3.4) if room != null and room.dark else Color(0.62, 0.78, 0.86)
 	_glint = Node2D.new()
 	_glint.draw.connect(_draw_glints)
 	add_child(_glint)
@@ -67,5 +72,4 @@ func _draw_glints() -> void:
 		var phase: float = _time * GLIMMER_SPEED + position.x * 0.07 + position.y * 0.11 + i * 1.9
 		var a := GLIMMER * fade * maxf(0.0, sin(phase))
 		if a > 0.02:
-			# Overbright, so the dark room's tint leaves a pale glint.
-			_glint.draw_rect(Rect2(GLINTS[i], Vector2(2, 1)), Color(2.6, 3.2, 3.4, a))
+			_glint.draw_rect(Rect2(GLINTS[i], Vector2(2, 1)), Color(_glint_color, a))

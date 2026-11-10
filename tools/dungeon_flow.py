@@ -18,6 +18,9 @@ Checks, per dungeon:
 
 Tools (hook, mallet, lantern, horn, helm...) are assumed in hand once the
 dungeon gives them: this is about keys, doors and dead ends, not item order.
+Rooms are whole: hatches and bars inside a room aren't modelled (all of them
+stand in border gaps today), keys count once their room is reached, and a
+dungeon room is read by its starting layout.
 """
 
 import glob
@@ -32,7 +35,7 @@ DUNGEONS = ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw"]
 # Tiles that block a crossing for good ($ comes down to the Echo Horn).
 SOLID = set("#!")
 # Anything the "clear" gate can count, the boss (V) included.
-ENEMIES = set("csbmweqtgdAkqxaMUV")
+ENEMIES = set("csbmweqtgdAkxaMUV")
 
 
 def parse_vec(text, key):
@@ -73,10 +76,17 @@ def load():
     return rooms
 
 
+def grids(room):
+    """The layouts to read. A dungeon room is checked as it starts (its
+    layout); an overworld neighbour by its most open layout, since an alt
+    layout there only opens ways up."""
+    return room["grids"][:1] if room["dungeon"] else room["grids"]
+
+
 def tile(room, x, y):
-    """Most open tile of any of the room's layouts at x, y."""
+    """Most open tile of the room's layouts (see grids) at x, y."""
     best = "#"
-    for g in room["grids"]:
+    for g in grids(room):
         t = g[y][x]
         if t not in SOLID:
             return t
@@ -85,7 +95,7 @@ def tile(room, x, y):
 
 
 def all_tiles(room):
-    return "".join("".join(g) for g in room["grids"])
+    return "".join("".join(g) for g in grids(room))
 
 
 def border(dir_):
@@ -106,16 +116,19 @@ def open_ground(room, at):
     x, y = at
     if not (0 <= x < W and 0 <= y < H):
         return False
-    return any(g[y][x] not in SOLID | set("~Q_^") for g in room["grids"])
+    return any(g[y][x] not in SOLID | set("~Q_^") for g in grids(room))
 
 
 def edges(rooms, coord, problems, name):
-    """Crossings out of a room: (neighbour, kind) with kind open/lock/big."""
+    """Crossings out of a room: (neighbour, kind, owner). kind is open, lock
+    or big; a lock's owner is the room whose hatch (X) stands in it, since
+    one small key opens every hatch in that room."""
     out = []
     room = rooms[coord]
     for d in DIRS:
         n = (coord[0] + d[0], coord[1] + d[1])
         kinds = set()
+        owner = None
         for here, there in border(d):
             a = tile(room, *here)
             if a in SOLID or a == "D":
@@ -129,15 +142,17 @@ def edges(rooms, coord, problems, name):
                 problems.append("%s %s: border gap at %s meets a wall in %s" % (name, coord, here, n))
                 continue
             pair = a + b
+            if "X" in pair and "G" not in pair:
+                owner = coord if a == "X" else n
             kinds.add("big" if "G" in pair else "lock" if "X" in pair else "open")
         if kinds:
             # The widest way through wins (a lock beside an open gap is open).
             kind = "open" if "open" in kinds else "lock" if "lock" in kinds else "big"
-            out.append((n, kind))
+            out.append((n, kind, owner if kind == "lock" else None))
     if room["door_to"] and "D" in all_tiles(room):
-        out.append((room["door_to"], "open"))
+        out.append((room["door_to"], "open", None))
     if room["falls"] and room["fall_to"]:
-        out.append((room["fall_to"], "open"))
+        out.append((room["fall_to"], "open", None))
     return out
 
 
@@ -178,7 +193,7 @@ def check_room(rooms, coord, name, problems):
 
 
 def g_count(room, ch):
-    return max(sum(r.count(ch) for r in g) for g in room["grids"]) if room["grids"] else 0
+    return max(sum(r.count(ch) for r in g) for g in grids(room)) if room["grids"] else 0
 
 
 def flow(rooms, name, problems):
@@ -187,10 +202,15 @@ def flow(rooms, name, problems):
     for c in sorted(mine):
         check_room(rooms, c, name, problems)
         graph[c] = edges(rooms, c, problems, name)
-    # Entrances: dungeon rooms joined to a room outside the dungeon.
-    entrances = {c for c in mine for n, _ in graph[c] if n not in mine}
-    entrances |= {c for c, r in rooms.items() if c not in mine for n in [r["door_to"]] if n in mine and "D" in all_tiles(r)}
-    entrances &= mine
+    # Entrances: dungeon rooms the outside leads into (a dungeon's own way
+    # out, such as the boss room's doorway, doesn't count).
+    entrances = set()
+    for c, r in rooms.items():
+        if c in mine:
+            continue
+        near = any((c[0] + d[0], c[1] + d[1]) in mine for d in DIRS)
+        if near or r["door_to"] in mine or r["fall_to"] in mine:
+            entrances |= {n for n, _, _ in edges(rooms, c, [], "") if n in mine}
     if not entrances:
         problems.append("%s: no way in" % name)
         return
@@ -203,14 +223,12 @@ def flow(rooms, name, problems):
         locks = set()
         while todo:
             c = todo.pop()
-            for n, kind in graph[c]:
+            for n, kind, owner in graph[c]:
                 if n not in mine:
                     continue
-                if kind == "lock":
-                    lock = frozenset((c, n))
-                    if lock not in opened:
-                        locks.add(lock)
-                        continue
+                if kind == "lock" and owner not in opened:
+                    locks.add(owner)
+                    continue
                 if kind == "big" and not big:
                     continue
                 if n not in seen:
@@ -221,8 +239,8 @@ def flow(rooms, name, problems):
     everything, _ = reach(_AllOpen(), True)
     for c in sorted(mine - everything):
         problems.append("%s %s: can't be reached from the entrance" % (name, c))
-    # Every order of spending keys. A hatch room's X tiles all open together,
-    # but each crossing here is its own lock; that only over-counts locks.
+    # Every order of spending keys: each key opens one hatch room (every X
+    # in it), so the state is the set of hatch rooms opened so far.
     stuck = []
     seen_states = set()
 
@@ -232,22 +250,12 @@ def flow(rooms, name, problems):
         seen_states.add(opened)
         big = bool(big_key & reach(opened, False)[0])
         area, locks = reach(opened, big)
-        have = sum(keys[c] for c in area) - lock_rooms(opened)
+        have = sum(keys[c] for c in area) - len(opened)
         if locks and have <= 0:
-            stuck.append((sorted(area), sorted(map(sorted, locks))))
+            stuck.append((sorted(area), sorted(locks)))
             return
         for lock in locks:
             walk(opened | {lock})
-
-    def lock_rooms(opened):
-        # One key opens every hatch in a room: count rooms with X opened.
-        rs = set()
-        for lock in opened:
-            for c in lock:
-                if c in mine and "X" in all_tiles(rooms[c]):
-                    rs.add(c)
-                    break
-        return len(rs)
 
     walk(frozenset())
     if stuck:
