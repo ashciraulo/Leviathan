@@ -3875,6 +3875,7 @@ func _test_overworld_secrets() -> void:
 			_check(room.chest_count == 30, "the Windmere sea stack holds 30 glints")
 		if coord in [Vector2i(1, -1), Vector2i(7, -1), Vector2i(3, 3)]:
 			_check(room.chest_count >= 100 and tr(room.name_key) != room.name_key, "side area %s has a name and a cache of %d glints" % [coord, room.chest_count])
+			_check(room.cave, "side area %s is shaded like a hollow" % coord)
 		room.free()
 	# Frost can't freeze lava: Cinder Hollow's islet still needs the hook or cloak.
 	var hollow: Room = (load("res://rooms/room_7_-1.tscn") as PackedScene).instantiate()

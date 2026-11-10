@@ -342,6 +342,15 @@ def main():
             if need:
                 if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
+    # The HUD's corners (breath bubbles top left, item slots top right)
+    # hide whatever lies under them: keep finds and stones out of there.
+    for coord in sorted(rooms):
+        rows = rows_for(rooms[coord], final_items)
+        for y in range(2):
+            # The bubble plate grows with Wren's breath: ten bubbles reach x 127.
+            for x in list(range(0, 8)) + list(range(20, COLS)):
+                if rows[y][x] in "C*Tn":
+                    problems.append("screen %s: '%s' at (%d,%d) sits under the HUD" % (coord, rows[y][x], x, y))
     # Every signpost in a room reads the room's one sign_key: one per room.
     for coord in sorted(rooms):
         if sum(r.count("n") for r in rows_for(rooms[coord], final_items)) > 1:

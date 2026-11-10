@@ -8,6 +8,7 @@ name_key = "ROOM_CINDER_HOLLOW"
 biome = "cinderreach"
 chest_item = "glint"
 chest_count = 100
+cave = true
 layout = "########################
 #####..............#####
 ###....y......y......###
