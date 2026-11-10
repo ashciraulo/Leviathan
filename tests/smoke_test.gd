@@ -4202,7 +4202,7 @@ func _test_ide() -> void:
 	var boats: Array = room.get_children().filter(func(c: Node) -> bool: return c is Rowboat)
 	_check(ides.size() == 1 and boats.size() == 1 and (boats[0] as Rowboat).rider == null, "Ide stands on the north shore by her empty boat")
 	_check(not room.get_children().any(func(c: Node) -> bool: return c is FerryBell), "no bell on the far landing while the Belfry still rings")
-	for at: Vector2 in [StoryDirector.IDE_AT, StoryDirector.WREN_NORTH, StoryDirector.WREN_SOUTH, StoryDirector.FERRY_BELL_AT]:
+	for at: Vector2 in [StoryDirector.IDE_AT, StoryDirector.WREN_NORTH, StoryDirector.WREN_NORTH_EAST, StoryDirector.WREN_SOUTH, StoryDirector.FERRY_BELL_AT]:
 		_check(room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE)) == ".", "the ferry's footing at %s is dry ground" % at)
 	for at: Vector2 in [StoryDirector.FERRY_NORTH, StoryDirector.FERRY_SOUTH]:
 		_check(room.tile_at(floori(at.x / Room.TILE), floori(at.y / Room.TILE)) == "~", "the boat at %s sits on the channel" % at)

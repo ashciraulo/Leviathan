@@ -96,6 +96,7 @@ const IDE_AT := Vector2(19 * 16 + 8, 2 * 16 + 10)
 const FERRY_NORTH := Vector2(19 * 16 + 8, 3 * 16 + 12)
 const FERRY_SOUTH := Vector2(19 * 16 + 8, 8 * 16 + 4)
 const WREN_NORTH := Vector2(17 * 16 + 8, 2 * 16 + 10)
+const WREN_NORTH_EAST := Vector2(21 * 16 + 8, 2 * 16 + 10)
 const WREN_SOUTH := Vector2(21 * 16 + 8, 9 * 16 + 12)
 const FERRY_BELL_AT := Vector2(17 * 16 + 4, 9 * 16 + 14)
 const FERRY_ROW_TIME := 3.0
@@ -840,7 +841,9 @@ func ide_ferries() -> void:
 		await _row(boat, FERRY_SOUTH, scene)
 		await _wave(boat, scene)
 	else:
-		await scene.walk_route(at + WREN_NORTH)
+		# Down to the boat on Wren's own side of her, not through her.
+		var east: bool = game.player.global_position.x > at.x + IDE_AT.x
+		await scene.walk_route(at + (WREN_NORTH_EAST if east else WREN_NORTH))
 		scene.face(Vector2.DOWN)
 		ide.visible = false
 		boat.set_rider("ide")
@@ -849,7 +852,7 @@ func ide_ferries() -> void:
 	for i in 3:
 		Audio.play_sfx("splash", null, 0.55 + 0.05 * (i % 2))
 		await scene.wait(0.7)
-	if not is_instance_valid(room) or not is_instance_valid(boat):
+	if not is_instance_valid(room) or not is_instance_valid(boat) or not is_instance_valid(game.player):
 		GameState.clear_flag(FERRY_FLAG)
 		scene.finish()
 		return
