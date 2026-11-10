@@ -630,14 +630,27 @@ func _place_set_pieces() -> void:
 	var tiles: Dictionary = BIOMES.get(biome, {})
 	if not tiles.has("set_pieces") or _rows.size() != ROWS:
 		return
+	# Crates get pushed along their row and column, so keep pieces off those
+	# lines (a slab on a crate's route reads as something in the way).
+	var crate_rows := {}
+	var crate_cols := {}
+	for y in _rows.size():
+		for x in _rows[y].length():
+			if _rows[y][x] == "K":
+				crate_rows[y] = true
+				crate_cols[x] = true
 	var spots: Array = []
 	for y in range(2, ROWS - 3):
 		for x in range(2, COLS - 3):
-			if _plain_block(x - 1, y - 1, 4):
+			if _plain_block(x - 1, y - 1, 4) and not _on_lines(x - 1, 4, crate_cols) \
+					and not _on_lines(y - 1, 4, crate_rows):
 				spots.append(Vector2i(x, y))
-	# (_hash's low bits repeat from room to room, so mix the room in fully.)
-	var mix := func(v: Vector2i) -> int: return hash("%d,%d,%d,%d" % [v.x, v.y, coord.x, coord.y])
-	spots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return mix.call(a) < mix.call(b))
+	# (_hash's low bits repeat from room to room, so mix the room in fully;
+	# Vector4i hashes with murmur3, which spreads small changes.)
+	var key := {}
+	for v: Vector2i in spots:
+		key[v] = hash(Vector4i(v.x, v.y, coord.x, coord.y))
+	spots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return key[a] < key[b])
 	var kinds: int = tiles["set_pieces"]
 	var first := absi(hash(coord)) % kinds
 	for spot: Vector2i in spots:
@@ -646,6 +659,14 @@ func _place_set_pieces() -> void:
 		if not _set_pieces.is_empty() and Vector2(spot - (_set_pieces[0][0] as Vector2i)).length() < 8.0:
 			continue
 		_set_pieces.append([spot, (first + _set_pieces.size()) % kinds])
+
+
+## True when any of the size lines from start (with a line either side) is in lines.
+func _on_lines(start: int, size: int, lines: Dictionary) -> bool:
+	for i in range(start - 1, start + size + 1):
+		if lines.has(i):
+			return true
+	return false
 
 
 ## True when every tile of the size x size block at x, y is plain floor.
