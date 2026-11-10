@@ -354,6 +354,9 @@ ROOM_KILN_RISER,The Kiln: Riser
 ROOM_KILN_BELL_LOFT,The Kiln: Bell Loft
 ROOM_KILN_GALLERY,The Kiln: Pouring Gallery
 ROOM_KILN_PATTERNS,The Kiln: Pattern Shop
+ROOM_KILN_CHIMNEY,The Kiln: Chimney
+ROOM_KILN_ANNEALING,The Kiln: Annealing Oven
+ROOM_KILN_SPRUE,The Kiln: Sprue
 ROOM_KILN_BOSS,The Kiln: Crucible
 DUNGEON_KILN,The Kiln
 TOAST_GOT_STONEBREAKER,You found the Stonebreaker Mallet!

@@ -698,6 +698,9 @@ func _kiln_shots(game: Node) -> void:
 		Vector2i(21, 8): ["57_kiln_gallery", Vector2i(11, 5)],
 		Vector2i(20, 8): ["58_kiln_pattern_shop", Vector2i(20, 6)],
 		Vector2i(22, 7): ["59_kiln_bell_loft", Vector2i(11, 10)],
+		Vector2i(23, 7): ["59b_kiln_chimney", Vector2i(2, 6)],
+		Vector2i(23, 8): ["59c_kiln_annealing_oven", Vector2i(11, 1)],
+		Vector2i(19, 9): ["59d_kiln_sprue", Vector2i(22, 6)],
 	}
 	for coord: Vector2i in rooms:
 		var at := await _jump(game, coord, rooms[coord][1])
