@@ -46,9 +46,13 @@ func _ready() -> void:
 	Layers.assign(self, Layers.WORLD, [])
 	add_child(Layers.rect_shape(Vector2(6, 4), Vector2(0, -2)))
 	add_child(Art.shadow())
-	_light = Lantern.make_light(48.0, GLOW, 0.9)
-	_light.position = Vector2(4, -20)
-	add_child(_light)
+	# A real light only where the room is dark; in the fen's dusk the glow
+	# is drawn (see _draw), so it doesn't wash the ground out.
+	var room := get_parent() as Room
+	if room and room.dark:
+		_light = Lantern.make_light(48.0, GLOW, 0.9)
+		_light.position = Vector2(4, -20)
+		add_child(_light)
 	if GameState.has_flag(flag_for(room_coord)):
 		lit = true
 	_show()
@@ -71,10 +75,14 @@ func light() -> void:
 	Audio.play_sfx("brazier_catch", global_position, 1.3)
 	if lit_count() >= SPOTS.size():
 		GameState.set_flag(ALL_LIT_FLAG)
+		# The last of them: every family's light burns again.
+		Audio.play_jingle("jingle_secret")
 	_show()
 
 
 func _show() -> void:
+	if _light == null:
+		return
 	# Dark, only an ember of a wick shows, so it can be found at night.
 	_light.texture_scale = (48.0 if lit else 10.0) / 128.0
 	_light.energy = 0.9 if lit else 0.35
@@ -95,6 +103,10 @@ func _draw() -> void:
 	draw_line(Vector2(4, -24), Vector2(4, -23), Palette.OUTLINE, 1.0)
 	var sway := sin(_time * 1.4) * 0.6
 	var top := Vector2(4 + sway, -23)
+	if lit and _light == null:
+		var breathe := 0.85 + 0.15 * sin(_time * 2.0)
+		for i in 3:
+			draw_circle(top + Vector2(0.5, 4), (16.0 - i * 5.0) * breathe, Color(GLOW, 0.07 + i * 0.05))
 	draw_rect(Rect2(top + Vector2(-3, 0), Vector2(7, 9)), Palette.OUTLINE)
 	draw_rect(Rect2(top + Vector2(-2, 1), Vector2(5, 7)), GLOW if lit else GLASS_DARK)
 	if lit:

@@ -1443,7 +1443,11 @@ func _wick_shots() -> void:
 	GameState.set_checkpoint(coord, at + Vector2(-34, 4))
 	var reach: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(reach)
-	await _wait(2.0)
+	await _wait(0.3)
+	# The moths stay out of this one.
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(1.7)
 	reach.player.facing = Vector2.RIGHT
 	reach.player._invuln = 0.0
 	await _capture("85_a_lantern_gone_dark")

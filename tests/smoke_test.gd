@@ -4210,7 +4210,7 @@ func _test_wick() -> void:
 	for coord: Vector2i in FenLantern.SPOTS:
 		var tile: Vector2i = FenLantern.SPOTS[coord]
 		var at := Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
-		GameState.set_checkpoint(coord, at + Vector2(0, 40))
+		GameState.set_checkpoint(coord, at + Vector2(0, -20))
 		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 		add_child(game)
 		await _wait(0.3)
