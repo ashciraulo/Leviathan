@@ -39,6 +39,9 @@ const KINDS := {
 	# Gully the salvager, dozing by the figurehead on Wreck Strand
 	# (StoryDirector). He wakes when Wren comes near.
 	"gully": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
+	# Captain Sorrel, the retired kite-post captain at Gullwatch Steps
+	# (StoryDirector). Her "breathe" frame is her scarf lifting in the wind.
+	"sorrel": {"texture": Art.VILLAGER_SORREL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.
