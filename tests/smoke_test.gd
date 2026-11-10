@@ -429,7 +429,9 @@ func _test_villagers() -> void:
 			for page: Dictionary in Conversations.pages(who, branch):
 				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
 				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
-	_check(fit_box.lines_for("SIGN_SALTMARROW", false) <= DialogueBox.MAX_LINES, "the sign fits the box")
+	for sign in ["SALTMARROW", "BARNACLE_WALL", "BRINEWOOD", "MILL_ROW", "BRINE_SPRING",
+			"ASHFALL_GATE", "BLEACHED_STRAND", "VERTEBRA_ROAD"]:
+		_check(fit_box.lines_for("SIGN_" + sign, false) <= DialogueBox.MAX_LINES, "the %s sign fits the box" % sign)
 	# The bells' narration and the Wayshell scene fit on one page each, too.
 	for k in ["HULL", "KILN", "MIRE", "GALE", "GLACIER", "BELFRY", "TOMB"]:
 		for part in [1, 2]:

@@ -75,6 +75,9 @@ SECRETS = {
     (1, -1): ("frostfang_bow",),              # Rime Hollow: glints in a frozen pool
     (7, -1): ("tide_hook", "kite_cloak"),     # Cinder Hollow: glints on a lava islet
     (3, 3): ("kite_cloak", "frostfang_bow"),  # Glowworm Hollow: glints on a fen islet
+    # Pacing finds in rooms that had nothing else (2026-11-10).
+    (3, -2): ("kite_cloak", "frostfang_bow"), # Hollow Bole: glints on a pond islet
+    (8, -1): ("stonebreaker",),               # Geyser Basin: glints behind a cracked boulder
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
