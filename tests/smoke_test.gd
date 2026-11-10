@@ -1355,6 +1355,66 @@ func _test_gale_dungeon() -> void:
 	local = player.global_position - room.global_position
 	_check(game.current_room == room and local.y < 3 * Room.TILE, "the Shaft's updraft lifts Wren to the top landing (at %s)" % local)
 
+	# The Bell Cage: up, across and down three fans' streams to the big
+	# key, and the long stream home.
+	room = await _goto(game, Vector2i(27, 7), Vector2i(3, 11))
+	await _calm(room)
+	before = GameState.bubbles
+	var rides := [[Vector2i(1, 9), Vector2.UP], [Vector2i(3, 1), Vector2.RIGHT], [Vector2i(22, 2), Vector2.DOWN], [Vector2i(18, 10), Vector2.LEFT]]
+	var ends: Array[Vector2] = []
+	for ride: Array in rides:
+		player.global_position = _tile_pos(room, ride[0])
+		player.facing = ride[1]
+		await _wait(0.1)
+		player.use_item("kite_cloak")
+		await _wait(3.2)
+		ends.append(player.global_position - room.global_position)
+	_check(game.current_room == room and ends[0].y < 3 * Room.TILE, "the Bell Cage's updraft lifts Wren to the top-left ledge (at %s)" % ends[0])
+	_check(ends[1].x > 19 * Room.TILE and ends[1].y < 3 * Room.TILE, "the top stream carries Wren across to the far ledge (at %s)" % ends[1])
+	_check(ends[2].x > 18 * Room.TILE and ends[2].y > 8.5 * Room.TILE, "even from the corner, the downdraft sets Wren by the big key (at %s)" % ends[2])
+	_check(ends[3].x < 6 * Room.TILE and ends[3].y > 9 * Room.TILE, "the long stream home carries Wren back to the way in (at %s)" % ends[3])
+	_check(GameState.bubbles == before and player.state == Player.State.MOVE, "all four rides without a fall")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Bell Cage's chest holds the big key")
+	_check(room.falls_through and room.fall_to == Vector2i(27, 8), "a fall from the Bell Cage lands in the Rookery")
+
+	# The Bellrope Walk: the stream runs on over open sky, so Wren folds
+	# the cloak over the island.
+	room = await _goto(game, Vector2i(29, 10), Vector2i(1, 6))
+	await _calm(room)
+	before = GameState.bubbles
+	player.global_position = _tile_pos(room, Vector2i(3, 5))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.5)
+	local = player.global_position - room.global_position
+	_check(GameState.bubbles == before - 1 and local.x < 5 * Room.TILE, "ridden to the end, the stream drops Wren into the sky (back at %s)" % local)
+	GameState.refill()
+	await _wait(1.0)
+	player.global_position = _tile_pos(room, Vector2i(3, 5))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	var waited := 0.0
+	while (player.global_position - room.global_position).x < 12.5 * Room.TILE and waited < 3.0:
+		await get_tree().physics_frame
+		waited += 1.0 / 60.0
+	Input.action_press("item_1")
+	Input.action_press("item_2")
+	await get_tree().physics_frame
+	Input.action_release("item_1")
+	Input.action_release("item_2")
+	await _wait(0.6)
+	local = player.global_position - room.global_position
+	_check(GameState.bubbles == GameState.max_bubbles and local.x > 11 * Room.TILE and local.x < 16 * Room.TILE and not player.airborne, "folded over the island, Wren lands on it (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(12, 8))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.0)
+	local = player.global_position - room.global_position
+	_check(local.x < 5 * Room.TILE and GameState.bubbles == GameState.max_bubbles, "the island's fans blow Wren home (at %s)" % local)
+
 	# The Stormheron (Vael's scene after it is tested in _test_story).
 	GameState.refill()
 	GameState.set_flag(StoryDirector.VAEL_FLAG)

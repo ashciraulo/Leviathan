@@ -10,9 +10,10 @@ dungeon = "gale"
 falls_through = true
 fall_to = Vector2i(27, 9)
 fall_spawn = Vector2i(11, 9)
-chest_item = "big_key"
-layout = "########################
-#__________________....#
+chest_item = "glint"
+chest_count = 50
+layout = "###..###################
+#....______________....#
 #....______________.&..#
 #...._____...._____....#
 #.C.._____<..._____....#
