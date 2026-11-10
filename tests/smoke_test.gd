@@ -78,6 +78,7 @@ func _ready() -> void:
 		await _test_lowe_after()
 		await _test_murmur_and_dace()
 		_test_talk_order()
+		_test_errands()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -4744,6 +4745,9 @@ func _test_sorrel() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_LETTERS_1", "after the race, Sorrel's last letters come first")
+	GameState.set_flag("sorrel_letters")
+	GameState.set_flag("sorrel_letters_paid")
 	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_END", "after the ending she flies letters again")
 
 
@@ -4986,6 +4990,62 @@ func _test_murmur_and_dace() -> void:
 	GameState.reset_new_game()
 
 
+## Three errands across the coast, played as conversations: Sorrel's last
+## letters, Ottilie's lamp sign for Hessa, and a lantern for Murmur's family.
+func _test_errands() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var talk := func(who: String) -> void: Conversations.talk(who)
+	# Sorrel's letters.
+	for flag in ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid"]:
+		GameState.set_flag(flag)
+	_check(first.call("sorrel") == "SORREL_LETTERS_1", "after the race, Sorrel has three letters that never went out")
+	talk.call("sorrel")
+	_check(first.call("agna") == "AGNA_1" and first.call("liesl") == "LIESL_1" and first.call("ottilie") == "OTTILIE_1", "everyone still introduces themselves before taking a letter")
+	for flag in ["ottilie_asked", "liesl_asked", "met_agna", "agna_gave_sword"]:
+		GameState.set_flag(flag)
+	_check(first.call("sorrel") == "SORREL_LETTERS_WAITING", "she waits while Wren carries them")
+	var glints := GameState.item_count("glint")
+	for who in ["ottilie", "liesl", "agna"]:
+		_check(Conversations.branch_for(who).get("lines")[1] == who.to_upper() + "_LETTER_1", "%s gets a letter" % who)
+		talk.call(who)
+	_check(first.call("sorrel") == "SORREL_LETTERS_DONE_1", "all three delivered")
+	talk.call("sorrel")
+	_check(GameState.item_count("glint") == glints + 150 and first.call("sorrel") == "SORREL_AFTER", "courier's pay, then back to her usual")
+	# Ottilie's sign for Hessa.
+	GameState.set_flag("ottilie_paid")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	GameState.set_flag("ottilie_told_vael")
+	_check(first.call("ottilie") == "OTTILIE_AFTER", "before Hessa's confession, Ottilie keeps her quarrel to herself")
+	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
+	_check(first.call("ottilie") == "OTTILIE_SIGNAL_1", "after it, she sends Hessa her old cave sign")
+	talk.call("ottilie")
+	_check(first.call("ottilie") == "OTTILIE_SIGNAL_WAITING", "and waits for an answer")
+	_check(Conversations.branch_for("hessa").get("lines")[1] == "HESSA_OTTILIE_1", "Wren shows Hessa the sign")
+	talk.call("hessa")
+	glints = GameState.item_count("glint")
+	_check(Conversations.branch_for("ottilie").get("lines")[1] == "OTTILIE_REPLY_1", "Wren flashes Hessa's yes back to Ottilie")
+	talk.call("ottilie")
+	_check(GameState.item_count("glint") == glints + 100 and first.call("ottilie") == "OTTILIE_AFTER", "and thanks Wren")
+	# A lantern for Murmur's family.
+	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "murmur_met"]:
+		GameState.set_flag(flag)
+	_check(first.call("wick") == "WICK_MURMUR_1", "Wick wants a lantern for Murmur's family")
+	talk.call("wick")
+	_check(first.call("wick") == "WICK_MURMUR_WAITING", "and sends Wren to ask Liesl")
+	_check(first.call("liesl") == "LIESL_MURMUR_1", "Liesl knows the family")
+	talk.call("liesl")
+	GameState.give_item("glowmoth_lantern", 1, false)
+	_check(first.call("wick") == "WICK_LANTERN_1", "with it, Wren lights the Reed lantern")
+	talk.call("wick")
+	_check(first.call("murmur") == "MURMUR_LANTERN_1", "Murmur finds it")
+	talk.call("murmur")
+	_check(first.call("murmur") == "MURMUR_TURNED", "and still feels the turn afterwards")
+	GameState.clear_flag(StoryDirector.TURNED_FLAG)
+	_check(first.call("murmur") == "MURMUR_LANTERN_AGAIN", "before the turn, Murmur keeps the lantern lit")
+	GameState.reset_new_game()
+
+
 ## No talk branch is hidden for good behind a single earlier one: a branch
 ## that matches whenever a later one does makes the later one unreachable.
 func _test_talk_order() -> void:
@@ -5014,7 +5074,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "seen_wayshell"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
