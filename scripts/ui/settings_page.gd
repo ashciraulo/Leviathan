@@ -104,6 +104,8 @@ func handle_input(event: InputEvent) -> bool:
 func hint() -> String:
 	if _controls.visible:
 		return _controls.hint()
+	if _rows[_cursor]["kind"] == "action":
+		return tr("HINT_OPEN") % MenuKit.key_name("interact")
 	return tr("HINT_OPTIONS")
 
 
