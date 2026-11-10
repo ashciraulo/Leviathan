@@ -126,6 +126,8 @@ func _physics_process(delta: float) -> void:
 	_swell = maxf(_swell - delta * 4.0, 0.0)
 	_sprite.frame = 1 if _swell > 0.5 else 0
 	_sprite.scale = Vector2.ONE * (1.0 + _swell * 0.03)
+	# At rest it's no foe: no high contrast outline then.
+	_sprite.set_meta("contrast", Color.TRANSPARENT if mode == Mode.SLEEP else Palette.CONTRAST_ENEMY)
 	Art.set_flash(_sprite, 0.0)
 	if Cutscene.active:
 		return

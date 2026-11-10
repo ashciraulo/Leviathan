@@ -33,9 +33,8 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	# The outline follows the shot's frame (subclasses swap the texture and
-	# move in their own _physics_process).
-	if Settings.high_contrast:
-		Art.set_flash(_sprite, 0.0)
+	# move in their own _physics_process), and the option being switched.
+	Art.set_flash(_sprite, 0.0)
 
 
 func _physics_process(delta: float) -> void:

@@ -72,9 +72,14 @@ func dive_hit(_direction: Vector2) -> void:
 	cut.emit()
 
 
+func _process(_delta: float) -> void:
+	# After the physics tick has picked this frame's pose, so the outline
+	# follows the frame.
+	Art.set_flash(_sprite, 0.0)
+
+
 func _physics_process(delta: float) -> void:
 	_time += delta
-	Art.set_flash(_sprite, 0.0)
 	if severed:
 		return
 	_timer -= delta

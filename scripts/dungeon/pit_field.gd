@@ -29,6 +29,7 @@ var _safe: Array[Vector2] = []
 var _safe_timer := 0.0
 var _lava_frame := 0
 var _lava_time := 0.0
+var _contrast_drawn := false
 var _has_lava := false
 ## Rising lava: the first row it covers (ROWS = none yet).
 var level := float(Room.ROWS)
@@ -86,6 +87,10 @@ func _first_lava_row() -> int:
 
 
 func _process(delta: float) -> void:
+	# High contrast switched in the pause menu: draw the edges (or not).
+	if Settings.high_contrast != _contrast_drawn:
+		_contrast_drawn = Settings.high_contrast
+		queue_redraw()
 	if not _has_lava:
 		return
 	_lava_time += delta
@@ -211,7 +216,8 @@ func _draw() -> void:
 					_tile("lava_right", x, y)
 				if not _is_lava(x, y + 1, first):
 					_tile("lava_bottom", x, y)
-	if Settings.high_contrast:
+	_contrast_drawn = Settings.high_contrast
+	if _contrast_drawn:
 		_draw_contrast_edges(first)
 
 
@@ -239,7 +245,9 @@ func _is_safe(x: int, y: int, first: int) -> bool:
 	if x < 0 or y < 0 or x >= Room.COLS or y >= Room.ROWS:
 		return false
 	var letter := _room.tile_at(x, y)
-	if letter == "#" or letter == "_":
+	# Walls, water and the Mire's hidden planks get no edge (an edge would
+	# give a hidden path away).
+	if letter in ["#", "_", "~", "Q", "v"]:
 		return false
 	return not (letter == "^" or y >= first)
 
