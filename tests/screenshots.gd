@@ -48,7 +48,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -134,6 +134,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _coralie_shots()
+			"lowe_after":
+				game.queue_free()
+				await _wait(0.2)
+				await _lowe_after_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1578,6 +1582,27 @@ func _coralie_shots() -> void:
 	await _wait(1.6)
 	await _capture("97_twelve_strings_ringing")
 	shore.queue_free()
+	await _wait(0.2)
+
+
+## Sister Lowe alone on Lullaby Point after the ending, watching the Maw.
+func _lowe_after_shots() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-20, 0))
+	var point: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(point)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.6)
+	point.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	point.player.try_interact()
+	await _wait(2.4)
+	await _capture("98_lowe_keeps_watch")
+	point.queue_free()
 	await _wait(0.2)
 
 

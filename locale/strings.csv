@@ -588,6 +588,11 @@ LOWE_HULL_3,"She's waking! Leave the bar. Down the holes, both of you. Now!"
 LOWE_KILN_1,"Work those bellows! It has to run like water before the tide turns."
 LOWE_KILN_2,"You again, little lamp? Too late. We'll pour it into a Waking Bell."
 LOWE_KILN_3,"The slag's alive! Get back from the rim. Out, all of you!"
+LOWE_END_1,"Little lamp. Come to gloat? ...No. You're not the sort."
+LOWE_END_2,"The others went home. I followed Vael half my life. Where's home?"
+LOWE_END_3,"He's down there, singing to it. Says it sleeps easier with company."
+LOWE_END_4,"I'll stand here a while. Someone should keep watch from outside."
+LOWE_END_AGAIN,"The tide comes in on time now. I'd forgotten it did that."
 NAME_MURMUR,Murmur
 MURMUR_CALF_1,"Oh... look at them. Every light in the fen, dreaming the same shape."
 MURMUR_CALF_2,"That's a calf. The Old One isn't angry. It's grieving, and they're its dreams."
@@ -625,7 +630,7 @@ HESSA_CONFESS_1,"You've met him, then. Vael. I felt the whole coast turn over in
 HESSA_CONFESS_2,"He was my apprentice. Best ear I ever trained. He said the Old One was weeping."
 HESSA_CONFESS_3,"I couldn't hear it. My ears were already going. So I told him he was wrong."
 HESSA_CONFESS_4,"And then I stopped listening to him at all. That's on me, not him."
-HESSA_CONFESS_5,"Don't hate him, little lamp. He's wrong, but he isn't cruel."
+HESSA_CONFESS_5,"Don't hate him, child. He's wrong, but he isn't cruel."
 HESSA_AFTER_TURN,"Ottilie trained beside us. Go and see her, fishing Still Cove."
 ROOM_MAW_THROAT,The Maw
 ROOM_MAW_PALATE,The Maw: the Palate
@@ -735,7 +740,7 @@ IDE_FERRY_2,"In you get, keeper. Sit low, and mind the oar."
 IDE_FERRY_AGAIN,"Over again? Sit low."
 IDE_END,"The whole sea's lying still. I'd row you anywhere today. Over we go."
 NAME_LIESL,Liesl
-LIESL_1,"Liesl. That cottage out on the flats was my gran's gran's gran's."
+LIESL_1,"Liesl. That cottage on the flats was my family's, gran after gran, way back."
 LIESL_1B,"I keep the lane swept, so it's tidy when the water goes out."
 LIESL_2,"The night the Verge Bell went quiet, the sea came up this lane."
 LIESL_2B,"It never went home again. They say she was laying the table."
@@ -767,7 +772,7 @@ NAME_GULLY,Gully
 GULLY_1,"Hm? Oh. Not asleep. Resting my eyes. Gully, salvager."
 GULLY_1B,"She's the Lantern Wake's figurehead. Keepers' ship."
 GULLY_2,"The keepers rang bells off her deck, back when there were bells."
-GULLY_2B,"They say the Choir first sang aboard her. Then she went down."
+GULLY_2B,"Then a storm took her down, crew and all. Long before my time."
 GULLY_3,"The tide turned on me last week. Took my strongbox into the pool."
 GULLY_3B,"Too deep to wade. Got anything with reach to it?"
 GULLY_WAITING,"Still bobbing out there. Hook it and haul, keeper."
@@ -776,7 +781,7 @@ GULLY_BOX_2,"Here. A salvager's cut. Fair's fair."
 NARRATE_GOT_SALVAGE,Wren got 100 Glints.
 NARRATE_HAULED_STRONGBOX,Wren hauled a barnacled strongbox out of the pool.
 GULLY_AFTER,"I keep her company. She kept the keepers'."
-GULLY_AFTER_2,"Three hundred years on this strand. She's earned a rest."
+GULLY_AFTER_2,"Longer on this strand than anyone remembers. She's earned a rest."
 GULLY_TURNED,"Felt the whole strand shift last night. She felt it too."
 GULLY_END,"Sea's gone calm. Even she looks like she's sleeping now."
 NAME_SORREL,Captain Sorrel

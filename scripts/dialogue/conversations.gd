@@ -169,6 +169,11 @@ const TALKS := {
 		{"if": ["sorrel_asked"], "lines": ["SORREL_WAITING"]},
 		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
 	],
+	# Sister Lowe, alone on Lullaby Point after the ending.
+	"lowe": [
+		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
+		{"lines": ["LOWE_END_AGAIN"]},
+	],
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
 	# (GlassChime) and pays for every piece Wren brings her.
 	"coralie": [
