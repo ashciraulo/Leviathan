@@ -8,8 +8,9 @@ Run from the repo root:  python3 tools/belfry_rooms.py
 
 Q is deep water: the Diver's Helm swims it and dives under it, and under
 the sunken grates (L) that stand in it. "," is floor the water rises over:
-deep while the Belfry's water is high, dry silt once the valve (R) in the
-Valve Chamber has let it down. The valve turns it back up again.
+deep while the Belfry's water is high, dry silt once a valve (R), in the
+Valve Chamber or the Tolling Well, has let it down. Either valve turns it
+back up again.
 
 The way through:
   Entry -> Bell Court -> west to the Vestry (beat everything; the Diver's
@@ -18,7 +19,13 @@ The way through:
   -> the Valve Chamber (map; let the water down) -> west to the Sunken
   Choir (push the crate across the drained floor onto the plate; small
   key) -> the Chamber's east hatch into the Ringers' Loft (dive under the
-  grates again; big key) -> the Chamber's great door -> Knell.
+  grates again; glints) -> east into the Tolling Well (with the water down,
+  push the crate round onto the plate; the bars open on the pool, and a
+  dive under its grates reaches the big key; a valve of its own turns the
+  water) -> the Chamber's great door -> Knell.
+  Off the main path: the Drowned Nave west of the Entry (dive into the
+  grate-roofed passage and wind through it, unable to surface, up to a
+  sealed chamber; glints).
 """
 
 import os
@@ -47,9 +54,9 @@ ROOMS = {
 #..QQQ............QQQ..#
 #..QQQ............QQQ..#
 #......................#
-#..........T...........#
-#......................#
-#...............@......#
+...........T...........#
+.......................#
+................@......#
 #..QQ..............QQ..#
 #..QQ..............QQ..#
 #......................#
@@ -141,19 +148,47 @@ ROOMS = {
 #...........@..........#
 #......................#
 ########################"""),
-    (37, 8): ("ROOM_BELFRY_LOFT", {"chest_item": '"big_key"'}, """
+    (37, 8): ("ROOM_BELFRY_LOFT", {"chest_item": '"glint"', "chest_count": "50"}, """
 ########################
 #......................#
 #..QQQQQQQQQQQQQQQQQQ..#
 #..QQQQQQQQQQLLLLLQQQ..#
 #..QQQQQQQQQQL...LQQQ..#
-#..QQQQQQQQQQL.C.LQQQ..#
-...QQQQQQQQQQL...LQQQ..#
+#..QQQQQQQQQQL.C.LQQQ...
+...QQQQQQQQQQL...LQQQ...
 ...QQQQQQQQQQLLLLLQQQ..#
 #..QQQQQQQQQQQQQQQQQQ..#
 #..QQQQQQQQQQQQQQQQQQ..#
 #..........@...........#
 #..c..............c....#
+########################"""),
+    (38, 8): ("ROOM_BELFRY_TOLLING_WELL", {"chest_item": '"big_key"', "gate": '"plates"'}, """
+########################
+#....#,,,,,,,,,#QQQQQQQ#
+#....#,,,,,,,,,#QLLLLLQ#
+#....#,,K,,,,,,#QL...LQ#
+#....#,,,,,,,,,#QL.C.LQ#
+......,,,,,,,,,|QL...LQ#
+......,,,,,,,#,|QLLLLLQ#
+#....#,,#,,,,,,#QQQQQQQ#
+#.R..#,,,,,,,,,#QQQQQQQ#
+#....#,,,,,,,=,#QQQQQQQ#
+#....#,,,,,,,,,#QQQQQQQ#
+#....#,,,,,,,,,#QQQQQQQ#
+########################"""),
+    (35, 10): ("ROOM_BELFRY_DROWNED_NAVE", {"chest_item": '"glint"', "chest_count": "100"}, """
+########################
+#....#######...........#
+#.C..#######...........#
+#....#######...........#
+###LL#######...........#
+###LL#######............
+###LL#######............
+###LLL######............
+#####L######...........#
+#####L##QQQQ...........#
+#####LLLQQQQ...@.......#
+########QQQQ...........#
 ########################"""),
     (36, 7): ("ROOM_BELFRY_BOSS", OUTSIDE, """
 ########################

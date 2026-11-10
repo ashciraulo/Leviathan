@@ -1793,6 +1793,63 @@ func _test_belfry_dungeon() -> void:
 	await _wait(0.4)
 	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "on the dry floor the crate reaches the plate (at %s)" % crate.position)
 
+	# The Tolling Well (water down): the crate goes round the pillar onto
+	# the plate, the bars open on the pool, and a dive under the grates
+	# reaches the big key. Its own valve turns the water too.
+	room = await _goto(game, Vector2i(38, 8), Vector2i(1, 6))
+	await _calm(room)
+	var well_crate: Crate = _child_of(room, Crate)[0]
+	var well_bars: Array = _child_of(room, Bars)
+	_check(well_bars.size() == 2 and not (well_bars[0] as Bars).is_open, "bars shut the Well's pool off")
+	for step: Vector2 in [Vector2.RIGHT, Vector2.RIGHT, Vector2.RIGHT, Vector2.RIGHT, Vector2.DOWN, Vector2.DOWN, Vector2.DOWN, Vector2.DOWN, Vector2.DOWN, Vector2.DOWN, Vector2.RIGHT]:
+		well_crate._slide(step)
+		await _wait(0.3)
+	await _wait(0.2)
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false) and (well_bars[0] as Bars).is_open, "round the pillar onto the plate, the crate opens the bars (at %s)" % well_crate.position)
+	player.global_position = _tile_pos(room, Vector2i(16, 4))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	_check(player.swimming() and player.use_item("divers_helm"), "Wren dives in the Well's pool")
+	Input.action_press("move_right")
+	await _wait(1.0)
+	Input.action_release("move_right")
+	await _wait(DiversHelm.DIVE_TIME)
+	local = player.global_position - room.global_position
+	_check(local.x > 17.5 * Room.TILE and not player.diving, "under the grates Wren comes up beside the big key (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Tolling Well's chest holds the big key")
+	var well_valves := _child_of(room, Valve)
+	_check(well_valves.size() == 1, "the Well has a valve of its own")
+	(well_valves[0] as Valve).interact()
+	await _wait(Valve.TURN_TIME + 0.3)
+	_check(room.flooded() and room.tile_at(8, 5) == "Q", "the Well's valve turns the water up")
+	(well_valves[0] as Valve).interact()
+	await _wait(Valve.TURN_TIME + 0.3)
+	_check(not room.flooded(), "and back down")
+
+	# The Drowned Nave: a passage roofed with grates winds up to a sealed
+	# chamber; once under, Wren can't surface until they're through.
+	room = await _goto(game, Vector2i(35, 10), Vector2i(22, 6))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(9, 10))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	Input.action_press("move_left")
+	await _wait(0.8)
+	Input.action_release("move_left")
+	local = player.global_position - room.global_position
+	_check(local.x > 7.5 * Room.TILE, "swimming, the grates stop Wren at the passage (at %s)" % local)
+	player.use_item("divers_helm")
+	Input.action_press("move_left")
+	Input.action_press("move_up")
+	await _wait(8.0)
+	Input.action_release("move_left")
+	Input.action_release("move_up")
+	await _wait(0.5)
+	local = player.global_position - room.global_position
+	_check(local.x < 5 * Room.TILE and local.y < 4 * Room.TILE and not player.diving, "diving, Wren winds up the passage into the sealed chamber (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "glint"), "glints wait in the Nave's chamber")
+
 	# Back up again, the Choir floods and its crate is stuck.
 	room = await _goto(game, Vector2i(36, 8), Vector2i(11, 11))
 	(_child_of(room, Valve)[0] as Valve).interact()
