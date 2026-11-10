@@ -484,6 +484,49 @@ def wick_frames():
 
 
 # --------------------------------------------------------------------------
+# Captain Sorrel, the retired Gullwatch kite-post captain: a leather flying
+# cap with brass goggles pushed up, a grey braid, a long blue coat and a red
+# scarf the wind never stops tugging. Talks with her whistle in her hand.
+# --------------------------------------------------------------------------
+SORREL = [
+    "................",
+    "................",
+    ".....bbbbbb.....",
+    "....bbbbbbbb....",
+    "...bQQeQQeQQb...",
+    "...bQQQQQQQQb...",
+    "...bwwwwwwwwb...",
+    "...Zwwewwewwb...",
+    "...Zwwewwewwb...",
+    "...Zwwwwwwww....",
+    "...Z.wwwwww.....",
+    "...ZrrrrrrrrRrr.",
+    "..CCrrrrrrrCCrrr",
+    "..CCCCCCCCCCCC.r",
+    "..CCCCQCCCCCCC..",
+    "..CCCCCCCCCCCC..",
+    "..wCCCQCCCCCCw..",
+    "...CCCCCCCCCC...",
+    "...CCCCCCCCCC...",
+    "...CCCC..CCCC...",
+    "....pp....pp....",
+    "....pp....pp....",
+    "....bb....bb....",
+    "................",
+]
+
+
+def sorrel_frames():
+    idle = SORREL
+    breathe = settle(idle, 12)
+    # The scarf's tail lifts in the wind as she breathes.
+    breathe = paint(breathe, [(11, 13, "rrr"), (12, 14, "rr"), (13, 15, ".")])
+    # Talking: the whistle up in her hand.
+    talk = paint(idle, [(16, 13, "C"), (15, 14, "w"), (14, 14, "Q"), (13, 14, "Q")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
 # Gully, Brinewood's salvager: a coral knit cap pulled low, a grizzled
 # beard, a patched leather coat. Sleeps sat in the crook of a beached
 # figurehead's arm. Idle and breathe are dozing (chin down, eyes shut);
@@ -1061,6 +1104,7 @@ SPRITES = {
     "liesl": liesl_frames,
     "wick": wick_frames,
     "gully": gully_frames,
+    "sorrel": sorrel_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1288,6 +1332,27 @@ def portrait_wick():
     return _rows(c)
 
 
+def portrait_sorrel():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "C")                    # long blue coat
+    _box(c, 8, 26, 16, 3, "r")                         # red scarf
+    _box(c, 22, 24, 8, 3, "r")                         # its tail, out in the wind
+    _box(c, 27, 21, 5, 3, "r")
+    _face(c, "w", eye_row=16, cy=17, rx=7, ry=8)
+    _box(c, 8, 13, 2, 6, "Z")                          # grey hair under the cap
+    _box(c, 22, 13, 2, 5, "Z")
+    _box(c, 5, 14, 3, 14, "Z")                         # her grey braid
+    _dots(c, [(5, 28), (6, 29), (6, 30)], "Z")
+    _dots(c, [(10, 17), (21, 17), (11, 18), (20, 18)], "-")  # weathered, crow's feet
+    _ellipse(c, 16, 9, 10, 6, "b")                     # leather flying cap
+    _box(c, 6, 10, 20, 3, "b")
+    _box(c, 9, 9, 14, 4, "Q")                          # brass goggles, pushed up
+    _box(c, 10, 10, 4, 2, "e")
+    _box(c, 18, 10, 4, 2, "e")
+    _dots(c, [(11, 10), (19, 10)], "W")
+    return _rows(c)
+
+
 def portrait_gully():
     c = _canvas()
     _ellipse(c, 16, 32, 15, 8, "b")                    # patched leather coat
@@ -1433,6 +1498,7 @@ PORTRAITS = {
     "liesl": portrait_liesl(),
     "wick": portrait_wick(),
     "gully": portrait_gully(),
+    "sorrel": portrait_sorrel(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

@@ -115,6 +115,24 @@ const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
 const FIGUREHEAD_AT := Vector2(8 * 16 + 8, 2 * 16 + 14)
 const STRONGBOX_AT := Vector2(13 * 16 + 8, 4 * 16 + 12)
+## Captain Sorrel on Gullwatch Steps' north bank, and the far post on the
+## south bank her kite races Wren to, across the water.
+const GULLWATCH_STEPS := Vector2i(3, -3)
+const SORREL_AT := Vector2(16 * 16 + 8, 2 * 16 + 10)
+const KITE_POST_AT := Vector2(20 * 16 + 8, 9 * 16 + 12)
+const RACE_FLAG := "sorrel_race"
+const RACE_WON_FLAG := "sorrel_won"
+## The way her kite flies, and how long it takes: a glide straight over the
+## water gets there first; the long way round by the planks doesn't.
+const KITE_ROUTE := [
+	Vector2(16 * 16 + 14, 2 * 16 + 6),
+	Vector2(19 * 16, 3 * 16 + 8),
+	Vector2(22 * 16, 6 * 16),
+	Vector2(20 * 16 + 8, 9 * 16 + 4),
+]
+const KITE_TIME := 3.0
+## How near the post counts as there.
+const POST_REACH := 16.0
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
 ## Cutscene 18, Vael's choir: the first time Wren walks into Vael's hall,
 ## the whole Choir is singing the Waking Song. More singers than fight him
@@ -197,6 +215,11 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_wick(coord)
 	if coord == WRECK_STRAND:
 		_put_gully()
+	if coord == GULLWATCH_STEPS:
+		# A race the game closed partway through is simply over.
+		if GameState.has_flag(RACE_FLAG):
+			GameState.clear_flag(RACE_FLAG)
+		_put_sorrel()
 	if coord == CAUSEWAY_END and GameState.has_flag(TURNED_FLAG):
 		# A ride the game closed partway through: she's home again.
 		if GameState.has_flag(FERRY_FLAG):
@@ -242,6 +265,13 @@ func _on_room_entered(coord: Vector2i) -> void:
 
 
 func _on_flag_changed(flag: String, _value: Variant) -> void:
+	if flag == RACE_FLAG:
+		if GameState.has_flag(RACE_FLAG):
+			if Cutscene.active or GameState.room_coord != GULLWATCH_STEPS:
+				GameState.clear_flag.call_deferred(RACE_FLAG)
+			else:
+				sorrel_race()
+		return
 	if flag == FERRY_FLAG:
 		if not GameState.has_flag(FERRY_FLAG):
 			return
@@ -884,6 +914,74 @@ func _put_gully() -> void:
 		var box := Strongbox.new()
 		box.position = STRONGBOX_AT
 		room.add_child(box)
+
+
+## Captain Sorrel and the far post of her old kite-post.
+func _put_sorrel() -> void:
+	var room: Node = game.current_room
+	if room == null or _find_npc("sorrel"):
+		return
+	var sorrel := Npc.new("sorrel")
+	sorrel.position = SORREL_AT
+	room.add_child(sorrel)
+	var post := KitePost.new()
+	post.won = GameState.has_flag(RACE_WON_FLAG)
+	post.position = KITE_POST_AT
+	room.add_child(post)
+
+
+func _kite_post() -> KitePost:
+	for child in game.current_room.get_children():
+		if child is KitePost:
+			return child
+	return null
+
+
+## Sorrel's kite races Wren to the far post. Wren isn't held: they run,
+## glide or go round as they like, and the first to the post wins.
+func sorrel_race() -> void:
+	var room: Node2D = game.current_room
+	# The flag is set just before her words open: let her finish them.
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if not is_instance_valid(room) or room != game.current_room:
+		GameState.clear_flag(RACE_FLAG)
+		return
+	var kite := RaceKite.new()
+	kite.route = KITE_ROUTE
+	kite.duration = KITE_TIME
+	room.add_child(kite)
+	Audio.play_sfx("gust", room.global_position + SORREL_AT, 1.2)
+	var post_at := room.global_position + KITE_POST_AT
+	var won := false
+	while true:
+		await get_tree().physics_frame
+		if not is_instance_valid(room) or room != game.current_room or not is_instance_valid(kite):
+			# Wren left, or fell: the race is off.
+			if GameState.has_flag(RACE_FLAG):
+				GameState.clear_flag(RACE_FLAG)
+			return
+		var wren: Player = game.player
+		if is_instance_valid(wren) and wren.state == Player.State.MOVE and not wren.airborne and wren.global_position.distance_to(post_at) <= POST_REACH:
+			won = true
+			break
+		if kite.arrived:
+			break
+	GameState.clear_flag(RACE_FLAG)
+	if won:
+		GameState.set_flag(RACE_WON_FLAG)
+		var post := _kite_post()
+		if post:
+			post.won = true
+		Audio.play_jingle("jingle_secret")
+	else:
+		Audio.play_sfx("bell_quiet", post_at)
+	# The kite drifts down (onto the post, if it got there) and is gathered in.
+	kite.arrived = true
+	await get_tree().create_timer(1.6).timeout
+	if is_instance_valid(kite):
+		kite.queue_free()
 
 
 func _ferry_boat() -> Rowboat:
