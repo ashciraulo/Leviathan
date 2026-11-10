@@ -151,7 +151,24 @@ async function saveCheck() {
   if (!picker) return failures.push("saves: Import didn't open the browser's file picker");
   const original = fs.readFileSync(path.resolve("tests/web_save.json"), "utf8");
   await picker.setFiles({ name: "web_save.json", mimeType: "application/json", buffer: Buffer.from(original) });
-  await tab.waitForTimeout(1500);
+  // Wait until the browser's storage holds the file (Godot copies user://
+  // there a moment after a save is written), then give it a little longer.
+  const stored = () => tab.evaluate(() => new Promise((done) => {
+    const open = indexedDB.open("/userfs");
+    open.onerror = () => done(false);
+    open.onsuccess = () => {
+      try {
+        const db = open.result;
+        const keys = db.transaction("FILE_DATA", "readonly").objectStore("FILE_DATA").getAllKeys();
+        keys.onsuccess = () => { done(keys.result.some((k) => String(k).endsWith("/save_0.json"))); db.close(); };
+        keys.onerror = () => done(false);
+      } catch (e) { done(false); }
+    };
+  }));
+  let kept = false;
+  for (let i = 0; i < 40 && !(kept = await stored()); i++) await tab.waitForTimeout(250);
+  if (!kept) return failures.push("saves: the imported file never reached the browser's storage");
+  await tab.waitForTimeout(500);
   // Saves live in the browser's storage: a reload still has the file.
   await tab.reload();
   if (!(await boot())) return failures.push("saves: the engine didn't start again after a reload");

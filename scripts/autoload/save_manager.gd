@@ -183,7 +183,7 @@ func export_file_name(slot: int) -> String:
 ## an empty slot. Returns "" when it worked, otherwise the text key of why not.
 func import_text(text: String, slot: int) -> String:
 	if has_save(slot):
-		return "FILES_COPY_NEED_EMPTY"
+		return "FILES_IMPORT_NEED_EMPTY"
 	var parsed = JSON.parse_string(text)
 	if not (parsed is Dictionary) or not (parsed.get("state") is Dictionary):
 		return "FILES_IMPORT_BAD"

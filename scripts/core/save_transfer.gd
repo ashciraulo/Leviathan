@@ -53,7 +53,7 @@ func export_slot(slot: int) -> void:
 func import_to(slot: int) -> void:
 	_import_slot = slot
 	if test_mode:
-		_take_import.call_deferred(test_import)
+		_take_import.call_deferred(test_import, test_import == "")
 	elif OS.has_feature("web"):
 		# A browser opens its file picker only right after a key press, click
 		# or tap; a gamepad press doesn't count.
@@ -67,13 +67,16 @@ func import_to(slot: int) -> void:
 			input.style.display = 'none';
 			document.body.appendChild(input);
 			var done = function(){ if (input.parentNode) input.parentNode.removeChild(input); };
-			input.addEventListener('cancel', function(){ done(); window.__lvImport.state = 'cancel'; });
+			// Each pick gets its own record, so a late event from an
+			// abandoned picker never touches a newer one (or a null).
+			var mine = window.__lvImport;
+			var settle = function(state, text){ if (window.__lvImport === mine) window.__lvImport = {state: state, text: text || ''}; };
+			input.addEventListener('cancel', function(){ done(); settle('cancel'); });
 			input.addEventListener('change', function(){
 				done();
 				var f = input.files && input.files[0];
-				if (!f || f.size > %d) { window.__lvImport.state = f ? 'bad' : 'cancel'; return; }
-				f.text().then(function(t){ window.__lvImport = {state: 'done', text: t}; },
-					function(){ window.__lvImport.state = 'bad'; });
+				if (!f || f.size > %d) { settle(f ? 'bad' : 'cancel'); return; }
+				f.text().then(function(t){ settle('done', t); }, function(){ settle('bad'); });
 			});
 			input.click();
 			return true;
@@ -95,7 +98,7 @@ func _process(_delta: float) -> void:
 		"done":
 			_take_import(str(JavaScriptBridge.eval("window.__lvImport.text", true)))
 		"cancel":
-			_take_import("")
+			_take_import("", true)
 		"bad":
 			_import_slot = -1
 			finished.emit("FILES_IMPORT_BAD")
@@ -109,12 +112,13 @@ func cancel() -> void:
 		JavaScriptBridge.eval("window.__lvImport = null", true)
 
 
-func _take_import(text: String) -> void:
+## The picked file's text, or cancelled when the player picked nothing.
+func _take_import(text: String, cancelled: bool = false) -> void:
 	if not busy():
 		return
 	var slot := _import_slot
 	_import_slot = -1
-	if text == "":
+	if cancelled:
 		finished.emit("")
 		return
 	var why := SaveManager.import_text(text, slot)
@@ -122,8 +126,10 @@ func _take_import(text: String) -> void:
 
 
 func _read_import(ok: bool, paths: PackedStringArray) -> void:
+	if not busy():
+		return
 	if not ok or paths.is_empty():
-		_take_import("")
+		_take_import("", true)
 		return
 	var file := FileAccess.open(paths[0], FileAccess.READ)
 	if file == null or file.get_length() > MAX_IMPORT_BYTES:

@@ -31,6 +31,7 @@ var _note := ""
 
 
 func _ready() -> void:
+	super()
 	if SaveTransfer.available() and transfer == null:
 		transfer = SaveTransfer.new()
 		add_child(transfer)

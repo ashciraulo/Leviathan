@@ -5006,7 +5006,7 @@ func _test_save_transfer() -> void:
 	var text := SaveManager.export_text(TEST_SLOT)
 	_check(text != "" and SaveManager.export_text(OTHER) == "", "a save exports as text; an empty file doesn't")
 	_check(SaveManager.export_file_name(TEST_SLOT).begins_with("leviathan-file3-"), "the exported file is named for its slot")
-	_check(SaveManager.import_text(text, TEST_SLOT) == "FILES_COPY_NEED_EMPTY", "import never writes over a file")
+	_check(SaveManager.import_text(text, TEST_SLOT) == "FILES_IMPORT_NEED_EMPTY", "import never writes over a file")
 	_check(SaveManager.import_text("{not json", OTHER) == "FILES_IMPORT_BAD"
 		and SaveManager.import_text('{"state": 3}', OTHER) == "FILES_IMPORT_BAD"
 		and not SaveManager.has_save(OTHER), "junk isn't imported")
