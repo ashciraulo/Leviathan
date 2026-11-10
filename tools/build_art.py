@@ -18,6 +18,7 @@ Run from the repo root:  python3 tools/build_art.py
 Only the Python standard library is needed. Output goes to assets/.
 """
 
+import math
 import os
 import random
 import struct
@@ -839,57 +840,74 @@ def grass_tuft(seed):
     return px
 
 
+SANDSTONE = [hex_color(c) for c in ("#E8B486", "#CC9064", "#AE704C", "#8A543E", "#643A36", "#40262E")]
+
+
 def cliff_top(seed):
-    """Rock plateau capped with dune grass."""
+    """High dunes over the beach: dune grass with sand blowing through it and
+    tufts of marram standing up in the wind."""
     rnd = random.Random(seed)
     px = blank(GRASS[2])
-    for _ in range(26):
+    for _ in range(22):
         x, y = rnd.randrange(T), rnd.randrange(T)
         px[y][x] = rnd.choice([GRASS[1], GRASS[3], GRASS[1]])
-    for _ in range(5):
-        x, y = rnd.randrange(T), rnd.randrange(1, T)
-        px[y][x] = GRASS[0]
-        px[y - 1][x] = GRASS[1]
+    # Bare sand where the wind has scoured the grass.
+    if rnd.random() < 0.6:
+        cx, cy, w = rnd.randrange(T - 4), rnd.randrange(1, T - 1), rnd.randrange(2, 4)
+        for x in range(cx, cx + w):
+            px[cy][x] = SAND[3]
+            px[cy + 1][x] = GRASS[3]
+    # Marram tufts: three pale blades over a dark root.
+    for _ in range(3):
+        x, y = rnd.randrange(1, T - 2), rnd.randrange(4, T)
+        px[y][x] = GRASS[3]
+        px[y][x + 1] = GRASS[3]
+        for i, (dx, h) in enumerate(((-1, 3), (0, 4), (1, 3))):
+            for k in range(1, h):
+                px[y - k][min(T - 1, max(0, x + dx + (1 if k > 2 and dx > 0 else 0)))] = GRASS[0] if k == h - 1 else GRASS[1]
     return px
 
 
 def cliff_face(seed):
-    """Front of a cliff: grass lip, layered rock, dark foot."""
+    """A low sandstone bluff: dune grass hanging over the lip, warm layered
+    rock with the odd shell set in it, and a damp dark foot."""
     rnd = random.Random(seed)
-    px = blank(ROCK[3])
+    px = blank(SANDSTONE[2])
+    # Strata: bands of different shades, the lines between them rolling
+    # gently and carrying on from one tile to the next.
+    bands = [(5, SANDSTONE[1]), (9, SANDSTONE[2]), (12, SANDSTONE[3])]
+    for x in range(T):
+        wave = 1 if math.sin((x + 5 * seed) * 2 * math.pi / 16) > 0.3 else 0
+        for y in range(3, T):
+            colour = SANDSTONE[2]
+            for top, c in bands:
+                if y >= top + wave:
+                    colour = c
+            px[y][x] = colour
+        for top, _ in bands:
+            px[top + wave][x] = SANDSTONE[0] if rnd.random() < 0.6 else px[top + wave][x]
+            px[top + wave - 1][x] = SANDSTONE[4] if rnd.random() < 0.9 else SANDSTONE[3]
+    # Weathering: little pits.
+    for _ in range(6):
+        x, y = rnd.randrange(T), rnd.randrange(4, T - 3)
+        px[y][x] = SANDSTONE[4]
+    # A shell or pebble set in the rock.
+    if rnd.random() < 0.5:
+        x, y = rnd.randrange(2, T - 3), rnd.randrange(6, 11)
+        px[y][x], px[y][x + 1] = hex_color("#FFF4D6"), hex_color("#F2B8A8")
+        px[y + 1][x], px[y + 1][x + 1] = hex_color("#F2B8A8"), hex_color("#B97C7A")
+    # Grass lip, with blades hanging over the edge.
     for x in range(T):
         px[0][x] = GRASS[2]
-        px[1][x] = GRASS[3] if rnd.random() < 0.6 else GRASS[2]
-        px[2][x] = ROCK[1]
-        px[3][x] = ROCK[2]
-    # Irregular boulders: each a lit top-left rim and a dark bottom-right seam.
-    y = 4
-    while y < T - 3:
-        x = -rnd.randrange(0, 5)
-        height = rnd.randrange(4, 6)
-        while x < T:
-            width = rnd.randrange(4, 8)
-            for xx in range(max(0, x), min(T, x + width)):
-                for yy in range(y, min(T - 2, y + height)):
-                    px[yy][xx] = ROCK[2] if (xx + yy) % 5 else ROCK[3]
-                if y + height - 1 < T - 2:
-                    px[y + height - 1][xx] = ROCK[4]
-                px[y][xx] = ROCK[1]
-            if 0 <= x + width - 1 < T:
-                for yy in range(y, min(T - 2, y + height)):
-                    px[yy][x + width - 1] = ROCK[4]
-            if 0 <= x < T:
-                for yy in range(y + 1, min(T - 2, y + height - 1)):
-                    px[yy][x] = ROCK[1]
-            x += width
-        y += height
+        px[1][x] = GRASS[3]
+        px[2][x] = GRASS[3] if (x * 5 + seed) % 7 < 3 else SANDSTONE[4]
+        if (x * 3 + seed) % 6 == 0:
+            px[3][x] = GRASS[3]
+            px[1][x] = GRASS[1]
+    # Damp foot.
     for x in range(T):
-        px[T - 1][x] = ROCK[5]
-        px[T - 2][x] = ROCK[4]
-    # Grass drips over the lip.
-    for _ in range(4):
-        x = rnd.randrange(T)
-        px[2][x] = GRASS[3]
+        px[T - 2][x] = SANDSTONE[4]
+        px[T - 1][x] = SANDSTONE[5]
     return px
 
 

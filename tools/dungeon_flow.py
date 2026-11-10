@@ -35,7 +35,7 @@ DUNGEONS = ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw"]
 # Tiles that block a crossing for good ($ comes down to the Echo Horn).
 SOLID = set("#!")
 # Anything the "clear" gate can count, the boss (V) included.
-ENEMIES = set("csbmweqtgdAkxaMUV")
+ENEMIES = set("csbmweqtgdAkxaMUV@&")
 
 
 def parse_vec(text, key):
@@ -190,6 +190,12 @@ def check_room(rooms, coord, name, problems):
             problems.append("%s %s: %s %s is no room" % (name, coord, key, target))
         elif room[spawn] is not None and not open_ground(rooms[target], room[spawn]):
             problems.append("%s %s: %s lands Wren off solid ground at %s in %s" % (name, coord, spawn, room[spawn], target))
+        elif room[spawn] is not None and rooms[target]["dungeon"]:
+            # Nothing waiting right where Wren lands (a regular foe, not a boss).
+            sx, sy = room[spawn]
+            near = [tile(rooms[target], x, y) for x in range(sx - 1, sx + 2) for y in range(sy - 1, sy + 2) if 0 <= x < W and 0 <= y < H]
+            if set(near) & (ENEMIES - {"V"}):
+                problems.append("%s %s: %s lands Wren beside an enemy at %s in %s" % (name, coord, spawn, room[spawn], target))
 
 
 def g_count(room, ch):

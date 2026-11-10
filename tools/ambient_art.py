@@ -47,8 +47,45 @@ def ripple(seed):
     return px
 
 
+def tidepool(seed):
+    """Seen through the water of a tidepool: a weedy stone, or a starfish and
+    a pair of pebbles. Laid over Saltmarrow's pools now and then."""
+    rnd = random.Random(4200 + seed)
+    px = [[CLEAR] * T for _ in range(T)]
+    if seed == 0:
+        stone = [hex_color(c, 150) for c in ("#8EA4A0", "#5E7A78", "#3E5658")]
+        weed = [hex_color(c, 170) for c in ("#7ABF6A", "#3E8A54")]
+        cx, cy = 5 + rnd.randrange(4), 6 + rnd.randrange(3)
+        for dy in range(-2, 3):
+            for dx in range(-3, 4):
+                if dx * dx / 9 + dy * dy / 4 <= 1.0:
+                    px[cy + dy][cx + dx] = stone[0] if dy < 0 and dx < 1 else (stone[2] if dy > 0 else stone[1])
+        for bx in (cx - 2, cx, cx + 2):
+            for k in range(3 + rnd.randrange(3)):
+                x = bx + (1 if k % 2 else 0)
+                if 0 <= cy - 2 - k < T and 0 <= x < T:
+                    px[cy - 2 - k][x] = weed[k % 2]
+    else:
+        star = [hex_color(c, 190) for c in ("#F4A07A", "#C8604A")]
+        cx, cy = 5 + rnd.randrange(5), 5 + rnd.randrange(5)
+        px[cy][cx] = star[1]
+        for d in ((0, -1), (1, 0), (-1, 0), (1, 1), (-1, 1)):
+            for r in (1, 2):
+                x, y = cx + d[0] * r, cy + d[1] * r
+                if 0 <= x < T and 0 <= y < T:
+                    px[y][x] = star[0] if r == 1 else star[1]
+        pebble = hex_color("#C8D0C8", 140)
+        for _ in range(2):
+            x, y = rnd.randrange(1, T - 2), rnd.randrange(1, T - 2)
+            if px[y][x] == CLEAR:
+                px[y][x] = pebble
+                px[y][x + 1] = pebble
+    return px
+
+
 TILES = [
     ("ripple_0", lambda: ripple(0)), ("ripple_1", lambda: ripple(1)),
+    ("tidepool_0", lambda: tidepool(0)), ("tidepool_1", lambda: tidepool(1)),
 ]
 
 

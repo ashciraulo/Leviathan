@@ -3,7 +3,8 @@ extends Node2D
 ## Life on the overworld that is never in the way: gulls wheeling overhead
 ## with their shadows sliding over the ground, fish gliding under the water
 ## (now and then one jumps), shore crabs that scuttle off when Wren comes
-## near, butterflies in Brinewood, fireflies over the Gloamfen, embers
+## near, butterflies in Brinewood, fireflies and mist over the Gloamfen,
+## wind streaks over the heights, embers
 ## drifting up off Cinderreach's lava, and buzzards' shadows circling the
 ## Ossuary. It has no collisions and does no harm: it only draws. A room
 ## outside the dungeons adds one (see Room).
@@ -17,11 +18,11 @@ const SPLASH := preload("res://assets/ambient/splash.png")
 ## How much of each kind of life a biome has.
 const LIFE := {
 	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4},
-	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5},
+	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3},
 	"cinderreach": {"embers": 14},
-	"gloamfen": {"fish": 2, "fireflies": 12},
-	"windmere": {"gulls": 4, "butterflies": 2},
-	"frostspine": {"gulls": 2, "fish": 2},
+	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4},
+	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5},
+	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3},
 	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3},
 	"ossuary": {"buzzards": 2},
 }
@@ -48,6 +49,10 @@ var fireflies: Array[Dictionary] = []
 var embers: Array[Dictionary] = []
 var buzzards: Array[Dictionary] = []
 var splashes: Array[Dictionary] = []
+## Weather: low mist drifting through the woods and fens, and wind streaks
+## racing over the heights.
+var mist: Array[Dictionary] = []
+var gusts: Array[Dictionary] = []
 var _water: Array[Vector2i] = []
 var _sand: Array[Vector2i] = []
 var _floor: Array[Vector2i] = []
@@ -86,6 +91,10 @@ func _ready() -> void:
 	if not _water.is_empty():
 		for i in int(life.get("embers", 0)):
 			embers.append(_new_ember(true))
+	for i in int(life.get("mist", 0)):
+		mist.append(_new_mist(true))
+	for i in int(life.get("gusts", 0)):
+		gusts.append(_new_gust(true))
 
 
 ## Sorts the room's tiles: open water, sand by the water (for crabs), and
@@ -162,6 +171,22 @@ func _all_water(from: Vector2, to: Vector2) -> bool:
 	return true
 
 
+## A bank of mist, wider than it is tall, drifting slowly sideways.
+func _new_mist(anywhere: bool) -> Dictionary:
+	var w := _rnd.randf_range(70.0, 120.0)
+	var x := _rnd.randf_range(0.0, Room.SIZE.x) if anywhere else -w
+	return {"pos": Vector2(x, _rnd.randf_range(30.0, Room.SIZE.y - 30.0)), "size": Vector2(w, w * 0.32),
+		"speed": _rnd.randf_range(4.0, 8.0), "clock": _rnd.randf() * TAU}
+
+
+## A streak of wind: a thin pale line that races across and fades.
+func _new_gust(anywhere: bool) -> Dictionary:
+	return {"pos": Vector2(_rnd.randf_range(-60.0, Room.SIZE.x), _rnd.randf_range(16.0, Room.SIZE.y - 16.0)),
+		"length": _rnd.randf_range(28.0, 56.0), "speed": _rnd.randf_range(110.0, 170.0),
+		"age": _rnd.randf() * 1.5 if anywhere else 0.0, "life": _rnd.randf_range(1.0, 1.8),
+		"wait": 0.0 if anywhere else _rnd.randf_range(0.5, 3.0)}
+
+
 func _new_crab() -> Dictionary:
 	var at := _pick(_sand)
 	return {"pos": at, "home": at, "clock": _rnd.randf() * 3.0, "fleeing": false, "dir": Vector2.ZERO}
@@ -201,6 +226,19 @@ func _process(delta: float) -> void:
 		e["pos"] = (e["pos"] as Vector2) + Vector2(float(e["drift"]), -14.0) * delta
 		if float(e["age"]) > float(e["life"]):
 			embers[i] = _new_ember(false)
+	for m in mist:
+		m["clock"] = float(m["clock"]) + delta
+		m["pos"] = (m["pos"] as Vector2) + Vector2(float(m["speed"]) * delta, 0.0)
+		if (m["pos"] as Vector2).x - (m["size"] as Vector2).x > Room.SIZE.x:
+			m.merge(_new_mist(false), true)
+	for g in gusts:
+		if float(g["wait"]) > 0.0:
+			g["wait"] = float(g["wait"]) - delta
+			continue
+		g["age"] = float(g["age"]) + delta
+		g["pos"] = (g["pos"] as Vector2) + Vector2(float(g["speed"]) * delta, 0.0)
+		if float(g["age"]) > float(g["life"]):
+			g.merge(_new_gust(false), true)
 	for s in splashes:
 		s["age"] = float(s["age"]) + delta
 	splashes.assign(splashes.filter(func(s: Dictionary) -> bool: return float(s["age"]) < 0.6))
@@ -329,6 +367,24 @@ func _draw_low() -> void:
 
 ## Over everything: gulls, butterflies, fireflies and embers.
 func _draw_high() -> void:
+	for m in mist:
+		# A few overlapping soft ovals, breathing a little.
+		var centre: Vector2 = m["pos"]
+		var size: Vector2 = m["size"]
+		var breathe := 0.85 + 0.15 * sin(float(m["clock"]) * 0.7)
+		for k in 3:
+			var offset := Vector2((k - 1) * size.x * 0.3, sin(float(m["clock"]) * 0.5 + k) * 3.0)
+			_oval(_high, centre + offset, Vector2(size.x * 0.35, size.y * 0.5) * breathe, Color(0.86, 0.92, 0.88, 0.07))
+		_oval(_high, centre, Vector2(size.x * 0.45, size.y * 0.35) * breathe, Color(0.9, 0.95, 0.92, 0.05))
+	for g in gusts:
+		if float(g["wait"]) > 0.0:
+			continue
+		var t := float(g["age"]) / float(g["life"])
+		var alpha := sin(clampf(t, 0.0, 1.0) * PI) * 0.75
+		var start: Vector2 = (g["pos"] as Vector2).floor()
+		var length := float(g["length"])
+		_high.draw_rect(Rect2(start, Vector2(length, 1)), Color(1, 1, 1, alpha))
+		_high.draw_rect(Rect2(start + Vector2(length * 0.3, -2).floor(), Vector2(length * 0.4, 1).floor()), Color(1, 1, 1, alpha * 0.6))
 	for g in gulls:
 		if float(g["wait"]) > 0.0:
 			continue
@@ -370,6 +426,11 @@ func _blit(canvas: Node2D, texture: Texture2D, size: Vector2i, cell: Vector2i, a
 
 
 func _shadow(canvas: Node2D, at: Vector2, radii: Vector2, alpha: float) -> void:
+	_oval(canvas, at, radii, Color(0.08, 0.06, 0.1, alpha))
+
+
+## A filled oval (shadows, mist).
+func _oval(canvas: Node2D, at: Vector2, radii: Vector2, colour: Color) -> void:
 	canvas.draw_set_transform(at.round(), 0.0, Vector2(1.0, radii.y / radii.x))
-	canvas.draw_circle(Vector2.ZERO, radii.x, Color(0.08, 0.06, 0.1, alpha))
+	canvas.draw_circle(Vector2.ZERO, radii.x, colour)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

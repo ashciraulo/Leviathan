@@ -30,7 +30,7 @@ func _ready() -> void:
 func _think(delta: float) -> void:
 	_time += delta
 	var wren := get_player()
-	if wren and wren.lantern_raised and wren.global_position.distance_to(global_position) < Lantern.RADIUS * 2.0:
+	if wren and wren.lantern_raised and wren.global_position.distance_to(global_position) < Lantern.reach(wren) * 2.0:
 		velocity = (wren.global_position + Vector2(0, -8) - global_position).normalized() * DRAWN_SPEED
 		return
 	if int(_time * 0.7) != int((_time - delta) * 0.7):

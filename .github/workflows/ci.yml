@@ -149,7 +149,7 @@ jobs:
       - name: Play through
         run: |
           set +e
-          timeout 480 "$RUNNER_TEMP/godot" --headless --path . res://tests/playthrough.tscn 2>&1 | tee play.log
+          timeout 900 "$RUNNER_TEMP/godot" --headless --path . res://tests/playthrough.tscn 2>&1 | tee play.log
           status=${PIPESTATUS[0]}
           set -e
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" play.log; then

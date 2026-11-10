@@ -81,6 +81,9 @@ func interact() -> void:
 		Events.dialogue_requested.emit("", PackedStringArray(BELLS[bell][1]))
 	# Through set_flag, so the story can answer (StoryDirector).
 	GameState.set_flag(flag())
+	# A rung bell is kept: falling on the way out, or quitting, never takes
+	# it (or the boss) back. Wren still wakes at their last Tidestone.
+	SaveManager.save_game()
 
 
 ## The phrase reaches Wren: breath and Resonance fill.

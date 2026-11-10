@@ -8,7 +8,7 @@ extends Object
 ## room-wide parts once every tile is placed: the gap field, the puzzle that
 ## opens the bars, and a listing deck.
 
-const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEaLR%$ZMU"
+const LETTERS := "_OK=|!GV^Yizkjvqx><NSrEaLR%$ZMU@&"
 
 
 static func handles(letter: String) -> bool:
@@ -65,6 +65,10 @@ static func make(letter: String, room: Room, pos: Vector2) -> Node2D:
 			return Marrowguard.new()
 		"U":
 			return Hush.new()
+		"@":
+			return Tollshell.new()
+		"&":
+			return Puffwisp.new()
 		"O":
 			return HookPost.new()
 		"K":

@@ -66,6 +66,8 @@ var item_velocity := Vector2.ZERO
 var airborne := false
 ## True while Wren holds the Glowmoth Lantern up (see Lantern).
 var lantern_raised := false
+## Seconds of Lamp Oil left in the lantern (it lights farther meanwhile).
+var lantern_oil := 0.0
 ## True while Wren is under the surface with the Diver's Helm: nothing up
 ## top can touch them.
 var diving := false
@@ -110,7 +112,7 @@ func _ready() -> void:
 
 	_sword = Area2D.new()
 	_sword.name = "Sword"
-	Layers.assign(_sword, Layers.PLAYER_ATTACK, [Layers.ENEMY_HURTBOX])
+	Layers.assign(_sword, Layers.PLAYER_ATTACK, [Layers.ENEMY_HURTBOX, Layers.WORLD])
 	_sword_shape = Layers.rect_shape(Vector2(16, 10), Vector2.ZERO)
 	_sword.add_child(_sword_shape)
 	add_child(_sword)
@@ -135,6 +137,7 @@ func _physics_process(delta: float) -> void:
 	if lantern_raised and not GameState.item_slots.has("glowmoth_lantern"):
 		lantern_raised = false
 	_state_time += delta
+	lantern_oil = maxf(lantern_oil - delta, 0.0)
 	_invuln = maxf(_invuln - delta, 0.0)
 	_flash = maxf(_flash - delta, 0.0)
 	match state:
@@ -210,11 +213,9 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	Feel.shake(3.0)
 	Audio.play_sfx("player_hurt", global_position)
 	Audio.play_sfx("bubble_pop", global_position)
-	if GameState.is_dead():
-		_enter(State.DEAD)
-		Events.player_died.emit()
-	else:
-		_enter(State.HURT)
+	if GameState.is_dead() and _out_of_breath():
+		return
+	_enter(State.HURT)
 
 
 func _move_state() -> void:
@@ -336,12 +337,86 @@ func use_item(id: String) -> bool:
 			_enter(State.ITEM)
 			item_velocity = Vector2.ZERO
 			return true
+		"puffer_bombs":
+			# Not in the water: it would only fizzle out.
+			if swimming() or not GameState.take_item("puffer_bombs"):
+				return false
+			PufferBomb.place(self)
+			return true
+		"lamp_oil":
+			# Poured into the Glowmoth Lantern, which goes up burning brighter.
+			if not GameState.item_slots.has("glowmoth_lantern") or not GameState.take_item("lamp_oil"):
+				return false
+			lantern_oil = Lantern.OIL_TIME
+			if not lantern_raised:
+				lantern_raised = true
+				Audio.play_sfx("lantern_up", global_position)
+			Audio.play_sfx("oil_pour", global_position)
+			_flash = FLASH_TIME
+			return true
 		"glowmoth_lantern":
 			# Up or down; Wren keeps walking either way.
 			lantern_raised = not lantern_raised
 			Audio.play_sfx("lantern_up" if lantern_raised else "lantern_down", global_position)
 			return true
 	return false
+
+
+## The last bubble has popped. A Sea Sprite in a jar breathes Wren back to
+## life (false: they carry on); otherwise Wren goes down (true).
+func _out_of_breath() -> bool:
+	if GameState.use_jar(Items.JAR_SPRITE):
+		GameState.refill()
+		_invuln = INVULN_TIME * 2.0
+		_flash = FLASH_TIME
+		Audio.play_sfx("hum_heal", global_position)
+		Audio.play_jingle("jingle_pearl")
+		Feel.shake(2.0)
+		get_parent().add_child(Revival.at(global_position))
+		return false
+	_enter(State.DEAD)
+	Events.player_died.emit()
+	return true
+
+
+## Kelp tonic from a jar: every bubble back.
+func drink_potion() -> bool:
+	# Never wasted on full breath.
+	if state in [State.DEAD, State.FALL] or GameState.bubbles >= GameState.max_bubbles:
+		return false
+	if not GameState.use_jar(Items.JAR_POTION):
+		return false
+	GameState.refill()
+	Audio.play_sfx("potion_drink", global_position)
+	get_parent().add_child(Revival.at(global_position))
+	return true
+
+
+## Rising motes round Wren: a sprite's revival, a tonic drunk.
+class Revival extends Node2D:
+	const TIME := 0.8
+	var _age := 0.0
+
+	static func at(where: Vector2) -> Revival:
+		var node := Revival.new()
+		node.global_position = where
+		node.z_index = 2
+		return node
+
+	func _process(delta: float) -> void:
+		_age += delta
+		if _age >= TIME:
+			queue_free()
+		queue_redraw()
+
+	func _draw() -> void:
+		var t := _age / TIME
+		for i in 8:
+			var angle := TAU * i / 8.0 + t * 3.0
+			var p := Vector2(cos(angle) * (10.0 - 4.0 * t), -6.0 - 22.0 * t + sin(angle) * 3.0)
+			draw_rect(Rect2(p - Vector2(0.5, 0.5), Vector2(3, 3)), Color(Palette.HUM, 1.0 - t))
+			if i % 2 == 0:
+				draw_rect(Rect2(p + Vector2(0.5, 0.5), Vector2(1, 1)), Color(1, 1, 1, 1.0 - t))
 
 
 ## What stops Wren on foot: walls, water and sunken grates, and deep water
@@ -452,11 +527,10 @@ func fall(back_to: Vector2) -> void:
 	GameState.damage(1)
 	shrink.call(1.0)
 	global_position = back_to
-	if GameState.is_dead():
-		_enter(State.DEAD)
-		Events.player_died.emit()
+	if GameState.is_dead() and _out_of_breath():
 		return
-	_invuln = INVULN_TIME
+	# Longer if a sea sprite has just breathed Wren back.
+	_invuln = maxf(_invuln, INVULN_TIME)
 	_flash = FLASH_TIME
 	_enter(State.MOVE)
 
@@ -471,6 +545,7 @@ func _attack_state(delta: float) -> void:
 				continue
 			_hit_ids[enemy.get_instance_id()] = true
 			_on_sword_contact(enemy.take_hit(sword_damage(enemy), facing))
+		_hit_scenery()
 	if _state_time >= ATTACK_TIME:
 		_enter(State.CHARGE if Input.is_action_pressed("attack") else State.MOVE)
 
@@ -528,9 +603,25 @@ func _spin_state(delta: float) -> void:
 			GameState.add_resonance(GameState.RESONANCE_PER_HIT)
 			Feel.hitstop(2)
 			Feel.shake(2.0)
+	_hit_scenery()
 	if _state_time >= SPIN_TIME:
 		_place_sword()
 		_enter(State.MOVE)
+
+
+## The sword through scenery: pots break and grass is cut.
+func _hit_scenery() -> void:
+	for body in _sword.get_overlapping_bodies():
+		if body.has_method("sword_hit") and not _hit_ids.has(body.get_instance_id()):
+			_hit_ids[body.get_instance_id()] = true
+			body.sword_hit(facing)
+	var room := Room.under(get_tree(), global_position)
+	if room == null:
+		return
+	var centre := _sword_shape.global_position
+	var shape := _sword_shape.shape
+	var half := Vector2.ONE * (shape as CircleShape2D).radius if shape is CircleShape2D else (shape as RectangleShape2D).size / 2.0
+	room.cut_plants(Rect2(centre - half, half * 2.0))
 
 
 func _on_sword_contact(result: Enemy.HitResult) -> void:

@@ -26,10 +26,18 @@ it finishes (about five minutes), download **Leviathan-windows** or
 `.tar.gz`; unpack that too, which keeps the game executable). Pushing a tag like
 `v0.2.0` builds them too.
 
-**Leviathan-web** is the browser version. Browsers won't run it straight from
-the unzipped folder, so serve it: in that folder run `python3 -m http.server`
-and open <http://localhost:8000>, or upload the folder to any static host
-(itch.io, GitHub Pages). Saves stay in that browser.
+**Play in a browser:** <https://ashciraulo.github.io/Leviathan/> is rebuilt
+from `main` on every push (the **Web build** workflow). Saves stay in that
+browser.
+
+The **Leviathan-web** download can't be opened by double-clicking
+`index.html`: browsers only run the game from a web address, and the page
+says so. To play the download, run `python3 -m http.server` in its folder and
+open <http://localhost:8000>, or upload the folder to any static host.
+
+Every pull request exports the web build and boots it in headless Chromium
+(`tools/web_check.mjs`): CI fails if it doesn't reach the title screen or
+the console shows a script error.
 
 To export locally, install the export templates from the editor
 (**Editor > Manage Export Templates**) and use **Project > Export**; the

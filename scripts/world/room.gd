@@ -54,6 +54,8 @@ extends Node2D
 ##             (the Echo Horn brings both down)
 ##          Z  singing skull (the Echo Horn wakes it)
 ##          M  Marrowguard (bone shield)   U  the Hush (unseen till an echo)
+##          @  Tollshell (tolls a ring of sound, then opens)
+##          &  Puffwisp (floats, draws breath, blows Wren back)
 ##          ,  floor the water rises over: deep water while the dungeon's
 ##             water is high (see flooded())
 ##          (a signpost n reads out sign_key when Wren faces it)
@@ -122,6 +124,12 @@ var _water_frame := 0
 ## Water a frost arrow has frozen over (Vector2i tile: true). It reads as
 ## ice (I) until it thaws, and goes back to water when the room reloads.
 var _frozen: Dictionary = {}
+## Tufts of grass (and ferns, scrub...) cut down in this visit: tile -> true.
+var _cut: Dictionary = {}
+## Floor decoration that a sword cuts down, by the start of its tile name,
+## and the chance a cut tuft leaves a glint.
+const PLANT_DECO := ["grass_", "fern_", "scrub_", "frond_", "tussock_"]
+const GRASS_GLINT_ODDS := 0.2
 ## Hidden bone walls ($) the Echo Horn has brought down.
 var _broken: Dictionary = {}
 ## Whether the layout has any I tiles (so ice checks can skip other rooms).
@@ -139,6 +147,7 @@ const BIOMES := {
 		"floor": "sand_%d", "wall_top": "cliff_top_%d", "wall_face": "cliff_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "shell_%d", "dry_deco": "grass_%d", "floor_overlay": ["ripple_%d", 7],
+		"water_overlay": ["tidepool_%d", 5],
 	},
 	"brinewood": {
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
@@ -458,6 +467,30 @@ static func under(tree: SceneTree, at: Vector2) -> Room:
 	return null
 
 
+## How deep each dungeon is on the way to the Old One (0 to 3). The
+## regular enemies in deeper dungeons are tougher and hit harder, to keep
+## pace with Wren's better swords and tunics (bosses have their own).
+const DEPTH := {"hull": 0, "kiln": 0, "mire": 1, "gale": 1, "glacier": 2, "belfry": 2, "tomb": 3, "maw": 3}
+## Health multiplier by depth (rounded up).
+const DEPTH_HP := [1.0, 1.5, 1.5, 2.0]
+## Extra contact damage by depth.
+const DEPTH_DAMAGE := [0, 0, 0, 1]
+
+
+## Toughens a regular enemy for this dungeon's depth (before its _ready).
+## One-touch foes (a single point of health: wisps, moths) stay one-touch.
+func _harden(node: Node) -> void:
+	if not node is Enemy or not DEPTH.has(dungeon):
+		return
+	var enemy := node as Enemy
+	if enemy.max_hp <= 1:
+		return
+	var depth: int = DEPTH[dungeon]
+	enemy.max_hp = ceili(enemy.max_hp * DEPTH_HP[depth])
+	if enemy.contact_damage > 0:
+		enemy.contact_damage += DEPTH_DAMAGE[depth]
+
+
 func _spawn(tile: String, pos: Vector2) -> void:
 	var node: Node2D = null
 	# Dungeon pieces win in a dungeon: some of their letters (k q x) mean
@@ -466,6 +499,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 		node = DungeonTiles.make(tile, self, pos)
 		if node:
 			node.position = pos
+			if tile != "V":
+				_harden(node)
 			add_child(node)
 		return
 	match tile:
@@ -536,6 +571,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			push_warning("Room %s: unknown tile '%s'" % [scene_file_path, tile])
 	if node:
 		node.position = pos
+		_harden(node)
 		add_child(node)
 
 
@@ -583,6 +619,68 @@ func _tile_at(x: int, y: int) -> String:
 		# Floor the water rises over: deep while the dungeon's water is high.
 		return "Q" if flooded() else "."
 	return letter
+
+
+## True when the tile shows a tuft a sword can cut (drawn by _draw_ground).
+func has_plant(x: int, y: int) -> bool:
+	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
+	var deco := str(tiles["dry_deco"])
+	if not PLANT_DECO.any(func(start: String) -> bool: return deco.begins_with(start)):
+		return false
+	# Open floor only: not under a hut, a fence, a pot or anything else.
+	if not _tile_at(x, y) in [".", "P"] or _cut.has(Vector2i(x, y)):
+		return false
+	if _hash(x, y) % 13 != 0 or _near_water(x, y):
+		return false
+	if not is_inside_tree():
+		return true
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = global_position + Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
+	query.collision_mask = 1 << (Layers.WORLD - 1)
+	return get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
+## Cuts every tuft under `area` (global): clippings fly, now and then a glint
+## is left. Returns how many were cut.
+func cut_plants(area: Rect2) -> int:
+	var local := Rect2(area.position - global_position, area.size)
+	var cut := 0
+	for y in range(maxi(floori(local.position.y / TILE), 0), mini(floori(local.end.y / TILE), ROWS - 1) + 1):
+		for x in range(maxi(floori(local.position.x / TILE), 0), mini(floori(local.end.x / TILE), COLS - 1) + 1):
+			if not has_plant(x, y):
+				continue
+			_cut[Vector2i(x, y)] = true
+			cut += 1
+			var at := Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
+			var bits := Clippings.new()
+			bits.position = at
+			add_child(bits)
+			Glint.drop.call_deferred(self, at + Vector2(0, 4), Glint.roll(GRASS_GLINT_ODDS))
+	if cut > 0:
+		Audio.play_sfx("grass_cut", area.get_center())
+		_ground.queue_redraw()
+	return cut
+
+
+## Cut grass flung up and drifting down.
+class Clippings extends Node2D:
+	const TIME := 0.5
+	var _age := 0.0
+
+	func _process(delta: float) -> void:
+		_age += delta
+		if _age >= TIME:
+			queue_free()
+		queue_redraw()
+
+	func _draw() -> void:
+		var t := _age / TIME
+		modulate.a = 1.0 - t * t
+		for i in 5:
+			var angle := TAU * i / 5.0 + 0.9
+			var out := Vector2(cos(angle) * (2.0 + 9.0 * t), -6.0 * sin(t * PI) + sin(angle) * 4.0 * t)
+			draw_rect(Rect2(out, Vector2(2, 1)), Color("#4f7a3a"))
+			draw_rect(Rect2(out + Vector2(1, -1), Vector2(1, 1)), Color("#8cbf5a"))
 
 
 ## A stable pseudo-random number per tile, so variants don't flicker.
@@ -649,7 +747,7 @@ func _draw_ground() -> void:
 				# Deep water is the same deep green wherever it is (Wren's
 				# waterline is drawn to match it).
 				_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
-				if tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
+				if tile != "Q" and tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					# Boardwalks sit on the water, so no bank line against them.
@@ -693,5 +791,5 @@ func _draw_ground() -> void:
 					pass
 				elif wet and h % 11 == 0:
 					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
-				elif not wet and h % 13 == 0:
+				elif not wet and h % 13 == 0 and not _cut.has(Vector2i(x, y)):
 					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)

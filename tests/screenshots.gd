@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -62,6 +62,8 @@ func _ready() -> void:
 				await _maw_shots(game)
 			"extras":
 				await _extras_shots(game)
+			"goods":
+				await _goods_shots(game)
 			"echoes":
 				await _echoes_shots(game)
 			"mantle":
@@ -364,6 +366,7 @@ func _ready() -> void:
 
 	# 8j. The optional rooms, and a dungeon map with its compass.
 	await _extras_shots(game)
+	await _goods_shots(game)
 
 	# 8k. After the end: the echo stones, and a remembered fight.
 	await _echoes_shots(game)
@@ -1350,6 +1353,58 @@ func _crucible_shots() -> void:
 	await _wait(0.2)
 
 
+## Shop goods and glints in Saltmarrow's pot room: a lit puffer bomb, its
+## burst, a pot breaking, coins on the grass, a tonic drunk.
+func _goods_shots(game: Node) -> void:
+	seed(3)
+	var room := await _jump(game, Vector2i(0, -1), Vector2i(12, 7))
+	var wren: Player = game.player
+	wren._invuln = 600.0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var at := wren.position - room.position
+	Glint.drop(room, at + Vector2(-34, 6), 1)
+	Glint.drop(room, at + Vector2(-26, 14), 5)
+	Glint.drop(room, at + Vector2(-42, 18), 20)
+	wren.facing = Vector2.RIGHT
+	GameState.give_item("puffer_bombs", 5, false)
+	wren.use_item("puffer_bombs")
+	await _wait(1.1)
+	wren._invuln = 0.0
+	await _capture("170_puffer_bomb_lit")
+	# Wren stepped back, as they should.
+	wren.global_position -= wren.facing * 40.0
+	var bomb: PufferBomb = get_tree().get_first_node_in_group("puffer_bombs")
+	if bomb:
+		bomb.burst()
+	await _wait(0.08)
+	wren._invuln = 0.0
+	await _capture("171_puffer_bomb_burst")
+	await _wait(0.6)
+	for prop in room.get_children():
+		if prop is Prop and prop.kind == "o":
+			wren.global_position = prop.global_position + Vector2(30, 0)
+			prop.smash()
+			break
+	await _wait(0.12)
+	wren._invuln = 0.0
+	await _capture("172_pot_breaks")
+	room.cut_plants(Rect2(room.global_position, Room.SIZE))
+	await _wait(0.15)
+	wren._invuln = 0.0
+	await _capture("173_grass_cut")
+	while GameState.jars.is_empty():
+		GameState.give_item("jar", 1, false)
+	GameState.jars[0] = Items.JAR_POTION
+	GameState.bubbles = 1
+	wren.drink_potion()
+	await _wait(0.3)
+	wren._invuln = 0.0
+	await _capture("174_tonic_drunk")
+	wren._invuln = 0.0
+	randomize()
+
+
 ## SHOTS_ONLY=ambience: the overworld's ambient life, region by region.
 func _ambience_shots(game: Node) -> void:
 	var shots := {
@@ -1358,6 +1413,8 @@ func _ambience_shots(game: Node) -> void:
 		Vector2i(4, 1): ["amb_fenmouth", Vector2i(11, 1)],
 		Vector2i(8, -2): ["amb_cinder_flats", Vector2i(11, 11)],
 		Vector2i(7, 0): ["amb_bleached_strand", Vector2i(11, 11)],
+		Vector2i(5, -3): ["amb_gale_flats", Vector2i(13, 4)],
+		Vector2i(0, -1): ["amb_saltmarrow_village", Vector2i(5, 11)],
 	}
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]
