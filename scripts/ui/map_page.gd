@@ -44,6 +44,9 @@ var _rooms: Array[Vector2i] = []
 ## Overworld rooms Wren hasn't seen yet but could walk into from one they
 ## have: drawn faint, under fog, so the edge of the known world shows.
 var _fringe: Array[Vector2i] = []
+## coord -> doorway tiles in the room's layout as it stands now (an
+## alt_layout can open one, as at Lullaby Point).
+var _doors: Dictionary = {}
 var _rects: Array = []
 var _cursor := 0
 var _texture: ImageTexture
@@ -77,6 +80,15 @@ func on_open() -> void:
 			_rooms.append(coord)
 	_rooms.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
 	_fringe.clear()
+	_doors.clear()
+	for coord in _rooms:
+		var found: Array[Vector2i] = []
+		var rows := RoomInfo.rows_now(coord)
+		for y in rows.size():
+			for x in rows[y].length():
+				if rows[y][x] == "D":
+					found.append(Vector2i(x, y))
+		_doors[coord] = found
 	if _area == "":
 		_fringe = _find_fringe()
 	_build_texture()
@@ -292,7 +304,7 @@ func _draw_view() -> void:
 				MenuKit.draw_marker(_view, marker, rect.position + Vector2(tile) * PX + Vector2(1, 0))
 		if _area == "" and GameState.has_seen(coord):
 			# Ways in: dungeon mouths, cottages, caves.
-			for tile: Vector2i in info["doors"]:
+			for tile: Vector2i in _doors.get(coord, []):
 				MenuKit.draw_marker(_view, MenuKit.Marker.DOOR, rect.position + Vector2(tile) * PX + Vector2(1, 0))
 			# Sea-glass still lying somewhere in a room Wren has walked:
 			# a twinkle in its corner, never where the piece is.

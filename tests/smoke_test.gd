@@ -2106,6 +2106,13 @@ func _test_extras_dungeon() -> void:
 	_check(world_page._fringe.has(Vector2i(1, 0)) and world_page._fringe.has(Vector2i(0, -1)),
 		"the rooms the Shore opens onto show faint under fog (%s)" % [world_page._fringe])
 	_check(not world_page._fringe.has(Vector2i(-1, 0)), "no fog where there's no room")
+	# Lullaby Point's doorway only exists once the seventh bell has rung.
+	GameState.mark_seen(Vector2i(2, 1))
+	world_page.on_open()
+	_check((world_page._doors[Vector2i(2, 1)] as Array).is_empty(), "no door on the map at Lullaby Point before the seventh bell")
+	GameState.set_flag(Tidebell.flag_for("tomb"))
+	world_page.on_open()
+	_check(not (world_page._doors[Vector2i(2, 1)] as Array).is_empty(), "the Maw's mouth is marked once it opens")
 	var greens: Array = MapPage.BIOME_COLORS["brinewood"]
 	_check(world_page._tile_color("v", greens, true) == greens[2] and world_page._tile_color("M", greens, true) != greens[0],
 		"veiled planks hide as water on the map; trees show")
