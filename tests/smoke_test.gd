@@ -4568,6 +4568,9 @@ func _test_overworld_secrets() -> void:
 		Vector2i(1, -1): "glint", Vector2i(7, -1): "glint", Vector2i(3, 3): "glint",
 		# Out on the sea bed.
 		Vector2i(2, 3): "glint", Vector2i(1, 4): "glint", Vector2i(0, 4): "glint",
+		# The regional caves, one or two per region.
+		Vector2i(0, 1): "glint", Vector2i(1, -4): "glint", Vector2i(3, 4): "glint", Vector2i(9, 2): "glint",
+		Vector2i(8, -4): "glint", Vector2i(6, -3): "glint", Vector2i(2, -1): "glint", Vector2i(6, 2): "glint",
 	}
 	for coord: Vector2i in expect:
 		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
@@ -4582,7 +4585,7 @@ func _test_overworld_secrets() -> void:
 			_check(_walkable_from(broken, Vector2i(10, 7)).has(Vector2i(2, 2)), "breaking the boulder opens the nook")
 		if coord == Vector2i(6, -4):
 			_check(room.chest_count == 30, "the Windmere sea stack holds 30 glints")
-		if coord in [Vector2i(1, -1), Vector2i(7, -1), Vector2i(3, 3)]:
+		if coord in [Vector2i(1, -1), Vector2i(7, -1), Vector2i(3, 3), Vector2i(0, 1), Vector2i(1, -4), Vector2i(3, 4), Vector2i(9, 2), Vector2i(8, -4), Vector2i(2, -1), Vector2i(6, 2)]:
 			_check(room.chest_count >= 100 and tr(room.name_key) != room.name_key, "side area %s has a name and a cache of %d glints" % [coord, room.chest_count])
 			_check(room.cave, "side area %s is shaded like a hollow" % coord)
 			_check(Audio.ambience_for_room(room.biome, room.dungeon, room.ambience, room.cave) == "hollow", "side area %s sounds like a hollow" % coord)
