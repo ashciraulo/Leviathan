@@ -93,6 +93,7 @@ SECRETS = {
     (1, -4): ("frostfang_bow",),              # Icefall Grotto: bars until every ice eye is shot open
     (8, -4): ("glowmoth_lantern",),           # Clinker Vault: bars until both islet braziers burn
     (6, -3): ("kite_cloak",),                 # Sailwind Gallery: ride a fan's stream over the sky gap
+    (2, -1): ("stonebreaker",),               # Rootbound Hollow: cracked boulders wall off the chest
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
