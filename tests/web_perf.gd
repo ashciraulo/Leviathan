@@ -75,6 +75,10 @@ func _ready() -> void:
 					player._invuln = 600.0
 				await get_tree().process_frame
 				_skip_talk()
+			# Back to normal for the timing: an unhurt Wren blinks (half the
+			# frames without them drawn), which would flatter the room.
+			if player:
+				player._invuln = 0.0
 		var total := 0.0
 		var worst := 0.0
 		var calls := 0.0
