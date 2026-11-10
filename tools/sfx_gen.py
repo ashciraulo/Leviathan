@@ -278,6 +278,9 @@ SOUNDS = {
         L("sine", 220, 330, dur=0.4, vol=0.25, attack=0.05, decay=0.2)),
     "wisp_chime": S(0.35,
         L("fm", 1568, dur=0.35, notes=[0, 7], ratio=3.01, index=1.5, decay=0.12)),
+    # Coralie's sea-glass chime: three glassy tings, falling then rising.
+    "glass_chime": S(0.35,
+        L("fm", 1760, dur=0.7, notes=[0, -5, 4], ratio=4.02, index=1.2, decay=0.18)),
     "heart_beat": S(0.75,
         L("sine", 90, 50, dur=0.12, decay=0.05),
         L("sine", 80, 45, at=0.18, dur=0.14, vol=0.7, decay=0.06),

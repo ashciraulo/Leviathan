@@ -527,6 +527,50 @@ def ottilie_frames():
 
 
 # --------------------------------------------------------------------------
+# Coralie, Saltmarrow's beachcomber, who strings sea-glass into wind chimes:
+# a wide straw hat with a coral band, loose dark hair, a teal shawl over a
+# coral skirt, bare feet, and a string of glass beads in her hand. Talking,
+# she holds the string up to the light.
+# --------------------------------------------------------------------------
+CORALIE = [
+    "................",
+    "................",
+    "......dddd......",
+    ".....dccccd.....",
+    "..dddddddddddd..",
+    "....vVVVVVVv....",
+    "....VVeVVeVV....",
+    "....VVVVVVVV....",
+    "....vVVVVVVv....",
+    "....vvVVVVvv....",
+    "....vttVVttv....",
+    "...tttttttttt...",
+    "..tttttttttttt..",
+    "..tttt0ttttttt..",
+    "..VccccccccccVj.",
+    "...cccccccccc.0.",
+    "...cccccccccc.j.",
+    "...cccccccccc.?.",
+    "...cccccccccc...",
+    "...cccccccccc...",
+    "....cccccccc....",
+    ".....VV..VV.....",
+    "....VVV..VVV....",
+    "................",
+]
+
+
+def coralie_frames():
+    idle = CORALIE
+    breathe = settle(idle, 10)
+    # Talking: the string held up to the light, the beads swinging below.
+    talk = paint(idle, [(14, 13, "c.."), (15, 14, "."), (16, 14, "."), (17, 14, "."),
+                        (11, 13, "t"), (11, 14, "t"), (10, 14, "V"), (9, 14, "V"),
+                        (10, 15, "j"), (11, 15, "0"), (12, 15, "j"), (13, 15, "?")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
 # Captain Sorrel, the retired Gullwatch kite-post captain: a leather flying
 # cap with brass goggles pushed up, a grey braid, a long blue coat and a red
 # scarf the wind never stops tugging. Talks with her whistle in her hand.
@@ -1149,6 +1193,7 @@ SPRITES = {
     "gully": gully_frames,
     "sorrel": sorrel_frames,
     "ottilie": ottilie_frames,
+    "coralie": coralie_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1391,6 +1436,21 @@ def portrait_ottilie():
     return _rows(c)
 
 
+def portrait_coralie():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "t")                    # teal shawl
+    _dots(c, [(11, 27), (13, 28), (16, 28), (19, 28), (21, 27)], "0")  # glass beads
+    _dots(c, [(14, 28), (18, 28)], "?")
+    _ellipse(c, 16, 20, 10, 10, "v")                   # dark hair, loose
+    _face(c, "V", eye_row=17, cy=18, rx=7, ry=8)
+    _ellipse(c, 16, 8, 8, 5, "d")                      # straw hat
+    _box(c, 2, 10, 28, 3, "d")                         # its wide brim
+    _box(c, 8, 9, 16, 1, "c")                          # coral band
+    _dots(c, [(8, 22), (23, 22)], "0")                 # sea-glass earrings
+    _dots(c, [(8, 23), (23, 23)], "?")
+    return _rows(c)
+
+
 def portrait_sorrel():
     c = _canvas()
     _ellipse(c, 16, 32, 15, 8, "C")                    # long blue coat
@@ -1559,6 +1619,7 @@ PORTRAITS = {
     "gully": portrait_gully(),
     "sorrel": portrait_sorrel(),
     "ottilie": portrait_ottilie(),
+    "coralie": portrait_coralie(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

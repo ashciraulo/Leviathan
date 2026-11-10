@@ -71,6 +71,7 @@ const SFX := {
 	"lantern_down": {"wave": "triangle", "f0": 660.0, "f1": 440.0, "dur": 0.14, "vol": 0.25},
 	"brazier_catch": {"wave": "noise", "f0": 900.0, "f1": 2400.0, "dur": 0.3, "vol": 0.35, "caption": "CAPTION_FLAME"},
 	"wisp_chime": {"wave": "triangle", "f0": 1568.0, "f1": 1568.0, "dur": 0.25, "vol": 0.2, "steps": 2, "caption": "CAPTION_WISP"},
+	"glass_chime": {"wave": "triangle", "f0": 1760.0, "f1": 1760.0, "dur": 0.4, "vol": 0.2, "steps": 3, "caption": "CAPTION_GLASS_CHIME"},
 	"heart_beat": {"wave": "triangle", "f0": 110.0, "f1": 70.0, "dur": 0.22, "vol": 0.5, "caption": "CAPTION_HEARTBEAT"},
 	"cloak_open": {"wave": "noise", "f0": 1400.0, "f1": 500.0, "dur": 0.2, "vol": 0.3, "caption": "CAPTION_CLOAK"},
 	"thunder": {"wave": "noise", "f0": 300.0, "f1": 40.0, "dur": 0.9, "vol": 0.7, "caption": "CAPTION_THUNDER"},

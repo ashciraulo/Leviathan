@@ -72,6 +72,7 @@ func _ready() -> void:
 		await _test_gully()
 		await _test_sorrel()
 		await _test_ottilie()
+		await _test_coralie()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -4719,6 +4720,73 @@ func _test_ottilie() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_1", "met after the turn but before Hessa's word, she's a stranger")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "once Hessa's sent Wren, she knows")
+
+
+## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a
+## piece, and a little more when all twelve are hung.
+func _test_coralie() -> void:
+	GameState.reset_new_game()
+	var talk_at := StoryDirector.CORALIE_AT + Vector2(0, -18)
+	GameState.set_checkpoint(StoryDirector.SHORE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "coralie") == null, "Coralie isn't on the shore before the opening's done")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	GameState.set_flag("met_hessa")
+	GameState.set_checkpoint(StoryDirector.SHORE, talk_at)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	_check(_find_kind(room, "coralie") != null, "Coralie combs Saltmarrow Shore")
+	var chimes: Array = room.get_children().filter(func(c: Node) -> bool: return c is GlassChime)
+	_check(chimes.size() == 1, "beside her chime")
+	for at: Vector2 in [StoryDirector.CORALIE_AT, StoryDirector.CHIME_AT]:
+		var tile := Vector2i(at / Room.TILE)
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y - 1) == ".", "%s stands on open sand, reachable from above" % tile)
+	# Glass found before she asks is kept until she does.
+	GameState.give_item("sea_glass", 2, false)
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("coralie_asked") and GameState.item_count("sea_glass") == 2, "she asks for sea-glass (%d pages)" % pages)
+	var glints := GameState.item_count("glint")
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	_check(GameState.item_count("sea_glass") == 0 and GlassChime.hung() == 2, "she hangs both pieces")
+	_check(SeaGlass.found() == 2, "pieces on the chime still count as found, for the last piece's jingle")
+	_check(GameState.item_count("glint") == glints + 50, "and pays 25 glints a piece")
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_WAITING"], "with no glass, she waits for more")
+	# Most of the rest, then the last: the chime's done and she adds her savings.
+	GameState.give_item("sea_glass", 9, false)
+	_check(Conversations.branch_for("coralie").get("lines")[0] == "CORALIE_HANG", "eleven isn't twelve")
+	Conversations.talk("coralie")
+	await _play_scene(game, 10.0)
+	_check(GlassChime.hung() == 11 and not GameState.has_flag("coralie_chime_done"), "eleven hung")
+	GameState.give_item("sea_glass", 1, false)
+	glints = GameState.item_count("glint")
+	_check(Conversations.branch_for("coralie").get("lines")[0] == "CORALIE_DONE_1", "the twelfth piece finishes it")
+	Conversations.talk("coralie")
+	await _play_scene(game, 10.0)
+	_check(GlassChime.hung() == SeaGlass.TOTAL and GameState.has_flag("coralie_chime_done"), "twelve hung")
+	_check(GameState.item_count("glint") == glints + 25 + 100, "the last piece, and her savings")
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_AFTER"], "then she listens to the wind")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_TURNED"], "the chime rings when the Old One turns")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_END"], "and after the ending")
+	# Saved and loaded, the tally comes back as a float: still twelve.
+	GameState.flags["coralie_glass"] = 12.0
+	_check(GlassChime.hung() == 12, "a loaded tally still counts")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
 
 
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
