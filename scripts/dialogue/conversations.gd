@@ -70,6 +70,8 @@ const TALKS := {
 	],
 	"corrin": [
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_corrin_hull"], "set": ["heard_corrin_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
+		{"if": ["talked_corrin_quest", "seen_ending"], "lines": ["CORRIN_END"]},
+		{"if": ["talked_corrin_quest", "old_one_turned"], "lines": ["CORRIN_TURNED"]},
 		{"if": ["talked_corrin_quest"], "lines": ["CORRIN_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_corrin_quest"], "lines": ["CORRIN_QUEST_1", "CORRIN_QUEST_2"]},
 		{"lines": ["CORRIN_1", "CORRIN_2"]},
@@ -78,24 +80,32 @@ const TALKS := {
 		{"if": ["found_crab"], "unless": ["pell_gave_pearl"], "set": ["pell_gave_pearl"], "give": {"breath_pearl": 1}, "lines": ["PELL_CRAB_1", "PELL_CRAB_2", ["", "NARRATE_GOT_PEARL"]]},
 		{"if": ["tidebell_hull"], "unless": ["heard_pell_bell"], "set": ["heard_pell_bell"], "lines": ["PELL_BELL_1", "PELL_BELL_2"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_pell_hull"], "set": ["heard_pell_hull"], "lines": ["PELL_HULL_1", "PELL_HULL_2"]},
+		# Admiral gets his introduction even when the crab turns up late.
+		{"if": ["pell_gave_pearl"], "unless": ["heard_pell_admiral"], "set": ["heard_pell_admiral"], "lines": ["PELL_CRAB_AGAIN"]},
+		{"if": ["talked_pell_quest", "seen_ending"], "lines": ["PELL_END"]},
+		{"if": ["talked_pell_quest", "old_one_turned"], "lines": ["PELL_TURNED"]},
 		{"if": ["pell_gave_pearl"], "lines": ["PELL_CRAB_AGAIN"]},
 		{"if": ["talked_pell_quest"], "lines": ["PELL_AGAIN"]},
 		{"if": ["met_hessa"], "set": ["talked_pell_quest"], "lines": ["PELL_QUEST_1", "PELL_QUEST_2"]},
 		{"lines": ["PELL_1", "PELL_2"]},
 	],
-	# Marga sends Wren to Dunstan for rope: a small errand made of flags.
 	# Nettle wants to be a keeper, and learns the lamp signals from Wren.
 	"nettle": [
-		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
 		{"if": ["tidebell_hull"], "unless": ["heard_nettle_bell"], "set": ["heard_nettle_bell"], "lines": ["NETTLE_BELL_1", ["", "NARRATE_WREN_FLASH_ONCE"], "NETTLE_BELL_2"]},
+		# The lamp lessons, whenever Wren first stops to talk after meeting Hessa.
+		{"if": ["met_hessa"], "unless": ["nettle_learned"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
+		{"if": ["nettle_learned", "seen_ending"], "lines": ["NETTLE_END"]},
+		{"if": ["nettle_learned", "old_one_turned"], "lines": ["NETTLE_TURNED"]},
+		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
 		{"if": ["nettle_learned"], "lines": ["NETTLE_AGAIN"]},
-		{"if": ["met_hessa"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
 		{"lines": ["NETTLE_1", "NETTLE_2"]},
 	],
 	# Agna Holt, the last founder, outside the Kiln. After the Ember Bell she
 	# lights her forge again and gives Wren a Brinesteel sword. She always
 	# introduces herself first, even if Wren walked past her into the Kiln.
 	"agna": [
+		{"if": ["agna_gave_sword", "seen_ending"], "lines": ["AGNA_END"]},
+		{"if": ["agna_gave_sword", "old_one_turned"], "lines": ["AGNA_TURNED"]},
 		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
 		{"unless": ["met_agna"], "set": ["met_agna"], "lines": ["AGNA_1", "AGNA_2", "AGNA_3"]},
 		{"if": ["tidebell_kiln"], "set": ["agna_gave_sword"], "give": {"brinesteel_sword": 1}, "lines": ["AGNA_AFTER_1", "AGNA_AFTER_2", ["", "NARRATE_GOT_BRINESTEEL"], "AGNA_AFTER_3"]},
@@ -141,6 +151,7 @@ const TALKS := {
 	# (StoryDirector.sorrel_race, started by the sorrel_race flag).
 	"sorrel": [
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
+		{"if": ["sorrel_paid", "old_one_turned"], "lines": ["SORREL_AFTER", "SORREL_TURNED"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
 		{"if": ["sorrel_won"], "set": ["sorrel_paid"], "give": {"glint": 150}, "lines": ["SORREL_WON_1", "SORREL_WON_2", ["", "NARRATE_GOT_COURIER_PAY"]]},
 		{"if": ["sorrel_race"], "lines": ["SORREL_FLYING"]},
@@ -163,12 +174,16 @@ const TALKS := {
 	# five that have gone dark (FenLantern).
 	"wick": [
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
+		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
 		{"if": ["fen_lanterns_lit"], "set": ["wick_gave_jar"], "give": {"jar": 1}, "lines": ["WICK_DONE_1", "WICK_DONE_2", ["", "NARRATE_GOT_JAR"]]},
 		{"if": ["wick_asked"], "lines": ["WICK_WAITING"]},
 		{"set": ["wick_asked"], "lines": ["WICK_1", "WICK_1B", "WICK_2", "WICK_2B", "WICK_3"]},
 	],
+	# Marga sends Wren to Dunstan for rope: a small errand made of flags.
 	"marga": [
+		{"if": ["marga_gave_jar", "seen_ending"], "lines": ["MARGA_END"]},
+		{"if": ["marga_gave_jar", "old_one_turned"], "lines": ["MARGA_TURNED"]},
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
 		{"if": ["marga_thanked", "tidebell_hull"], "set": ["marga_gave_jar"], "give": {"jar": 1}, "lines": ["MARGA_EEL_1", "MARGA_EEL_2", ["", "NARRATE_GOT_JAR"]]},
 		{"if": ["marga_thanked"], "lines": ["MARGA_AGAIN"]},
@@ -184,7 +199,9 @@ const TALKS := {
 			"set": ["rope_promised"],
 			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
 		},
+		{"if": ["seen_ending"], "lines": ["DUNSTAN_END"]},
 		{"if": ["tobin_home"], "lines": ["DUNSTAN_TOBIN_AFTER"]},
+		{"if": ["old_one_turned"], "lines": ["DUNSTAN_TURNED"]},
 		{"if": ["rope_promised"], "lines": ["DUNSTAN_AGAIN"]},
 		{"lines": ["DUNSTAN_1", "DUNSTAN_2"]},
 	],
