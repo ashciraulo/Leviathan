@@ -105,7 +105,7 @@ const FERRY_ROW_TIME := 3.0
 ## Square's flats until Wren finds it, then hung back by the door.
 const DROWNED_LANE := Vector2i(0, 3)
 const BELFRY_SQUARE := Vector2i(1, 3)
-const LIESL_AT := Vector2(10 * 16 + 8, 4 * 16 + 10)
+const LIESL_AT := Vector2(10 * 16 + 8, 3 * 16 + 10)
 const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
 ## Cutscene 18, Vael's choir: the first time Wren walks into Vael's hall,
