@@ -87,6 +87,10 @@ func _ready() -> void:
 			Vector2i(3, 4): ["rcave_wreckers_hold", Vector2i(1, 9)],
 			Vector2i(9, 1): ["rcave_saltpan_way_in", Vector2i(7, 9)],
 			Vector2i(9, 2): ["rcave_saltpan_hollow", Vector2i(7, 2)],
+			Vector2i(8, -3): ["rcave_clinker_way_in", Vector2i(11, 2)],
+			Vector2i(8, -4): ["rcave_clinker_vault", Vector2i(11, 10)],
+			Vector2i(6, -4): ["rcave_sailwind_way_in", Vector2i(12, 10)],
+			Vector2i(6, -3): ["rcave_sailwind_gallery", Vector2i(3, 7)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
