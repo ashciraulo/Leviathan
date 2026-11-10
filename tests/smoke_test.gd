@@ -73,6 +73,7 @@ func _ready() -> void:
 		await _test_sorrel()
 		await _test_ottilie()
 		await _test_coralie()
+		await _test_lowe_after()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -3231,10 +3232,22 @@ func _test_credits() -> void:
 	_check(credits._height > 216.0, "the credits have something to roll")
 	for key in ["CREDITS_DIRECTION", "CREDITS_END", "MENU_CREDITS", "GAMEOVER_WAKE"]:
 		_check(tr(key) != key, "%s is translated" % key)
+	_check(credits._vignette_count() == 0, "before the ending, the credits show no epilogue scenes")
+	var plain_height: float = credits._height
 	# Leaving would change scene and end the test: don't let it.
 	credits._leaving = true
 	credits.queue_free()
 	await _wait(0.1)
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	var after: Control = (load("res://scenes/credits.tscn") as PackedScene).instantiate()
+	add_child(after)
+	await _wait(0.2)
+	_check(after._vignette_count() == CreditsVignettes.KINDS.size(), "after the ending, the epilogue's scenes come between the names")
+	_check(after._height > plain_height, "and the roll makes room for them")
+	after._leaving = true
+	after.queue_free()
+	await _wait(0.1)
+	GameState.clear_flag(StoryDirector.ENDING_FLAG)
 ## Saltmarrow side quests: Pell's three-clawed crab (a Breath Pearl) and
 ## Marga's smoked eel after the Hull (a jar).
 func _test_side_quests() -> void:
@@ -4807,6 +4820,41 @@ func _test_coralie() -> void:
 	# Saved and loaded, the tally comes back as a float: still twelve.
 	GameState.flags["coralie_glass"] = 12.0
 	_check(GlassChime.hung() == 12, "a loaded tally still counts")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## After the ending, Sister Lowe stands alone on Lullaby Point.
+func _test_lowe_after() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.TOMB_BELL_FLAG)
+	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-20, 0))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "lowe") == null, "Lowe isn't on the point before the ending")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-20, 0))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	var lowe := _find_kind(room, "lowe")
+	_check(lowe != null, "after the ending, Lowe keeps watch on the point")
+	var tile := Vector2i(StoryDirector.LOWE_AT / Room.TILE)
+	_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == ".", "she stands on the point's rocks, above the dialogue box")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages == 4 and GameState.has_flag("lowe_spoke"), "she talks about Vael and home (%d pages)" % pages)
+	_check(Conversations.branch_for("lowe").get("lines") == ["LOWE_END_AGAIN"], "then just watches the tide")
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
