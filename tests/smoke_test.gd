@@ -4668,6 +4668,16 @@ func _test_late_reactions() -> void:
 	GameState.reset_new_game()
 	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "seen_wayshell"]:
 		GameState.set_flag(flag)
+	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
+	GameState.clear_flag("nettle_learned")
+	GameState.set_flag("met_hessa")
+	_check(Conversations.branch_for("nettle").get("lines")[0] == "NETTLE_LEARN_1", "Nettle's lamp lessons still happen after the Wayshell")
+	GameState.set_flag("nettle_learned")
+	GameState.set_flag("heard_nettle_bell")
+	# A crab found late still gets its name before the late lines.
+	GameState.set_flag("pell_gave_pearl")
+	_check(Conversations.branch_for("pell").get("lines") == ["PELL_CRAB_AGAIN"], "Pell names the crab Admiral")
+	GameState.set_flag("heard_pell_admiral")
 	var who := ["corrin", "pell", "nettle", "agna", "marga", "dunstan", "wick"]
 	for speaker in who:
 		_check(not str(Conversations.branch_for(speaker).get("lines")[0]).ends_with("_TURNED"), "%s has nothing to say about a turn that hasn't happened" % speaker)
