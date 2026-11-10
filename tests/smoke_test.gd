@@ -3822,7 +3822,8 @@ func _test_sea_bed() -> void:
 	add_child(steps)
 	await _wait(0.1)
 	var froze := steps.freeze(Vector2i(10, 11))
-	_check(not froze.is_empty() and froze.all(func(t: Vector2i) -> bool: return steps.tile_at(t.x, t.y) == "~"),
+	var laid := Room.parse_layout(steps.layout)
+	_check(not froze.is_empty() and froze.all(func(t: Vector2i) -> bool: return laid[t.y][t.x] == "~"),
 		"a frost arrow beside the sea bed freezes only the open water")
 	# Turned in at a breathing low tide, the sea bed never shows on the way up.
 	var steps_tide := steps.get_node_or_null("Tide") as Tide
