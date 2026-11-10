@@ -3776,6 +3776,45 @@ func _test_overworld_secrets() -> void:
 	await _wait(0.1)
 	chest.queue_free()
 	GameState.reset_new_game()
+	await _test_sea_glass()
+
+
+## Twelve pieces of sea-glass, one per room; walking over one picks it up
+## for good, and the count survives a save.
+func _test_sea_glass() -> void:
+	var total := 0
+	for coord: Vector2i in RoomInfo.in_area(""):
+		total += "".join(RoomInfo.get_room(coord)["rows"]).count("*")
+	_check(total == SeaGlass.TOTAL and Items.max_count("sea_glass") == SeaGlass.TOTAL, "%d pieces of sea-glass in the overworld" % total)
+	_check(tr("ITEM_SEA_GLASS") != "ITEM_SEA_GLASS", "sea-glass has a name")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(1, 1), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.5)
+	var glass: SeaGlass = null
+	for child in game.current_room.get_children():
+		if child is SeaGlass:
+			glass = child
+	_check(glass != null, "the Wreck's ruin holds a piece of sea-glass")
+	if glass:
+		var player: Player = game.player
+		player.global_position = glass.global_position
+		await _wait(0.3)
+		_check(GameState.item_count("sea_glass") == 1 and not is_instance_valid(glass), "walking over sea-glass picks it up")
+		var saved := GameState.to_dict()
+		GameState.reset_new_game()
+		GameState.from_dict(saved)
+		_check(GameState.item_count("sea_glass") == 1 and GameState.has_flag("sea_glass_1_1"), "the sea-glass count and the piece's flag are saved")
+		var again: Room = (load("res://rooms/room_1_1.tscn") as PackedScene).instantiate()
+		again.coord = Vector2i(1, 1)
+		add_child(again)
+		await _wait(0.1)
+		_check(not again.get_children().any(func(c: Node) -> bool: return c is SeaGlass and not c.is_queued_for_deletion()), "a piece picked up stays gone")
+		again.queue_free()
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
 
 
 ## Lullaby Point: open sea until the seventh bell; then the Old One's back

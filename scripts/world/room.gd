@@ -29,6 +29,7 @@ extends Node2D
 ##          7  Marlo Pike's market stall (MarketStall)
 ##          k  Pell's three-clawed crab (shows once Pell asks for it)
 ##          C  chest (holds chest_item)
+##          *  a piece of sea-glass (SeaGlass; one per room, overworld only)
 ##          :  boardwalk over water (walkable; regions with "boardwalk" tiles)
 ##          X  locked hatch (all X in a room open with one small key)
 ##          D  doorway to door_to, arriving on door_spawn
@@ -572,6 +573,11 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			door.target_room = door_to
 			door.target_tile = door_spawn
 			node = door
+		"*":
+			var glass := SeaGlass.new()
+			glass.room_coord = coord
+			glass.tile = Vector2i(int(pos.x) / TILE, int(pos.y) / TILE)
+			node = glass
 		"k":
 			node = QuestCrab.new()
 		"7":

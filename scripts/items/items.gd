@@ -71,6 +71,8 @@ const DEFS := {
 	"breath_pearl": {"kind": PEARL, "icon": 21, "max": 5},
 	"keeper_lamp": {"kind": QUEST, "icon": 22},
 	"glint": {"kind": CURRENCY, "icon": 23, "max": 999},
+	# Twelve pieces hidden off the beaten path (SeaGlass, room letter *).
+	"sea_glass": {"kind": QUEST, "icon": 32, "max": 12},
 	# Dungeon items (templates: the real ids are <dungeon>_map and so on).
 	"map": {"kind": DUNGEON, "icon": 27},
 	"compass": {"kind": DUNGEON, "icon": 28},
