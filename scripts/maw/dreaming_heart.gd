@@ -20,6 +20,9 @@ enum Mode { WAKING, BELL, CALMING, EIGHTH, SLEEP }
 
 const ROOM_KEY := "ROOM_MAW_HEART"
 const DEFEATED_FLAG := "the_end"
+## The last fight's own theme, in place of the boss theme.
+const MUSIC := "boss_heart"
+var music_cue := MUSIC
 const CREDITS_SCENE := "res://scenes/credits.tscn"
 ## The bells in the order Wren rang them, and the boss each one calmed:
 ## [texture, frames, foot row].

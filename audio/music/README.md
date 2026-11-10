@@ -13,7 +13,10 @@ The tracks here now are placeholders made in code by `tools/music_gen.py` (numpy
 ## When each cue plays
 
 - A room plays `dungeon_<id>` inside a dungeon, otherwise `region_<biome>`, with a cross-fade on every change.
-- A room with a living boss plays `boss`; when it falls (`Events.boss_defeated`) the room's own track fades back in.
+- A room with a living boss plays `boss` (Cantor Vael plays `boss_vael` and the Dreaming Heart `boss_heart`, from their `music_cue`); when it falls (`Events.boss_defeated`) the room's own track fades back in.
+- A room's own `Room.music` overrides its track; `"none"` leaves only the ambience (the Ebb Shelf and Grotto).
+- In a hollow (`Room.cave`) the music is muffled: 5 dB down through a low-pass filter.
+- The Wayshell's flight plays `story_flight`.
 
 Cues the game asks for:
 

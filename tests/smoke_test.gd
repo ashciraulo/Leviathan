@@ -3291,6 +3291,10 @@ func _test_audio() -> void:
 	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")
 	Audio._phrase.stop()
 	Audio.stop_music(0.01)
+	# Every track the game asks for by name has a file: the flight, and the
+	# last two bosses' own themes.
+	for cue: String in ["story_flight", "credits", "title", CantorVael.MUSIC, DreamingHeart.MUSIC]:
+		_check(Audio._load(Audio.MUSIC_DIR, cue) != null, "the %s track exists" % cue)
 	# A room can have its own track, or none (only the ambience).
 	_check(Audio.music_for_room("sunken_verge", "") == "region_sunken_verge"
 		and Audio.music_for_room("sunken_verge", "", "none") == ""

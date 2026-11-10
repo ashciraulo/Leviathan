@@ -63,6 +63,11 @@ func _init() -> void:
 	knockback_scale = 0.0
 
 
+## Vael's own theme, in place of the boss theme.
+const MUSIC := "boss_vael"
+var music_cue := MUSIC
+
+
 func _ready() -> void:
 	super._ready()
 	add_to_group("boss")
