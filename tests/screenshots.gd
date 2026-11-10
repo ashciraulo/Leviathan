@@ -39,6 +39,14 @@ func _ready() -> void:
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.6)
+	# SHOTS_ONLY=seaglass: a few of the pieces of sea-glass where they lie.
+	if OS.get_environment("SHOTS_ONLY") == "seaglass":
+		await _sea_glass_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
 	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie"]:
 		match OS.get_environment("SHOTS_ONLY"):
@@ -1966,6 +1974,25 @@ func _ambience_shots(game: Node) -> void:
 		Vector2i(1, -1): ["amb_rime_hollow", Vector2i(11, 1)],
 		Vector2i(7, -1): ["amb_cinder_hollow", Vector2i(21, 5)],
 		Vector2i(3, 3): ["amb_glowworm_hollow", Vector2i(9, 1)],
+	}
+	for coord: Vector2i in shots:
+		var tile: Vector2i = shots[coord][1]
+		GameState.set_checkpoint(coord, Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		await _wait(2.2)
+		await _capture(shots[coord][0])
+
+
+## SHOTS_ONLY=seaglass: a few of the twelve pieces where they lie.
+func _sea_glass_shots(game: Node) -> void:
+	var shots := {
+		Vector2i(4, -1): ["glass_lantern_walk", Vector2i(9, 5)],
+		Vector2i(5, -2): ["glass_old_stilts", Vector2i(8, 9)],
+		Vector2i(9, -1): ["glass_scorched_pass", Vector2i(17, 5)],
+		Vector2i(6, 1): ["glass_lumen_pool", Vector2i(9, 4)],
+		Vector2i(1, 1): ["glass_wreck", Vector2i(9, 10)],
+		Vector2i(9, -2): ["glass_slag_fields", Vector2i(12, 2)],
 	}
 	for coord: Vector2i in shots:
 		var tile: Vector2i = shots[coord][1]

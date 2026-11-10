@@ -323,6 +323,17 @@ GLINT = icon([
 ])
 
 
+SEA_GLASS = icon([
+    "...XXX....",
+    ".XXXXXXX..",
+    "XXXXXXXXX.",
+    "XXXXXXXXXX",
+    ".XXXXXXXXX",
+    "..XXXXXX..",
+    "....XX....",
+])
+
+
 def jar(contents):
     body = "XXXXXXXX"
     fill = contents * 6 if contents else "......"
@@ -413,6 +424,7 @@ def icon_frames():
         TIDEBELL, PEARL, KEEPER_LAMP, GLINT,
         jar(""), jar("&"), SPRITE_JAR,
         MAP, COMPASS, BIG_KEY, hull_art.SMALL_KEY, BLANK,
+        SEA_GLASS,
     ]
 
 

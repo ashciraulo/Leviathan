@@ -141,6 +141,9 @@ func _build_texture() -> void:
 		for y in rows.size():
 			for x in rows[y].length():
 				var ch := rows[y][x]
+				# Sea-glass hides on the map: its tile shows as what's beside it.
+				if ch == "*" and x > 0:
+					ch = rows[y][x - 1]
 				var color: Color = colors[1] if ch == "#" or ch == "$" else (colors[2] if ch == "~" else colors[0])
 				# A faint grain on floors, darker at room edges.
 				if ch != "#" and ch != "~" and (x + y) % 2 == 0:

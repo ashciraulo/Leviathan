@@ -266,10 +266,11 @@ func _sweep() -> void:
 
 
 ## Somewhere Wren can be put down: firm, open ground, clear of props'
-## footprints, stones and doorways.
+## footprints, stones and doorways. Not a piece of sea-glass's tile either:
+## out on the flats that's a one-tile islet.
 func _is_dry_spot(at: Vector2i) -> bool:
 	var tile := _room.tile_at(at.x, at.y)
-	if is_flat(tile) or Room.is_solid(tile) or tile in ["T", "D", "C"] or Prop.is_prop(tile):
+	if is_flat(tile) or Room.is_solid(tile) or tile in ["T", "D", "C", "*"] or Prop.is_prop(tile):
 		return false
 	for dx in [-1, 1]:
 		var side := _room.tile_at(at.x + dx, at.y)

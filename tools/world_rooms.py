@@ -81,6 +81,20 @@ SECRETS = {
 # planks: the Glowmoth Lantern), Cinder Hollow west of (8,-1) (open).
 # The Ossuary's jar (7, 1) needs no tool: it sits inside a ring of sinking
 # sand, and the challenge is walking in without being swallowed.
+# Sea-glass (*): twelve pieces, one per room, picked up by walking over
+# them. Rooms listed here hide theirs behind a tool, like SECRETS; the rest
+# are tucked into corners anyone can walk to.
+SEA_GLASS_TOTAL = 12
+SEA_GLASS = {
+    (0, 0): ("frostfang_bow", "kite_cloak"),                       # the Shore: a pond islet
+    (9, -2): ("kite_cloak",),                                      # Slag Fields: a lava islet
+    (6, 1): ("glowmoth_lantern", "frostfang_bow", "kite_cloak"),   # Lumen Pool: veiled planks
+    (2, -2): ("frostfang_bow", "kite_cloak"),                      # Shiver Coast: out in the sea
+    (9, -1): ("stonebreaker",),                                    # Scorched Pass: behind a boulder
+}
+# The rest: behind a mangrove (4,-1), a stilt hut (5,-2), a rib (8,0) and a
+# windmill (4,-4), in the Wreck's ruin (1,1), out on Cockle Flats at low
+# tide (0,2), and in the middle of Rimewatch Pass's ice (2,-3).
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
 PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
 # Solid things that aren't scenery: stones, chests, hook posts, NPCs, and
@@ -302,7 +316,7 @@ def main():
         for y in range(ROWS):
             for x in range(COLS):
                 t = rows[y][x]
-                if t in ".:xrSpD" and walkable(t, final_items) and (coord, (x, y)) not in reached:
+                if t in ".:xrSpD*" and walkable(t, final_items) and (coord, (x, y)) not in reached:
                     problems.append("screen %s tile (%d,%d) '%s' is never reachable" % (coord, x, y, t))
     # Chests: when each comes within reach, and secrets need their tool.
     for coord in sorted(rooms):
@@ -317,6 +331,27 @@ def main():
             if need:
                 if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
+    # Sea-glass: how many, where, and the hidden ones need their tool.
+    glass = [(coord, (x, y)) for coord in sorted(rooms) for y in range(ROWS) for x in range(COLS)
+             if rows_for(rooms[coord], final_items)[y][x] == "*"]
+    if len(glass) != SEA_GLASS_TOTAL:
+        problems.append("%d pieces of sea-glass, expected %d" % (len(glass), SEA_GLASS_TOTAL))
+    for coord in sorted({c for c, _ in glass}):
+        if sum(1 for c, _ in glass if c == coord) > 1:
+            problems.append("screen %s has more than one piece of sea-glass" % (coord,))
+    for coord, spot in glass:
+        stage = next((i for i, st in enumerate(stages) if (coord, spot) in st[3]), None)
+        if stage is None:
+            problems.append("sea-glass %s %s is never reachable" % (coord, spot))
+            continue
+        if not check:
+            print("Sea-glass at %s %s: stage %d" % (coord, spot, stage))
+        need = SEA_GLASS.get(coord)
+        if need and (coord, spot) in inside(rooms, coord, seen, final_items - set(need)):
+            problems.append("sea-glass %s %s is reachable without %s" % (coord, spot, " or ".join(need)))
+    for coord in SEA_GLASS:
+        if not any(c == coord for c, _ in glass):
+            problems.append("SEA_GLASS lists %s but it has no sea-glass" % (coord,))
     # Crossing an edge carries Wren a step into the next screen: that step
     # must be ground, not water, lava or veiled planks (frozen water and lit
     # planks reset when a screen loads). Deep water is fine: Wren swims it.

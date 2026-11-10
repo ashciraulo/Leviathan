@@ -130,6 +130,8 @@ ITEM_KEEPER_LAMP,Keeper's lamp
 ITEM_KEEPER_LAMP_DESC,"The Saltmarrow light, small enough to carry. Keep it lit."
 ITEM_GLINT,Glints
 ITEM_GLINT_DESC,Shell coins. Saltmarrow's traders take them.
+ITEM_SEA_GLASS,Sea-glass
+ITEM_SEA_GLASS_DESC,"Smooth, frosted glass, worn round by the sea."
 ITEM_MAP,Dungeon map
 ITEM_MAP_DESC,Shows every room here.
 ITEM_COMPASS,Compass
