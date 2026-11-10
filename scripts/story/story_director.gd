@@ -107,6 +107,9 @@ const DROWNED_LANE := Vector2i(0, 3)
 const BELFRY_SQUARE := Vector2i(1, 3)
 const LIESL_AT := Vector2(10 * 16 + 8, 3 * 16 + 10)
 const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
+## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
+const FENMOUTH := Vector2i(4, 1)
+const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
 ## Cutscene 18, Vael's choir: the first time Wren walks into Vael's hall,
 ## the whole Choir is singing the Waking Song. More singers than fight him
@@ -185,6 +188,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_tobin_home()
 	if coord == DROWNED_LANE or coord == BELFRY_SQUARE:
 		_put_liesl(coord)
+	if coord == FENMOUTH or FenLantern.SPOTS.has(coord):
+		_put_wick(coord)
 	if coord == CAUSEWAY_END and GameState.has_flag(TURNED_FLAG):
 		# A ride the game closed partway through: she's home again.
 		if GameState.has_flag(FERRY_FLAG):
@@ -837,6 +842,23 @@ func _put_liesl(coord: Vector2i) -> void:
 		var lost := Doorbell.new()
 		lost.position = DOORBELL_LOST_AT
 		room.add_child(lost)
+
+
+## Wick at Fenmouth, or the room's memorial lantern out in the fen.
+func _put_wick(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	if room == null:
+		return
+	if coord == FENMOUTH and not _find_npc("wick"):
+		var wick := Npc.new("wick")
+		wick.position = WICK_AT
+		room.add_child(wick)
+	if FenLantern.SPOTS.has(coord) and not room.get_children().any(func(c: Node) -> bool: return c is FenLantern):
+		var lantern := FenLantern.new()
+		lantern.room_coord = coord
+		var tile: Vector2i = FenLantern.SPOTS[coord]
+		lantern.position = Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
+		room.add_child(lantern)
 
 
 func _ferry_boat() -> Rowboat:

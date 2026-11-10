@@ -67,6 +67,7 @@ func _ready() -> void:
 		await _test_choir()
 		await _test_ide()
 		await _test_liesl()
+		await _test_wick()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4185,6 +4186,73 @@ func _test_rowing() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
+
+
+## Wick at Fenmouth, who counts the fen's lanterns, and the five gone dark
+## that the raised Glowmoth Lantern lights again.
+func _test_wick() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("glowmoth_lantern")
+	var talk_at := Vector2(StoryDirector.WICK_AT.x - 14, StoryDirector.WICK_AT.y)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "wick") != null, "Wick stands at Fenmouth")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("wick_asked"), "they ask Wren to light the dark lanterns (%d pages)" % pages)
+	game.queue_free()
+	await _wait(0.1)
+	var jars := GameState.item_count("jar")
+	for coord: Vector2i in FenLantern.SPOTS:
+		var tile: Vector2i = FenLantern.SPOTS[coord]
+		var at := Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
+		GameState.set_checkpoint(coord, at + Vector2(0, 40))
+		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.3)
+		var room: Room = game.current_room
+		_check(room.tile_at(tile.x, tile.y) == ".", "%s's lantern stands on dry ground" % coord)
+		var lanterns: Array = room.get_children().filter(func(c: Node) -> bool: return c is FenLantern)
+		_check(lanterns.size() == 1 and not (lanterns[0] as FenLantern).lit, "%s has a dark lantern" % coord)
+		# Walking past with the lantern down does nothing.
+		game.player.global_position = room.global_position + at + Vector2(0, 10)
+		await _wait(0.2)
+		_check(not (lanterns[0] as FenLantern).lit, "only the raised lantern lights it")
+		_check(game.player.use_item("glowmoth_lantern") and game.player.lantern_raised, "Wren raises the Glowmoth Lantern")
+		await _wait(0.2)
+		_check((lanterns[0] as FenLantern).lit and GameState.has_flag(FenLantern.flag_for(coord)), "%s's lantern catches" % coord)
+		game.player.use_item("glowmoth_lantern")
+		game.queue_free()
+		await _wait(0.1)
+	_check(GameState.has_flag(FenLantern.ALL_LIT_FLAG), "all five burn again")
+	# They stay lit.
+	var first: Vector2i = FenLantern.SPOTS.keys()[0]
+	GameState.set_checkpoint(first, Vector2(12 * Room.TILE + 8, 6 * Room.TILE + 10))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	var again: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is FenLantern)
+	_check(again.size() == 1 and (again[0] as FenLantern).lit, "and stay lit")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, talk_at)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	pages = await _play_scene(game, 10.0)
+	_check(GameState.has_flag("wick_gave_jar") and GameState.item_count("jar") == jars + 1, "Wick gives Wren a jar")
+	_check(Conversations.branch_for("wick").get("lines") == ["WICK_AFTER"], "and is glad of every light")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("wick").get("lines")[0] == "WICK_END", "after the ending they counted the strange lights leaving")
+	game.queue_free()
+	await _wait(0.1)
 
 
 ## Liesl in Drowned Lane, and her great-grandmother's door bell out on

@@ -441,6 +441,49 @@ def liesl_frames():
 
 
 # --------------------------------------------------------------------------
+# Wick, Gloamfen's lamplighter child, about ten: a moss-green hooded cape,
+# a brown fringe, and a lighting pole twice their height with a little
+# brass lamp on its hook. Counts the fen's lanterns every night.
+# --------------------------------------------------------------------------
+WICK = [
+    "............QQQ.",
+    "............QJQ.",
+    "............QQQ.",
+    ".............d..",
+    ".............d..",
+    ".....mmmmmm..d..",
+    "....mmmmmmmm.d..",
+    "...mmMMMMMMmmd..",
+    "...mMAAAAAAMmd..",
+    "...mAAeAAeAAmd..",
+    "...mAAeAAeAAmd..",
+    "....AAAAAAAA.d..",
+    ".....AAAAAA..d..",
+    "...mmmmmmmmmmd..",
+    "..mmmmmmmmmmAd..",
+    "..mmmmmmmmmmmd..",
+    "..mmmmmmmmmmmd..",
+    "...mmmmmmmmm.d..",
+    "....pppppppp.d..",
+    "....pp....pp.d..",
+    "....pp....pp.d..",
+    "....AA....AA.d..",
+    "....bb....bb.d..",
+    "................",
+]
+
+
+def wick_frames():
+    idle = WICK
+    breathe = settle(idle, 13)
+    # The lamp's flame flickers while they breathe.
+    breathe = paint(breathe, [(0, 12, "QQQ"), (1, 12, "QJQ"), (2, 12, "QQQ")])
+    # Talking: a hand up, counting on their fingers.
+    talk = paint(idle, [(14, 2, "m"), (13, 1, "A"), (12, 1, "A"), (11, 1, "A")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
 # Tobin, Dunstan's son, about seventeen: the Choir's newest singer. A grey
 # robe too big for him, hood shoved down, a rope belt, his father's mop of
 # brown hair grown out. Rubs the back of his neck when he talks.
@@ -908,6 +951,7 @@ SPRITES = {
     "tobin": tobin_frames,
     "ide": ide_frames,
     "liesl": liesl_frames,
+    "wick": wick_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -1122,6 +1166,19 @@ def portrait_liesl():
     return _rows(c)
 
 
+def portrait_wick():
+    c = _canvas()
+    _ellipse(c, 16, 32, 14, 8, "m")                    # moss-green cape
+    _ellipse(c, 16, 15, 13, 13, "m")                   # its hood, up
+    _face(c, "A", eye_row=17, cy=18, rx=7, ry=8)
+    _box(c, 9, 10, 14, 3, "M")                         # brown fringe under the hood
+    _dots(c, [(10, 13), (13, 13), (19, 13), (22, 13)], "M")
+    _box(c, 28, 4, 2, 28, "d")                         # the lighting pole
+    _box(c, 26, 0, 6, 5, "Q")                          # and its little lamp
+    _box(c, 28, 1, 2, 3, "J")
+    return _rows(c)
+
+
 def portrait_tobin():
     c = _canvas()
     _ellipse(c, 16, 32, 14, 8, "S")                    # grey robe, too big
@@ -1252,6 +1309,7 @@ PORTRAITS = {
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),
     "liesl": portrait_liesl(),
+    "wick": portrait_wick(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

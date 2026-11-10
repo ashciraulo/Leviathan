@@ -36,6 +36,7 @@ const SPEAKERS := {
 	"tobin": ["NAME_TOBIN", Art.PORTRAIT_TOBIN],
 	"ide": ["NAME_IDE", Art.PORTRAIT_IDE],
 	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
+	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -120,6 +121,15 @@ const TALKS := {
 		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
 		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
 		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
+	],
+	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
+	# five that have gone dark (FenLantern).
+	"wick": [
+		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
+		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
+		{"if": ["fen_lanterns_lit"], "set": ["wick_gave_jar"], "give": {"jar": 1}, "lines": ["WICK_DONE_1", "WICK_DONE_2", ["", "NARRATE_GOT_JAR"]]},
+		{"if": ["wick_asked"], "lines": ["WICK_WAITING"]},
+		{"set": ["wick_asked"], "lines": ["WICK_1", "WICK_1B", "WICK_2", "WICK_2B", "WICK_3"]},
 	],
 	"marga": [
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
