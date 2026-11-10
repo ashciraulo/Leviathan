@@ -2416,6 +2416,8 @@ func _maw_shots(game: Node) -> void:
 		[Vector2i(43, 9), "150_maw_hollows", Vector2i(21, 6)],
 		[Vector2i(45, 9), "151_maw_dim_gallery", Vector2i(2, 6)],
 		[Vector2i(44, 8), "152_maw_veins", Vector2i(11, 11)],
+		[Vector2i(45, 8), "152b_maw_lung", Vector2i(17, 11)],
+		[Vector2i(43, 10), "152c_maw_gullet", Vector2i(21, 10)],
 	]
 	for shot: Array in rooms:
 		var at := await _jump(game, shot[0], shot[2])
