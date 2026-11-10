@@ -2958,6 +2958,25 @@ func _test_items() -> void:
 	Settings.using_pad = pad_was_used
 	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
 	_check(tabs == "LB RT", "the menu tabs show their pad buttons (%s)" % tabs)
+	# Prompts use the labels printed on the pad in use.
+	_check(Settings.pad_style_for("Xbox Series Controller") == "xbox"
+		and Settings.pad_style_for("PS5 Controller") == "playstation"
+		and Settings.pad_style_for("DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)") == "playstation"
+		and Settings.pad_style_for("Nintendo Switch Pro Controller") == "nintendo"
+		and Settings.pad_style_for("Generic USB Gamepad") == "xbox", "pads are told apart by name")
+	var style_was := Settings.pad_style
+	Settings.using_pad = true
+	var shown := {}
+	for style in ["xbox", "playstation", "nintendo"]:
+		Settings.pad_style = style
+		shown[style] = "%s %s %s %s" % [MenuKit.key_name("interact"), MenuKit.key_name("attack"),
+			MenuKit.key_name("tab_prev"), MenuKit.key_name("tab_next")]
+	shown["controls"] = tr(ControlsPage.pad_text("interact"))
+	Settings.pad_style = style_was
+	Settings.using_pad = pad_was_used
+	_check(shown["xbox"] == "A B LB RT" and shown["playstation"] == "✕ ○ L1 R2" and shown["nintendo"] == "B A L ZR",
+		"prompts match an Xbox, PlayStation or Nintendo pad (%s)" % shown)
+	_check(shown["controls"] == "B", "the controls page names the Nintendo button too (%s)" % shown["controls"])
 	var game := Vector2(384, 216)
 	_check(Settings.stretch_for(Vector2(844, 390), game) == Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 		and Settings.stretch_for(Vector2(1152, 648), game) == Window.CONTENT_SCALE_STRETCH_INTEGER,
@@ -3271,6 +3290,29 @@ func _test_audio() -> void:
 	phrase = Audio._phrase.stream as AudioStreamPlaylist
 	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")
 	Audio._phrase.stop()
+	Audio.stop_music(0.01)
+	# A room can have its own track, or none (only the ambience).
+	_check(Audio.music_for_room("sunken_verge", "") == "region_sunken_verge"
+		and Audio.music_for_room("sunken_verge", "", "none") == ""
+		and Audio.music_for_room("sunken_verge", "", "story_flight") == "story_flight", "a room's own music overrides its region's")
+	var shelf: Room = (load("res://rooms/room_1_4.tscn") as PackedScene).instantiate()
+	var grotto: Room = (load("res://rooms/room_0_4.tscn") as PackedScene).instantiate()
+	_check(shelf.music == "none" and grotto.music == "none", "the Ebb Shelf and Grotto have only the sea's sound")
+	shelf.free()
+	grotto.free()
+	# Music in a hollow is muffled, and clears outside.
+	Audio.play_music("region_brinewood", 0.01)
+	await _wait(0.1)
+	var open_db: float = Audio._music[Audio._music_index].volume_db
+	Audio.set_muffled(true, 0.1)
+	await _wait(0.3)
+	var hollow_db: float = Audio._music[Audio._music_index].volume_db
+	_check(Audio._low_pass != null and Audio._low_pass.cutoff_hz < 1000.0 and hollow_db < open_db - 4.0,
+		"music in a hollow is quieter and dulled (%.1f to %.1f dB, %d Hz)" % [open_db, hollow_db, Audio._low_pass.cutoff_hz if Audio._low_pass else 0])
+	Audio.set_muffled(false, 0.1)
+	await _wait(0.3)
+	_check(Audio._low_pass.cutoff_hz > 19000.0 and is_equal_approx(Audio._music[Audio._music_index].volume_db, open_db),
+		"and clear again outside")
 	Audio.stop_music(0.01)
 
 

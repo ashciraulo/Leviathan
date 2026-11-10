@@ -9,6 +9,7 @@ biome = "sunken_verge"
 chest_item = "glint"
 chest_count = 150
 cave = true
+music = "none"
 layout = "########################
 ########################
 #########......#########

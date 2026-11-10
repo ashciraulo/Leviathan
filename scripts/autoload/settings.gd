@@ -41,6 +41,9 @@ var key_overrides: Dictionary = {}
 ## True while the player is on a gamepad (the last input came from one), so
 ## button prompts show pad buttons. Not saved.
 var using_pad := false
+## Which buttons the pad in use has printed on it, for prompts: "xbox",
+## "playstation" or "nintendo". Read from the pad's name. Not saved.
+var pad_style := "xbox"
 var pad_overrides: Dictionary = {}
 
 const TEXT_SPEEDS := [25.0, 45.0, 90.0, 10000.0]
@@ -78,6 +81,10 @@ var _default_events: Dictionary = {}
 func _ready() -> void:
 	# Keeps noticing the device in use while menus pause the game.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
+	var pads := Input.get_connected_joypads()
+	if not pads.is_empty():
+		_on_joy_connection_changed(pads[0], true)
 	_register_default_actions()
 	_set_default_font()
 	_make_filter()
@@ -118,12 +125,43 @@ func apply() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventJoypadButton and event.pressed:
+	if (event is InputEventJoypadButton and event.pressed) \
+			or (event is InputEventJoypadMotion and absf(event.axis_value) > 0.5):
 		using_pad = true
-	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
-		using_pad = true
+		if event.device != _pad_device:
+			_pad_device = event.device
+			pad_style = pad_style_for(Input.get_joy_name(event.device))
 	elif (event is InputEventKey and event.pressed) or event is InputEventMouseButton:
 		using_pad = false
+
+
+var _pad_device := -1
+
+
+## A newly connected pad's buttons show straight away, before it's used.
+func _on_joy_connection_changed(device: int, connected: bool) -> void:
+	if connected:
+		_pad_device = device
+		pad_style = pad_style_for(Input.get_joy_name(device))
+	elif device == _pad_device:
+		var pads := Input.get_connected_joypads()
+		_pad_device = pads[0] if not pads.is_empty() else -1
+		pad_style = pad_style_for(Input.get_joy_name(_pad_device)) if _pad_device >= 0 else "xbox"
+
+
+## The button labels a pad has, from its name. Anything unknown gets the
+## Xbox names, which most PC pads copy.
+static func pad_style_for(pad_name: String) -> String:
+	# In a browser the name also carries the USB vendor: 054c Sony, 057e
+	# Nintendo.
+	var lowered := pad_name.to_lower()
+	for word in ["playstation", "dualshock", "dualsense", "ps3", "ps4", "ps5", "sony", "054c"]:
+		if word in lowered:
+			return "playstation"
+	for word in ["nintendo", "switch", "joy-con", "joycon", "057e"]:
+		if word in lowered:
+			return "nintendo"
+	return "xbox"
 
 
 func text_chars_per_second() -> float:
