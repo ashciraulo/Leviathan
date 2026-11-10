@@ -626,7 +626,7 @@ HESSA_CONFESS_2,"He was my apprentice. Best ear I ever trained. He said the Old 
 HESSA_CONFESS_3,"I couldn't hear it. My ears were already going. So I told him he was wrong."
 HESSA_CONFESS_4,"And then I stopped listening to him at all. That's on me, not him."
 HESSA_CONFESS_5,"Don't hate him, little lamp. He's wrong, but he isn't cruel."
-HESSA_AFTER_TURN,"Ottilie keeps the keepers' old training cave up in Frostspine. Go and see her."
+HESSA_AFTER_TURN,"Ottilie trained beside us. Go and see her, fishing Still Cove."
 ROOM_MAW_THROAT,The Maw
 ROOM_MAW_PALATE,The Maw: the Palate
 ROOM_MAW_HOLLOWS,The Maw: the Hollows
@@ -797,3 +797,19 @@ NARRATE_GOT_COURIER_PAY,Wren got 150 Glints.
 SORREL_AFTER,"Your pennant's flying on the far post. Gullwatch remembers."
 SORREL_AFTER_2,"Maybe I'll open the post again, once the gales calm down."
 SORREL_END,"The winds are gentle now. I've started flying letters again."
+NAME_OTTILIE,Ottilie
+OTTILIE_HESSA,"Hessa's keeper, are you? She always did send me the quiet ones."
+OTTILIE_1,"Shh. You'll spook the rimefin. Ottilie. I fish this cove."
+OTTILIE_1B,"Rimefin only bite when the cove's still, and it hasn't been."
+OTTILIE_2,"Something big down there turns in its sleep. Fish scatter."
+OTTILIE_2B,"My old fingers are too slow for them now. Yours look quick."
+OTTILIE_3,"Sit by the hole. When the float goes under, pull. Bring me three."
+OTTILIE_WAITING,"Three rimefin. Watch the float, and pull the moment it dips."
+OTTILIE_DONE_1,"Three! Look at the frost on their fins. Supper for a week."
+OTTILIE_DONE_2,"Take these. Old keepers' coin, from when I trained up here."
+NARRATE_GOT_KEEPERS_COIN,Wren got 200 Glints.
+OTTILIE_AFTER,"The cove's still today. Even the deep sleeps easier."
+OTTILIE_TURNED,"Hessa, Vael and I trained in the old cave above. Cold years."
+OTTILIE_TURNED_2,"Vael would lie with his ear to the ice for hours. Listening."
+OTTILIE_TURNED_3,"He heard it first, you know. The Old One, grieving."
+OTTILIE_END,"The ice sings at night now. Soft, like someone humming."

@@ -70,6 +70,7 @@ func _ready() -> void:
 		await _test_wick()
 		await _test_gully()
 		await _test_sorrel()
+		await _test_ottilie()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4616,6 +4617,81 @@ func _test_sorrel() -> void:
 	await _wait(0.1)
 	GameState.set_flag("seen_ending")
 	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_END", "after the ending she flies letters again")
+
+
+func _test_ottilie() -> void:
+	GameState.reset_new_game()
+	var talk_at := StoryDirector.OTTILIE_AT + Vector2(0, -18)
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	_check(_find_kind(room, "ottilie") != null, "Ottilie fishes Still Cove")
+	var holes: Array = room.get_children().filter(func(c: Node) -> bool: return c is FishingHole)
+	_check(holes.size() == 1, "by her fishing hole")
+	var hole := holes[0] as FishingHole
+	for at: Vector2 in [StoryDirector.OTTILIE_AT, StoryDirector.FISHING_HOLE_AT]:
+		var tile := Vector2i(at / Room.TILE)
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y - 1) == ".", "%s stands on the shore, reachable from above" % tile)
+	# Before she asks, the hole is just a hole.
+	game.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	game.player.try_interact()
+	await _wait(0.1)
+	_check(hole.state == FishingHole.State.IDLE, "Wren can't fish until Ottilie asks")
+	game.player.global_position = room.global_position + talk_at
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("ottilie_asked"), "she asks for three rimefin (%d pages)" % pages)
+	game.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	# Pulling too early loses the fish.
+	game.player.try_interact()
+	_check(hole.state == FishingHole.State.WAITING, "the float goes in")
+	game.player.try_interact()
+	_check(hole.state == FishingHole.State.IDLE and FishingHole.caught() == 0, "pulled too soon: nothing")
+	# Too late, too.
+	game.player.try_interact()
+	hole.bite_in = 0.1
+	await _wait(0.3)
+	_check(hole.state == FishingHole.State.BITE, "the float goes under")
+	await _wait(FishingHole.BITE_WINDOW + 0.1)
+	_check(hole.state == FishingHole.State.IDLE and FishingHole.caught() == 0, "too slow: it's gone")
+	for i in FishingHole.WANTED:
+		game.player.try_interact()
+		hole.bite_in = 0.1
+		await _wait(0.3)
+		game.player.try_interact()
+		await _wait(0.1)
+	_check(FishingHole.caught() == FishingHole.WANTED and GameState.has_flag(FishingHole.DONE_FLAG), "three rimefin landed")
+	game.player.try_interact()
+	_check(hole.state == FishingHole.State.IDLE, "and she has all she needs")
+	await _wait(0.6)
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	var glints := GameState.item_count("glint")
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	_check(GameState.has_flag("ottilie_paid") and GameState.item_count("glint") == glints + 200, "Ottilie pays in old keepers' coin")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_TURNED", "after the turn she remembers training with Hessa and Vael, even after the ending")
+	Conversations.talk("ottilie")
+	await _play_scene(game, 10.0)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_END", "and then the ice hums")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_1", "met after the turn but before Hessa's word, she's a stranger")
+	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "once Hessa's sent Wren, she knows")
 
 
 func _enemies_away() -> void:

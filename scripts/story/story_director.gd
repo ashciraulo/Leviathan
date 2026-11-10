@@ -131,6 +131,10 @@ const KITE_ROUTE := [
 	Vector2(20 * 16 + 8, 9 * 16 + 4),
 ]
 const KITE_TIME := 3.0
+## Ottilie on Still Cove's east shore, by her fishing hole.
+const STILL_COVE := Vector2i(0, -2)
+const OTTILIE_AT := Vector2(17 * 16 + 8, 8 * 16 + 10)
+const FISHING_HOLE_AT := Vector2(19 * 16 + 8, 8 * 16 + 12)
 ## How near the post counts as there.
 const POST_REACH := 16.0
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
@@ -215,6 +219,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_wick(coord)
 	if coord == WRECK_STRAND:
 		_put_gully()
+	if coord == STILL_COVE:
+		_put_ottilie()
 	if coord == GULLWATCH_STEPS:
 		# A race the game closed partway through is simply over.
 		if GameState.has_flag(RACE_FLAG):
@@ -914,6 +920,19 @@ func _put_gully() -> void:
 		var box := Strongbox.new()
 		box.position = STRONGBOX_AT
 		room.add_child(box)
+
+
+## Ottilie and her fishing hole.
+func _put_ottilie() -> void:
+	var room: Node = game.current_room
+	if room == null or _find_npc("ottilie"):
+		return
+	var ottilie := Npc.new("ottilie")
+	ottilie.position = OTTILIE_AT
+	room.add_child(ottilie)
+	var hole := FishingHole.new()
+	hole.position = FISHING_HOLE_AT
+	room.add_child(hole)
 
 
 ## Captain Sorrel and the far post of her old kite-post.
