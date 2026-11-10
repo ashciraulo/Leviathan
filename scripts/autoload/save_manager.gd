@@ -167,6 +167,36 @@ func copy_save(from_slot: int, to_slot: int) -> bool:
 	return true
 
 
+## A slot's save as text to keep outside the game (a file the player
+## downloads), or "" when the slot has no readable save.
+func export_text(slot: int) -> String:
+	var parsed := _read_slot(slot)
+	return "" if parsed.is_empty() else JSON.stringify(parsed, "\t")
+
+
+## The name an exported save gets: the game, the file number and the date.
+func export_file_name(slot: int) -> String:
+	return "leviathan-file%d-%s.json" % [_slot(slot) + 1, Time.get_date_string_from_system()]
+
+
+## Puts a save brought in from outside the game (export_text's output) into
+## an empty slot. Returns "" when it worked, otherwise the text key of why not.
+func import_text(text: String, slot: int) -> String:
+	if has_save(slot):
+		return "FILES_COPY_NEED_EMPTY"
+	var parsed = JSON.parse_string(text)
+	if not (parsed is Dictionary) or not (parsed.get("state") is Dictionary):
+		return "FILES_IMPORT_BAD"
+	if is_newer(parsed):
+		return "FILES_NEWER"
+	var file := FileAccess.open(slot_path(slot), FileAccess.WRITE)
+	if file == null:
+		return "FILES_IMPORT_BAD"
+	file.store_string(JSON.stringify(parsed, "\t"))
+	file.close()
+	return ""
+
+
 ## The slot saved most recently, or -1 when there are no saves.
 func latest_slot() -> int:
 	var best := -1

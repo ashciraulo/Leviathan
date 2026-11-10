@@ -12,7 +12,9 @@
 // checks the canvas has actually drawn something (not a blank or error page).
 // Then it opens the game again on a phone-sized touch screen: the game has to
 // fill the screen's height, a touch has to bring up the on-screen controls
-// (web/touch.html), and the stick has to press the arrow keys.
+// (web/touch.html), and the stick has to press the arrow keys. Last, a save
+// goes in through Import on the file select (tests/web_save.json), survives
+// a reload, and comes back out through Export the same.
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -107,9 +109,65 @@ if (shot) fs.writeFileSync(shot, png);
 const colours = await colourCount(png);
 if (colours < 12) failures.push(`the screen looks blank (${colours} colours)`);
 if (failures.length === 0) await phoneCheck();
+if (failures.length === 0) await saveCheck();
 await browser.close();
 server.close();
-finish(`WEB BUILD CHECK PASSED (title drawn, ${colours} colours; touch controls work)`);
+finish(`WEB BUILD CHECK PASSED (title drawn, ${colours} colours; touch controls and save import/export work)`);
+
+async function saveCheck() {
+  const ctx = await browser.newContext({ viewport: { width: 1152, height: 648 }, acceptDownloads: true });
+  const tab = await ctx.newPage();
+  tab.on("pageerror", (err) => failures.push(`saves: page error: ${err.message}`));
+  let picker = null;
+  tab.on("filechooser", (f) => { picker = f; });
+  const boot = async () => {
+    let up = false;
+    const seen = (msg) => { if (msg.text().includes("Godot Engine v")) up = true; };
+    tab.on("console", seen);
+    const until = Date.now() + BOOT_TIMEOUT_MS;
+    while (!up && Date.now() < until) await tab.waitForTimeout(500);
+    tab.off("console", seen);
+    await tab.waitForTimeout(6000);
+    return up;
+  };
+  const key = async (k, n = 1) => {
+    for (let i = 0; i < n; i++) {
+      await tab.keyboard.down(k);
+      await tab.waitForTimeout(70);
+      await tab.keyboard.up(k);
+      await tab.waitForTimeout(250);
+    }
+  };
+  // The file select's buttons, from the left: Copy, Erase, Export, Import, Back.
+  const button = async (index) => { await key("ArrowDown", 3); await key("ArrowLeft", 4); await key("ArrowRight", index); };
+  await tab.goto(`http://127.0.0.1:${port}/`);
+  if (!(await boot())) return failures.push("saves: the engine never started");
+  await key("Enter"); // Journeys
+  await tab.waitForTimeout(800);
+  await button(3);
+  await key("k"); // Import, into File 1
+  await key("k");
+  for (let i = 0; i < 20 && !picker; i++) await tab.waitForTimeout(250);
+  if (!picker) return failures.push("saves: Import didn't open the browser's file picker");
+  const original = fs.readFileSync(path.resolve("tests/web_save.json"), "utf8");
+  await picker.setFiles({ name: "web_save.json", mimeType: "application/json", buffer: Buffer.from(original) });
+  await tab.waitForTimeout(1500);
+  // Saves live in the browser's storage: a reload still has the file.
+  await tab.reload();
+  if (!(await boot())) return failures.push("saves: the engine didn't start again after a reload");
+  await key("ArrowDown"); // Continue, then Journeys
+  await key("Enter");
+  await tab.waitForTimeout(800);
+  await button(2);
+  await key("k"); // Export; the file select starts on the latest file
+  const download = tab.waitForEvent("download", { timeout: 8000 }).catch(() => null);
+  await key("k");
+  const got = await download;
+  if (!got) return failures.push("saves: Export didn't download the file (did Import keep it?)");
+  const back = JSON.parse(fs.readFileSync(await got.path(), "utf8"));
+  if (JSON.stringify(back.state) !== JSON.stringify(JSON.parse(original).state)) failures.push("saves: the exported file isn't the one imported");
+  await ctx.close();
+}
 
 async function phoneCheck() {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });

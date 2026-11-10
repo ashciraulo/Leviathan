@@ -1,0 +1,46 @@
+{
+	"format_version": 1.0,
+	"game_version": "0.1.0",
+	"saved_at": "2026-11-10T15:10:27",
+	"state": {
+		"bubbles": 5.0,
+		"checkpoint_pos": [
+			-1.0,
+			-1.0
+		],
+		"checkpoint_room": [
+			0.0,
+			0.0
+		],
+		"equipped": {
+			"shield": "cork_buckler",
+			"sword": "driftwood_sword",
+			"tunic": "oilskin"
+		},
+		"flags": {},
+		"inventory": {
+			"cork_buckler": 1.0,
+			"driftwood_sword": 1.0,
+			"keeper_lamp": 1.0,
+			"oilskin": 1.0,
+			"tidebell": 1.0
+		},
+		"item_slots": [
+			"",
+			""
+		],
+		"jars": [],
+		"max_bubbles": 5.0,
+		"play_time": 3725.0,
+		"resonance": 0.0,
+		"resonance_max": 30.0,
+		"tidestones": {}
+	},
+	"summary": {
+		"bells": 1.0,
+		"bubbles": 5.0,
+		"pearls": 0.0,
+		"place": "ROOM_SHORE",
+		"play_time": 3725.0
+	}
+}

@@ -281,6 +281,17 @@ FILES_ERASE_CONFIRM,Erase file %d for good?
 FILES_ERASED,Erased.
 FILES_YES,Yes
 FILES_NO,No
+FILES_EXPORT,Export
+FILES_IMPORT,Import
+FILES_PICK_EXPORT,Export which file to your device?
+FILES_PICK_IMPORT,Import into which empty file?
+FILES_IMPORT_NEED_EMPTY,Pick an empty file to import into.
+FILES_IMPORT_WAIT,Choose a Leviathan save file.
+FILES_IMPORT_NEEDS_TOUCH,Press %s or tap to choose a file.
+FILES_IMPORT_BAD,That isn't a Leviathan save.
+FILES_EXPORTED,Saved to your device.
+FILES_EXPORT_FAILED,Couldn't save it there.
+FILES_IMPORTED,Imported.
 ROOM_MOTHLIGHT_GLADE,Mothlight Glade
 ROOM_HOLLOW_BOLE,The Hollow Bole
 ROOM_OLD_STILTS,Old Stilts
