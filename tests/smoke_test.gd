@@ -3624,8 +3624,10 @@ func _test_ambience() -> void:
 	add_child(hull)
 	_check(hull.get_node_or_null("Ambience") == null, "dungeons have no gulls")
 	hull.queue_free()
-	# Weather: mist in Brinewood, wind over Windmere.
-	for case in [["res://rooms/room_3_0.tscn", "mist"], ["res://rooms/room_5_-3.tscn", "gusts"]]:
+	# Weather: mist in Brinewood, wind over Windmere, ash over Cinderreach,
+	# snow (the same falling flakes) over Frostspine, sand blowing over the Ossuary.
+	for case in [["res://rooms/room_3_0.tscn", "mist"], ["res://rooms/room_5_-3.tscn", "gusts"],
+			["res://rooms/room_8_-2.tscn", "ash"], ["res://rooms/room_0_-3.tscn", "ash"], ["res://rooms/room_7_0.tscn", "gusts"]]:
 		var weather_room: Room = (load(case[0]) as PackedScene).instantiate()
 		add_child(weather_room)
 		var weather := weather_room.get_node_or_null("Ambience") as Ambience
