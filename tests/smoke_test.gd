@@ -4283,6 +4283,9 @@ func _test_regional_caves() -> void:
 	await _wait(0.4)
 	var gallery: Room = game.current_room
 	var player: Player = game.player
+	# Its Tumbleburr wanders the west ledge; out of the way for the rides.
+	for burr in _child_of(gallery, Enemy):
+		burr.free()
 	var before := GameState.bubbles
 	var ends: Array[Vector2] = []
 	for ride: Array in [[Vector2i(4, 5), Vector2.RIGHT], [Vector2i(20, 9), Vector2.LEFT]]:

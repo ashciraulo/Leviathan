@@ -90,7 +90,7 @@ func _ready() -> void:
 			Vector2i(8, -3): ["rcave_clinker_way_in", Vector2i(11, 2)],
 			Vector2i(8, -4): ["rcave_clinker_vault", Vector2i(11, 10)],
 			Vector2i(6, -4): ["rcave_sailwind_way_in", Vector2i(12, 10)],
-			Vector2i(6, -3): ["rcave_sailwind_gallery", Vector2i(4, 5)],
+			Vector2i(6, -3): ["rcave_sailwind_gallery", Vector2i(3, 7)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
