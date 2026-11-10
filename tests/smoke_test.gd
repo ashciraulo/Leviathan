@@ -2181,7 +2181,7 @@ func _test_echoes_dungeon() -> void:
 	await _wait(1.0 + EchoHall.RISE_GAP * 8 + 0.5)
 	var stones := _child_of(room, EchoStone)
 	_check(stones.size() == 8 and GameState.has_flag(EchoTrial.WOKEN_FLAG), "eight echo stones rise round the Heart")
-	_check(Audio.music_cue != "boss", "the sleeping Heart's chamber is no fight (%s)" % Audio.music_cue)
+	_check(not Audio.music_cue.begins_with("boss"), "the sleeping Heart's chamber is no fight (%s)" % Audio.music_cue)
 	_check(stones.all(func(s: EchoStone) -> bool: return room.tile_at(s.return_tile.x, s.return_tile.y) == "."), "every stone sends Wren home onto floor")
 	if stones.size() == 8:
 		var stone: EchoStone = stones.filter(func(s: EchoStone) -> bool: return s.id == "hull")[0]
@@ -4798,12 +4798,12 @@ func _test_choir() -> void:
 		return
 	var vael: CantorVael = vaels[0]
 	_check(Cutscene.active and vael.asleep and GameState.has_flag(StoryDirector.CHOIR_FLAG), "the first time in, the Choir is singing and the fight waits")
-	_check(Audio.music_cue != "boss", "no boss theme over the song (%s)" % Audio.music_cue)
+	_check(not Audio.music_cue.begins_with("boss"), "no boss theme over the song (%s)" % Audio.music_cue)
 	await _wait(0.3)
 	_check(get_tree().get_nodes_in_group("choir_extra").size() == StoryDirector.CHOIR_EXTRAS.size(), "the whole Choir stands along the hall")
 	var pages := await _play_scene(game, 40.0)
 	_check(pages >= 1 and not Cutscene.active, "Vael has his say (%d pages)" % pages)
-	_check(not vael.asleep and Audio.music_cue == "boss", "then the duel begins (%s)" % Audio.music_cue)
+	_check(not vael.asleep and Audio.music_cue == CantorVael.MUSIC, "then the duel begins (%s)" % Audio.music_cue)
 	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WATCH_FROM) < 6.0, "Wren walked up the hall into the song")
 	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is WakingSong), "the song's notes are gone once it's broken off")
 	# Break his song: the rest of the Choir slips away.
