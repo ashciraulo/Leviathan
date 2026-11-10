@@ -89,7 +89,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 ## The room's track, or the boss theme while a boss is still up in it.
 func _play_room_music() -> void:
 	if current_room:
-		var cue := "boss" if _room_has_boss() else _room_music()
+		var boss := _living_boss()
+		var cue := _room_music() if boss == null else str(boss.get("music_cue") if boss.get("music_cue") else "boss")
 		Audio.play_music(cue)
 		Audio.set_muffled(current_room.cave)
 		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon, current_room.ambience, current_room.cave))
@@ -100,10 +101,16 @@ func _room_music() -> String:
 
 
 func _room_has_boss() -> bool:
+	return _living_boss() != null
+
+
+## A boss in this room that is awake and not yet beaten. One with its own
+## theme (music_cue: Cantor Vael, the Dreaming Heart) plays that.
+func _living_boss() -> Node:
 	for boss in get_tree().get_nodes_in_group("boss"):
 		if current_room.is_ancestor_of(boss) and boss.get("dying") != true and boss.get("asleep") != true:
-			return true
-	return false
+			return boss
+	return null
 
 
 func _on_boss_defeated() -> void:
@@ -120,7 +127,7 @@ func _process(delta: float) -> void:
 		_count_time(delta)
 	# A boss that falls without sending boss_defeated still hands the room
 	# back its own music.
-	if Audio.music_cue == "boss" and not busy and current_room and not _room_has_boss():
+	if Audio.music_cue.begins_with("boss") and not busy and current_room and not _room_has_boss():
 		_on_boss_defeated()
 
 
