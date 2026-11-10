@@ -54,6 +54,8 @@ extends Node2D
 ##             (the Echo Horn brings both down)
 ##          Z  singing skull (the Echo Horn wakes it)
 ##          M  Marrowguard (bone shield)   U  the Hush (unseen till an echo)
+##          @  Tollshell (tolls a ring of sound, then opens)
+##          &  Puffwisp (floats, draws breath, blows Wren back)
 ##          ,  floor the water rises over: deep water while the dungeon's
 ##             water is high (see flooded())
 ##          (a signpost n reads out sign_key when Wren faces it)
@@ -453,6 +455,27 @@ static func under(tree: SceneTree, at: Vector2) -> Room:
 	return null
 
 
+## How deep each dungeon is on the way to the Old One (0 to 3). The
+## regular enemies in deeper dungeons are tougher and hit harder, to keep
+## pace with Wren's better swords and tunics (bosses have their own).
+const DEPTH := {"hull": 0, "kiln": 0, "mire": 1, "gale": 1, "glacier": 2, "belfry": 2, "tomb": 3, "maw": 3}
+## Health multiplier by depth (rounded up).
+const DEPTH_HP := [1.0, 1.5, 1.5, 2.0]
+## Extra contact damage by depth.
+const DEPTH_DAMAGE := [0, 0, 0, 1]
+
+
+## Toughens a regular enemy for this dungeon's depth (before its _ready).
+func _harden(node: Node) -> void:
+	if not node is Enemy or not DEPTH.has(dungeon):
+		return
+	var enemy := node as Enemy
+	var depth: int = DEPTH[dungeon]
+	enemy.max_hp = ceili(enemy.max_hp * DEPTH_HP[depth])
+	if enemy.contact_damage > 0:
+		enemy.contact_damage += DEPTH_DAMAGE[depth]
+
+
 func _spawn(tile: String, pos: Vector2) -> void:
 	var node: Node2D = null
 	# Dungeon pieces win in a dungeon: some of their letters (k q x) mean
@@ -461,6 +484,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 		node = DungeonTiles.make(tile, self, pos)
 		if node:
 			node.position = pos
+			if tile != "V":
+				_harden(node)
 			add_child(node)
 		return
 	match tile:
@@ -531,6 +556,7 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			push_warning("Room %s: unknown tile '%s'" % [scene_file_path, tile])
 	if node:
 		node.position = pos
+		_harden(node)
 		add_child(node)
 
 

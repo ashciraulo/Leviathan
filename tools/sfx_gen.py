@@ -418,6 +418,18 @@ SOUNDS = {
     "save": S(0.45,
         L("tri", 523, dur=0.5, notes=[0, 7, 12], decay=0.25),
         L("sine", 262, dur=0.5, vol=0.4, decay=0.3)),
+    # A Tollshell (Drowned Belfry): its rattle before it tolls, and the toll.
+    "toll_rattle": S(0.4,
+        L("fm", 640, 600, dur=0.5, ratio=2.7, index=1.2, decay=0.25, vib=(28, 0.06)),
+        L("noise", dur=0.45, hp=2500, lp=6000, vol=0.25, decay=0.2, seed=181, wobble=(30, 0.7))),
+    "toll_ring": S(0.55,
+        L("fm", 523, 520, dur=1.0, ratio=2.4, index=1.8, decay=0.35),
+        L("sine", 262, dur=0.8, vol=0.4, decay=0.3)),
+    # A Puffwisp (Gale Spire): drawing breath, then the gust it blows.
+    "puff_inhale": S(0.4,
+        L("noise", dur=0.55, lp=(500, 2400), hp=300, attack=0.4, decay=0.1, seed=182)),
+    "puff_blow": S(0.5,
+        L("noise", dur=0.5, lp=(3000, 600), hp=200, decay=0.2, seed=183, wobble=(9, 0.3))),
     "bell_quiet": S(0.3,
         L("fm", 392, 390, dur=0.9, ratio=3.5, index=0.6, decay=0.3)),
     "bell_ring": S(0.7,
