@@ -26,6 +26,6 @@ func _process(delta: float) -> void:
 	if wren == null:
 		return
 	_light.global_position = wren.global_position + Vector2(0, -8)
-	var want := Lantern.RADIUS * 1.25 if wren.lantern_raised else Lantern.GLOW
+	var want := Lantern.reach(wren) * 1.25 if wren.lantern_raised else Lantern.GLOW
 	_radius = move_toward(_radius, want, 220.0 * delta)
 	_light.texture_scale = _radius / 128.0

@@ -12,6 +12,9 @@ extends Object
 const RADIUS := 72.0
 ## Wren's own faint glow in a dark room, lantern down.
 const GLOW := 26.0
+## Lamp Oil: the raised lantern burns this much farther for OIL_TIME seconds.
+const OIL_BOOST := 1.5
+const OIL_TIME := 30.0
 
 static var _light_texture: Texture2D
 
@@ -30,7 +33,12 @@ static func lights(tree: SceneTree, at: Vector2, margin: float = 0.0) -> bool:
 	var wren := player(tree)
 	if wren == null or not wren.lantern_raised:
 		return false
-	return (wren.global_position + Vector2(0, -8)).distance_to(at) <= RADIUS + margin
+	return (wren.global_position + Vector2(0, -8)).distance_to(at) <= reach(wren) + margin
+
+
+## How far `wren`'s raised lantern lights: farther while Lamp Oil burns.
+static func reach(wren: Player) -> float:
+	return RADIUS * (OIL_BOOST if wren != null and wren.lantern_oil > 0.0 else 1.0)
 
 
 ## A soft round light, for PointLight2D (256 px across, white in the

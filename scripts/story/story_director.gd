@@ -612,6 +612,8 @@ func bell_rung(bell: Tidebell) -> void:
 	# The bell itself may be gone by now (a test, or the room unloading).
 	GameState.refill()
 	GameState.add_resonance(GameState.resonance_max)
+	# The bell saved when it rang; keep the breath it gave too.
+	SaveManager.save_game()
 	if is_instance_valid(game) and is_instance_valid(game.player):
 		Audio.play_sfx("hum_heal", game.player.global_position)
 	await scene.wait(1.0)

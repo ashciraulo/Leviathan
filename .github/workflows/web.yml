@@ -1,0 +1,127 @@
+name: Web build
+
+# Exports the browser version, boots it in headless Chromium (it must reach
+# the title screen with no script errors), and on main publishes it to
+# GitHub Pages: https://ashciraulo.github.io/Leviathan/
+# A browser can't run the game from a downloaded folder (file://), so the
+# hosted page is the way to play it without installing anything.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Export and boot the web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GODOT_VERSION: 4.7.2
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
+
+      - name: Cache web export template
+        id: templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-templates-${{ env.GODOT_VERSION }}-web
+
+      - name: Download web export template
+        if: steps.templates.outputs.cache-hit != 'true'
+        run: |
+          dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$dir"
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q -o -j templates.tpz templates/version.txt templates/web_nothreads_release.zip -d "$dir"
+          rm templates.tpz
+
+      - name: Import project
+        run: timeout 300 "$RUNNER_TEMP/godot" --headless --path . --import
+
+      - name: Export
+        run: |
+          mkdir -p export/web
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web" export/web/index.html 2>&1 | tee export.log
+          test -s export/web/index.wasm
+          test -s export/web/index.pck
+          # Imports Godot made of the exported icons don't belong on the page.
+          rm -f export/web/*.import
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.49.1
+          npx playwright install --with-deps chromium
+
+      - name: Boot it in a browser
+        run: node tools/web_check.mjs export/web web_title.png
+
+      - name: Keep the title screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-title
+          path: web_title.png
+          if-no-files-found: ignore
+
+      - name: Keep the build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Leviathan-web
+          path: export/web/
+
+      - name: Prepare the Pages site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: export/web/
+
+  deploy:
+    name: Publish to GitHub Pages
+    needs: web
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

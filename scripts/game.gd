@@ -19,6 +19,9 @@ var busy := false
 var _fade: ColorRect
 ## True while the game over screen is up: play time doesn't count.
 var _game_over := false
+## [direction, until msec]: a locked hatch just kept Wren from crossing that
+## way, so walking on into it doesn't knock again every frame.
+var _hatch_blocked := [Vector2i.ZERO, 0]
 
 
 func _ready() -> void:
@@ -106,6 +109,7 @@ func _process(delta: float) -> void:
 ## Build the world at the checkpoint in GameState. With by_mantle, Mantle
 ## swoops in and sets Wren down there.
 func _start(by_mantle: bool = false) -> void:
+	_hatch_blocked = [Vector2i.ZERO, 0]
 	# No remembered fight carries over into a load or a new game.
 	EchoTrial.end()
 	world = Node2D.new()
@@ -170,13 +174,26 @@ func _room_center(room: Room) -> Vector2:
 
 
 func _change_room(direction: Vector2i) -> void:
-	var next := _spawn_room(current_room.coord + direction)
+	var held_back: bool = _hatch_blocked[0] == direction and Time.get_ticks_msec() < _hatch_blocked[1]
+	var next: Room = null if held_back else _spawn_room(current_room.coord + direction)
 	if next == null:
 		# Nothing that way: keep Wren inside this room.
 		var local := player.global_position - current_room.global_position
 		local = local.clamp(Vector2.ONE, Room.SIZE - Vector2.ONE)
 		player.global_position = current_room.global_position + local
 		return
+	# A locked hatch on the far side of the edge is a door from this side
+	# too: a key opens it, and without one Wren stays here.
+	var hatch := _hatch_ahead(next, direction)
+	if hatch:
+		hatch._on_touch(player)
+		if not GameState.flags.get(LockedDoor.lock_flag(next.coord), false):
+			next.queue_free()
+			var back := player.global_position - current_room.global_position
+			back = back.clamp(Vector2.ONE, Room.SIZE - Vector2.ONE) - Vector2(direction) * 2.0
+			player.global_position = current_room.global_position + back
+			_hatch_blocked = [direction, Time.get_ticks_msec() + int(LockedDoor.TOAST_COOLDOWN * 1000.0)]
+			return
 	busy = true
 	player.frozen = true
 	# Freeze both rooms (and their enemies) during the slide.
@@ -198,11 +215,30 @@ func _change_room(direction: Vector2i) -> void:
 	Events.toast.emit(next.name_key)
 
 
+## The closed hatch in `next` that Wren would slide into crossing the edge
+## that way, or null.
+func _hatch_ahead(next: Room, direction: Vector2i) -> LockedDoor:
+	var dir := Vector2(direction)
+	var across := Vector2(absf(dir.y), absf(dir.x))
+	# The edge Wren comes in by, as a distance into `next` (0 at the edge).
+	var edge := 0.0 if direction.x + direction.y > 0 else -Room.SIZE.dot(-dir)
+	for door in get_tree().get_nodes_in_group("locked_doors"):
+		if not (door is LockedDoor) or not next.is_ancestor_of(door):
+			continue
+		var centre: Vector2 = door.global_position + Vector2(0, -4)
+		var depth := (centre - next.global_position).dot(dir) - edge
+		# The first row or column in, and in line with Wren across the edge.
+		if depth >= 0.0 and depth < Room.TILE and absf((centre - player.global_position).dot(across)) < 12.0:
+			return door
+	return null
+
+
 ## Fade out, swap to the doorway's room, put Wren on its arrival tile, fade in.
 func _on_door_entered(target: Vector2i, tile: Vector2i) -> void:
 	if busy or not ResourceLoader.exists(ROOM_PATH % [target.x, target.y]):
 		return
 	busy = true
+	_hatch_blocked = [Vector2i.ZERO, 0]
 	player.frozen = true
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
