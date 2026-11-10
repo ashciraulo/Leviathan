@@ -244,12 +244,14 @@ func _move_state() -> void:
 		velocity = Vector2.ZERO
 	elif Input.is_action_just_pressed("item_2") and use_item(GameState.item_slots[1]):
 		velocity = Vector2.ZERO
-	elif _hum_requested() and not GameState.can_hum():
-		# Don't leave Hum toggled on; it would start by itself later.
-		_hum_latched = false
-	elif _hum_requested() and GameState.can_hum():
-		_enter(State.HUM)
-		velocity = Vector2.ZERO
+	# Asked once a frame: with Hum on toggle, each ask on a press flips it.
+	elif _hum_requested():
+		if GameState.can_hum():
+			_enter(State.HUM)
+			velocity = Vector2.ZERO
+		else:
+			# Don't leave Hum toggled on; it would start by itself later.
+			_hum_latched = false
 
 
 ## The point just in front of Wren that Interact reaches.
@@ -492,6 +494,8 @@ func drop_through(coord: Vector2i, tile: Vector2i) -> void:
 	if state in [State.FALL, State.DEAD]:
 		return
 	end_item()
+	# Don't let a toggled Hum start by itself after landing.
+	_hum_latched = false
 	_enter(State.FALL)
 	velocity = Vector2.ZERO
 	Audio.play_sfx("player_fall", global_position, 1.3)
@@ -512,6 +516,8 @@ func fall(back_to: Vector2) -> void:
 	if state in [State.FALL, State.DEAD]:
 		return
 	end_item()
+	# Don't let a toggled Hum start by itself after landing.
+	_hum_latched = false
 	_enter(State.FALL)
 	velocity = Vector2.ZERO
 	# Shrink towards the middle of the body, as if dropping away.

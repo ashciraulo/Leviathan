@@ -1036,6 +1036,27 @@ func _test_play() -> void:
 	Input.action_release("hum")
 	_check(GameState.bubbles == 3, "humming restores a bubble (bubbles %d)" % GameState.bubbles)
 	_check(is_equal_approx(GameState.resonance, GameState.resonance_max * 2.0 / 3.0), "humming spends a third of the meter")
+	# Hum set to toggle (an accessibility option): one tap starts it, it
+	# keeps going with the key up, and a second tap stops it.
+	await _wait(0.3)
+	_check(player.state == Player.State.MOVE, "letting go of Hum ends the hum (state %d)" % player.state)
+	var was_toggle := Settings.hum_toggle
+	Settings.hum_toggle = true
+	var hum_key := Settings.main_key("hum") as Key
+	GameState.bubbles = 2
+	GameState.resonance = GameState.resonance_max
+	_press_key(hum_key, true)
+	await _wait(0.1)
+	_press_key(hum_key, false)
+	await _wait(1.0)
+	_check(player.state == Player.State.HUM and GameState.bubbles == 3,
+		"with Hum on toggle, a tap starts a hum that heals (state %d, bubbles %d)" % [player.state, GameState.bubbles])
+	_press_key(hum_key, true)
+	await _wait(0.1)
+	_press_key(hum_key, false)
+	await _wait(0.2)
+	_check(player.state == Player.State.MOVE, "a second tap stops the hum")
+	Settings.hum_toggle = was_toggle
 
 	# A Spitter fires a projectile.
 	var spitter := Spitter.new()
@@ -2931,6 +2952,15 @@ func _test_menus() -> void:
 	await get_tree().process_frame
 	files.queue_free()
 	await get_tree().process_frame
+
+
+## A real key press or release, the way the keyboard sends it.
+func _press_key(key: Key, down: bool) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = key
+	event.keycode = key
+	event.pressed = down
+	Input.parse_input_event(event)
 
 
 func _pad_event(button: JoyButton) -> InputEventJoypadButton:
