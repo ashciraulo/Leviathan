@@ -28,10 +28,10 @@ func _ready() -> void:
 	add_child(_shape)
 	z_index = -9
 	# Plain wet light. In a dark room the glint shows above the dark (it's
-	# what gives the hidden way away), a little paler.
+	# what gives the hidden way away), as dim blue-violet specks.
 	var room := get_parent() as Room
 	var dark := room != null and room.dark
-	_glint_color = Color(0.72, 0.86, 0.92) if dark else Color(0.62, 0.78, 0.86)
+	_glint_color = Color(0.39, 0.38, 0.88) if dark else Color(0.62, 0.78, 0.86)
 	_glint = Node2D.new()
 	_glint.draw.connect(_draw_glints)
 	if dark:

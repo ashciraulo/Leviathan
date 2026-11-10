@@ -9,7 +9,7 @@ extends Node2D
 ## Every Glow, for the Darkness to read.
 const GROUP := "glows"
 ## How much of a Glow shows as a wash of colour in a lit room.
-const WASH := 0.35
+const WASH := 0.18
 
 var radius := 32.0:
 	set(value):
@@ -41,6 +41,13 @@ func _ready() -> void:
 
 
 func _draw() -> void:
+	# In a dark room the Darkness lets this light through; a wash on top
+	# would light it twice.
+	var room := get_parent()
+	while room != null and not room is Room:
+		room = room.get_parent()
+	if room != null and (room as Room).dark:
+		return
 	var tint := color * (energy * WASH)
 	tint.a = 1.0
 	draw_texture_rect(Lantern.light_texture(), Rect2(-radius, -radius, radius * 2.0, radius * 2.0), false, tint)
