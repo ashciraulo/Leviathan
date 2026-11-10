@@ -41,6 +41,7 @@ func _ready() -> void:
 		await _test_maw_dungeon()
 		await _test_extras_dungeon()
 		await _test_echoes_dungeon()
+		await _test_foes_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -2122,6 +2123,61 @@ func _test_echoes_dungeon() -> void:
 		_check(EchoTrial.boss == "", "leaving before the trip home ends the echo too")
 	game.queue_free()
 	EchoTrial.end()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
+## The dungeons' own regular enemies, and how they toughen with depth.
+func _test_foes_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(36, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	var room: Room = game.current_room
+	# A Tollshell: shut, it turns the sword; near, it rattles, tolls, opens.
+	var shells := _child_of(room, Tollshell)
+	_check(shells.size() == 1, "a Tollshell squats in the Belfry's entry")
+	if shells.size() == 1:
+		var shell: Tollshell = shells[0]
+		_check(shell.max_hp == 3, "deeper down, it's tougher (%d)" % shell.max_hp)
+		_check(shell.take_hit(1, Vector2.UP) == Enemy.HitResult.BLOCKED, "shut, its shell turns the sword")
+		player.global_position = shell.global_position + Vector2(0, 30)
+		await _wait(Tollshell.RATTLE_TIME + 0.1)
+		_check(shell.is_tolling(), "Wren near, it rattles and then tolls")
+		await _wait(Tollshell.TOLL_TIME + 0.1)
+		_check(shell.is_open(), "then it lifts its lip to look out")
+		_check(shell.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT, "and open, the sword finds it")
+	# A Puffwisp: draws breath, then blows Wren back.
+	room = await _goto(game, Vector2i(28, 10), Vector2i(11, 10))
+	await _wait(0.2)
+	var puffs := _child_of(room, Puffwisp)
+	_check(puffs.size() == 1, "a Puffwisp drifts in the Gale Spire's entry")
+	if puffs.size() == 1:
+		var puff: Puffwisp = puffs[0]
+		for c in _child_of(room, Enemy):
+			if c != puff:
+				c.queue_free()
+		_check(puff.max_hp == 3, "the Gale's foes are tougher than the Hull's (%d)" % puff.max_hp)
+		player.global_position = room.global_position + Vector2(12 * 16, 9 * 16)
+		puff.global_position = player.global_position + Vector2(40, 0)
+		var deadline := Time.get_ticks_msec() + 3000
+		while Time.get_ticks_msec() < deadline and not puff.is_blowing():
+			await _wait(0.05)
+		var before := player.global_position.x
+		await _wait(0.4)
+		_check(puff.is_blowing() or puff.is_spent(), "it draws breath and blows")
+		_check(player.global_position.x < before - 20.0, "the gust shoves Wren back (%.0f px)" % (before - player.global_position.x))
+	# Depth: a Hull Scuttler is as it was; a Tomb Marrowguard hits harder.
+	room = await _goto(game, Vector2i(10, 9), Vector2i(11, 11))
+	var scuttlers := _child_of(room, Scuttler)
+	_check(not scuttlers.is_empty() and scuttlers[0].max_hp == 2 and scuttlers[0].contact_damage == 1, "the Hull's Scuttlers are as they were")
+	room = await _goto(game, Vector2i(41, 9), Vector2i(1, 6))
+	var guards := _child_of(room, Marrowguard)
+	_check(not guards.is_empty() and guards[0].max_hp == 6 and guards[0].contact_damage == 2, "a Tomb Marrowguard is twice as tough and hits harder")
+	game.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)
 

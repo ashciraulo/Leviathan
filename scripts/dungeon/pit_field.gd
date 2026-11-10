@@ -63,9 +63,10 @@ func _ready() -> void:
 			var size := Vector2((x - start) * Room.TILE - 4, Room.TILE - 4)
 			body.add_child(Layers.rect_shape(size, Vector2((start + x) * Room.TILE / 2.0, y * Room.TILE + Room.TILE / 2.0)))
 	# Enemies and crates already in the room steer clear of the gaps.
-	# (Not fliers, which nothing in the room stops: their mask is empty.)
+	# (Not fliers, which nothing in the room stops: their mask is empty; nor
+	# floaters that keep to walls but drift over gaps: meta "floats".)
 	for child in _room.get_children():
-		if (child is Enemy and (child as Enemy).collision_mask != 0) or child is Crate:
+		if (child is Enemy and (child as Enemy).collision_mask != 0 and not child.has_meta("floats")) or child is Crate:
 			(child as CollisionObject2D).collision_mask |= 1 << (Layers.PIT - 1)
 	rising = _room.lava_rise > 0.0 and not GameState.has_flag(rise_flag(_room.coord))
 	_has_lava = _has_lava or rising

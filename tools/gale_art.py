@@ -433,6 +433,45 @@ def storm_bell(rung):
     return rows_of(c)
 
 
+def puffwisp(pose):
+    """A Puffwisp: a little scrap of storm cloud with a face, that draws a
+    breath and blows. 16x16. Poses: drift, swell (cheeks full), blow (lips
+    pursed, a streak out front), spent (small and sagging)."""
+    c = canvas(16, 16)
+    size = {"drift": 1.0, "swell": 1.18, "blow": 1.05, "spent": 0.8}[pose]
+    cy = 9 if pose != "spent" else 10
+    for (bx, by, r) in ((8, cy, 5.0), (4.5, cy + 1, 3.2), (11.5, cy + 1, 3.2), (6, cy - 3, 3.0), (10, cy - 3, 2.8)):
+        fill_ellipse(c, 8 + (bx - 8) * size, cy + (by - cy) * size, r * size, r * size * 0.9, "w")
+    # A darker storm belly.
+    for x in range(16):
+        for y in range(cy + 2, 16):
+            if c[y][x] == "w":
+                c[y][x] = "h" if y < cy + 4 else "k"
+    eyes = cy - 1
+    if pose == "spent":
+        put(c, 6, eyes, "_")
+        put(c, 9, eyes, "_")
+        put(c, 7, eyes + 2, "_")
+        put(c, 8, eyes + 2, "_")
+    else:
+        put(c, 6, eyes, "_")
+        put(c, 10, eyes, "_")
+        if pose == "swell":
+            fill_ellipse(c, 8, eyes + 3, 1.6, 1.2, "_")
+        elif pose == "blow":
+            put(c, 8, eyes + 2, "_")
+            put(c, 9, eyes + 2, "_")
+            for x in range(12, 16):
+                put(c, x, eyes + 2, "*")
+            put(c, 13, eyes + 1, "*")
+        else:
+            put(c, 8, eyes + 2, "_")
+    # A spark of the storm in it.
+    if pose in ("swell", "blow"):
+        put(c, 4, cy - 2, "!")
+    return rows_of(c)
+
+
 def build(lit, sheet):
     """Everything in assets/gale/, as {file name: pixels}."""
     return {
@@ -442,5 +481,6 @@ def build(lit, sheet):
         "lightning_rod": sheet([[lit(lightning_rod(False), 93), lit(lightning_rod(True), 93)]], 16, 40),
         "stormheron": sheet([[lit(heron(p), 94) for p in ("perch", "flare", "fly", "grounded")]], 48, 48),
         "feather_dart": sheet([[lit(feather_dart(), 95)]], 10, 6),
+        "puffwisp": sheet([[lit(puffwisp(p), 97) for p in ("drift", "swell", "blow", "spent")]], 16, 16),
         "storm_bell": sheet([[lit(storm_bell(False), 96), lit(storm_bell(True), 96)]], 32, 40),
     }
