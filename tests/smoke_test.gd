@@ -2906,6 +2906,25 @@ func _test_items() -> void:
 	Settings.using_pad = pad_was_used
 	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
 	_check(tabs == "LB RT", "the menu tabs show their pad buttons (%s)" % tabs)
+	# Prompts use the labels printed on the pad in use.
+	_check(Settings.pad_style_for("Xbox Series Controller") == "xbox"
+		and Settings.pad_style_for("PS5 Controller") == "playstation"
+		and Settings.pad_style_for("DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)") == "playstation"
+		and Settings.pad_style_for("Nintendo Switch Pro Controller") == "nintendo"
+		and Settings.pad_style_for("Generic USB Gamepad") == "xbox", "pads are told apart by name")
+	var style_was := Settings.pad_style
+	Settings.using_pad = true
+	var shown := {}
+	for style in ["xbox", "playstation", "nintendo"]:
+		Settings.pad_style = style
+		shown[style] = "%s %s %s %s" % [MenuKit.key_name("interact"), MenuKit.key_name("attack"),
+			MenuKit.key_name("tab_prev"), MenuKit.key_name("tab_next")]
+	shown["controls"] = tr(ControlsPage.pad_text("interact"))
+	Settings.pad_style = style_was
+	Settings.using_pad = pad_was_used
+	_check(shown["xbox"] == "A B LB RT" and shown["playstation"] == "✕ ○ L1 R2" and shown["nintendo"] == "B A L ZR",
+		"prompts match an Xbox, PlayStation or Nintendo pad (%s)" % shown)
+	_check(shown["controls"] == "B", "the controls page names the Nintendo button too (%s)" % shown["controls"])
 	var game := Vector2(384, 216)
 	_check(Settings.stretch_for(Vector2(844, 390), game) == Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 		and Settings.stretch_for(Vector2(1152, 648), game) == Window.CONTENT_SCALE_STRETCH_INTEGER,

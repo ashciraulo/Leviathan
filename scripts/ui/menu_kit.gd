@@ -215,15 +215,26 @@ static func pad_name(action: String) -> String:
 	for event in InputMap.action_get_events(action):
 		var key := ""
 		if event is InputEventJoypadButton:
-			key = "PAD_SHORT_%d" % event.button_index
+			key = pad_key("PAD_SHORT_%d" % event.button_index)
 		elif event is InputEventJoypadMotion:
-			key = "PAD_SHORT_AXIS_%d" % event.axis
+			key = pad_key("PAD_SHORT_AXIS_%d" % event.axis)
 		else:
 			continue
 		var text := TranslationServer.translate(key)
 		# Unusual buttons (paddles, touchpad) have no name: show the number.
 		return text if text != key else "B%s" % key.get_slice("_", key.get_slice_count("_") - 1)
 	return "-"
+
+
+## A pad text key ("PAD_SHORT_0") in the style of the pad in use:
+## "PAD_PS_SHORT_0" on a PlayStation pad, "PAD_NS_SHORT_0" on a Nintendo
+## one, when that differs; otherwise the key itself (the Xbox names).
+static func pad_key(key: String) -> String:
+	var prefix: String = {"playstation": "PAD_PS_", "nintendo": "PAD_NS_"}.get(Settings.pad_style, "")
+	if prefix == "":
+		return key
+	var styled := prefix + key.trim_prefix("PAD_")
+	return styled if TranslationServer.translate(styled) != styled else key
 
 
 static func key_text(key: InputEventKey) -> String:
