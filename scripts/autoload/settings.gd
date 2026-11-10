@@ -83,6 +83,25 @@ func _ready() -> void:
 	_make_filter()
 	load_settings()
 	apply()
+	get_tree().root.size_changed.connect(_fit_scale)
+	_fit_scale()
+
+
+## Whole-number scaling keeps the pixels crisp, but in a window under twice
+## the game's size (a phone, a small browser tab) it would leave the game at
+## 1x in a sea of black: scale to fit there instead.
+func _fit_scale() -> void:
+	var root := get_tree().root
+	var base := Vector2(root.content_scale_size)
+	if base.x <= 0.0 or base.y <= 0.0:
+		return
+	root.content_scale_stretch = stretch_for(Vector2(root.size), base)
+
+
+static func stretch_for(window: Vector2, base: Vector2) -> Window.ContentScaleStretch:
+	if window.x < base.x * 2.0 or window.y < base.y * 2.0:
+		return Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+	return Window.CONTENT_SCALE_STRETCH_INTEGER
 
 
 ## Applies everything that lives outside this script (audio, window,
@@ -311,8 +330,8 @@ func _register_default_actions() -> void:
 		"hum": [_key(KEY_H), _pad(JOY_BUTTON_RIGHT_SHOULDER)],
 		"map": [_key(KEY_M), _pad(JOY_BUTTON_BACK)],
 		"pause": [_key(KEY_ESCAPE), _pad(JOY_BUTTON_START)],
-		# Menus: switch tabs.
-		"tab_prev": [_key(KEY_Q), _pad(JOY_BUTTON_LEFT_SHOULDER)],
+		# Menus: switch tabs with the triggers (shown as LT / RT); LB works too.
+		"tab_prev": [_key(KEY_Q), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0), _pad(JOY_BUTTON_LEFT_SHOULDER)],
 		"tab_next": [_key(KEY_E), _axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)],
 	}
 	_default_events = bindings

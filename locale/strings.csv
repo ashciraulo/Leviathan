@@ -73,7 +73,7 @@ HINT_MAP,Move the cursor to look around
 HINT_MAP_FLY,%s: blow the Wayshell and fly here
 HINT_OPTIONS,Left / right: change
 HINT_CONTROLS,%s: change    %s: back
-HINT_CONTROLS_WAIT,Press the new key or button. Esc cancels.
+HINT_CONTROLS_WAIT,Press the new key or button. %s cancels.
 ITEM_TIDE_HOOK,Tide Hook
 ITEM_TIDE_HOOK_DESC,A barbed hook on a long line. Pulls small things in and Wren across gaps.
 ITEM_STONEBREAKER,Stonebreaker Mallet

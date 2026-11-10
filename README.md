@@ -60,8 +60,16 @@ presets are in `export_presets.cfg`.
 | Talk / open | K | A / South |
 | Hum (heal) | Hold H | Right shoulder |
 | Pause | Esc | Start |
+| Items | U, I | X, Y |
+| Map | M | Back |
+| Menu tabs | Q, E | LT, RT (or LB) |
 
-Item slots (U, I) and map (M) are bound but not used yet.
+Prompts in menus show keyboard keys or pad buttons, whichever was used last.
+Every key and button can be changed in **Options > Controls**.
+
+On a phone or tablet the web build shows touch controls once the screen is
+touched: a stick on the left, J, K, U, I and H on the right, and Esc, Q, E
+and M in the top corners. The game scales to fit small screens.
 
 ## What's in the prototype
 

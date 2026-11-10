@@ -10,6 +10,9 @@
 // It serves the folder over HTTP (browsers won't run Godot from file://),
 // waits for the engine to start, watches the console for script errors, and
 // checks the canvas has actually drawn something (not a blank or error page).
+// Then it opens the game again on a phone-sized touch screen: the game has to
+// fill the screen's height, a touch has to bring up the on-screen controls
+// (web/touch.html), and the stick has to press the arrow keys.
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -103,9 +106,47 @@ if (shot) fs.writeFileSync(shot, png);
 // A drawn title has many colours; a blank or error page has one or two.
 const colours = await colourCount(png);
 if (colours < 12) failures.push(`the screen looks blank (${colours} colours)`);
+if (failures.length === 0) await phoneCheck();
 await browser.close();
 server.close();
-finish(`WEB BUILD CHECK PASSED (title drawn, ${colours} colours)`);
+finish(`WEB BUILD CHECK PASSED (title drawn, ${colours} colours; touch controls work)`);
+
+async function phoneCheck() {
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  const phone = await ctx.newPage();
+  phone.on("pageerror", (err) => failures.push(`phone: page error: ${err.message}`));
+  await phone.addInitScript(() => {
+    window.__keys = [];
+    addEventListener("keydown", (e) => window.__keys.push(e.code), true);
+  });
+  let up = false;
+  phone.on("console", (msg) => { if (msg.text().includes("Godot Engine v")) up = true; });
+  await phone.goto(`http://127.0.0.1:${port}/`);
+  const until = Date.now() + BOOT_TIMEOUT_MS;
+  while (!up && Date.now() < until) await phone.waitForTimeout(500);
+  if (!up) return failures.push("phone: the engine never started");
+  await phone.waitForTimeout(6000);
+  // At whole-number scaling the game would sit at 1x, leaving the bottom of a
+  // 390-pixel-high screen black; scaled to fit, the whale and menu reach it.
+  const low = await phone.screenshot({ clip: { x: 200, y: 340, width: 444, height: 46 } });
+  const lowColours = await colourCount(low);
+  if (lowColours < 3) failures.push(`phone: the game doesn't fill the screen (${lowColours} colours at the bottom)`);
+  const cdp = await ctx.newCDPSession(phone);
+  const touch = (type, x, y) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 1 }] });
+  await touch("touchStart", 420, 200);
+  await touch("touchEnd");
+  await phone.waitForTimeout(300);
+  if (!(await phone.$("#lv-touch.on"))) return failures.push("phone: a touch didn't bring up the on-screen controls");
+  // The stick's centre, then a lean to the right.
+  const pad = await phone.evaluate(() => { const r = document.getElementById("lv-pad").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+  await touch("touchStart", pad[0], pad[1]);
+  await touch("touchMove", pad[0] + 50, pad[1]);
+  await phone.waitForTimeout(200);
+  await touch("touchEnd");
+  const keys = await phone.evaluate(() => window.__keys);
+  if (!keys.includes("ArrowRight")) failures.push(`phone: the stick didn't press Right (${keys.join(" ") || "no keys"})`);
+  await ctx.close();
+}
 
 function finish(passed) {
   if (failures.length) {
