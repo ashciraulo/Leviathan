@@ -5,7 +5,7 @@ of those dungeons has something of its own to look at. They're transparent
 overlays drawn over the floor (scripts/world/room.gd places them, "set_pieces"
 in a biome's tile table), never solid.
 
-  hull     a ship's wheel lying flat on the deck; a tangle of old net
+  hull     a wrecked ship's wheel, a third of it smashed away; a tangle of old net
            with a cork float and a starfish caught in it
   kiln     a cooled spill of bronze, crusted, a drip channel feeding it;
            a brass ring set in the floor with the kiln's flame mark
@@ -113,9 +113,20 @@ def hull_wheel():
     disc(px, 16, 16, 3.4, wood[3])
     disc(px, 16, 16, 2.4, brass[1])
     put(px, 15, 15, brass[0])
-    # One handle snapped off: the deck took it.
-    a = 5 * math.tau / 8 + 0.2
-    disc(px, 16 + math.cos(a) * 13.6, 16 + math.sin(a) * 13.6, 2.4, CLEAR)
+    # Wrecked: a third of the rim smashed away and its spokes snapped,
+    # splinters strewn, the rest half sunk in silt. No helm to turn here.
+    for y in range(S):
+        for x in range(S):
+            ang = math.atan2(y + 0.5 - 16, x + 0.5 - 16)
+            d = math.hypot(x + 0.5 - 16, y + 0.5 - 16)
+            if 0.35 < ang < 2.45 and d > 4.5:
+                px[y][x] = CLEAR
+    silt = hx("#5A4430", 170)
+    for (x, y) in ((20, 22), (22, 20), (17, 25), (12, 24), (24, 17)):
+        line(px, x, y, x + 2, y + 1, wood[2])
+    for k in range(10):
+        a = 0.5 + k * 0.2
+        put(px, 16 + math.cos(a) * 11, 16 + math.sin(a) * 11, silt)
     return px
 
 
@@ -183,24 +194,29 @@ def kiln_spill():
 
 def kiln_mark():
     px = canvas()
-    brass = [hx("#F4D48A"), hx("#C89A48"), hx("#8A6430")]
-    soot = hx("#22161A", 200)
-    ember = [hx("#FFB040"), hx("#E06A2A"), hx("#A03A1E")]
-    disc(px, 16, 16, 13.5, soot)
-    ring(px, 16, 16, 11.5, 13.0, brass[1])
-    ring(px, 16, 16, 11.5, 12.0, brass[0])
-    ring(px, 16, 16, 13.0, 13.6, brass[2])
-    # Rivets round the ring.
+    brass = [hx("#B89A62"), hx("#8A7044"), hx("#5E4A2E")]
+    soot = hx("#2A1E20", 150)
+    cut = hx("#3A2A22", 200)
+    # An old brass ring sunk flush in the floor, dulled with soot, and the
+    # kiln's flame mark cut into it as an outline (nothing burns here).
+    disc(px, 16, 16, 13.0, soot)
+    ring(px, 16, 16, 11.6, 12.8, brass[1])
+    ring(px, 16, 16, 11.6, 12.0, brass[0])
+    ring(px, 16, 16, 12.8, 13.3, brass[2])
     for k in range(8):
         a = k * math.tau / 8 + math.pi / 8
-        put(px, 16 + math.cos(a) * 12.3, 16 + math.sin(a) * 12.3, brass[2])
-    # The flame mark, inlaid: three tongues rising from a bowl.
-    poly(px, [(9, 20), (23, 20), (21, 24), (11, 24)], brass[2])
-    line(px, 10, 20, 22, 20, brass[0])
-    for (bx, h, w) in ((12.5, 9, 2.4), (16, 13, 3.2), (19.5, 8, 2.4)):
-        poly(px, [(bx - w, 19.5), (bx + w, 19.5), (bx + 0.6, 19.5 - h)], ember[1])
-        poly(px, [(bx - w * 0.45, 19.5), (bx + w * 0.45, 19.5), (bx + 0.3, 19.5 - h * 0.6)], ember[0])
-    put(px, 16, 7, ember[2])
+        put(px, 16 + math.cos(a) * 12.2, 16 + math.sin(a) * 12.2, brass[2])
+    # The mark: a bowl and three tongues, engraved lines only.
+    line(px, 10, 21, 22, 21, brass[1])
+    line(px, 11, 23, 21, 23, brass[2])
+    for (bx, h, w) in ((12.5, 7, 2.2), (16, 11, 2.8), (19.5, 6, 2.2)):
+        line(px, bx - w, 20, bx + 0.5, 20 - h, cut)
+        line(px, bx + 0.5, 20 - h, bx + w, 20, cut)
+        line(px, bx - w + 0.6, 20, bx + 0.5, 21 - h, brass[2])
+    # Scuffed: a worn gap in the ring.
+    for k in range(5):
+        a = 2.3 + k * 0.08
+        put(px, 16 + math.cos(a) * 12.0, 16 + math.sin(a) * 12.0, soot)
     return px
 
 
