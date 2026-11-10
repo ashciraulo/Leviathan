@@ -3817,9 +3817,20 @@ func _test_sea_bed() -> void:
 	_check(map._joined(Vector2i(1, 3), Vector2i(1, 4), Vector2i.DOWN), "and joins it once the tide is held out")
 	map.free()
 	# Frost can't make a path out to it: only open water freezes.
+	GameState.clear_flag(Tide.HELD_FLAG)
 	var steps: Room = (load("res://rooms/room_2_3.tscn") as PackedScene).instantiate()
 	add_child(steps)
-	_check(steps.freeze(Vector2i(8, 11)).is_empty(), "a frost arrow leaves the sea bed alone")
+	await _wait(0.1)
+	var froze := steps.freeze(Vector2i(10, 11))
+	_check(not froze.is_empty() and froze.all(func(t: Vector2i) -> bool: return steps.tile_at(t.x, t.y) == "~"),
+		"a frost arrow beside the sea bed freezes only the open water")
+	# Turned in at a breathing low tide, the sea bed never shows on the way up.
+	var steps_tide := steps.get_node_or_null("Tide") as Tide
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	Tide.turn(get_tree())
+	await _wait(0.2)
+	_check(Tide.held() == "high" and steps_tide != null and steps_tide.is_flooded(Vector2i(9, 11)) and steps_tide.cover(Vector2i(9, 11)) >= 1.0,
+		"turning the tide in at low water never bares the sea bed")
 	steps.queue_free()
 	Tide.offset = 0.0
 	GameState.reset_new_game()

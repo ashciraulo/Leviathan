@@ -80,7 +80,12 @@ func _over_water() -> bool:
 	if room == null:
 		return false
 	var local := at - room.global_position
-	var tile := room.tile_at(floori(local.x / Room.TILE), floori(local.y / Room.TILE))
+	var cell := Vector2i(floori(local.x / Room.TILE), floori(local.y / Room.TILE))
+	var tile := room.tile_at(cell.x, cell.y)
+	# Tide flats and the sea bed count as water while they're under.
+	var tide := room.get_node_or_null("Tide") as Tide
+	if tide != null and tide.is_flooded(cell):
+		return true
 	return tile == "~" or (tile == "Q" and not GameState.has_item("divers_helm"))
 
 

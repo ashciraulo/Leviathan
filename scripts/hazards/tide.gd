@@ -225,6 +225,10 @@ func is_swimmable(tile: Vector2i) -> bool:
 func cover(tile: Vector2i) -> float:
 	if _seabed.has(tile) and held() == "":
 		return 1.0
+	# A tide turned in while it breathed low starts from the bottom, but the
+	# sea bed was never bare: it stays under while the rest floods.
+	if _seabed.has(tile) and held() == "high" and _flooded.get(tile, false):
+		return 1.0
 	return clampf(_level * _deepest - _distance.get(tile, 0), 0.0, 1.0)
 
 
