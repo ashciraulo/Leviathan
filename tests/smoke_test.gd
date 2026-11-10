@@ -4937,10 +4937,13 @@ func _test_errands() -> void:
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
 	var talk := func(who: String) -> void: Conversations.talk(who)
 	# Sorrel's letters.
-	for flag in ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid", "ottilie_asked", "liesl_asked", "met_agna", "agna_gave_sword"]:
+	for flag in ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid"]:
 		GameState.set_flag(flag)
 	_check(first.call("sorrel") == "SORREL_LETTERS_1", "after the race, Sorrel has three letters that never went out")
 	talk.call("sorrel")
+	_check(first.call("agna") == "AGNA_1" and first.call("liesl") == "LIESL_1" and first.call("ottilie") == "OTTILIE_1", "everyone still introduces themselves before taking a letter")
+	for flag in ["ottilie_asked", "liesl_asked", "met_agna", "agna_gave_sword"]:
+		GameState.set_flag(flag)
 	_check(first.call("sorrel") == "SORREL_LETTERS_WAITING", "she waits while Wren carries them")
 	var glints := GameState.item_count("glint")
 	for who in ["ottilie", "liesl", "agna"]:
@@ -4961,7 +4964,7 @@ func _test_errands() -> void:
 	_check(Conversations.branch_for("hessa").get("lines")[1] == "HESSA_OTTILIE_1", "Wren shows Hessa the sign")
 	talk.call("hessa")
 	glints = GameState.item_count("glint")
-	_check(first.call("ottilie") == "OTTILIE_REPLY_1", "Ottilie hears the answer")
+	_check(Conversations.branch_for("ottilie").get("lines")[1] == "OTTILIE_REPLY_1", "Wren flashes Hessa's yes back to Ottilie")
 	talk.call("ottilie")
 	_check(GameState.item_count("glint") == glints + 100 and first.call("ottilie") == "OTTILIE_AFTER", "and thanks Wren")
 	# A lantern for Murmur's family.
@@ -4972,13 +4975,14 @@ func _test_errands() -> void:
 	_check(first.call("wick") == "WICK_MURMUR_WAITING", "and sends Wren to ask Liesl")
 	_check(first.call("liesl") == "LIESL_MURMUR_1", "Liesl knows the family")
 	talk.call("liesl")
-	_check(first.call("wick") == "WICK_MURMUR_WAITING", "lighting it wants the Glowmoth Lantern")
 	GameState.give_item("glowmoth_lantern", 1, false)
 	_check(first.call("wick") == "WICK_LANTERN_1", "with it, Wren lights the Reed lantern")
 	talk.call("wick")
 	_check(first.call("murmur") == "MURMUR_LANTERN_1", "Murmur finds it")
 	talk.call("murmur")
-	_check(first.call("murmur") == "MURMUR_LANTERN_AGAIN", "and keeps it lit")
+	_check(first.call("murmur") == "MURMUR_TURNED", "and still feels the turn afterwards")
+	GameState.clear_flag(StoryDirector.TURNED_FLAG)
+	_check(first.call("murmur") == "MURMUR_LANTERN_AGAIN", "before the turn, Murmur keeps the lantern lit")
 	GameState.reset_new_game()
 
 

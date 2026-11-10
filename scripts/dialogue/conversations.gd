@@ -115,7 +115,7 @@ const TALKS := {
 	# lights her forge again and gives Wren a Brinesteel sword. She always
 	# introduces herself first, even if Wren walked past her into the Kiln.
 	"agna": [
-		{"if": ["sorrel_letters"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
+		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["agna_gave_sword", "seen_ending"], "lines": ["AGNA_END"]},
 		{"if": ["agna_gave_sword", "old_one_turned"], "lines": ["AGNA_TURNED"]},
 		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
@@ -141,8 +141,8 @@ const TALKS := {
 	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
 	"liesl": [
-		{"if": ["sorrel_letters"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
-		{"if": ["wick_murmur_ask"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
+		{"if": ["sorrel_letters", "liesl_asked"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
+		{"if": ["wick_murmur_ask", "liesl_asked"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
 		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
@@ -153,10 +153,10 @@ const TALKS := {
 	# Ottilie at Still Cove, who trained with Hessa and Vael, and three
 	# rimefin from her fishing hole (a FishingHole).
 	"ottilie": [
-		{"if": ["sorrel_letters"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
+		{"if": ["sorrel_letters", "ottilie_asked"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
 		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
 		# Her old cave sign for Hessa (Wren shows it with the lamp), and the answer.
-		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": ["OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
+		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "lines": ["OTTILIE_SIGNAL_WAITING"]},
 		{"if": ["ottilie_paid", "seen_hessa_confession"], "unless": ["ottilie_signal"], "set": ["ottilie_signal"], "lines": ["OTTILIE_SIGNAL_1", "OTTILIE_SIGNAL_1B", "OTTILIE_SIGNAL_2", "OTTILIE_SIGNAL_2B"]},
 		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
@@ -193,9 +193,9 @@ const TALKS := {
 		{"unless": ["murmur_met"], "set": ["murmur_met"], "lines": ["MURMUR_FEN_1", "MURMUR_FEN_2", "MURMUR_FEN_3"]},
 		# The Reed family's lantern, lit at last (Wick, Liesl and Wren).
 		{"if": ["murmur_lantern_lit"], "unless": ["murmur_saw_lantern"], "set": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_1", "MURMUR_LANTERN_2", "MURMUR_LANTERN_3"]},
-		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
 		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
+		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
 		{"lines": ["MURMUR_AGAIN"]},
 	],
 	# Mother Dace by the last mural, after the ending.
