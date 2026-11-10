@@ -29,6 +29,8 @@ var _from := Vector2.ZERO
 var _mark := Vector2.ZERO
 var _height := HEIGHT
 var _grounded_mask := 0
+var _grounded_layer := 0
+var _hurtbox_layer := 0
 
 
 func _init() -> void:
@@ -38,9 +40,11 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_home = _inside(position)
+	_home = _orbit_centre(position)
 	_angle = fposmod(position.x * 0.13 + position.y * 0.07, TAU)
 	_grounded_mask = collision_mask
+	_grounded_layer = collision_layer
+	_hurtbox_layer = _hurtbox.collision_layer
 	_lift(true)
 
 
@@ -99,16 +103,19 @@ func _think(delta: float) -> void:
 			_height = HEIGHT * (1.0 - maxf(_timer / CLIMB_TIME, 0.0))
 			if _timer <= 0.0:
 				mode = Mode.CIRCLE
-				_home = _inside(position)
+				_home = _orbit_centre(position)
 				_angle = randf() * TAU
 				_rest = REST
 
 
-## Up in the air it flies over walls and water and can't touch or be touched.
+## Up in the air it flies over walls and water and can't touch or be touched:
+## no body for burrs to bump, nothing for arrows or the hook to find. (Its
+## contact stays monitorable, only inactive, so landing on Wren still hurts.)
 func _lift(up: bool) -> void:
 	collision_mask = 0 if up else _grounded_mask
+	set_deferred("collision_layer", 0 if up else _grounded_layer)
+	_hurtbox.set_deferred("collision_layer", 0 if up else _hurtbox_layer)
 	_contact.active = not up
-	_contact.set_deferred("monitorable", not up)
 	_hurtbox.set_deferred("monitorable", not up)
 	if not up:
 		_height = 0.0
@@ -124,6 +131,13 @@ func _can_land(room: Room, spot: Vector2) -> bool:
 ## Keeps a point inside the room, clear of its edge.
 func _inside(at: Vector2) -> Vector2:
 	return at.clamp(Vector2(EDGE, EDGE + 8.0), Room.SIZE - Vector2(EDGE, EDGE))
+
+
+## Where it circles: far enough in that the whole lap, and the bird drawn
+## high above its shadow, stays on screen.
+func _orbit_centre(at: Vector2) -> Vector2:
+	var margin := Vector2(CIRCLE_RADIUS + 12.0, CIRCLE_RADIUS + 12.0)
+	return at.clamp(margin + Vector2(0.0, HEIGHT), Room.SIZE - margin)
 
 
 func _make_sprite() -> Sprite2D:

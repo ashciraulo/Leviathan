@@ -4054,6 +4054,29 @@ func _test_overworld_life() -> void:
 	_check(perched and hawk.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "down on the turf it can be struck")
 	game.queue_free()
 	await _wait(0.1)
+	# A Rimeling out on the open shore turns at the screen's edge, and a
+	# hawk's lap stays on screen.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(0, -3), Vector2(5 * Room.TILE + 8, 8 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	room = game.current_room
+	game.player._invuln = 60.0
+	var imps := _child_of(room, Rimeling)
+	var probe_hawk := Galehawk.new()
+	probe_hawk.position = Vector2(2 * Room.TILE, 1 * Room.TILE)
+	room.add_child(probe_hawk)
+	var out := false
+	for i in 30:
+		await _wait(0.1)
+		for imp in imps:
+			out = out or not Rect2(Vector2.ZERO, Room.SIZE).has_point(imp.position)
+		var lap: Vector2 = probe_hawk._home
+		out = out or lap.x - Galehawk.CIRCLE_RADIUS < 0.0 or lap.y - Galehawk.CIRCLE_RADIUS - Galehawk.HEIGHT < 0.0
+	_check(not imps.is_empty() and not out, "Frostspine's Rimeling stays in its room, and a hawk circles on screen")
+	game.queue_free()
+	await _wait(0.1)
 	# Each samey region has a second kind of foe now.
 	var foes := {"windmere": "0", "frostspine": "a", "sunken_verge": "b", "gloamfen": "m"}
 	for biome: String in foes:
