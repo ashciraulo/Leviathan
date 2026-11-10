@@ -68,6 +68,7 @@ func _ready() -> void:
 		await _test_ide()
 		await _test_liesl()
 		await _test_wick()
+		await _test_gully()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4443,3 +4444,67 @@ func _test_choir() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
+
+
+func _test_gully() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	var talk_at := StoryDirector.GULLY_AT + Vector2(0, 18)
+	GameState.set_checkpoint(StoryDirector.WRECK_STRAND, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	_check(_find_kind(room, "gully") != null, "Gully dozes on Wreck Strand")
+	var boxes := get_tree().get_nodes_in_group("strongbox")
+	_check(boxes.size() == 1 and not (boxes[0] as Strongbox).visible, "his strongbox isn't out there until he's asked")
+	var gully_tile := Vector2i(StoryDirector.GULLY_AT / Room.TILE)
+	_check(gully_tile.y <= 8 and room.tile_at(gully_tile.x, gully_tile.y + 1) == ".", "Gully can be talked to from dry ground")
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages >= 2 and GameState.has_flag("gully_asked"), "he asks Wren to fetch his strongbox (%d pages)" % pages)
+	var box := boxes[0] as Strongbox
+	_check(box.visible, "and there it is, out in the pool")
+	var box_tile := Vector2i(StoryDirector.STRONGBOX_AT / Room.TILE)
+	_check(room.tile_at(box_tile.x, box_tile.y) == "~", "the strongbox bobs in the water")
+	# Hook it from the shore west of the pool.
+	_enemies_away()
+	game.player.global_position = room.global_position + Vector2(9 * Room.TILE + 8, box_tile.y * Room.TILE + 10)
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	var glints := GameState.item_count("glint")
+	game.player.use_item("tide_hook")
+	var waited := 0.0
+	while not GameState.has_flag("gully_box_hauled") and waited < 3.0:
+		await _wait(0.05)
+		waited += 0.05
+	_check(GameState.has_flag("gully_box_hauled"), "the Tide Hook hauls it in")
+	await _play_scene(game, 4.0)
+	_check(not is_instance_valid(box), "and it's out of the water")
+	game.player.global_position = room.global_position + talk_at
+	game.player.facing = Vector2.UP
+	await _wait(0.2)
+	game.player.try_interact()
+	await _play_scene(game, 10.0)
+	_check(GameState.has_flag("gully_paid") and GameState.item_count("glint") == glints + 100, "Gully pays a salvager's cut")
+	_check(Conversations.branch_for("gully").get("lines")[0] == "GULLY_AFTER", "and keeps the figurehead company")
+	game.queue_free()
+	await _wait(0.1)
+	# Back again: the box stays hauled.
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	_check(get_tree().get_nodes_in_group("strongbox").is_empty(), "the pool stays empty")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	_check(Conversations.branch_for("gully").get("lines")[0] == "GULLY_TURNED", "he felt the Old One turn")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("gully").get("lines")[0] == "GULLY_END", "and after the ending she sleeps too")
+
+
+func _enemies_away() -> void:
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
