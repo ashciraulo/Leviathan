@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -106,6 +106,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _choir_shots()
+			"wick":
+				game.queue_free()
+				await _wait(0.2)
+				await _wick_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1409,6 +1413,50 @@ func _rowing_shots() -> void:
 	await _capture("74_hessa_rows_home")
 	await _skip_scene(home)
 	home.queue_free()
+	await _wait(0.2)
+
+
+## Wick at Fenmouth, a dark memorial lantern out in the fen, and the
+## Glowmoth Lantern lighting it.
+func _wick_shots() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("glowmoth_lantern")
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, Vector2(StoryDirector.WICK_AT.x - 14, StoryDirector.WICK_AT.y))
+	var fen: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(fen)
+	await _wait(0.6)
+	fen.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	fen.player.try_interact()
+	var box := _dialogue_box(fen)
+	await _wait(2.4)
+	await _capture("84_wick_counts_the_lanterns")
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	fen.queue_free()
+	await _wait(0.2)
+	var coord := Vector2i(5, 1)
+	var tile: Vector2i = FenLantern.SPOTS[coord]
+	var at := Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12)
+	GameState.set_checkpoint(coord, at + Vector2(-34, 4))
+	var reach: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(reach)
+	await _wait(0.3)
+	# The moths stay out of this one.
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(1.7)
+	reach.player.facing = Vector2.RIGHT
+	reach.player._invuln = 0.0
+	await _capture("85_a_lantern_gone_dark")
+	reach.player.use_item("glowmoth_lantern")
+	reach.player.global_position = reach.current_room.global_position + at + Vector2(-18, 4)
+	await _wait(0.25)
+	reach.player._invuln = 0.0
+	await _capture("86_it_catches")
+	reach.queue_free()
 	await _wait(0.2)
 
 

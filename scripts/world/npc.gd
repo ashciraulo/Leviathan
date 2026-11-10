@@ -34,6 +34,8 @@ const KINDS := {
 	# Liesl at the head of Drowned Lane (StoryDirector). Her "breathe" frame
 	# is the broom swung out, so her idling is sweeping.
 	"liesl": {"texture": Art.VILLAGER_LIESL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# Wick, Gloamfen's lamplighter child, at Fenmouth (StoryDirector).
+	"wick": {"texture": Art.VILLAGER_WICK, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.
