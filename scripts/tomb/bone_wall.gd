@@ -16,6 +16,7 @@ func _ready() -> void:
 	Layers.assign(self, Layers.WORLD, [])
 	add_child(Layers.rect_shape(Vector2(16, 16), Vector2(0, -4)))
 	if concealed:
+		_draft()
 		return
 	add_child(Art.shadow())
 	_sprite = Art.sprite(TombSprites.BARRICADE, 1, 1, 22)
@@ -34,11 +35,56 @@ func horn_hit(_from: Vector2) -> void:
 	queue_free()
 
 
+## A concealed wall breathes: the barrow's air leaks through its seam as a
+## thin drift of bone dust, out into the room. That's what sets it apart
+## from the barrow's ordinary cracked walls.
+func _draft() -> void:
+	var dust := CPUParticles2D.new()
+	dust.amount = 9
+	dust.lifetime = 2.4
+	dust.preprocess = 2.4
+	dust.local_coords = false
+	dust.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	var into := _into_room()
+	# Along the seam, across the way the air comes out.
+	dust.emission_rect_extents = Vector2(1, 6) if into.x != 0 else Vector2(6, 1)
+	dust.position = Vector2(0, -4) + into * 7.0
+	dust.direction = into
+	dust.spread = 25.0
+	dust.gravity = Vector2(0, 2)
+	dust.initial_velocity_min = 6.0
+	dust.initial_velocity_max = 11.0
+	dust.scale_amount_min = 1.0
+	dust.scale_amount_max = 2.0
+	var fade := Gradient.new()
+	fade.set_color(0, Color(0.92, 0.88, 0.78, 0.0))
+	fade.add_point(0.2, Color(0.96, 0.93, 0.84, 0.95))
+	fade.set_color(fade.get_point_count() - 1, Color(0.92, 0.88, 0.78, 0.0))
+	dust.color_ramp = fade
+	dust.z_index = 1
+	add_child(dust)
+
+
+## Which way the room is from this wall tile (it sits in the room's border).
+func _into_room() -> Vector2:
+	if tile.x <= 0:
+		return Vector2.RIGHT
+	if tile.x >= Room.COLS - 1:
+		return Vector2.LEFT
+	if tile.y <= 0:
+		return Vector2.DOWN
+	return Vector2.UP
+
+
 func _draw() -> void:
 	if not concealed:
 		return
-	# The hairline crack.
-	var c := Color(0.1, 0.07, 0.06, 0.55)
-	draw_line(Vector2(-2, -11), Vector2(1, -6), c)
-	draw_line(Vector2(1, -6), Vector2(-1, -1), c)
-	draw_line(Vector2(1, -6), Vector2(4, -4), c)
+	# The crack, darker than the barrow's own, with a pale lip of dust.
+	var c := Color(0.08, 0.05, 0.04, 0.8)
+	var lip := Color(0.9, 0.86, 0.74, 0.5)
+	draw_line(Vector2(-2, -12), Vector2(1, -7), c)
+	draw_line(Vector2(1, -7), Vector2(-1, -2), c)
+	draw_line(Vector2(-1, -2), Vector2(1, 3), c)
+	draw_line(Vector2(1, -7), Vector2(4, -5), c)
+	draw_line(Vector2(2, -12), Vector2(3, -7), lip)
+	draw_line(Vector2(0, -2), Vector2(2, 3), lip)
