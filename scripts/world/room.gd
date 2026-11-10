@@ -204,6 +204,7 @@ const BIOMES := {
 		"water": "bilge_%d", "water_edge": "brine_%s_%d", "damp": "soak_%s",
 		"wet_deco": "barnacles_%d", "dry_deco": "rope_%d",
 		"floor_overlay": ["shaft_%d", 9], "door": "exit_glow",
+		"set_pieces": 2,
 	},
 	"kiln": {
 		"wall_deco": "kiln",
@@ -211,6 +212,7 @@ const BIOMES := {
 		"water": "quench_%d", "water_edge": "kerb_%s_%d", "damp": "kiln_scorch_%s",
 		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
 		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
+		"set_pieces": 2,
 	},
 	"mire": {
 		"wall_deco": "mire",
@@ -659,13 +661,17 @@ func _place_set_pieces() -> void:
 	var tiles: Dictionary = BIOMES.get(biome, {})
 	if not tiles.has("set_pieces") or _rows.size() != ROWS:
 		return
-	# Crates get pushed along their row and column, so keep pieces off those
-	# lines (a slab on a crate's route reads as something in the way).
+	# A boss arena stays bare: nothing on its floor to mistake for a tell.
+	if "V" in "".join(_rows):
+		return
+	# Crates get pushed along their row and column, and onto plates along
+	# theirs, so keep pieces off those lines (a slab on a crate's route reads
+	# as something in the way).
 	var crate_rows := {}
 	var crate_cols := {}
 	for y in _rows.size():
 		for x in _rows[y].length():
-			if _rows[y][x] == "K":
+			if _rows[y][x] == "K" or _rows[y][x] == "=":
 				crate_rows[y] = true
 				crate_cols[x] = true
 	var spots: Array = []
