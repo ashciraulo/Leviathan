@@ -26,7 +26,9 @@ Item gates (keep in step with the game):
   (Q and bow freezing arrive with the Hollow Glacier PR. Props block one
   tile here; their real footprints can be wider, which only makes this
   check more generous, never stricter.)
-  The Gale Bell turns the Old One over (old_one_turned): the Verge rises
+  The Gale Bell turns the Old One over (old_one_turned): the Verge rises,
+                   and Wren can hold the tide out at a Tidestone, which
+                   bares the sea bed (;)
   The seventh bell raises the Old One at Lullaby Point (alt_layout)
 """
 
@@ -78,6 +80,10 @@ SECRETS = {
     # Pacing finds in rooms that had nothing else (2026-11-10).
     (3, -2): ("kite_cloak", "frostfang_bow"), # Hollow Bole: glints on a pond islet
     (8, -1): ("stonebreaker",),               # Geyser Basin: glints behind a cracked boulder
+    # Out on the sea bed, bared only while Wren holds the tide out.
+    (2, 3): ("old_one_turned",),              # Weir Steps: glints on the sea bed
+    (1, 4): ("old_one_turned",),              # the Ebb Shelf, south of Belfry Square
+    (0, 4): ("old_one_turned",),              # Ebb Grotto, west of the Shelf
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -161,6 +167,8 @@ def walkable(tile, items):
         return "glowmoth_lantern" in items
     if tile == "Y":
         return "stonebreaker" in items
+    if tile == ";":
+        return "old_one_turned" in items
     if tile in "^_":
         return False
     return True

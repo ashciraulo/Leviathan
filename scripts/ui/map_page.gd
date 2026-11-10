@@ -152,6 +152,9 @@ func _joined(a: Vector2i, b: Vector2i, dir: Vector2i) -> bool:
 		else:
 			ta = ra[Room.ROWS - 1 if dir.y > 0 else 0][i]
 			tb = rb[0 if dir.y > 0 else Room.ROWS - 1][i]
+		# The sea bed only joins rooms while the tide is held out.
+		if ta == ";" and tb == ";" and Tide.held() != "low":
+			continue
 		if ta != "#" and tb != "#":
 			return true
 	return false
@@ -232,6 +235,8 @@ func _tile_color(ch: String, colors: Array, overworld: bool) -> Color:
 	match ch:
 		"r", "d":
 			return ground.lerp(water, 0.45)
+		";":
+			return water.lerp(ground, 0.3)
 		"x", "I":
 			return ground.lerp(Color("#e8f4ff"), 0.6)
 		":":

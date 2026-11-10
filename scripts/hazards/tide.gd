@@ -13,6 +13,10 @@ extends Node2D
 ## Wren can turn the tide at any awake Tidestone: it runs in or out and
 ## stays there (flag tide_held, with tide_held_in set when it's held in)
 ## instead of breathing on its own.
+##
+## Further out lies the sea bed (layout ;), which the tide's breathing
+## never uncovers. Only a tide Wren holds out drains it, and Wren can walk
+## out to what lies there: the Ebb Shelf, its grotto, a chest or two.
 
 enum Phase { LOW, RISING, HIGH, FALLING }
 
@@ -44,6 +48,9 @@ var _shapes := {}
 var _distance := {}
 var _deepest := 1
 var _flooded := {}
+## Sea-bed tiles (;): under water unless the tide is held.
+var _seabed := {}
+var _held_was := ""
 var _level := -1.0
 var _phase := Phase.LOW
 var _frame := 0
@@ -159,6 +166,8 @@ func _ready() -> void:
 			_body.add_child(shape)
 			_shapes[tile] = shape
 			_flooded[tile] = false
+			if is_seabed(_room.tile_at(x, y)):
+				_seabed[tile] = true
 			# The open sea floods first, and so do flats running off the
 			# screen's edge, so both sides of a room seam flood together.
 			var edge := x == 0 or y == 0 or x == Room.COLS - 1 or y == Room.ROWS - 1
@@ -185,15 +194,21 @@ func _ready() -> void:
 	# Siltrays) begin flooded.
 	_level = level()
 	_phase = phase()
+	_held_was = held()
 	for tile: Vector2i in _shapes:
 		_flooded[tile] = cover(tile) >= 1.0
 		(_shapes[tile] as CollisionShape2D).disabled = not _flooded[tile]
 	queue_redraw()
 
 
-## Tide flats: r, and the d a Siltray lies on.
+## Tide flats: r, the d a Siltray lies on, and the sea bed (;).
 static func is_flat(tile: String) -> bool:
-	return tile == "r" or tile == "d"
+	return tile == "r" or tile == "d" or tile == ";"
+
+
+## The sea bed: only a held tide drains it.
+static func is_seabed(tile: String) -> bool:
+	return tile == ";"
 
 
 ## Is this flat under water right now?
@@ -208,6 +223,8 @@ func is_swimmable(tile: Vector2i) -> bool:
 
 ## How covered this flat is, 0..1 (for drawing).
 func cover(tile: Vector2i) -> float:
+	if _seabed.has(tile) and held() == "":
+		return 1.0
 	return clampf(_level * _deepest - _distance.get(tile, 0), 0.0, 1.0)
 
 
@@ -223,10 +240,12 @@ func _physics_process(delta: float) -> void:
 			Audio.play_sfx("tide_rise", global_position + Room.SIZE / 2.0)
 		_phase = now_phase
 	var frame := int(Time.get_ticks_msec() / 600) % 2
-	if is_equal_approx(now, _level) and frame == _frame:
+	var held_now := held()
+	if is_equal_approx(now, _level) and frame == _frame and held_now == _held_was:
 		return
 	_level = now
 	_frame = frame
+	_held_was = held_now
 	for tile: Vector2i in _shapes:
 		var under := cover(tile) >= 1.0
 		if under != _flooded[tile]:
@@ -299,7 +318,7 @@ func _nearest_dry(start: Vector2i) -> Vector2i:
 
 
 func _draw() -> void:
-	if _level <= 0.0:
+	if _level <= 0.0 and (_seabed.is_empty() or held() != ""):
 		return
 	for tile: Vector2i in _shapes:
 		var c := cover(tile)
