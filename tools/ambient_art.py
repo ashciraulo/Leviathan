@@ -99,6 +99,10 @@ RAMPS = {
     "1": ["#FFE7A0", "#F6C85A", "#D89A3A", "#A86A2A", "#5E3A1A"],   # butterfly: amber
     "2": ["#D8E8FF", "#A8C4F0", "#7A96D0", "#566EA6", "#2E3E6A"],   # butterfly: sky
     "3": ["#FFD8E8", "#F4A8C8", "#D47AA4", "#A0507A", "#5A2A44"],   # butterfly: pink
+    "h": ["#FFFFFF", "#F0F2F6", "#D4DAE4", "#A8B2C2", "#707A8C"],   # snow hare
+    "j": ["#D8B890", "#B8946A", "#94704C", "#6C5036", "#443222"],   # brown hare
+    "l": ["#E0D0A0", "#C4AE78", "#9E8856", "#76643C", "#4A3E24"],   # sand lizard
+    "k": ["#7A7E86", "#5E626A", "#464A52", "#30333A", "#1C1E24"],   # cinder lizard
 }
 FLAT = {
     "o": "#F2A541",   # beak and legs
@@ -217,6 +221,58 @@ def splash(frame):
     return px
 
 
+# A hare seen from above, 12x10, facing right: sitting (ears up, hunched)
+# and mid-bound (stretched out, ears flat). `m` is its coat.
+def hare(m, frame):
+    w, h = 12, 10
+    c = _grid(w, h)
+    if frame == 0:
+        for y in range(3, 9):
+            for x in range(2, 8):
+                if not ((y in (3, 8)) and x in (2, 7)):
+                    c[y][x] = m
+        for (x, y) in ((8, 4), (8, 5), (9, 4), (9, 5), (8, 3)):
+            c[y][x] = m
+        for (x, y) in ((7, 1), (7, 2), (8, 1), (8, 2)):
+            c[y][x] = m
+        c[4][9] = "e"
+        c[6][1] = "g"
+    else:
+        for y in range(4, 8):
+            for x in range(1, 9):
+                if not ((y in (4, 7)) and x in (1, 8)):
+                    c[y][x] = m
+        for (x, y) in ((9, 4), (9, 5), (10, 5), (9, 6)):
+            c[y][x] = m
+        for (x, y) in ((6, 3), (7, 3), (8, 3)):
+            c[y][x] = m
+        c[5][10] = "e"
+        c[5][0] = "g"
+        c[8][2], c[8][7] = m, m
+    return _rows(c)
+
+
+# A lizard seen from above, 12x6, facing right, legs splayed; the frames
+# swap which legs are forward.
+def lizard(m, frame):
+    w, h = 12, 6
+    c = _grid(w, h)
+    for x in range(1, 11):
+        c[2 if x < 9 else 2][x] = m
+        if 3 <= x <= 9:
+            c[3][x] = m
+    c[2][0] = m
+    c[3][10], c[2][11] = m, m
+    c[2][10] = "e"
+    fore, hind = (8, 4) if frame == 0 else (7, 5)
+    for x in (fore, hind):
+        c[1][x] = m
+        c[4][x + (1 if frame == 0 else -1)] = m
+    c[0][fore + 1 if frame == 0 else fore] = m
+    c[5][hind - 1 if frame == 0 else hind + 1] = m
+    return _rows(c)
+
+
 def build(lit, sheet):
     """Everything in assets/ambient/, as {file name: pixels}."""
     return {
@@ -225,4 +281,6 @@ def build(lit, sheet):
         "butterfly": sheet([[lit(butterfly(m, f), 142) for f in (0, 1)] for m in ("1", "2", "3")], 7, 6),
         "fish": sheet([[fish_shadow(f) for f in (0, 1)]], 12, 5),
         "splash": sheet([[splash(f) for f in (0, 1, 2)]], 12, 8),
+        "hare": sheet([[lit(hare(m, f), 143) for f in (0, 1)] for m in ("h", "j")], 12, 10),
+        "lizard": sheet([[lit(lizard(m, f), 144) for f in (0, 1)] for m in ("l", "k")], 12, 6),
     }

@@ -56,6 +56,7 @@ func _ready() -> void:
 		await _test_tide_turning()
 		await _test_sea_bed()
 		await _test_challenges()
+		await _test_overworld_life()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -4023,6 +4024,62 @@ func _test_tide_turning() -> void:
 	_check(Tide.held() == "low" and Tide.phase() == Tide.Phase.LOW, "a tide left mid-turn finishes running out")
 	Tide.offset = 0.0
 	GameState.reset_new_game()
+
+
+## Overworld life: the Galehawk over Windmere, the newer foes elsewhere, and
+## the hares, lizards and reeds.
+func _test_overworld_life() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(4, -3), Vector2(13 * Room.TILE + 8, 4 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var hawks := _child_of(room, Galehawk)
+	_check(hawks.size() == 1, "Mill Row has a Galehawk")
+	if hawks.is_empty():
+		game.queue_free()
+		return
+	var hawk: Galehawk = hawks[0]
+	game.player._invuln = 60.0
+	_check(hawk.airborne() and hawk.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.IGNORED, "up in the air a Galehawk can't be struck")
+	_check(not hawk._can_land(room, Vector2(6 * Room.TILE + 8, 8 * Room.TILE + 8)), "it never stoops into water")
+	var perched := false
+	for i in 40:
+		await _wait(0.1)
+		if not hawk.airborne():
+			perched = true
+			break
+	_check(perched and hawk.position.distance_to(room.to_local(game.player.global_position)) < 24.0, "it stoops on Wren's spot (at %s)" % hawk.position)
+	_check(perched and hawk.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "down on the turf it can be struck")
+	game.queue_free()
+	await _wait(0.1)
+	# Each samey region has a second kind of foe now.
+	var foes := {"windmere": "0", "frostspine": "a", "sunken_verge": "b", "gloamfen": "m"}
+	for biome: String in foes:
+		var found := 0
+		for path in DirAccess.get_files_at("res://rooms"):
+			if not path.ends_with(".tscn"):
+				continue
+			var probe: Room = (load("res://rooms/" + path) as PackedScene).instantiate()
+			if probe.biome == biome and probe.dungeon == "" and probe.layout.contains(foes[biome]):
+				found += 1
+			probe.free()
+		_check(found >= 3, "%s has %s in %d rooms" % [biome, foes[biome], found])
+	# Critters and reeds.
+	for case: Array in [[Vector2i(1, -2), "hares"], [Vector2i(8, 1), "lizards"], [Vector2i(3, 0), "reeds"], [Vector2i(5, -3), "reeds"]]:
+		var place: Room = (load("res://rooms/room_%d_%d.tscn" % [case[0].x, case[0].y]) as PackedScene).instantiate()
+		add_child(place)
+		await _wait(0.1)
+		var life := place.get_node_or_null("Ambience") as Ambience
+		var list: Array = [] if life == null else (life.reeds if case[1] == "reeds" else life.runners)
+		_check(not list.is_empty(), "room %s has %s" % [case[0], case[1]])
+		if case[1] != "reeds" and not list.is_empty():
+			for r: Dictionary in list:
+				var at := Vector2i(((r["pos"] as Vector2) / Room.TILE).floor())
+				_check(place.tile_at(at.x, at.y) == ".", "a %s starts on open ground" % r["kind"])
+		place.queue_free()
+	await _wait(0.1)
 
 
 ## The optional challenges: each holds a Breath Pearl behind its own test.
