@@ -127,6 +127,12 @@ const SFX := {
 	"burr_roll": {"wave": "noise", "f0": 1800.0, "f1": 1000.0, "dur": 0.4, "vol": 0.2, "caption": "CAPTION_BURR"},
 	"spitter_gulp": {"wave": "triangle", "f0": 200.0, "f1": 420.0, "dur": 0.3, "vol": 0.3, "caption": "CAPTION_GULP"},
 	# Bosses: a warning of their own before each big attack.
+	"regent_raise": {"wave": "noise", "f0": 500.0, "f1": 2200.0, "dur": 0.6, "vol": 0.4, "caption": "CAPTION_TELL"},
+	"regent_gather": {"wave": "noise", "f0": 900.0, "f1": 4000.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_TELL"},
+	"rime_gather": {"wave": "noise", "f0": 2500.0, "f1": 5000.0, "dur": 0.55, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"knell_ink": {"wave": "sine", "f0": 95.0, "f1": 130.0, "dur": 0.6, "vol": 0.4, "caption": "CAPTION_TELL"},
+	"vael_breath": {"wave": "noise", "f0": 600.0, "f1": 2600.0, "dur": 0.7, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"wyrm_gurgle": {"wave": "noise", "f0": 300.0, "f1": 1000.0, "dur": 0.6, "vol": 0.4, "caption": "CAPTION_TELL"},
 	"matriarch_tell": {"wave": "noise", "f0": 4000.0, "f1": 3000.0, "dur": 0.5, "vol": 0.35, "caption": "CAPTION_TELL"},
 	"wyrm_tell": {"wave": "noise", "f0": 200.0, "f1": 1800.0, "dur": 0.7, "vol": 0.45, "caption": "CAPTION_RUMBLE"},
 	"congregation_tell": {"wave": "triangle", "f0": 330.0, "f1": 349.0, "dur": 0.7, "vol": 0.35, "caption": "CAPTION_TELL"},

@@ -122,7 +122,7 @@ func _think(delta: float) -> void:
 						singer.talking = true
 				else:
 					_enter(Mode.BREATH, BREATH_TIME * (0.75 if angry else 1.0))
-					Audio.play_sfx("enemy_tell", global_position, 1.2)
+					Audio.play_sfx("vael_breath", global_position)
 		Mode.BREATH:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:

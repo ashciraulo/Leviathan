@@ -109,10 +109,10 @@ func _think(delta: float) -> void:
 			_throw_timer -= delta
 			if to_wren.length() < SLAM_REACH + 6.0:
 				_enter(Mode.RAISE, RAISE_TIME * (0.8 if angry else 1.0))
-				Audio.play_sfx("enemy_tell", global_position, 0.6)
+				Audio.play_sfx("regent_raise", global_position)
 			elif _throw_timer <= 0.0 and to_wren.length() > 60.0:
 				_enter(Mode.THROW, THROW_TELL)
-				Audio.play_sfx("enemy_tell", global_position, 0.8)
+				Audio.play_sfx("regent_gather", global_position)
 		Mode.RAISE:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
@@ -271,15 +271,18 @@ func _bell_spot() -> Vector2:
 
 
 func _make_sprite() -> Sprite2D:
-	return Art.sprite(TombSprites.REGENT, 4, 1, 62)
+	return Art.sprite(TombSprites.REGENT, 5, 1, 62)
 
 
 func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
 	match mode:
-		Mode.RAISE, Mode.THROW:
+		Mode.RAISE:
 			_sprite.frame = 1
+			_jitter(_timer)
+		Mode.THROW:
+			_sprite.frame = 4
 			_jitter(_timer)
 		Mode.SLAM:
 			_sprite.frame = 2
