@@ -16,6 +16,8 @@ const SOFT_FLASH := Color(1.0, 0.85, 0.85)
 ## High contrast: outlines around Wren and enemies.
 const CONTRAST_WREN := Color(1.0, 0.92, 0.45)
 const CONTRAST_ENEMY := Color(1.0, 0.3, 0.3)
+## High contrast: the edges of pits, lava and other ground that hurts.
+const CONTRAST_HAZARD := Color(1.0, 0.6, 0.15)
 const TELL := Color(1.0, 0.85, 0.30)
 
 const WREN := Color(0.25, 0.65, 0.63)

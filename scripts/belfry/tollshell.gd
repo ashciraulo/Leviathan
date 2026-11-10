@@ -110,7 +110,7 @@ func _draw() -> void:
 	# The toll rolling out: a bright ring, fading as it goes.
 	var r := _ring_shape.radius
 	var a := clampf(1.0 - r / RING_RADIUS, 0.0, 1.0) * 0.8 + 0.2
-	draw_arc(Vector2(0, -5), r, 0.0, TAU, 32, Color(RING_COLOR, a), 2.0)
+	draw_arc(Vector2(0, -5), r, 0.0, TAU, 32, Palette.CONTRAST_ENEMY if Settings.high_contrast else Color(RING_COLOR, a), 2.0)
 	draw_arc(Vector2(0, -5), r * 0.7, 0.0, TAU, 28, Color(RING_COLOR, a * 0.4), 1.0)
 
 

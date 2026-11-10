@@ -11,6 +11,9 @@ extends Node2D
 ## renderer each light redrew the whole room again: half speed.)
 
 const DARK := Color(0.15, 0.12, 0.26)
+## With high contrast on, the dark is a little less deep, so the outlines of
+## foes beyond the light still show (the sheet darkens them too).
+const DARK_HIGH_CONTRAST := Color(0.3, 0.27, 0.4)
 const LANTERN_COLOR := Color(1.0, 0.95, 0.8)
 ## Above everything in the room (Wren, enemies, props), below the HUD.
 const Z := 200
@@ -88,7 +91,8 @@ func _process(delta: float) -> void:
 
 
 func _update(_delta: float) -> void:
-	_material.set_shader_parameter("dark", Color.WHITE.lerp(DARK, _amount))
+	var dark := DARK_HIGH_CONTRAST if Settings.high_contrast else DARK
+	_material.set_shader_parameter("dark", Color.WHITE.lerp(dark, _amount))
 	var count := 0
 	var wren := Lantern.player(get_tree()) if is_inside_tree() else null
 	if wren != null:

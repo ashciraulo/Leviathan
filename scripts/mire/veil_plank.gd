@@ -76,4 +76,7 @@ func _draw_glints() -> void:
 		var phase: float = _time * GLIMMER_SPEED + position.x * 0.07 + position.y * 0.11 + i * 1.9
 		var a := GLIMMER * fade * maxf(0.0, sin(phase))
 		if a > 0.02:
-			_glint.draw_rect(Rect2(GLINTS[i], Vector2(2, 1)), Color(_glint_color, a))
+			if Settings.high_contrast:
+				_glint.draw_rect(Rect2(GLINTS[i], Vector2(2, 2)), Color(1.0, 1.0, 1.0, minf(1.0, a * 2.0)))
+			else:
+				_glint.draw_rect(Rect2(GLINTS[i], Vector2(2, 1)), Color(_glint_color, a))

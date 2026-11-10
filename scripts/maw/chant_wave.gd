@@ -79,3 +79,7 @@ func _draw() -> void:
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 64, Color(0.54, 0.94, 0.88, 0.75 * fade), 3.0)
 	draw_arc(Vector2.ZERO, radius - 4.0, 0.0, TAU, 64, Color(0.54, 0.94, 0.88, 0.3 * fade), 1.0)
 	draw_arc(Vector2.ZERO, radius + 4.0, 0.0, TAU, 64, Color(0.82, 0.25, 0.31, 0.25 * fade), 1.0)
+	if Settings.high_contrast:
+		# The band that hurts, edged plainly.
+		draw_arc(Vector2.ZERO, radius - BAND, 0.0, TAU, 64, Palette.CONTRAST_ENEMY, 1.0)
+		draw_arc(Vector2.ZERO, radius + BAND, 0.0, TAU, 64, Palette.CONTRAST_ENEMY, 1.0)
