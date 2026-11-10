@@ -19,6 +19,9 @@ const SETTLE_SECONDS := 1.5
 ## to lift, so the room is measured (and pictured) as it's played.
 const VEIL_WAIT_SECONDS := 12.0
 const FRAMES := 90
+## A boss room is measured mid-fight: Wren can't be hurt, and the boss gets
+## this long to get going (its entrance over, its attacks flying) first.
+const BOSS_FIGHT_SECONDS := 6.0
 ## Busiest overworld screens in tests/perf_rooms (a baseline to compare).
 const OVERWORLD := [Vector2i(12, 9), Vector2i(3, -3), Vector2i(22, 8), Vector2i(2, 3)]
 ## Rooms worth a picture, to see they draw right in a browser (not boss
@@ -64,6 +67,14 @@ func _ready() -> void:
 		if dungeon == "mire" and first_mire and _dark() and not boss_room and not _veiled():
 			first_mire = false
 			shot = "mire_dark"
+		if boss_room:
+			var player := get_tree().get_first_node_in_group("player") as Player
+			var fight_until := Time.get_ticks_msec() + int(BOSS_FIGHT_SECONDS * 1000.0)
+			while Time.get_ticks_msec() < fight_until:
+				if player:
+					player._invuln = 600.0
+				await get_tree().process_frame
+				_skip_talk()
 		var total := 0.0
 		var worst := 0.0
 		var calls := 0.0
