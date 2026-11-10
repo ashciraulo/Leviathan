@@ -588,6 +588,21 @@ def _same(path, frames):
     return all(abs(x - y) <= 2 for x, y in zip(a, b))
 
 
+## Effects with no sound caption, and why. Everything else needs one
+## (accessibility: captions are opt-in, never shown by default).
+UNCAPTIONED = {
+    # Wren's own moves: the player pressed the button and sees it happen.
+    "sword_swing", "sword_spin", "player_hurt", "bubble_pop", "player_fall",
+    "hit_flesh", "hit_shell", "hum_heal", "hook_fire", "hook_latch", "hook_reel",
+    "lantern_up", "lantern_down", "cloak_open", "bow_draw", "bow_loose",
+    "ice_slide", "grass_cut", "pickup",
+    # Menus and text.
+    "ui_move", "ui_select", "ui_back", "ui_open", "text_blip",
+    # Ambient life: scenery, not a cue (overworld ambience review).
+    "fish_jump",
+}
+
+
 def main():
     check = "--check" in sys.argv
     only = None
@@ -609,7 +624,16 @@ def main():
         # Every sound needs an entry in Audio.SFX (its caption and fallback).
         import re
         with open(os.path.join(ROOT, "scripts", "autoload", "audio.gd"), encoding="utf-8") as f:
-            known = set(re.findall(r'^\t"([a-z0-9_]+)": \{', f.read(), re.M))
+            audio_src = f.read()
+        known = set(re.findall(r'^\t"([a-z0-9_]+)": \{', audio_src, re.M))
+        # Every effect has an opt-in caption, except the few listed in
+        # UNCAPTIONED (Wren's own moves and the menus, which the screen
+        # already shows).
+        sfx_block = audio_src[audio_src.index("const SFX"):]
+        sfx_block = sfx_block[:sfx_block.index("\n}\n")]
+        for name, body in re.findall(r'^\t"([a-z0-9_]+)": \{([^\n]*)\}', sfx_block, re.M):
+            if "caption" not in body and name not in UNCAPTIONED:
+                stale.append("%s has no caption in Audio.SFX (add one, or list it in UNCAPTIONED with why)" % name)
         for name in SOUNDS:
             if name not in known:
                 stale.append("%s has no entry in Audio.SFX (scripts/autoload/audio.gd)" % name)
