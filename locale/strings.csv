@@ -395,6 +395,9 @@ ROOM_MIRE_DROWNED,Lantern Mire: Drowned Walk
 ROOM_MIRE_BRAZIERS,Lantern Mire: Hall of Braziers
 ROOM_MIRE_GRAVES,Lantern Mire: Grave Lamps
 ROOM_MIRE_OSSUARY,Lantern Mire: Ossuary
+ROOM_MIRE_LYCH_WALK,Lantern Mire: Lych Walk
+ROOM_MIRE_LANTERN_LOFT,Lantern Mire: Lantern Loft
+ROOM_MIRE_SUNKEN_CRYPT,Lantern Mire: Sunken Crypt
 ROOM_MIRE_BOSS,Lantern Mire: the Still Pool
 DUNGEON_MIRE,Lantern Mire
 TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!

@@ -8,8 +8,9 @@ name_key = "ROOM_MIRE_OSSUARY"
 biome = "mire"
 dungeon = "mire"
 dark = true
-chest_item = "big_key"
-layout = "########################
+chest_item = "glint"
+chest_count = 50
+layout = "###########..###########
 #......................#
 #..~~~~~~~~~~~~~~~~~...#
 #..~...............~...#

@@ -798,6 +798,9 @@ func _mire_shots(game: Node) -> void:
 		[Vector2i(26, 8), "76_mire_brazier_hall", Vector2i(11, 10), true],
 		[Vector2i(26, 10), "77_mire_grave_lamps", Vector2i(11, 4), true],
 		[Vector2i(24, 8), "78_mire_ossuary", Vector2i(20, 7), true],
+		[Vector2i(24, 7), "78b_mire_lych_walk", Vector2i(11, 10), true],
+		[Vector2i(26, 7), "78c_mire_lantern_loft", Vector2i(19, 10), true],
+		[Vector2i(24, 10), "78d_mire_sunken_crypt", Vector2i(11, 2), true],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])

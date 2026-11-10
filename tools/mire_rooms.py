@@ -13,9 +13,13 @@ The way through:
   Drowned Walk (dark; raise the lantern to bring the veiled planks back;
   map) -> north to the Hall of Braziers (dark; light all four; small key)
   -> back to the Chapel, unlock its west hatch into the Ossuary (dark,
-  planks; big key) -> the Chapel's great door -> the Pale Congregation.
+  planks; glints) -> north to the Lych Walk (dark; planks out to three
+  braziers, light them all to open the bars; big key) -> the Chapel's
+  great door -> the Pale Congregation.
   Off the main path: the Grave Lamps south of the Drowned Walk (planks;
-  compass).
+  compass); the Lantern Loft north of the Hall of Braziers (dark; beat
+  everything; glints); the Sunken Crypt south of the Candle Store (a long
+  way round on planks only the lantern shows; 100 glints).
 
 The front door, and the way out after the boss, lead to Mirelight Edge in
 Gloamfen (overworld room (5, 2)), arriving just below its doorway.
@@ -82,7 +86,7 @@ ROOMS = {
 #....K.................#
 #..o...............o...#
 #......................#
-########################"""),
+###########..###########"""),
     (25, 8): ("ROOM_MIRE_CHAPEL", {"chest_item": '"glowmoth_lantern"', "gate": '"clear"', "chest_hidden": "true"}, """
 ###########GG###########
 #......................#
@@ -112,7 +116,7 @@ X......................#
 #~~~~~~~~~~..~~~~~~~~~~#
 ###########..###########"""),
     (26, 8): ("ROOM_MIRE_BRAZIERS", dict(DARK, gate='"braziers"'), """
-########################
+###################..###
 #.........#..#.........#
 #..j......#C.#......j..#
 #.........#||#.........#
@@ -139,8 +143,8 @@ X......................#
 #..o.......C.......o...#
 #......................#
 ########################"""),
-    (24, 8): ("ROOM_MIRE_OSSUARY", dict(DARK, chest_item='"big_key"'), """
-########################
+    (24, 8): ("ROOM_MIRE_OSSUARY", dict(DARK, chest_item='"glint"', chest_count="50"), """
+###########..###########
 #......................#
 #..~~~~~~~~~~~~~~~~~...#
 #..~...............~...#
@@ -152,6 +156,48 @@ X......................#
 #......................#
 #..o....x.....x.....o..#
 #......................#
+########################"""),
+    (24, 7): ("ROOM_MIRE_LYCH_WALK", dict(DARK, chest_item='"big_key"', gate='"braziers"'), """
+########################
+#.....q....#C#.........#
+#..j.......#|#......j..#
+#................q.....#
+#~~~~~vv~~~~~~~~~vv~~~~#
+#~~~~~vv~~~~~~~~~vv~~~~#
+#~~~~~vv~~....~~~vv~~~~#
+#~~~~~vvvv..j.vvvvv~~~~#
+#~~~~~~~~~....~~~~~~~~~#
+#~~~~~~~~~~vv~~~~~~~~~~#
+#......................#
+#..o..x..........x..o..#
+###########..###########"""),
+    (26, 7): ("ROOM_MIRE_LANTERN_LOFT", dict(DARK, chest_item='"glint"', chest_count="100", gate='"clear"', chest_hidden="true"), """
+########################
+#......................#
+#.l........x.........l.#
+#...~~~~........~~~~...#
+#...~~~~........~~~~...#
+#..........C.....q.....#
+#......................#
+#....q...~~~~~~........#
+#........~~~~~~........#
+#......q...............#
+#..x...................#
+#......................#
+###################..###"""),
+    (24, 10): ("ROOM_MIRE_SUNKEN_CRYPT", dict(DARK, chest_item='"glint"', chest_count="100"), """
+###########..###########
+#..o................o..#
+#...x..................#
+#~~~~~~~~~~vv~~~~~~~~~~#
+#~~~~~~~~~~vv~~~.C.~~~~#
+#~~~~vvvvvvvv~~~...~~~~#
+#~~~~v~~~~~~~~~~~v~~~~~#
+#~~~~v~~~~~~~~~~~v~~~~~#
+#~~~~v~~~~~~~~~~~v~~~~~#
+#~~~~vvvvvvvvvvvvv~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~#
 ########################"""),
     (25, 7): ("ROOM_MIRE_BOSS", OUTSIDE, """
 ########################

@@ -1192,6 +1192,41 @@ func _test_mire_dungeon() -> void:
 	_check(GameState.keys("mire") == 1, "the Hall's chest holds a small key")
 	await _wait(0.6)
 
+	# The Lych Walk: lantern up, out along the planks to three braziers;
+	# all three lit open the bars on the big key.
+	room = await _goto(game, Vector2i(24, 7), Vector2i(11, 11))
+	await _calm(room)
+	if not player.lantern_raised:
+		player.use_item("glowmoth_lantern")
+	player.global_position = _tile_pos(room, Vector2i(11, 10))
+	Input.action_press("move_up")
+	await _wait(0.6)
+	Input.action_release("move_up")
+	local = player.global_position - room.global_position
+	_check(local.y < 9 * Room.TILE and player.state == Player.State.MOVE, "lantern up, Wren walks the plank out to the Lych Walk's island (at %s)" % local)
+	var lych: Array = _child_of(room, Brazier)
+	_check(lych.size() == 3, "three braziers stand in the Lych Walk")
+	var lych_bars: Bars = _child_of(room, Bars)[0]
+	for brazier: Brazier in lych:
+		# (The walk out lights the island's brazier on the way.)
+		if lych.any(func(b: Brazier) -> bool: return not b.lit):
+			_check(not lych_bars.is_open, "the Lych Walk's bars stay shut until every brazier burns")
+		player.global_position = brazier.global_position + Vector2(0, 16)
+		await _wait(0.1)
+		_check(brazier.lit, "the raised lantern lights a Lych Walk brazier")
+	await _wait(0.4)
+	_check(lych_bars.is_open, "all three lit, the Lych Walk's bars open")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Lych Walk's chest holds the big key")
+	player.use_item("glowmoth_lantern")
+
+	# The Sunken Crypt and the Lantern Loft, off the main path.
+	room = await _goto(game, Vector2i(24, 10), Vector2i(11, 1))
+	await _calm(room)
+	_check(_child_of(room, VeilPlank).size() > 20 and _child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "glint"), "the Sunken Crypt's long plank walk leads to a chest")
+	room = await _goto(game, Vector2i(26, 7), Vector2i(19, 11))
+	await _wait(0.3)
+	_check(_child_of(room, Enemy).size() >= 4, "the Lantern Loft has a fight in it")
+
 	# The Pale Congregation (the calf scene after it is tested in _test_story).
 	GameState.refill()
 	GameState.set_flag(StoryDirector.CALF_FLAG)
