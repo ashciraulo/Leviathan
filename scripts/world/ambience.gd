@@ -96,6 +96,12 @@ func _ready() -> void:
 	add_child(_high)
 	_survey()
 	var life: Dictionary = LIFE.get(_room.biome if _room else "", {})
+	# Under a roof: nothing that needs the open sky (gulls, buzzards, wind,
+	# falling snow or ash).
+	if _room and _room.cave:
+		life = life.duplicate()
+		for key in ["gulls", "buzzards", "gusts", "snow", "ash", "butterflies"]:
+			life.erase(key)
 	for i in int(life.get("gulls", 0)):
 		gulls.append(_new_gull(true))
 	for i in int(life.get("buzzards", 0)):

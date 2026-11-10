@@ -57,6 +57,7 @@ func _ready() -> void:
 		await _test_sea_bed()
 		await _test_challenges()
 		await _test_overworld_life()
+		await _test_regional_caves()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -4154,6 +4155,42 @@ func _test_tide_turning() -> void:
 	_check(Tide.held() == "low" and Tide.phase() == Tide.Phase.LOW, "a tide left mid-turn finishes running out")
 	Tide.offset = 0.0
 	GameState.reset_new_game()
+
+
+## Small caves off the regions: Smugglers' Cut (crates onto plates open the
+## bars), Rimefall Steps and the Icefall Grotto (three ice eyes).
+func _test_regional_caves() -> void:
+	GameState.reset_new_game()
+	var cut: Room = (load("res://rooms/room_0_1.tscn") as PackedScene).instantiate()
+	add_child(cut)
+	await _wait(0.2)
+	var bars: Array = _child_of(cut, Bars)
+	var plates: Array = _child_of(cut, PressurePlate)
+	var crates: Array = _child_of(cut, Crate)
+	_check(cut.cave and bars.size() == 1 and not bars[0].is_open and plates.size() == 2 and crates.size() == 2, "Smugglers' Cut keeps its chest behind bars, with two crates for two plates")
+	for i in 2:
+		crates[i].position = Vector2(plates[i].tile.x * Room.TILE + 8, plates[i].tile.y * Room.TILE + 12)
+	await _wait(0.3)
+	_check(bars[0].is_open, "both plates weighed down open the bars")
+	_check(cut.get_node("Ambience").gulls.is_empty(), "no gulls fly under a cave roof")
+	cut.queue_free()
+	GameState.reset_new_game()
+	var grotto: Room = (load("res://rooms/room_1_-4.tscn") as PackedScene).instantiate()
+	add_child(grotto)
+	await _wait(0.2)
+	var eyes: Array = _child_of(grotto, IceEye)
+	bars = _child_of(grotto, Bars)
+	_check(grotto.gate == "eyes" and eyes.size() == 3 and bars.size() == 1 and not bars[0].is_open, "the Icefall Grotto has three ice eyes and a barred chest")
+	for eye in eyes:
+		eye.arrow_hit(Vector2.UP)
+	await _wait(0.4)
+	_check(bars[0].is_open, "every eye open lets Wren at the chest")
+	grotto.queue_free()
+	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4)]:
+		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
+		_check(probe.cave, "%s is a cave" % coord)
+		probe.free()
+	await _wait(0.1)
 
 
 ## Overworld life: the Galehawk over Windmere, the newer foes elsewhere, and
