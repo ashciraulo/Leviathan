@@ -56,9 +56,10 @@ func import_to(slot: int) -> void:
 		_take_import.call_deferred(test_import, test_import == "")
 	elif OS.has_feature("web"):
 		# A browser opens its file picker only right after a key press, click
-		# or tap; a gamepad press doesn't count.
+		# or tap; a gamepad press doesn't count. So after a pad press, say so
+		# instead of asking for a picker the browser would quietly refuse.
 		var opened = JavaScriptBridge.eval("""(function(){
-			if (navigator.userActivation && !navigator.userActivation.isActive) return false;
+			if (%s && navigator.userActivation && !navigator.userActivation.isActive) return false;
 			window.__lvImport = {state: 'wait', text: ''};
 			var input = document.createElement('input');
 			input.type = 'file';
@@ -80,7 +81,7 @@ func import_to(slot: int) -> void:
 			});
 			input.click();
 			return true;
-		})()""" % MAX_IMPORT_BYTES, true)
+		})()""" % ["true" if Settings.using_pad else "false", MAX_IMPORT_BYTES], true)
 		if not opened:
 			_import_slot = -1
 			finished.emit("FILES_IMPORT_NEEDS_TOUCH")
