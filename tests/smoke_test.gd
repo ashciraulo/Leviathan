@@ -4186,7 +4186,16 @@ func _test_regional_caves() -> void:
 	await _wait(0.4)
 	_check(bars[0].is_open, "every eye open lets Wren at the chest")
 	grotto.queue_free()
-	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4)]:
+	# Saltpan Hollow: a hook post on the islet, in line with the shore.
+	var pan := Room.parse_layout(((load("res://rooms/room_9_2.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(pan[5][15] == "O" and pan[5][14] == "." and pan[5].substr(11, 3) == "~~~" and pan[5][10] == ".", "Saltpan Hollow's hook post pulls Wren from the shore onto the islet")
+	# Wreckers' Hold: its chest stands on a reef the low tide bares.
+	var hold: Room = (load("res://rooms/room_3_4.tscn") as PackedScene).instantiate()
+	add_child(hold)
+	await _wait(0.1)
+	_check(hold.get_node_or_null("Tide") != null and hold.chest_item == "glint", "Wreckers' Hold is tidal, with a glint chest")
+	hold.queue_free()
+	for coord: Vector2i in [Vector2i(0, 1), Vector2i(2, -4), Vector2i(1, -4), Vector2i(2, 4), Vector2i(3, 4), Vector2i(9, 2)]:
 		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
 		_check(probe.cave, "%s is a cave" % coord)
 		probe.free()

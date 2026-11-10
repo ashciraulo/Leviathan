@@ -87,6 +87,8 @@ SECRETS = {
     # Challenges, each with a Breath Pearl.
     (7, -4): ("kite_cloak",),                 # Gullcry Stacks: glide stack to stack over the chasm
     (5, 3): ("glowmoth_lantern", "frostfang_bow", "kite_cloak"),  # Lampless Sink (the braziers need the lantern)
+    # Regional caves (2026-11-10).
+    (9, 2): ("tide_hook", "frostfang_bow", "kite_cloak"),  # Saltpan Hollow: a bitter-sea islet with a hook post
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
