@@ -61,7 +61,7 @@ func _ready() -> void:
 		var boss_room: bool = RoomInfo.all()[coord]["boss"] != Vector2i(-1, -1)
 		if shot != "" and (boss_room or _veiled()):
 			shot = ""
-		if dungeon == "mire" and first_mire and _lights() > 0 and not boss_room and not _veiled():
+		if dungeon == "mire" and first_mire and _dark() and not boss_room and not _veiled():
 			first_mire = false
 			shot = "mire_dark"
 		var total := 0.0
@@ -108,15 +108,30 @@ func _skip_talk() -> void:
 func _veiled() -> bool:
 	for node in get_tree().root.find_children("*", "ColorRect", true, false):
 		var rect := node as ColorRect
+		# A dark room's Darkness sheet multiplies the room, it doesn't hide it.
+		if rect.get_parent() is Darkness:
+			continue
 		if rect.is_visible_in_tree() and rect.color.a > 0.5 and rect.size.x >= 300.0:
 			return true
 	return false
 
 
-## Lights drawing in the room now.
+## Lights shining in the room now: 2D lights (there should be none: each
+## redraws everything it touches) and Glows (one shader pass in the dark).
 func _lights() -> int:
 	var n := 0
 	for node in get_tree().root.find_children("*", "Light2D", true, false):
 		if (node as Light2D).is_visible_in_tree() and (node as Light2D).enabled:
 			n += 1
+	for node in get_tree().get_nodes_in_group(Glow.GROUP):
+		if (node as Node2D).is_visible_in_tree():
+			n += 1
 	return n
+
+
+## True when the room is a dark one.
+func _dark() -> bool:
+	for room in get_tree().get_nodes_in_group("rooms"):
+		if room.get_node_or_null("Darkness") is Darkness:
+			return true
+	return false
