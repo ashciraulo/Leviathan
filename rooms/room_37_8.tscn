@@ -7,14 +7,15 @@ script = ExtResource("1_room")
 name_key = "ROOM_BELFRY_LOFT"
 biome = "belfry"
 dungeon = "belfry"
-chest_item = "big_key"
+chest_item = "glint"
+chest_count = 50
 layout = "########################
 #......................#
 #..QQQQQQQQQQQQQQQQQQ..#
 #..QQQQQQQQQQLLLLLQQQ..#
 #..QQQQQQQQQQL...LQQQ..#
-#..QQQQQQQQQQL.C.LQQQ..#
-...QQQQQQQQQQL...LQQQ..#
+#..QQQQQQQQQQL.C.LQQQ...
+...QQQQQQQQQQL...LQQQ...
 ...QQQQQQQQQQLLLLLQQQ..#
 #..QQQQQQQQQQQQQQQQQQ..#
 #..QQQQQQQQQQQQQQQQQQ..#

@@ -1073,6 +1073,8 @@ func _belfry_shots(game: Node) -> void:
 		[Vector2i(36, 8), "124_belfry_valve_chamber", Vector2i(11, 11)],
 		[Vector2i(35, 8), "125_belfry_choir", Vector2i(22, 6)],
 		[Vector2i(37, 8), "126_belfry_loft", Vector2i(1, 6)],
+		[Vector2i(38, 8), "126b_belfry_tolling_well", Vector2i(2, 6)],
+		[Vector2i(35, 10), "126c_belfry_drowned_nave", Vector2i(21, 6)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])

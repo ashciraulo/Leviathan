@@ -513,6 +513,8 @@ ROOM_BELFRY_CISTERN,The Drowned Belfry: Cistern
 ROOM_BELFRY_VALVES,The Drowned Belfry: Valve Chamber
 ROOM_BELFRY_CHOIR,The Drowned Belfry: Sunken Choir
 ROOM_BELFRY_LOFT,The Drowned Belfry: Ringers' Loft
+ROOM_BELFRY_TOLLING_WELL,The Drowned Belfry: Tolling Well
+ROOM_BELFRY_DROWNED_NAVE,The Drowned Belfry: Drowned Nave
 ROOM_BELFRY_BOSS,The Drowned Belfry: the Great Bell
 DUNGEON_BELFRY,The Drowned Belfry
 TOAST_GOT_DIVERS_HELM,You found the Diver's Helm!
