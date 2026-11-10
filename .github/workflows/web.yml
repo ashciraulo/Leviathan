@@ -108,7 +108,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web-title
-          path: web_title.png
+          path: |
+            web_title.png
+            web_saves.png
           if-no-files-found: ignore
 
       - name: Time the heavy rooms in a browser

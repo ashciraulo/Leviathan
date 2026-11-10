@@ -61,6 +61,7 @@ func _ready() -> void:
 		await _test_side_quests()
 		await _test_shop()
 		_test_satchel_sea_glass()
+		await _test_save_transfer()
 		await _test_dream()
 		await _test_journal()
 		await _test_tobin()
@@ -4989,3 +4990,78 @@ func _test_late_reactions() -> void:
 func _enemies_away() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.queue_free()
+
+
+## Export and Import on the file select: a save goes out as text and comes
+## back into an empty file the same; junk, a newer game's save or a filled
+## file are turned away.
+func _test_save_transfer() -> void:
+	const OTHER := 0
+	SaveManager.set_aside(OTHER, "testtransfer")
+	SaveManager.delete_save(TEST_SLOT)
+	GameState.reset_new_game()
+	GameState.give_item("tidebell")
+	GameState.play_time = 3725.0
+	SaveManager.save_game(TEST_SLOT)
+	var text := SaveManager.export_text(TEST_SLOT)
+	_check(text != "" and SaveManager.export_text(OTHER) == "", "a save exports as text; an empty file doesn't")
+	_check(SaveManager.export_file_name(TEST_SLOT).begins_with("leviathan-file3-"), "the exported file is named for its slot")
+	_check(SaveManager.import_text(text, TEST_SLOT) == "FILES_IMPORT_NEED_EMPTY", "import never writes over a file")
+	_check(SaveManager.import_text("{not json", OTHER) == "FILES_IMPORT_BAD"
+		and SaveManager.import_text('{"state": 3}', OTHER) == "FILES_IMPORT_BAD"
+		and not SaveManager.has_save(OTHER), "junk isn't imported")
+	var newer = JSON.parse_string(text)
+	newer["format_version"] = SaveManager.FORMAT_VERSION + 1
+	_check(SaveManager.import_text(JSON.stringify(newer), OTHER) == "FILES_NEWER" and not SaveManager.has_save(OTHER),
+		"a newer game's save isn't imported")
+
+	# The same through the file select's buttons.
+	var files := FileSelect.new()
+	files.transfer = SaveTransfer.new()
+	files.transfer.test_mode = true
+	files.add_child(files.transfer)
+	add_child(files)
+	files.on_open()
+	var press := InputEventAction.new()
+	press.action = "interact"
+	press.pressed = true
+	var back := InputEventAction.new()
+	back.action = "attack"
+	back.pressed = true
+	var buttons: Array = files._buttons()
+	_check(buttons.has("FILES_EXPORT") and buttons.has("FILES_IMPORT"), "the file select offers Export and Import")
+	files._cursor = SaveManager.SLOT_COUNT + buttons.find("FILES_EXPORT")
+	files.handle_input(press)
+	files._cursor = TEST_SLOT
+	files.handle_input(press)
+	_check(files.transfer.last_export == text and files._note == "FILES_EXPORTED", "Export hands over the chosen file")
+	files.transfer.test_import = files.transfer.last_export
+	files._cursor = SaveManager.SLOT_COUNT + buttons.find("FILES_IMPORT")
+	files.handle_input(press)
+	_check(files._cursor == OTHER, "Import starts on an empty file (%d)" % files._cursor)
+	files.handle_input(press)
+	await get_tree().process_frame
+	var summary := SaveManager.read_summary(OTHER)
+	_check(files._note == "FILES_IMPORTED" and int(summary.get("bells", 0)) == 1
+		and is_equal_approx(float(summary.get("play_time", 0.0)), 3725.0), "Import brings the file back as it was")
+	SaveManager.current_slot = OTHER
+	_check(SaveManager.load_game(OTHER) and GameState.item_count("tidebell") == 1, "an imported file loads")
+	SaveManager.current_slot = TEST_SLOT
+	# Into a filled file, and a cancelled pick.
+	files._cursor = SaveManager.SLOT_COUNT + buttons.find("FILES_IMPORT")
+	files.handle_input(press)
+	files._cursor = OTHER
+	files.handle_input(press)
+	_check(files._note == "FILES_IMPORT_NEED_EMPTY" and files._mode == FileSelect.Mode.IMPORT, "Import asks for an empty file")
+	SaveManager.delete_save(OTHER)
+	files.transfer.test_import = ""
+	files._refresh()
+	files.handle_input(press)
+	await get_tree().process_frame
+	_check(files._mode == FileSelect.Mode.PLAY and files._note == "" and not SaveManager.has_save(OTHER),
+		"a cancelled pick changes nothing")
+	files.handle_input(back)
+	files.queue_free()
+	await get_tree().process_frame
+	SaveManager.delete_save(TEST_SLOT)
+	SaveManager.restore_aside(OTHER, "testtransfer")

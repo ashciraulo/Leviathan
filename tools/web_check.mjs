@@ -12,7 +12,9 @@
 // checks the canvas has actually drawn something (not a blank or error page).
 // Then it opens the game again on a phone-sized touch screen: the game has to
 // fill the screen's height, a touch has to bring up the on-screen controls
-// (web/touch.html), and the stick has to press the arrow keys.
+// (web/touch.html), and the stick has to press the arrow keys. Last, a save
+// goes in through Import on the file select (tests/web_save.json), survives
+// a reload, and comes back out through Export the same.
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -107,9 +109,103 @@ if (shot) fs.writeFileSync(shot, png);
 const colours = await colourCount(png);
 if (colours < 12) failures.push(`the screen looks blank (${colours} colours)`);
 if (failures.length === 0) await phoneCheck();
+if (failures.length === 0) await saveCheck();
 await browser.close();
 server.close();
-finish(`WEB BUILD CHECK PASSED (title drawn, ${colours} colours; touch controls work)`);
+finish(`WEB BUILD CHECK PASSED (title drawn, ${colours} colours; touch controls and save import/export work)`);
+
+async function saveCheck() {
+  const ctx = await browser.newContext({ viewport: { width: 1152, height: 648 }, acceptDownloads: true });
+  const tab = await ctx.newPage();
+  tab.on("pageerror", (err) => failures.push(`saves: page error: ${err.message}`));
+  let picker = null;
+  tab.on("filechooser", (f) => { picker = f; });
+  const boot = async () => {
+    let up = false;
+    const seen = (msg) => { if (msg.text().includes("Godot Engine v")) up = true; };
+    tab.on("console", seen);
+    const until = Date.now() + BOOT_TIMEOUT_MS;
+    while (!up && Date.now() < until) await tab.waitForTimeout(500);
+    tab.off("console", seen);
+    await tab.waitForTimeout(6000);
+    return up;
+  };
+  // CI draws in software at a few frames a second: hold each key for a
+  // couple of frames and leave room between presses and screens.
+  const key = async (k, n = 1) => {
+    for (let i = 0; i < n; i++) {
+      await tab.keyboard.down(k);
+      await tab.waitForTimeout(150);
+      await tab.keyboard.up(k);
+      await tab.waitForTimeout(450);
+    }
+  };
+  // The title's logo is bright; the file select dims it behind dark cards.
+  const onFiles = async () => (await brightness(await tab.screenshot({ clip: { x: 300, y: 70, width: 550, height: 120 } }))) < 70;
+  // Enter on Journeys (or Continue's neighbour) until the file select is up:
+  // the title only takes keys once its menu has faded in.
+  const openFiles = async (downs) => {
+    for (let tries = 0; tries < 6; tries++) {
+      await key("ArrowDown", downs);
+      await key("Enter");
+      for (let i = 0; i < 10; i++) {
+        if (await onFiles()) { await tab.waitForTimeout(800); return true; }
+        await tab.waitForTimeout(500);
+      }
+      await key("ArrowUp", downs);
+    }
+    return false;
+  };
+  // The file select's buttons, from the left: Copy, Erase, Export, Import, Back.
+  const button = async (index) => { await key("ArrowDown", 3); await key("ArrowLeft", 4); await key("ArrowRight", index); };
+  await tab.goto(`http://127.0.0.1:${port}/`);
+  if (!(await boot())) return failures.push("saves: the engine never started");
+  if (!(await openFiles(0))) return failures.push("saves: Journeys didn't open the file select");
+  await button(3);
+  await key("k"); // Import, into File 1
+  await key("k");
+  for (let i = 0; i < 60 && !picker; i++) await tab.waitForTimeout(250);
+  if (!picker) {
+    // What the page saw, and a picture of the menu, for working out why.
+    const seen = await tab.evaluate(() => JSON.stringify({ importing: window.__lvImport, active: navigator.userActivation && navigator.userActivation.isActive }));
+    fs.writeFileSync("web_saves.png", await tab.screenshot());
+    return failures.push(`saves: Import didn't open the browser's file picker (${seen}; see web_saves.png)`);
+  }
+  const original = fs.readFileSync(path.resolve("tests/web_save.json"), "utf8");
+  await picker.setFiles({ name: "web_save.json", mimeType: "application/json", buffer: Buffer.from(original) });
+  // Wait until the browser's storage holds the file (Godot copies user://
+  // there a moment after a save is written), then give it a little longer.
+  const stored = () => tab.evaluate(() => new Promise((done) => {
+    const open = indexedDB.open("/userfs");
+    open.onerror = () => done(false);
+    open.onsuccess = () => {
+      try {
+        const db = open.result;
+        const keys = db.transaction("FILE_DATA", "readonly").objectStore("FILE_DATA").getAllKeys();
+        keys.onsuccess = () => { done(keys.result.some((k) => String(k).endsWith("/save_0.json"))); db.close(); };
+        keys.onerror = () => done(false);
+      } catch (e) { done(false); }
+    };
+  }));
+  let kept = false;
+  for (let i = 0; i < 40 && !(kept = await stored()); i++) await tab.waitForTimeout(250);
+  if (!kept) return failures.push("saves: the imported file never reached the browser's storage");
+  await tab.waitForTimeout(500);
+  // Saves live in the browser's storage: a reload still has the file.
+  await tab.reload();
+  if (!(await boot())) return failures.push("saves: the engine didn't start again after a reload");
+  // With a save the title starts on Continue; Journeys is next.
+  if (!(await openFiles(1))) return failures.push("saves: after a reload, Journeys didn't open the file select");
+  await button(2);
+  await key("k"); // Export; the file select starts on the latest file
+  const download = tab.waitForEvent("download", { timeout: 8000 }).catch(() => null);
+  await key("k");
+  const got = await download;
+  if (!got) return failures.push("saves: Export didn't download the file (did Import keep it?)");
+  const back = JSON.parse(fs.readFileSync(await got.path(), "utf8"));
+  if (JSON.stringify(back.state) !== JSON.stringify(JSON.parse(original).state)) failures.push("saves: the exported file isn't the one imported");
+  await ctx.close();
+}
 
 async function phoneCheck() {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
@@ -156,6 +252,24 @@ function finish(passed) {
   }
   console.log(passed);
   process.exit(0);
+}
+
+// The average brightness (0-255) of a screenshot.
+async function brightness(png) {
+  return page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.width;
+    c.height = img.height;
+    const g = c.getContext("2d");
+    g.drawImage(img, 0, 0);
+    const data = g.getImageData(0, 0, c.width, c.height).data;
+    let sum = 0;
+    for (let i = 0; i < data.length; i += 4) sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+    return sum / (data.length / 4);
+  }, png.toString("base64"));
 }
 
 // How many colours a screenshot has: a drawn screen has many, a blank or

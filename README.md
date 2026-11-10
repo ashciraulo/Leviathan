@@ -38,7 +38,10 @@ downloaded from the run's page too.
 
 **Play in a browser:** <https://ashciraulo.github.io/Leviathan/> is rebuilt
 from `main` on every push (the **Web build** workflow). Saves stay in that
-browser.
+browser, so clearing its site data erases them: **Export** on the file select
+downloads a file as a `.json` to keep, and **Import** puts one back (into an
+empty file). The desktop builds have the same buttons, so a journey can move
+between the browser and a PC.
 
 The **Leviathan-web** download can't be opened by double-clicking
 `index.html`: browsers only run the game from a web address, and the page
