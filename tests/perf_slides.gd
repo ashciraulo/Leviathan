@@ -33,14 +33,21 @@ func _ready() -> void:
 		var t0 := Time.get_ticks_usec()
 		game.call("_change_room", way)
 		var step_ms := (Time.get_ticks_usec() - t0) / 1000.0
+		# A slide that didn't start (blocked, no room) isn't a slide.
+		var slid: bool = game.get("busy")
 		var worst := 0.0
 		var last := Time.get_ticks_usec()
-		for i in 30:
+		# Measure until the slide has finished and the next room is live.
+		var settle := 3
+		while slid and settle > 0 and Time.get_ticks_usec() - t0 < 5000000:
 			await get_tree().process_frame
 			var now := Time.get_ticks_usec()
 			worst = maxf(worst, (now - last) / 1000.0)
 			last = now
-		rows.append([coord, coord + way, step_ms, worst])
+			if not game.get("busy"):
+				settle -= 1
+		if slid:
+			rows.append([coord, coord + way, step_ms, worst])
 		game.queue_free()
 		await get_tree().process_frame
 	rows.sort_custom(func(a: Array, b: Array) -> bool: return a[2] > b[2])

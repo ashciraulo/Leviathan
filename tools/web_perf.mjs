@@ -11,7 +11,8 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -19,28 +20,52 @@ const { chromium } = require("playwright");
 
 const scene = process.argv[2] || "res://tests/perf_rooms.tscn";
 const godot = process.env.GODOT || "godot";
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dir = path.join(root, "export", "web_perf");
 const TIMEOUT_MS = 1800000;
 
 const project = path.join(root, "project.godot");
 const presets = path.join(root, "export_presets.cfg");
 const keep = [fs.readFileSync(project, "utf8"), fs.readFileSync(presets, "utf8")];
-try {
-  fs.writeFileSync(project, keep[0].replace(/^run\/main_scene=.*$/m, `run/main_scene="${scene}"`));
-  fs.writeFileSync(presets, keep[1].replace(/exclude_filter="tests\/\*, /g, 'exclude_filter="'));
-  fs.mkdirSync(dir, { recursive: true });
-  execFileSync(godot, ["--headless", "--path", root, "--export-release", "Web", path.join(dir, "index.html")], { stdio: "ignore" });
-} finally {
+const restore = () => {
   fs.writeFileSync(project, keep[0]);
   fs.writeFileSync(presets, keep[1]);
+};
+// Put the files back even if the run is stopped mid-export.
+const stop = () => {
+  restore();
+  process.exit(130);
+};
+process.on("SIGINT", stop);
+process.on("SIGTERM", stop);
+try {
+  const mainScene = keep[0].replace(/^run\/main_scene=.*$/m, `run/main_scene="${scene}"`);
+  const withTests = keep[1].replace(/exclude_filter="tests\/\*, /g, 'exclude_filter="');
+  if (mainScene === keep[0] || withTests === keep[1]) throw new Error("project.godot or export_presets.cfg no longer look as expected");
+  fs.writeFileSync(project, mainScene);
+  fs.writeFileSync(presets, withTests);
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.mkdirSync(dir, { recursive: true });
+  const code = await new Promise((resolve) => {
+    spawn(godot, ["--headless", "--path", root, "--export-release", "Web", path.join(dir, "index.html")], { stdio: "ignore" })
+      .on("error", () => resolve(-1))
+      .on("exit", resolve);
+  });
+  if (code !== 0 || !fs.existsSync(path.join(dir, "index.pck"))) throw new Error(`web export failed (exit ${code})`);
+} finally {
+  restore();
 }
 
 const TYPES = { ".html": "text/html", ".js": "application/javascript", ".wasm": "application/wasm" };
 const server = http.createServer((req, res) => {
-  const url = decodeURIComponent((req.url || "/").split("?")[0]);
-  const file = path.join(dir, url === "/" ? "index.html" : url);
-  if (!file.startsWith(dir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+  let file = "";
+  try {
+    const url = decodeURIComponent((req.url || "/").split("?")[0]);
+    file = path.join(dir, url === "/" ? "index.html" : url);
+  } catch {
+    file = "";
+  }
+  if (!file || !file.startsWith(dir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
     res.writeHead(404);
     res.end();
     return;
