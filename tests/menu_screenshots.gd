@@ -31,7 +31,12 @@ func _ready() -> void:
 	# Title, then the file select with one new file, a copy, and an empty one.
 	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
 	add_child(title)
-	await _wait(1.6)
+	# Wait for the menu to finish surfacing: a button has focus then.
+	for i in 100:
+		if get_viewport().gui_get_focus_owner() != null:
+			break
+		await _wait(0.1)
+	await _wait(0.2)
 	await _capture("30_title_menu")
 	GameState.reset_new_game()
 	GameState.play_time = 760.0
