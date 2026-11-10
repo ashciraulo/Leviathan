@@ -41,7 +41,7 @@ const KINDS := {
 	"gully": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
 	# Gully out on the Ebb Shelf's sandbar while the tide is held out, by the
 	# old lantern-boat it bared (StoryDirector).
-	"gully_ebb": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"gully_ebb": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
 	# Captain Sorrel, the retired kite-post captain at Gullwatch Steps
 	# (StoryDirector). Her "breathe" frame is her scarf lifting in the wind.
 	"sorrel": {"texture": Art.VILLAGER_SORREL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},

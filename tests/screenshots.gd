@@ -1706,7 +1706,7 @@ func _murmur_dace_shots() -> void:
 ## finds in the lantern-boat there.
 func _ebb_story_shots() -> void:
 	GameState.reset_new_game()
-	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa"]:
+	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa", "gully_paid"]:
 		GameState.set_flag(flag)
 	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()

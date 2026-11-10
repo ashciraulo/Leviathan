@@ -953,9 +953,9 @@ HESSA_HINT_TOMB_1,"One bell left. Dace's people keep the Ossuary Dunes, out past
 HESSA_HINT_TOMB_2,"Deep water lies between. You'll want something to breathe with under it."
 HESSA_HINT_MAW,"The Maw's waiting, child. Go on. The lamp stays lit."
 GULLY_EBB_1,"Dry ground on the Ebb Shelf! Never thought I'd stand out here without a boat."
-GULLY_EBB_2,"See her? A lantern-boat. Went down the night of the big storm, twelve years back."
+GULLY_EBB_2,"See her? A lantern-boat. Ran aground here in the big storm, twelve years back."
 GULLY_EBB_3,"Empty, folk said. But Hessa rowed out that night, and came home with her coat buttoned up."
-GULLY_EBB_4,"Twelve years... about when you came to the lighthouse, keeper. Go on, have a look."
+GULLY_EBB_4,"Twelve years, near enough... Go on, keeper. Have a look."
 GULLY_EBB_AGAIN,"I'll not take a thing from that boat. Whatever's in her is yours."
 GULLY_EBB_AFTER,"Found something, did you? Keep it close. The sea doesn't give much back."
 NARRATE_LANTERN_BOAT,"A little lantern-boat, half buried in the sand. Its lamp hook still hangs at the bow."
@@ -965,4 +965,4 @@ NARRATE_LANTERN_BOAT_EMPTY,Only sand now. The lamp hook creaks when the wind fin
 NARRATE_WREN_SHOWS_CAP,Wren holds out the little cap from the lantern-boat.
 HESSA_CAP_1,"Where did you... Out on the Shelf. Of course. You held the tide out."
 NARRATE_HESSA_HOLDS_CAP,"Hessa holds the cap a long time. Then she folds it, and puts it back in Wren's hands."
-HESSA_CAP_2,"Keep it, child. It was always yours."
+HESSA_CAP_2,"Keep it, child. Keep it close."

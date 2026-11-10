@@ -5106,10 +5106,17 @@ func _test_errands() -> void:
 ## the ebb bared, and there is a child's cap under its bench.
 func _test_ebb_shelf() -> void:
 	GameState.reset_new_game()
-	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa"]:
+	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa", "gully_asked"]:
 		GameState.set_flag(flag)
 	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "gully_ebb") == null, "until his strongbox is home, Gully stays on the Wreck Strand")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag("gully_paid")
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.4)
 	var room: Room = game.current_room
@@ -5140,7 +5147,7 @@ func _test_ebb_shelf() -> void:
 	_check(Conversations.branch_for("gully_ebb").get("lines") == ["GULLY_EBB_AFTER"], "Gully sees Wren found something")
 	_check(Conversations.branch_for("hessa").get("lines")[1] == "HESSA_CAP_1", "Wren shows Hessa the cap")
 	Conversations.talk("hessa")
-	_check(Conversations.branch_for("hessa").get("lines")[0] != "NARRATE_WREN_SHOWS_CAP", "once")
+	_check(GameState.has_flag("hessa_saw_cap") and not (Conversations.branch_for("hessa").get("lines") as Array).has("HESSA_CAP_1"), "once")
 	await _close_dialogue(game)
 	game.queue_free()
 	await _wait(0.1)

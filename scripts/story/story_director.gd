@@ -938,13 +938,17 @@ func _put_wick(coord: Vector2i) -> void:
 ## pool until it's hauled in (it shows itself once he's asked).
 func _put_gully() -> void:
 	var room: Node = game.current_room
-	if room == null or _find_npc("gully"):
+	if room == null:
 		return
+	for child in room.get_children():
+		if child is Prop and child.kind == "figurehead":
+			return
 	var figurehead := Prop.new("figurehead")
 	figurehead.position = FIGUREHEAD_AT
 	room.add_child(figurehead)
-	# With the tide held out, Gully is out salvaging on the Ebb Shelf.
-	if Tide.held() != "low":
+	# With the tide held out (and his strongbox home), Gully is out
+	# salvaging on the Ebb Shelf.
+	if not _gully_on_the_shelf():
 		var gully := Npc.new("gully")
 		gully.position = GULLY_AT
 		room.add_child(gully)
@@ -995,13 +999,17 @@ func _put_coralie() -> void:
 	room.add_child(chime)
 
 
+static func _gully_on_the_shelf() -> bool:
+	return Tide.held() == "low" and GameState.has_flag("gully_paid")
+
+
 ## The lantern-boat on the Ebb Shelf, and Gully beside it while the tide is
 ## held out.
 func _put_lantern_boat() -> void:
 	var room: Node = game.current_room
 	if room == null:
 		return
-	if Tide.held() == "low":
+	if _gully_on_the_shelf():
 		_put_npc("gully_ebb", GULLY_EBB_AT)
 	for child in room.get_children():
 		if child is LanternBoat:
