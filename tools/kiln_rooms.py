@@ -12,12 +12,17 @@ The way through:
   flipped with the Tide Hook; the Stonebreaker Mallet) -> back to the
   Casting Floor and smash the boulders east -> Slag Pits (hammer the peg
   down; small key) -> north through more boulders into the Riser (climb
-  ahead of the rising lava) -> Bell Loft (big key) -> back to the Casting
+  ahead of the rising lava) -> Bell Loft (glints) -> east into the
+  Chimney (slip under the drop hammers, smash the boulders) -> Annealing
+  Oven (drive the two pegs that block the crate's one-tile channel, then
+  shove it along and down onto the plate; big key) -> back through the Chimney and down to the Casting
   Floor, hook across the lava to the locked hatch -> Pouring Gallery (time
   the drop hammers) -> great door -> the Slagwyrm.
   Off the main path: the Quench Room south of the Slag Pits (hook out to
   an island in the lava; a second small key) opens the Gallery's west hatch
-  into the Pattern Shop (pegs; compass).
+  into the Pattern Shop (pegs; compass). The Sprue, west of the Mould
+  Store, is sealed with boulders: smash in, beat the Clinkers among the
+  hammers, and a chest gives a jar.
 
 The front door, and the way out after the boss, lead to the Kiln Mouth in
 Cinderreach (overworld room (10, -2)), arriving just below its doorway.
@@ -74,9 +79,9 @@ ROOMS = {
 #..#####......u....u...#
 #..#.C.|...............#
 #..#####...............#
-#.......................
-#...........K...=.......
-#.......................
+........................
+............K...=.......
+........................
 #......................#
 #....k...........s.....#
 #..u..................u#
@@ -138,16 +143,16 @@ ROOMS = {
 #......................#
 #......................#
 ###########..###########"""),
-    (22, 7): ("ROOM_KILN_BELL_LOFT", {"chest_item": '"big_key"'}, """
+    (22, 7): ("ROOM_KILN_BELL_LOFT", {"chest_item": '"glint"', "chest_count": "50"}, """
 ########################
 #......................#
 #..~~..............~~..#
 #..~~......C.......~~..#
 #......................#
-#....z............z....#
-#......................#
-#...k..............k...#
-#......................#
+#....z............z.....
+#.......................
+#...k...................
+#...............k......#
 #....##..........##....#
 #......................#
 #......................#
@@ -179,6 +184,48 @@ X......................#
 #...k..............k...#
 #......................#
 #..u..............u....#
+########################"""),
+    (23, 7): ("ROOM_KILN_CHIMNEY", {}, """
+########################
+#......................#
+#..u...............u...#
+#......................#
+#......................#
+.......................#
+.......................#
+.......................#
+#......................#
+#####z#####zz#####z#####
+#^^^.......YY.......^^^#
+#^^^....k.......k...^^^#
+###########..###########"""),
+    (23, 8): ("ROOM_KILN_ANNEALING", {"chest_item": '"big_key"', "gate": '"plates"'}, """
+###########..###########
+#......................#
+####.#####.#######.#...#
+####.K....i........#...#
+#...#^^^^^^^^^^^^#.#...#
+#.z.#^^^^^^^^^^^^#.#...#
+#................#i#...#
+#..#####.........#.#...#
+#..#.C.|.........#.#.k.#
+#..#####..........=....#
+#..k..............#....#
+#......................#
+########################"""),
+    (19, 9): ("ROOM_KILN_SPRUE", {"chest_item": '"jar"', "gate": '"clear"', "chest_hidden": "true"}, """
+########################
+#....................#.#
+#..^^^^..........^^^^#.#
+#..^^^^...z..z...^^^^#.#
+#....................#.#
+#....................Y..
+#.....k.......k......Y..
+#....................Y..
+#....................#.#
+#..^^^^...z..z...^^^^#.#
+#..^^^^..............#.#
+#..........C.........#.#
 ########################"""),
     (21, 7): ("ROOM_KILN_BOSS", OUTSIDE, """
 ########################

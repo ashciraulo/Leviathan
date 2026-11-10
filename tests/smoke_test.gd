@@ -2758,6 +2758,58 @@ func _test_kiln_dungeon() -> void:
 			await _play_scene(game, 10.0)
 		_check(_child_of(room, Doorway).size() == 1, "a way out opens after the fight")
 
+	# The Chimney: two boulders seal the way down to the Annealing Oven.
+	room = await _goto(game, Vector2i(23, 7), Vector2i(2, 6))
+	await _calm(room)
+	_check(_child_of(room, Boulder).size() == 2 and _child_of(room, DropHammer).size() == 4, "the Chimney has its hammers and boulders")
+	player.global_position = _tile_pos(room, Vector2i(10, 10))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("stonebreaker")
+	await _wait(0.5)
+	_check(_child_of(room, Boulder).size() == 1, "the mallet opens the Chimney's floor")
+
+	# The Annealing Oven: two pegs stand in the crate's one-tile channel;
+	# with them down, Wren shoves it along and down onto the plate, and the
+	# bars around the big key open.
+	room = await _goto(game, Vector2i(23, 8), Vector2i(11, 1))
+	await _calm(room)
+	var oven_pegs: Array = _child_of(room, Peg)
+	_check(oven_pegs.size() == 2, "two pegs stand in the Annealing Oven")
+	var oven_crate: Crate = _child_of(room, Crate)[0]
+	var oven_plate: PressurePlate = _child_of(room, PressurePlate)[0]
+	# With the pegs still up, the crate stops at the first one.
+	player.global_position = _tile_pos(room, Vector2i(4, 3))
+	Input.action_press("move_right")
+	await _wait(4.0)
+	Input.action_release("move_right")
+	_check(int(oven_crate.position.x) / Room.TILE == 9, "a standing peg stops the Oven's crate (at %s)" % oven_crate.position)
+	for oven_peg: Peg in oven_pegs:
+		var at := Vector2i(oven_peg.position / Room.TILE)
+		player.global_position = _tile_pos(room, at + Vector2i(0, -1))
+		player.facing = Vector2.DOWN
+		await _wait(0.1)
+		player.use_item("stonebreaker")
+		await _wait(0.5)
+		_check(oven_peg.down, "the mallet drives the Oven's peg at %s" % at)
+	player.global_position = _tile_pos(room, Vector2i(8, 3))
+	Input.action_press("move_right")
+	await _wait(7.0)
+	Input.action_release("move_right")
+	_check(Vector2i(oven_crate.position / Room.TILE) == Vector2i(18, 3), "the crate runs the channel to its corner (at %s)" % oven_crate.position)
+	player.global_position = _tile_pos(room, Vector2i(18, 2))
+	Input.action_press("move_down")
+	await _wait(5.0)
+	Input.action_release("move_down")
+	_check(oven_plate.pressed, "shoved down the chute, the crate weighs down the plate (at %s)" % oven_crate.position)
+	_check(_child_of(room, Bars).all(func(b: Bars) -> bool: return b.is_open), "the plate opens the bars around the big key")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Annealing Oven's chest holds the big key")
+
+	# The Sprue: sealed with boulders off the Mould Store.
+	room = await _goto(game, Vector2i(19, 9), Vector2i(22, 6))
+	await _calm(room)
+	_check(_child_of(room, Boulder).size() == 3, "three boulders seal the Sprue")
+
 	# The Bellows Room shuts Wren in; clearing it shows the mallet's chest.
 	GameState.inventory.erase("stonebreaker")
 	GameState.item_slots = ["", ""]
