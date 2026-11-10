@@ -84,6 +84,9 @@ SECRETS = {
     (2, 3): ("old_one_turned",),              # Weir Steps: glints on the sea bed
     (1, 4): ("old_one_turned",),              # the Ebb Shelf, south of Belfry Square
     (0, 4): ("old_one_turned",),              # Ebb Grotto, west of the Shelf
+    # Challenges, each with a Breath Pearl.
+    (7, -4): ("kite_cloak",),                 # Gullcry Stacks: glide stack to stack over the chasm
+    (5, 3): ("glowmoth_lantern", "frostfang_bow", "kite_cloak"),  # Lampless Sink (the braziers need the lantern)
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -347,8 +350,8 @@ def main():
     for coord in sorted(rooms):
         rows = rows_for(rooms[coord], final_items)
         for y in range(2):
-            # The bubble plate grows with Wren's breath: ten bubbles reach x 127.
-            for x in list(range(0, 8)) + list(range(20, COLS)):
+            # The bubble plate grows with Wren's breath: thirteen bubbles reach x 161.
+            for x in list(range(0, 11)) + list(range(20, COLS)):
                 if rows[y][x] in "C*Tn":
                     problems.append("screen %s: '%s' at (%d,%d) sits under the HUD" % (coord, rows[y][x], x, y))
     # Every signpost in a room reads the room's one sign_key: one per room.

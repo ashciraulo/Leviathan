@@ -196,7 +196,7 @@ const BIOMES := {
 	"windmere": {
 		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
 		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
-		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d",
+		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d", "gap": "galesky",
 		"floor_overlay": ["gust_%d", 9], "door": "exit_glow",
 	},
 	"frostspine": {

@@ -73,6 +73,23 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=challenges: the optional challenges, each with a Breath Pearl.
+	if OS.get_environment("SHOTS_ONLY") == "challenges":
+		for item in ["kite_cloak", "glowmoth_lantern", "frostfang_bow", "tide_hook"]:
+			GameState.give_item(item)
+		await _room_shots(game, {
+			Vector2i(8, 1): ["challenge_bone_ring_way_in", Vector2i(11, 10)],
+			Vector2i(8, 2): ["challenge_bone_ring", Vector2i(11, 4)],
+			Vector2i(6, -4): ["challenge_gullcry_way_in", Vector2i(19, 8)],
+			Vector2i(7, -4): ["challenge_gullcry_stacks", Vector2i(2, 8)],
+			Vector2i(5, 2): ["challenge_sink_way_in", Vector2i(11, 9)],
+			Vector2i(5, 3): ["challenge_lampless_sink", Vector2i(11, 7)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=pacing: the small finds in rooms that had nothing else.
 	if OS.get_environment("SHOTS_ONLY") == "pacing":
 		await _pacing_shots(game)

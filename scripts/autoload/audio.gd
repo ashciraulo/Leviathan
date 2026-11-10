@@ -460,8 +460,9 @@ static func cue_for_room(biome: String, dungeon: String) -> String:
 # Ambience
 # --------------------------------------------------------------------------
 
-## The background loop for a room: dungeons share one, the overworld has
-## one per region.
+## The background loop for a room: a room's own loop if it names one (the
+## Ebb Shelf), else the dungeons' shared loop, else the hollow loop for caves,
+## else its region's.
 static func ambience_for_room(biome: String, dungeon: String, own: String = "", cave: bool = false) -> String:
 	if own != "":
 		return own

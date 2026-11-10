@@ -55,6 +55,7 @@ func _ready() -> void:
 		await _test_overworld_secrets()
 		await _test_tide_turning()
 		await _test_sea_bed()
+		await _test_challenges()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -3987,6 +3988,49 @@ func _test_tide_turning() -> void:
 	_check(Tide.held() == "low" and Tide.phase() == Tide.Phase.LOW, "a tide left mid-turn finishes running out")
 	Tide.offset = 0.0
 	GameState.reset_new_game()
+
+
+## The optional challenges: each holds a Breath Pearl behind its own test.
+func _test_challenges() -> void:
+	GameState.reset_new_game()
+	for coord: Vector2i in [Vector2i(8, 2), Vector2i(7, -4), Vector2i(5, 3)]:
+		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
+		_check(probe.chest_item == "breath_pearl" and probe.layout.count("C") == 1, "challenge %s holds one Breath Pearl" % coord)
+		probe.free()
+	# The Bone Ring: the bars stay open till Wren is in, then the ring shuts and
+	# the pearl only shows once every foe is down.
+	var ring: Room = (load("res://rooms/room_8_2.tscn") as PackedScene).instantiate()
+	add_child(ring)
+	await _wait(0.2)
+	var chest: Chest = _child_of(ring, Chest)[0]
+	# The bars sit on row 1, outside the shut-in line, so they never close on Wren.
+	_check(Room.parse_layout(ring.layout)[1].count("|") == 2, "the Bone Ring's bars stand clear of the arena")
+	_check(ring.gate == "clear" and not chest.visible and not _child_of(ring, Enemy).is_empty(), "the Bone Ring hides its pearl behind a fight")
+	for enemy in _child_of(ring, Enemy):
+		enemy.queue_free()
+	ring.get_node("Puzzle").set("_shut_in", true)
+	await _wait(0.3)
+	_check(chest.visible and GameState.has_flag(RoomPuzzle.flag_for(ring.coord)), "with the ring cleared the pearl appears")
+	ring.queue_free()
+	# The Lampless Sink: dark, veiled planks out to four braziers. (Rooms made
+	# here all sit at the same coord, so the ring's solved flag goes first.)
+	GameState.reset_new_game()
+	var sink: Room = (load("res://rooms/room_5_3.tscn") as PackedScene).instantiate()
+	add_child(sink)
+	await _wait(0.2)
+	var braziers := _child_of(sink, Brazier)
+	chest = _child_of(sink, Chest)[0]
+	_check(sink.dark and braziers.size() == 4 and sink.layout.count("v") > 20 and not chest.visible, "the Lampless Sink is dark, with four braziers over veiled planks")
+	for brazier in braziers:
+		brazier.light(true)
+	await _wait(0.2)
+	_check(chest.visible, "four braziers lit bring up its pearl")
+	sink.queue_free()
+	# Gullcry Stacks: a chasm course that only the kite cloak crosses, into the wind.
+	var stacks: Room = (load("res://rooms/room_7_-4.tscn") as PackedScene).instantiate()
+	_check(stacks.wind.x < 0 and stacks.layout.count("_") > 150 and Room.BIOMES["windmere"].get("gap") == "galesky", "Gullcry Stacks is a gusty chasm course, drawn as open sky")
+	stacks.free()
+	await _wait(0.1)
 
 
 ## The sea bed (;): under water while the tide breathes, even at its lowest;
