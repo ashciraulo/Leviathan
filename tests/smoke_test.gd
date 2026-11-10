@@ -71,6 +71,7 @@ func _ready() -> void:
 		await _test_gully()
 		await _test_sorrel()
 		await _test_ottilie()
+		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
 	Engine.time_scale = 1.0
@@ -4653,6 +4654,23 @@ func _test_ottilie() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_1", "met after the turn but before Hessa's word, she's a stranger")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "once Hessa's sent Wren, she knows")
+
+
+## Saltmarrow and the locals notice the Old One turn, and the ending.
+func _test_late_reactions() -> void:
+	GameState.reset_new_game()
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "seen_wayshell"]:
+		GameState.set_flag(flag)
+	var who := ["corrin", "pell", "nettle", "agna", "marga", "dunstan", "wick"]
+	for speaker in who:
+		_check(not str(Conversations.branch_for(speaker).get("lines")[0]).ends_with("_TURNED"), "%s has nothing to say about a turn that hasn't happened" % speaker)
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	for speaker in who:
+		_check(Conversations.branch_for(speaker).get("lines")[0] == speaker.to_upper() + "_TURNED", "%s felt the Old One turn" % speaker)
+	_check(Conversations.branch_for("sorrel").get("lines")[1] == "SORREL_TURNED", "Sorrel feels the gales ease")
+	GameState.set_flag("seen_ending")
+	for speaker in ["corrin", "pell", "nettle", "agna", "marga", "dunstan", "wick", "sorrel"]:
+		_check(str(Conversations.branch_for(speaker).get("lines")[0]).begins_with(speaker.to_upper() + "_END"), "%s has a word after the ending" % speaker)
 
 
 func _enemies_away() -> void:
