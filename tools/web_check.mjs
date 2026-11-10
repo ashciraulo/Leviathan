@@ -23,15 +23,20 @@ const TYPES = {
 
 function serve() {
   const server = http.createServer((req, res) => {
-    const url = decodeURIComponent((req.url || "/").split("?")[0]);
-    const file = path.join(dir, url === "/" ? "index.html" : url);
-    if (!file.startsWith(dir) || !fs.existsSync(file)) {
+    let file;
+    try {
+      const url = decodeURIComponent((req.url || "/").split("?")[0]);
+      file = path.join(dir, url === "/" ? "index.html" : url);
+    } catch {
+      file = "";
+    }
+    if (!file || !file.startsWith(dir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
       res.writeHead(404);
       res.end();
       return;
     }
     res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" });
-    fs.createReadStream(file).pipe(res);
+    fs.createReadStream(file).on("error", () => res.destroy()).pipe(res);
   });
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
 }
@@ -39,14 +44,14 @@ function serve() {
 const failures = [];
 const server = await serve();
 const port = server.address().port;
-const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
+const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 const page = await browser.newPage({ viewport: { width: 1152, height: 648 } });
 let booted = false;
 page.on("console", (msg) => {
   const text = msg.text();
   if (process.env.WEB_CHECK_VERBOSE) console.log(`[console.${msg.type()}] ${text}`);
   if (text.includes("Godot Engine v")) booted = true;
-  if (/SCRIPT ERROR|Parse Error|Failed to load|failed to fetch/i.test(text)) failures.push(text);
+  if (/SCRIPT ERROR|Parse Error|Failed to load|failed to fetch/i.test(text) || /^(USER )?ERROR:/.test(text)) failures.push(text);
 });
 page.on("pageerror", (err) => failures.push(`page error: ${err.message}`));
 page.on("requestfailed", (req) => failures.push(`request failed: ${req.url()} ${req.failure()?.errorText}`));
