@@ -2095,6 +2095,22 @@ func _test_extras_dungeon() -> void:
 		GameState.set_flag(MapPage.BOSS_FLAGS[dungeon])
 		_check(page._boss_calmed(bosses.filter(func(c: Vector2i) -> bool: return RoomInfo.get_room(c)["name_key"] != "ROOM_MAW_HEART")[0]), "%s: and stops once it is calmed" % dungeon)
 		page.queue_free()
+	# The overworld map: seen rooms, and the rooms they open onto under fog.
+	GameState.reset_new_game()
+	GameState.dungeon = ""
+	GameState.room_coord = Vector2i(0, 0)
+	var world_page := MapPage.new()
+	add_child(world_page)
+	world_page.on_open()
+	_check(world_page._rooms.size() == 1 and world_page._rooms[0] == Vector2i(0, 0), "the overworld map starts with the Shore alone")
+	_check(world_page._fringe.has(Vector2i(1, 0)) and world_page._fringe.has(Vector2i(0, -1)),
+		"the rooms the Shore opens onto show faint under fog (%s)" % [world_page._fringe])
+	_check(not world_page._fringe.has(Vector2i(-1, 0)), "no fog where there's no room")
+	var greens: Array = MapPage.BIOME_COLORS["brinewood"]
+	_check(world_page._tile_color("v", greens, true) == greens[2] and world_page._tile_color("M", greens, true) != greens[0],
+		"veiled planks hide as water on the map; trees show")
+	_check(world_page._tile_color("x", greens, false) == greens[0], "a dungeon's wisp letter isn't drawn as ice")
+	world_page.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)
 
