@@ -398,13 +398,13 @@ func is_frozen(tile: Vector2i) -> bool:
 	return _frozen.has(tile)
 
 
-## Freezes water: the tile, or the whole pool when it's a small one (four
-## tiles or fewer). Returns the tiles that froze.
 ## True when this room's "~" is lava (Cinderreach): frost can't touch it.
 func is_lava() -> bool:
 	return str(BIOMES.get(biome, {}).get("water", "")).begins_with("lava")
 
 
+## Freezes water: the tile, or the whole pool when it's a small one (four
+## tiles or fewer). Returns the tiles that froze.
 func freeze(tile: Vector2i) -> Array[Vector2i]:
 	var pool := water_pool(tile)
 	var froze: Array[Vector2i] = []

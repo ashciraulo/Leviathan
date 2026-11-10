@@ -317,6 +317,22 @@ def main():
             if need:
                 if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
+    # Crossing an edge carries Wren a step into the next screen: that step
+    # must be ground, not water, lava or veiled planks (frozen water and lit
+    # planks reset when a screen loads). Deep water is fine: Wren swims it.
+    for coord in sorted(rooms):
+        rows = rows_for(rooms[coord], final_items)
+        for y in range(ROWS):
+            for x in range(COLS):
+                if not (x in (0, COLS - 1) or y in (0, ROWS - 1)) or not walkable(rows[y][x], final_items):
+                    continue
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    ix, iy = x + dx, y + dy
+                    ox, oy = x - dx, y - dy
+                    if not (0 <= ix < COLS and 0 <= iy < ROWS) or (0 <= ox < COLS and 0 <= oy < ROWS):
+                        continue
+                    if (coord[0] - dx, coord[1] - dy) in rooms and rows[iy][ix] in "~^v":
+                        problems.append("screen %s: coming in at (%d,%d) steps Wren onto '%s'" % (coord, x, y, rows[iy][ix]))
     for coord in SECRETS:
         if coord not in rooms or not chest_tiles(rooms[coord], final_items):
             problems.append("secret %s has no chest" % (coord,))
