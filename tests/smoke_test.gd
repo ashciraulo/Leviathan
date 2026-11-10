@@ -2813,7 +2813,7 @@ func _test_items() -> void:
 	var tabs := "%s %s" % [MenuKit.key_name("tab_prev"), MenuKit.key_name("tab_next")]
 	Settings.using_pad = pad_was_used
 	_check(pad_prompt == "A" and key_prompt == "K", "prompts show pad buttons on a pad, keys on a keyboard (%s, %s)" % [pad_prompt, key_prompt])
-	_check(tabs == "LT RT", "the menu tabs show the triggers on a pad (%s)" % tabs)
+	_check(tabs == "LB RT", "the menu tabs show their pad buttons (%s)" % tabs)
 	var game := Vector2(384, 216)
 	_check(Settings.stretch_for(Vector2(844, 390), game) == Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 		and Settings.stretch_for(Vector2(1152, 648), game) == Window.CONTENT_SCALE_STRETCH_INTEGER,

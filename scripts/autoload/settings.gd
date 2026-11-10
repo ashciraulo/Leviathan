@@ -330,8 +330,8 @@ func _register_default_actions() -> void:
 		"hum": [_key(KEY_H), _pad(JOY_BUTTON_RIGHT_SHOULDER)],
 		"map": [_key(KEY_M), _pad(JOY_BUTTON_BACK)],
 		"pause": [_key(KEY_ESCAPE), _pad(JOY_BUTTON_START)],
-		# Menus: switch tabs with the triggers (shown as LT / RT); LB works too.
-		"tab_prev": [_key(KEY_Q), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0), _pad(JOY_BUTTON_LEFT_SHOULDER)],
+		# Menus: switch tabs. LB (the remappable button) or LT back, RT on.
+		"tab_prev": [_key(KEY_Q), _pad(JOY_BUTTON_LEFT_SHOULDER), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0)],
 		"tab_next": [_key(KEY_E), _axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)],
 	}
 	_default_events = bindings

@@ -74,7 +74,7 @@
   window.addEventListener('DOMContentLoaded',function(){
     var root=null;
     window.addEventListener('touchstart',function(){if(!root)root=build();root.classList.add('on');},{passive:true,capture:true});
-    // A keyboard or pad user hides them again.
+    // Typing on a real keyboard hides them again.
     window.addEventListener('keydown',function(e){if(root&&e.isTrusted)root.classList.remove('on');},true);
   });
 })();
