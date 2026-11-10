@@ -355,6 +355,48 @@ def lowe_frames():
     return [idle, breathe, talk]
 
 
+# --------------------------------------------------------------------------
+# Tobin, Dunstan's son, about seventeen: the Choir's newest singer. A grey
+# robe too big for him, hood shoved down, a rope belt, his father's mop of
+# brown hair grown out. Rubs the back of his neck when he talks.
+# --------------------------------------------------------------------------
+TOBIN = [
+    "................",
+    "................",
+    "......MMMM......",
+    "....MMMMMMMM....",
+    "...MMMMMMMMMM...",
+    "...MMwMMMwMMM...",
+    "....wwwwwwww....",
+    "....wewwwwew....",
+    "....wewwwwew....",
+    "....w%wwww%w....",
+    ".....wwwwww.....",
+    "....SSSwwSSS....",
+    "...SSSSSSSSSS...",
+    "...SSSSSSSSSS...",
+    "..wSSSSSSSSSSw..",
+    "..wSSSSSSSSSSw..",
+    "...jjjjjjjjjj...",
+    "...SSSSSjSSSS...",
+    "...SSSSSjSSSS...",
+    "...SSSSSSSSSS...",
+    "....SSSSSSSS....",
+    "....pp....pp....",
+    "....bb....bb....",
+    "................",
+]
+
+
+def tobin_frames():
+    idle = TOBIN
+    breathe = settle(idle, 11)
+    # Talking: one hand up rubbing the back of his neck.
+    talk = paint(idle, [(14, 13, "."), (15, 13, "."), (13, 13, "S"), (12, 13, "S"), (11, 12, "w"), (10, 12, "w")])
+    return [idle, breathe, talk]
+
+
+
 SINGER = [
     "................",
     "................",
@@ -633,13 +675,152 @@ def market_stall():
     return ["".join(r) for r in c]
 
 
+# --------------------------------------------------------------------------
+# Young Hessa and young Vael, as they were when they trained together in the
+# Hollow Glacier: new keepers in navy caps and jackets with the buoy-red
+# scarf. Hessa wears her chestnut hair in a braid and carries the lamp.
+# They only appear in the frozen journal's vision (cutscene 13).
+# --------------------------------------------------------------------------
+YOUNG_HESSA = paint([
+    "................",
+    "......EEEE......",
+    ".....EEEEEE.....",
+    "....EEEJJEEE....",
+    "...EEEEEEEEEE...",
+    "...MMwwwwwwMM...",
+    "...MwwwwwwwwM...",
+    "...MwewwwwewM...",
+    "...Mwewwwwew M..".replace(" ", "M")[:16],
+    "....w%wwww%wM...",
+    ".....wwwwwwM....",
+    ".....rrrrrrM....",
+    "....EEErrEEEM...",
+    "...EEEEEEEEEM...",
+    "..wEEEEEEEEEEw..",
+    "..wEEEEEEEEEEw..",
+    "...EEEEEEEEEE...",
+    "...EEEEEEEEEE...",
+    "....88888888....",
+    "....888..888....",
+    "....888..888....",
+    "....bbb..bbb....",
+    "....bbb..bbb....",
+    "................",
+], [(15, 1, "Q"), (16, 0, "QJQ"), (17, 0, "QJQ"), (18, 0, "QQQ")])
+YOUNG_VAEL = [
+    "................",
+    "......EEEE......",
+    ".....EEEEEE.....",
+    "....EEEJJEEE....",
+    "...EEEEEEEEEE...",
+    "...++VVVVVV++...",
+    "...+VVVVVVVV+...",
+    "...VVeVVVVeVV...",
+    "...VVeVVVVeVV...",
+    "....VVVVVVVV....",
+    ".....VV--VV.....",
+    ".....rrrrrr.....",
+    "...EEErrrrEEE...",
+    "..EEEEErrEEEEE..",
+    ".VEEEEEEEEEEEEV.",
+    ".VEEEEEEEEEEEEV.",
+    "..EEEEEEEEEEEE..",
+    "..EEEEEEEEEEEE..",
+    "...8888888888...",
+    "....888..888....",
+    "....888..888....",
+    "....888..888....",
+    "....vvv..vvv....",
+    "................",
+]
+
+
+def young_hessa_frames():
+    idle = YOUNG_HESSA
+    # Talking: the lamp comes up to shoulder height, as if to signal.
+    talk = paint(idle, [(15, 0, "..."), (16, 0, "..."), (17, 0, "..."), (18, 0, "..."),
+                        (14, 2, "w"), (11, 0, "QJQ"), (12, 0, "QJQ"), (13, 1, "Qw")])
+    return [idle, settle(idle, 10), talk]
+
+
+def young_vael_frames():
+    idle = YOUNG_VAEL
+    # Talking: he kneels, head bowed, listening down through the ice.
+    talk = ["." * 16] * 4 + idle[:13] + idle[13:17] + idle[21:23] + ["." * 16]
+    return [idle, settle(idle, 11), talk]
+
+
+def journal_ice():
+    """A page of the keepers' journal frozen in a block of ice, 16x20."""
+    c = [["."] * 16 for _ in range(20)]
+    def box(x, y, w, h, m):
+        for yy in range(y, y + h):
+            for xx in range(x, x + w):
+                c[yy][xx] = m
+    box(2, 4, 12, 15, "`")
+    box(3, 2, 9, 2, "`")
+    box(1, 7, 1, 10, "`")
+    box(14, 6, 1, 11, "`")
+    # The page, tilted a little, with lines of ink.
+    for y in range(6, 16):
+        x0 = 4 + (y - 6) // 5
+        box(x0, y, 7, 1, "]")
+    for y in (8, 10, 12, 14):
+        x0 = 5 + (y - 6) // 5
+        box(x0, y, 4 if y != 14 else 2, 1, "-")
+    # Light catching the ice.
+    for x, y in ((4, 3), (3, 5), (12, 5), (13, 7), (12, 16)):
+        c[y][x] = "'"
+    return ["".join(r) for r in c]
+
+
+def rowboat():
+    """Hessa's rowboat seen from above and a little south, 36x16: red-painted
+    planks, a thwart, oars shipped out either side."""
+    w, h = 36, 16
+    c = [["."] * w for _ in range(h)]
+    cx, cy, rx, ry = 18.0, 8.5, 15.5, 5.0
+    for y in range(h):
+        for x in range(w):
+            # A hull pointed at both ends (bow left, stern right, rounder).
+            dx = (x + 0.5 - cx) / rx
+            dy = (y + 0.5 - cy) / ry
+            if dx * dx + dy * dy * (1.0 + 0.6 * max(0.0, -dx)) <= 1.0:
+                c[y][x] = "r"
+    # The inside, planked, inset from the painted hull.
+    for y in range(h):
+        for x in range(w):
+            dx = (x + 0.5 - cx) / (rx - 2.5)
+            dy = (y + 0.5 - (cy - 0.8)) / (ry - 1.6)
+            if c[y][x] == "r" and dx * dx + dy * dy * (1.0 + 0.6 * max(0.0, -dx)) <= 1.0:
+                c[y][x] = "d"
+    for x in range(6, 31):
+        if c[7][x] == "d":
+            c[7][x] = "-"
+    # Two thwarts across.
+    for y in range(4, 11):
+        for x in (13, 14, 23, 24):
+            if c[y][x] == "d" or c[y][x] == "-":
+                c[y][x] = "b"
+    # Oars out over the water from the oarlocks, blades down at the ends.
+    for i in range(6):
+        c[3 - i // 2][16 - i] = "j"
+        c[13 + i // 2][16 - i] = "j"
+    for x, y in ((9, 0), (10, 0), (9, 15), (10, 15)):
+        c[y][x] = "j"
+    return ["".join(r) for r in c]
+
+
 SPRITES = {
+    "young_hessa": young_hessa_frames,
+    "young_vael": young_vael_frames,
     "marlo": marlo_frames,
     "dace": dace_frames,
     "vael_keeper": vael_keeper_frames,
     "vael": vael_frames,
     "murmur": murmur_frames,
     "lowe": lowe_frames,
+    "tobin": tobin_frames,
     "singer": singer_frames,
     "agna": agna_frames,
     "nettle": nettle_frames,
@@ -821,6 +1002,19 @@ def portrait_lowe():
     return _rows(c)
 
 
+def portrait_tobin():
+    c = _canvas()
+    _ellipse(c, 16, 32, 14, 8, "S")                    # grey robe, too big
+    _ellipse(c, 16, 26, 12, 4, "S")                    # the hood, shoved down
+    for i in range(6):
+        _box(c, 13 + (i % 2), 26 + i, 1, 1, "j")       # rope belt's knot, up the front
+    _face(c, "w", eye_row=16, cy=17, rx=7, ry=8)
+    _dots(c, [(10, 19), (12, 20), (20, 19), (21, 20), (14, 18), (18, 18)], "T")  # freckles
+    _ellipse(c, 16, 9, 10, 5, "M")                     # mop of brown hair
+    _dots(c, [(7, 12), (7, 13), (8, 14), (24, 12), (24, 13), (23, 14), (11, 14), (14, 14), (18, 14)], "M")  # grown out, over his ears
+    return _rows(c)
+
+
 def portrait_murmur():
     c = _canvas()
     _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
@@ -901,13 +1095,41 @@ def portrait_marlo():
     return _rows(c)
 
 
+def _keeper_cap(c):
+    _ellipse(c, 16, 7, 10, 5, "E")
+    _box(c, 5, 9, 22, 3, "E")
+    _box(c, 15, 5, 3, 3, "J")                          # the lamp badge, new
+def portrait_young_hessa():
+    c = _canvas()
+    _ellipse(c, 16, 32, 14, 8, "E")                    # keeper's jacket
+    _box(c, 10, 24, 12, 3, "r")                        # red scarf
+    _box(c, 18, 26, 3, 4, "r")
+    _ellipse(c, 16, 15, 10, 9, "M")                    # chestnut hair
+    _face(c, "w", eye_row=16, cy=17, rx=7, ry=8)
+    for i in range(9):                                 # the braid, over one shoulder
+        _box(c, 24 - i // 4, 18 + i, 3, 1, "M")
+    _keeper_cap(c)
+    return _rows(c)
+def portrait_young_vael():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "E")
+    _box(c, 10, 24, 12, 3, "r")
+    _ellipse(c, 16, 14, 9, 7, "+")                     # close-cropped dark hair
+    _face(c, "V", eye_row=16, cy=17, rx=7, ry=8, cheeks=False)
+    _keeper_cap(c)
+    return _rows(c)
+
+
 PORTRAITS = {
+    "young_hessa": portrait_young_hessa(),
+    "young_vael": portrait_young_vael(),
     "marlo": portrait_marlo(),
     "dace": portrait_dace(),
     "vael_keeper": portrait_vael_keeper(),
     "vael": portrait_vael(),
     "murmur": portrait_murmur(),
     "lowe": portrait_lowe(),
+    "tobin": portrait_tobin(),
     "agna": portrait_agna(),
     "nettle": portrait_nettle(),
     "hessa": portrait_hessa(),

@@ -56,7 +56,56 @@ const MURAL_FLAG := "seen_last_mural"
 ## Wren stands under the slab; Dace comes up from the way in at the south.
 const MURAL_WATCH := Vector2(16 * 16 + 8, 2 * 16 + 12)
 const DACE_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 7 * 16 + 12), Vector2(14 * 16 + 8, 3 * 16 + 12)]
+## Cutscene 14, Lowe in the water: Knell sinks, the hall's water surges,
+## and Sister Lowe comes up fighting it below the island's edge.
+const BELFRY_BOSS := Vector2i(36, 7)
+const LOWE_WATER_FLAG := "seen_lowe_water"
+const LOWE_SURFACES := Vector2(14 * 16 + 8, 8 * 16 + 12)
+const WREN_REACHES := Vector2(14 * 16 + 8, 7 * 16 + 8)
+const LOWE_HAULED := Vector2(15 * 16 + 8, 7 * 16 + 10)
+## Into the deep on the far side, across, and out over the walkway and door.
+const LOWE_SWIMS := [Vector2(16 * 16 + 12, 7 * 16 + 14), Vector2(17 * 16 + 8, 9 * 16 + 8), Vector2(17 * 16 + 8, 10 * 16 + 14)]
+const LOWE_OUT := [Vector2(17 * 16 + 8, 11 * 16 + 10), Vector2(12 * 16, 11 * 16 + 10)]
+const LOWE_DOOR := Vector2(12 * 16, 13 * 16 + 4)
+## Cutscene 16, Tobin's warning: on Skull Rise, coming up out of the Marrow
+## Tomb with the seventh bell rung, a young singer comes running from the
+## west. Then home: Tobin stands by his dad on the dock until Wren comes.
+const SKULL_RISE := Vector2i(9, 0)
+const TOMB_BELL_FLAG := "tidebell_" + "tomb"
+const TOBIN_WARNED_FLAG := "tobin_warned"
+const TOBIN_HOME_FLAG := "tobin_home"
+const TOBIN_RUNS_IN := [Vector2(-8, 6 * 16 + 8), Vector2(9 * 16 + 8, 7 * 16 + 10)]
+const TOBIN_LEAVES := [Vector2(5 * 16, 6 * 16 + 8), Vector2(-12, 6 * 16 + 8)]
+## On the dock, beside Dunstan (who stands at tile 16, 7).
+const TOBIN_HOME_AT := Vector2(18 * 16 + 8, 7 * 16 + 12)
+const WREN_AT_DOCK := Vector2(17 * 16 + 8, 9 * 16 + 4)
+## Cutscene 17, rowing to the Maw: talk to Hessa at home once the seventh
+## bell has rung and she rows Wren out to Lullaby Point; go on foot instead
+## and she's there already, waiting in the boat.
+const LULLABY_POINT := Vector2i(2, 1)
+const ROW_ASKED_FLAG := "hessa_rows"
+const ROWED_FLAG := "hessa_rowed"
+const BOAT_AT := Vector2(6 * 16 + 8, 6 * 16 + 4)
+const WREN_AT_BOAT := Vector2(6 * 16 + 8, 8 * 16 + 12)
+const BOAT_LEAVES := Vector2(-40, 6 * 16 + 8)
 const ENDING_FLAG := "seen_ending"
+## Cutscene 13, the frozen journal: pages frozen through the Hollow Glacier
+## (room: [tile, page]), and the last in the boss's room once Rimeback calms.
+const JOURNAL_PAGES := {
+	Vector2i(32, 10): [Vector2i(17, 1), 1],
+	Vector2i(31, 10): [Vector2i(12, 1), 2],
+	Vector2i(32, 9): [Vector2i(16, 2), 3],
+	Vector2i(33, 9): [Vector2i(18, 1), 4],
+	Vector2i(33, 8): [Vector2i(13, 1), 5],
+}
+const GLACIER_BOSS := Vector2i(32, 7)
+const LAST_PAGE_TILE := Vector2i(5, 1)
+const JOURNAL_FLAG := "seen_frozen_journal"
+## Where the vision's young keepers stand (Wren watches from the page),
+## and the way Vael walks out.
+const YOUNG_HESSA_AT := Vector2(7 * 16 + 8, 5 * 16 + 12)
+const YOUNG_VAEL_AT := Vector2(15 * 16 + 8, 5 * 16 + 12)
+const VAEL_LEAVES := [Vector2(15 * 16 + 8, 9 * 16 + 12), Vector2(12 * 16 + 0, 10 * 16 + 12), Vector2(12 * 16 + 0, 12 * 16 + 12)]
 ## Cutscene 21, back home after the credits: the Old One dreams, and the
 ## lighthouse turns its beam towards the Maw.
 const DREAM_FLAG := "seen_old_one_dreams"
@@ -81,6 +130,7 @@ func _ready() -> void:
 	Events.room_entered.connect(_on_room_entered)
 	Events.flag_changed.connect(_on_flag_changed)
 	Events.game_finished.connect(the_ending)
+	Events.boss_defeated.connect(_on_boss_defeated)
 
 
 func _on_game_started() -> void:
@@ -103,6 +153,10 @@ func _on_room_entered(coord: Vector2i) -> void:
 	var echo := EchoTrial.boss != ""
 	if coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not echo:
 		_put_up_mural()
+	if not echo:
+		_put_up_journal(coord)
+	if coord == SALTMARROW and GameState.has_flag(TOBIN_HOME_FLAG):
+		_put_tobin_home()
 	# The game closed partway through the ending: the Heart sleeps, so pick
 	# the ending up again.
 	if GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and not GameState.has_flag(ENDING_FLAG) and _heart_here():
@@ -127,6 +181,12 @@ func _on_room_entered(coord: Vector2i) -> void:
 	elif coord == TOMB_BOSS and GameState.has_flag(HollowRegent.DEFEATED_FLAG) and not GameState.has_flag(MURAL_FLAG) and not echo:
 		# A save from before the mural existed: show it on the way back in.
 		the_last_mural()
+	elif coord == LULLABY_POINT and GameState.has_flag(TOMB_BELL_FLAG) and not GameState.has_flag(ROWED_FLAG) and not GameState.has_flag(ENDING_FLAG):
+		hessa_at_the_maw(false)
+	elif coord == SKULL_RISE and GameState.has_flag(TOMB_BELL_FLAG) and not GameState.has_flag(TOBIN_WARNED_FLAG) and not GameState.has_flag(ENDING_FLAG):
+		tobins_warning()
+	elif coord == SALTMARROW and GameState.has_flag(TOBIN_WARNED_FLAG) and not GameState.has_flag(TOBIN_HOME_FLAG) and not GameState.has_flag(ENDING_FLAG):
+		tobin_comes_home()
 	elif lowe_waits(coord):
 		if coord == HULL_BOSS:
 			lowe_at_the_hull()
@@ -143,8 +203,22 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		vael_at_the_spire()
 	elif flag == GALE_BELL_FLAG and not GameState.has_flag(TURNED_FLAG):
 		the_old_one_turns()
+	elif flag == ROW_ASKED_FLAG and GameState.room_coord == SALTMARROW:
+		rowing_to_the_maw()
 	elif flag == HollowRegent.DEFEATED_FLAG and GameState.room_coord == TOMB_BOSS and not GameState.has_flag(MURAL_FLAG):
 		the_last_mural()
+
+
+## Some bosses mark themselves beaten without a flag_changed, so their
+## scenes wait on the fight's end instead. Not in a remembered fight.
+func _on_boss_defeated() -> void:
+	if Cutscene.active or EchoTrial.boss != "":
+		return
+	var coord := GameState.room_coord
+	if coord == GLACIER_BOSS:
+		_put_up_journal(GLACIER_BOSS, true)
+	elif coord == BELFRY_BOSS and not GameState.has_flag(LOWE_WATER_FLAG):
+		lowe_in_the_water()
 
 
 ## True while one of Lowe's scenes is still to play in this room: the boss
@@ -453,6 +527,221 @@ func hessas_confession() -> void:
 	scene.finish()
 
 
+## Cutscene 14, "Lowe in the water": with Knell gone the hall's water
+## surges, and Sister Lowe, who got in ahead of Wren, comes up below the
+## island's edge, going under. Wren hauls her out. She coughs, looks at
+## Wren a long moment, and leaves without a word: back into the deep and
+## out by the door.
+func lowe_in_the_water() -> void:
+	GameState.set_flag(LOWE_WATER_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	# Knell slips under and the bell sinks after it; the water answers.
+	await scene.wait(2.6)
+	Audio.play_sfx("water_rush", room.global_position + LOWE_SURFACES)
+	Feel.shake(3.0)
+	await scene.wait(0.5)
+	var lowe := ChoirFigure.new("lowe")
+	lowe.position = LOWE_SURFACES
+	lowe.sunk = 21.0
+	lowe.struggling = true
+	room.add_child(lowe)
+	Audio.play_sfx("splash", room.global_position + LOWE_SURFACES, 1.2)
+	var up := lowe.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	up.tween_property(lowe, "sunk", 12.0, Cutscene.scaled(0.35)).set_ease(Tween.EASE_OUT)
+	# Wren runs to the edge while she fights to keep her head up.
+	await scene.walk_route(room.global_position + WREN_REACHES, false)
+	scene.face(Vector2.DOWN)
+	for i in 2:
+		Audio.play_sfx("splash", room.global_position + LOWE_SURFACES, 0.9 + i * 0.2)
+		await scene.wait(0.7)
+	# She goes under once, and comes back up.
+	lowe.struggling = false
+	var under := lowe.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	under.tween_property(lowe, "sunk", 20.0, Cutscene.scaled(0.4))
+	await under.finished
+	Audio.play_sfx("water_rush", room.global_position + LOWE_SURFACES, 0.6)
+	await scene.wait(0.6)
+	# Wren reaches down and hauls her up onto the stone.
+	Feel.shake(1.0)
+	Audio.play_sfx("splash", room.global_position + LOWE_SURFACES, 0.7)
+	var haul := lowe.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	haul.tween_property(lowe, "sunk", 0.0, Cutscene.scaled(0.5)).set_ease(Tween.EASE_OUT)
+	haul.tween_property(lowe, "position", LOWE_HAULED, Cutscene.scaled(0.5)).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await haul.finished
+	lowe.dripping = true
+	lowe.face(true)
+	scene.face(Vector2.RIGHT)
+	# Coughing up the Belfry.
+	for i in 3:
+		lowe.position.y += 1.0
+		await scene.wait(0.18)
+		lowe.position.y -= 1.0
+		await scene.wait(0.32)
+	await scene.wait(0.6)
+	# She almost says something.
+	lowe.talking = true
+	await scene.wait(0.35)
+	lowe.talking = false
+	await scene.wait(1.6)
+	# Not a word. Back into the water, the long way round, and gone.
+	lowe.face(false)
+	await scene.wait(0.4)
+	var dive := lowe.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	dive.tween_property(lowe, "position", LOWE_SWIMS[0], Cutscene.scaled(0.3))
+	dive.tween_property(lowe, "sunk", 16.0, Cutscene.scaled(0.3))
+	await dive.finished
+	lowe.dripping = false
+	Audio.play_sfx("splash", room.global_position + LOWE_SWIMS[0], 1.1)
+	scene.face(Vector2.DOWN)
+	await lowe.walk_along(LOWE_SWIMS.slice(1), 38.0)
+	var climb := lowe.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	climb.tween_property(lowe, "position", LOWE_OUT[0], Cutscene.scaled(0.35))
+	climb.tween_property(lowe, "sunk", 0.0, Cutscene.scaled(0.35))
+	await climb.finished
+	lowe.dripping = true
+	await lowe.walk_along(LOWE_OUT.slice(1), 46.0)
+	# At the door, half a look back.
+	lowe.face(false)
+	await scene.wait(0.9)
+	await lowe.walk_along([LOWE_DOOR], 46.0, -1)
+	lowe.queue_free()
+	await scene.wait(0.4)
+	scene.finish()
+
+
+## Cutscene 16, "Tobin's warning": up out of the Marrow Tomb with the
+## seventh bell rung, a young singer comes running over the dunes. Tobin has
+## left the Choir. He tells Wren where they've gone and how singers go in,
+## and heads home to his dad.
+func tobins_warning() -> void:
+	GameState.set_flag(TOBIN_WARNED_FLAG)
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	await scene.wait(0.6)
+	var tobin := ChoirFigure.new("tobin")
+	tobin.position = TOBIN_RUNS_IN[0]
+	room.add_child(tobin)
+	await tobin.walk_along(TOBIN_RUNS_IN.slice(1), 60.0, 1)
+	var wren_x: float = game.player.global_position.x - room.global_position.x
+	scene.face(Vector2.LEFT if tobin.position.x < wren_x else Vector2.RIGHT)
+	tobin.face(tobin.position.x > wren_x)
+	await scene.wait(0.5)
+	for key in ["TOBIN_DUNES_1", "TOBIN_DUNES_2", "TOBIN_DUNES_3", "TOBIN_DUNES_4"]:
+		tobin.talking = true
+		await scene.speak("tobin", [key])
+		tobin.talking = false
+	# He looks west, the way home, before he says it.
+	tobin.face(true)
+	await scene.wait(0.8)
+	tobin.face(false)
+	await scene.speak("tobin", ["TOBIN_DUNES_5"])
+	await scene.wait(0.3)
+	await tobin.walk_along(TOBIN_LEAVES, 40.0, -1)
+	tobin.queue_free()
+	scene.finish()
+
+
+## Tobin, home, standing on the dock beside his dad.
+func _put_tobin_home() -> void:
+	var room: Node = game.current_room
+	if room == null or _find_npc("tobin"):
+		return
+	var tobin := Npc.new("tobin")
+	tobin.position = TOBIN_HOME_AT
+	room.add_child(tobin)
+
+
+## Tobin comes home: the first time Wren is back in Saltmarrow after the
+## dunes, Tobin is on the dock beside Dunstan, still in the Choir's robe,
+## and Dunstan finds more words than he's said all year.
+func tobin_comes_home() -> void:
+	var room: Node2D = game.current_room
+	var scene := _scene()
+	var tobin := ChoirFigure.new("tobin")
+	tobin.position = TOBIN_HOME_AT
+	tobin.face(true)
+	room.add_child(tobin)
+	await scene.wait(0.4)
+	await scene.walk_route(room.global_position + WREN_AT_DOCK)
+	scene.face(Vector2.UP)
+	await scene.wait(0.6)
+	await scene.speak("dunstan", ["DUNSTAN_TOBIN_1"])
+	tobin.talking = true
+	await scene.speak("tobin", ["TOBIN_HOME_1"])
+	tobin.talking = false
+	await scene.wait(0.4)
+	await scene.speak("dunstan", ["DUNSTAN_TOBIN_2", "DUNSTAN_TOBIN_3"])
+	tobin.talking = true
+	await scene.speak("tobin", ["TOBIN_HOME_2"])
+	tobin.talking = false
+	await scene.wait(0.5)
+	await scene.speak("dunstan", ["DUNSTAN_TOBIN_4"])
+	GameState.set_flag(TOBIN_HOME_FLAG)
+	tobin.queue_free()
+	_put_tobin_home()
+	scene.finish()
+
+
+## Cutscene 17, "Rowing to the Maw": Hessa takes the oars. Dark water and
+## the sound of rowing, then Lullaby Point from the sea.
+func rowing_to_the_maw() -> void:
+	var scene := _scene()
+	# Let her finish what she's saying first.
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	await scene.darken(1.2)
+	for i in 4:
+		Audio.play_sfx("splash", null, 0.55 + 0.05 * (i % 2))
+		await scene.wait(0.8)
+	_move_to(LULLABY_POINT)
+	hessa_at_the_maw(true, scene)
+
+
+## Hessa in her boat off Lullaby Point, the Old One's lip rising out of the
+## water beside them. She says her piece about Vael, signals she'll be
+## there, and rows away home. `rowed`: Wren came out in the boat with her
+## (and `carried` is that scene, still dark).
+func hessa_at_the_maw(rowed: bool, carried: Cutscene = null) -> void:
+	GameState.set_flag(ROWED_FLAG)
+	var room: Node2D = game.current_room
+	var scene := carried if carried else _scene()
+	var boat := Rowboat.new()
+	boat.position = BOAT_AT
+	room.add_child(boat)
+	if rowed:
+		game.player.global_position = room.global_position + WREN_AT_BOAT
+		scene.face(Vector2.UP)
+		await scene.wait(0.3)
+		await scene.lift_veil(1.4)
+	else:
+		await scene.wait(0.4)
+		await scene.walk_route(room.global_position + WREN_AT_BOAT)
+		scene.face(Vector2.UP)
+		await scene.wait(0.3)
+	await scene.wait(0.6)
+	if not rowed:
+		await scene.speak("hessa", ["HESSA_MAW_0"])
+	await scene.speak("hessa", ["HESSA_MAW_1", "HESSA_MAW_2"])
+	await scene.wait(0.4)
+	await scene.speak("hessa", ["HESSA_MAW_3"])
+	# I'm here; and Wren's yes.
+	await scene.lamp(room.global_position + BOAT_AT + Vector2(-6, -12), Cutscene.LAMP_HERE)
+	await scene.wait(0.3)
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	await scene.wait(0.4)
+	# She pulls away west along the shore, home.
+	var away := boat.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	away.tween_property(boat, "position", BOAT_LEAVES, Cutscene.scaled(4.5)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	away.parallel().tween_property(boat, "modulate:a", 0.0, Cutscene.scaled(1.0)).set_delay(Cutscene.scaled(3.5))
+	for i in 3:
+		Audio.play_sfx("splash", room.global_position + boat.position, 0.6)
+		await scene.wait(1.2)
+	await away.finished
+	boat.queue_free()
+	scene.finish()
+
+
 ## Cutscene 15, "The last mural": with the Hollow Regent gone to bones,
 ## the wall he sealed falls open on the last carving. Mother Dace comes down
 ## into the tomb and shows Wren what it is: the Old One lying down beside its
@@ -513,6 +802,9 @@ func the_ending() -> void:
 	# Scenes still owed at home would play after the credits, out of turn.
 	GameState.set_flag(CONFESSION_FLAG)
 	GameState.set_flag("seen_wayshell")
+	# Everyone's home by the end: Tobin on the dock, Hessa at the lamp.
+	for flag in [TOBIN_WARNED_FLAG, TOBIN_HOME_FLAG, ROWED_FLAG]:
+		GameState.set_flag(flag)
 	var room: Node2D = game.current_room
 	var scene := _scene()
 	await scene.wait(1.0)
@@ -551,6 +843,7 @@ func the_ending() -> void:
 	await scene.veil_text(["ENDING_DAWN_1", "ENDING_DAWN_2"])
 	# Home: Saltmarrow, with Hessa by the lighthouse.
 	_move_to(SALTMARROW)
+	_put_tobin_home()
 	var hessa := _find_npc("hessa")
 	if hessa:
 		game.player.global_position = hessa.global_position + HOME_FROM_HESSA
@@ -602,6 +895,101 @@ func the_old_one_dreams() -> void:
 	await scene.speak("hessa", ["HESSA_DREAM_1", "HESSA_DREAM_2"])
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
 	Audio.play_sfx("mantle_wings")
+	scene.finish()
+
+
+## The journal's pages in this room of the Hollow Glacier, if any. The
+## last waits for Rimeback to calm; `rising` brings it up out of the ice.
+func _put_up_journal(coord: Vector2i, rising: bool = false) -> void:
+	var room: Node = game.current_room
+	if room == null:
+		return
+	var tile := Vector2i(-1, -1)
+	var number := 0
+	if JOURNAL_PAGES.has(coord):
+		tile = JOURNAL_PAGES[coord][0]
+		number = JOURNAL_PAGES[coord][1]
+	elif coord == GLACIER_BOSS and GameState.has_flag(Rimeback.DEFEATED_FLAG):
+		tile = LAST_PAGE_TILE
+		number = JournalPage.LAST
+	if number == 0:
+		return
+	for child in room.get_children():
+		if child is JournalPage:
+			return
+	var page := JournalPage.new(number)
+	page.position = Vector2(tile.x * Room.TILE + Room.TILE / 2.0, tile.y * Room.TILE + Room.TILE - 4)
+	room.add_child(page)
+	if rising:
+		page.readable = false
+		page.modulate.a = 0.0
+		page.scale = Vector2(1, 0.2)
+		var tween := page.create_tween().set_parallel(true)
+		tween.tween_interval(1.2)
+		tween.chain().tween_property(page, "modulate:a", 1.0, 0.6)
+		tween.parallel().tween_property(page, "scale", Vector2.ONE, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.chain().tween_callback(func() -> void: page.readable = true)
+		Audio.play_sfx("secret")
+
+
+## Cutscene 13, "The frozen journal": the last page, then a vision in the
+## ice. Young Hessa and young Vael stand where Wren stands now; Hessa signals
+## with her lamp, Vael bows his head to the weeping under the ice, answers
+## no, and walks away. Hessa's lamp keeps glowing after him: I'm here.
+func the_frozen_journal(page: JournalPage) -> void:
+	if Cutscene.active:
+		return
+	GameState.set_flag(JOURNAL_FLAG)
+	var room: Node = game.current_room
+	var scene := _scene()
+	await scene.wait(0.2)
+	Events.conversation_requested.emit(JournalPage.pages_for(JournalPage.LAST))
+	await Events.dialogue_finished
+	if not is_instance_valid(room) or not room.is_inside_tree():
+		scene.finish()
+		return
+	# The ice remembers.
+	Audio.play_sfx("bell_quiet", null, 0.7)
+	Feel.shake(1.0)
+	scene.face(Vector2.RIGHT)
+	var hessa := ChoirFigure.new("young_hessa")
+	hessa.ghost = true
+	hessa.position = YOUNG_HESSA_AT
+	var vael := ChoirFigure.new("young_vael")
+	vael.ghost = true
+	vael.position = YOUNG_VAEL_AT
+	vael.face(true)
+	for figure: ChoirFigure in [hessa, vael]:
+		figure.modulate.a = 0.0
+		room.add_child(figure)
+		var fade: Tween = figure.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		fade.tween_property(figure, "modulate:a", 1.0, Cutscene.scaled(1.2))
+	await scene.wait(1.6)
+	# Signals, the way they practised them.
+	hessa.talking = true
+	await scene.lamp(room.global_position + YOUNG_HESSA_AT + Vector2(-8, -14), Cutscene.LAMP_YES)
+	await scene.wait(0.6)
+	# Under the ice, something weeps; only Vael hears it.
+	vael.talking = true
+	Audio.play_sfx("old_one_hum", null, 1.8)
+	await scene.wait(2.4)
+	vael.talking = false
+	vael.face(true)
+	await scene.lamp(room.global_position + YOUNG_VAEL_AT + Vector2(0, -14), Cutscene.LAMP_NO)
+	await scene.wait(0.8)
+	await vael.walk_along(VAEL_LEAVES, 22.0, -1)
+	vael.queue_free()
+	# She keeps the light lit after him.
+	await scene.lamp(room.global_position + YOUNG_HESSA_AT + Vector2(-8, -14), Cutscene.LAMP_HERE)
+	var gone := hessa.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	gone.tween_property(hessa, "modulate:a", 0.0, Cutscene.scaled(1.4))
+	await gone.finished
+	hessa.queue_free()
+	await scene.wait(0.6)
+	# Wren answers the old light with their own.
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_HERE)
+	if is_instance_valid(page):
+		page.modulate = Color(1, 1, 1, 0.8)
 	scene.finish()
 
 
