@@ -1038,21 +1038,23 @@ func _test_play() -> void:
 	# keeps going with the key up, and a second tap stops it.
 	await _wait(0.3)
 	_check(player.state == Player.State.MOVE, "letting go of Hum ends the hum (state %d)" % player.state)
+	var was_toggle := Settings.hum_toggle
 	Settings.hum_toggle = true
+	var hum_key := Settings.main_key("hum") as Key
 	GameState.bubbles = 2
 	GameState.resonance = GameState.resonance_max
-	_press_key(KEY_H, true)
+	_press_key(hum_key, true)
 	await _wait(0.1)
-	_press_key(KEY_H, false)
+	_press_key(hum_key, false)
 	await _wait(1.0)
 	_check(player.state == Player.State.HUM and GameState.bubbles == 3,
 		"with Hum on toggle, a tap starts a hum that heals (state %d, bubbles %d)" % [player.state, GameState.bubbles])
-	_press_key(KEY_H, true)
+	_press_key(hum_key, true)
 	await _wait(0.1)
-	_press_key(KEY_H, false)
+	_press_key(hum_key, false)
 	await _wait(0.2)
 	_check(player.state == Player.State.MOVE, "a second tap stops the hum")
-	Settings.hum_toggle = false
+	Settings.hum_toggle = was_toggle
 
 	# A Spitter fires a projectile.
 	var spitter := Spitter.new()

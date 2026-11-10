@@ -494,6 +494,8 @@ func drop_through(coord: Vector2i, tile: Vector2i) -> void:
 	if state in [State.FALL, State.DEAD]:
 		return
 	end_item()
+	# Don't let a toggled Hum start by itself after landing.
+	_hum_latched = false
 	_enter(State.FALL)
 	velocity = Vector2.ZERO
 	Audio.play_sfx("player_fall", global_position, 1.3)
@@ -514,6 +516,8 @@ func fall(back_to: Vector2) -> void:
 	if state in [State.FALL, State.DEAD]:
 		return
 	end_item()
+	# Don't let a toggled Hum start by itself after landing.
+	_hum_latched = false
 	_enter(State.FALL)
 	velocity = Vector2.ZERO
 	# Shrink towards the middle of the body, as if dropping away.

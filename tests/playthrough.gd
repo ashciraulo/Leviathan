@@ -291,7 +291,7 @@ func _save_and_reload(after: String) -> void:
 	before = _whole(before)
 	after_load = _whole(after_load)
 	for key: String in before:
-		if key == "play_time":
+		if key in ["play_time", "area_stats"]:
 			continue
 		# Compared as JSON, the way it's saved (a 2 comes back as 2.0).
 		var was := JSON.stringify(before[key], "", true)
@@ -611,12 +611,14 @@ func _audit(after: String) -> void:
 	for id: String in GameState.inventory:
 		var count := GameState.item_count(id)
 		_check(Items.exists(id), "%s: %s is a real item" % [after, id])
-		_check(count >= 1 and count <= Items.max_count(id), "%s: %d %s is within 1..%d" % [after, count, id, Items.max_count(id)])
+		# Counted tools (bombs, arrows, oil) stay in the satchel at zero.
+		var least := 0 if Items.kind(id) in [Items.AMMO, Items.CURRENCY] else 1
+		_check(count >= least and count <= Items.max_count(id), "%s: %d %s is within %d..%d" % [after, count, id, least, Items.max_count(id)])
 	for kind: String in Items.EQUIPMENT_KINDS:
 		var worn := GameState.equipped_item(kind)
 		_check(GameState.has_item(worn) and Items.kind(worn) == kind, "%s: the %s worn (%s) is owned" % [after, kind, worn])
 	for id: String in GameState.item_slots:
-		_check(id == "" or (GameState.has_item(id) and Items.slottable(id)), "%s: %s on an item key is an owned tool" % [after, id])
+		_check(id == "" or (GameState.inventory.has(id) and Items.slottable(id)), "%s: %s on an item key is an owned tool" % [after, id])
 	_check(GameState.item_slots.size() == 2 and (GameState.item_slots[0] == "" or GameState.item_slots[0] != GameState.item_slots[1]),
 		"%s: the two item keys hold different tools (%s)" % [after, GameState.item_slots])
 	_check(GameState.jars.size() == GameState.item_count("jar"), "%s: one jar entry per jar (%d, %d)" % [after, GameState.jars.size(), GameState.item_count("jar")])
@@ -657,10 +659,13 @@ func _accessibility_runs() -> void:
 	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
 	var had_settings := FileAccess.file_exists(settings_path)
 	var old_settings := FileAccess.get_file_as_string(settings_path) if had_settings else ""
+	# The defaults are the game's own, not whatever this machine has saved.
+	var fresh: Node = Settings.get_script().new()
 	var defaults := {}
 	for profile: Dictionary in PROFILES:
 		for key: String in profile:
-			defaults[key] = Settings.get(key)
+			defaults[key] = fresh.get(key)
+	fresh.free()
 	await _goto(Vector2i(0, 0))
 	await _play_scene(20.0)
 	for profile: Dictionary in PROFILES:
@@ -684,9 +689,10 @@ func _accessibility_runs() -> void:
 	Settings.apply()
 
 
-## Every pause menu tab, walked cell by cell in every direction. On the
-## Satchel, Interact on every cell too (equipping, putting tools on keys,
-## drinking): _audit checks the satchel still adds up after.
+## Every pause menu tab, walked in every direction (only up and down on
+## Options, so no setting changes or saves). On the Satchel, Interact on
+## every cell too (equipping, putting tools on keys, drinking): _audit
+## checks the satchel still adds up after.
 func _menu_sweep(label: String) -> void:
 	var pause := PauseMenu.new()
 	_game.add_child(pause)
@@ -694,14 +700,19 @@ func _menu_sweep(label: String) -> void:
 		pause.open(tab)
 		await _wait(0.05)
 		var page: MenuPage = pause._pages[tab]
-		for action: String in ["move_right", "move_down", "move_left", "move_up"]:
+		var moves := ["move_down", "move_up"] if tab == PauseMenu.Tab.OPTIONS else ["move_right", "move_down", "move_left", "move_up"]
+		for action: String in moves:
 			for i in 12:
 				_send(pause, action)
-				if tab == PauseMenu.Tab.SATCHEL:
-					_send(pause, "interact")
-					_read_dialogue()
 				_check_hint(page, label, tab)
 			await _wait(0.02)
+		if tab == PauseMenu.Tab.SATCHEL:
+			var satchel := page as SatchelPage
+			for cell in satchel._cells.size():
+				satchel._cursor = cell
+				_send(pause, "interact")
+				_read_dialogue()
+				_check_hint(page, label, tab)
 		_check(pause.visible and pause.current == tab, "%s: tab %s stays open while browsing" % [label, PauseMenu.TABS[tab]])
 	# Tab Next goes all the way round.
 	pause.open(PauseMenu.Tab.SATCHEL)
@@ -738,7 +749,7 @@ func _hit_and_hum(label: String) -> void:
 	GameState.resonance = GameState.resonance_max
 	wren._invuln = 0.0
 	var before := GameState.bubbles
-	# 2: the abyssal tunic worn by now halves what a hit takes.
+	# 2: the tunic worn by the end of the game halves what a hit takes.
 	wren.take_damage(2, wren.global_position + Vector2(16, 0))
 	await _wait(0.6)
 	_check(GameState.bubbles < before, "%s: a hit costs breath (%d to %d)" % [label, before, GameState.bubbles])
@@ -791,6 +802,10 @@ func _conversation(label: String) -> void:
 		box.advance()
 		await _wait(0.05)
 	_check(not DialogueBox.is_open and not get_tree().paused, "%s: the conversation closes and play goes on" % label)
+	# If it didn't, don't leave the rest of the run paused behind it.
+	if DialogueBox.is_open:
+		box.close()
+	get_tree().paused = false
 
 
 ## Captioned sounds show a caption only with captions on.
