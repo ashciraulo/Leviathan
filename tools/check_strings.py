@@ -31,6 +31,8 @@ def csv_keys():
         key = row[0]
         if key in keys:
             problems.append("line %d: %s is listed twice" % (n, key))
+        if len(row) > len(header):
+            problems.append("line %d: %s has %d columns, not %d (quote text with commas)" % (n, key, len(row), len(header)))
         if len(row) < 2 or not row[1].strip():
             problems.append("line %d: %s has no English text" % (n, key))
         for col in range(2, len(header)):
