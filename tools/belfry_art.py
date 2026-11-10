@@ -404,6 +404,40 @@ def drowned_bell(rung):
     return rows_of(c)
 
 
+def tollshell(pose):
+    """A Tollshell: a little bell-shaped hermit shell grown green with
+    verdigris, squatting on the nave floor. Shut, it's a bell; ringing, the
+    rim flares; open, its lip lifts on a single brass eye. 16x16."""
+    c = canvas(16, 16)
+    lift = 2 if pose == "open" else 0
+    for y in range(2, 13 - lift):
+        t = (y - 2) / 10.0
+        half = 3 + 4 * t
+        for x in range(int(8 - half), int(8 + half + 0.5)):
+            put(c, x, y, "v")
+    fill_rect(c, 7, 1, 2, 2, "v")
+    # A brass band round its shoulder.
+    for x in range(16):
+        if c[6][x] == "v":
+            c[6][x] = "g"
+    # The rim.
+    rim_y = 12 - lift
+    flare = 1 if pose == "ring" else 0
+    fill_rect(c, 2 - flare, rim_y, 12 + 2 * flare, 1, "g")
+    if pose == "open":
+        # Lifted: dark underneath, and the eye looking out.
+        fill_rect(c, 3, rim_y + 1, 10, 3, "_")
+        fill_rect(c, 6, rim_y + 1, 4, 2, "y")
+        put(c, 7, rim_y + 1, "k")
+        put(c, 8, rim_y + 1, "k")
+    else:
+        fill_rect(c, 3, rim_y + 1, 10, 1, "_")
+    if pose == "ring":
+        for (x, y) in ((0, 8), (15, 8), (1, 3), (14, 3)):
+            put(c, x, y, "!")
+    return rows_of(c)
+
+
 def build(lit, sheet):
     """Everything in assets/belfry/, as {file name: pixels}."""
     return {
@@ -414,5 +448,6 @@ def build(lit, sheet):
         "knell": sheet([[lit(kraken("peek"), 114), lit(kraken("out"), 114)]], 48, 40),
         "tentacle": sheet([[lit(tentacle(p), 115) for p in ("up", "rear", "cut")]], 16, 40),
         "ink_blob": sheet([[lit(ink_blob(), 116)]], 8, 8),
+        "tollshell": sheet([[lit(tollshell(p), 118) for p in ("shut", "ring", "open")]], 16, 16),
         "drowned_bell": sheet([[lit(drowned_bell(False), 117), lit(drowned_bell(True), 117)]], 32, 40),
     }
