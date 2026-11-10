@@ -22,7 +22,7 @@ The way through:
   an island in the lava; a second small key) opens the Gallery's west hatch
   into the Pattern Shop (pegs; compass). The Sprue, west of the Mould
   Store, is sealed with boulders: smash in, beat the Clinkers among the
-  hammers, and a chest gives a jar.
+  hammers, and a chest gives 100 glints.
 
 The front door, and the way out after the boss, lead to the Kiln Mouth in
 Cinderreach (overworld room (10, -2)), arriving just below its doorway.
@@ -213,7 +213,7 @@ X......................#
 #..k..............#....#
 #......................#
 ########################"""),
-    (19, 9): ("ROOM_KILN_SPRUE", {"chest_item": '"jar"', "gate": '"clear"', "chest_hidden": "true"}, """
+    (19, 9): ("ROOM_KILN_SPRUE", {"chest_item": '"glint"', "chest_count": "100", "gate": '"clear"', "chest_hidden": "true"}, """
 ########################
 #....................#.#
 #..^^^^..........^^^^#.#
