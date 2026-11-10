@@ -47,6 +47,10 @@ const KINDS := {
 	# Sister Lowe on Lullaby Point after the ending (StoryDirector): no
 	# orders left to give, so she talks standing still.
 	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3, "near": 0, "talk": 0, "wander": 0.0},
+	# Murmur at Fenmouth after leaving the Choir, and Mother Dace by the last
+	# mural after the ending (StoryDirector).
+	"murmur": {"texture": Art.VILLAGER_MURMUR, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"dace": {"texture": Art.VILLAGER_DACE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Coralie the beachcomber on Saltmarrow Shore, by her chime (StoryDirector).
 	"coralie": {"texture": Art.VILLAGER_CORALIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }

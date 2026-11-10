@@ -145,6 +145,11 @@ const LOWE_AT := Vector2(16 * 16 + 8, 8 * 16 + 10)
 ## Nettle's signal in the ending is answered from beyond the village's
 ## south gate, the way to the shore and the bay.
 const BAY_ANSWER := Vector2(12 * 16, 12 * 16 + 10)
+## Murmur, out of the Choir after the calf, helps Wick tend Fenmouth's
+## lanterns.
+const MURMUR_FEN_AT := Vector2(8 * 16 + 8, 3 * 16 + 10)
+## After the ending, Mother Dace sits with the bones by the last mural.
+const DACE_AFTER_AT := Vector2(12 * 16 + 8, 2 * 16 + 10)
 ## How near the post counts as there.
 const POST_REACH := 16.0
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
@@ -227,6 +232,10 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_liesl(coord)
 	if coord == FENMOUTH or FenLantern.SPOTS.has(coord):
 		_put_wick(coord)
+	if coord == FENMOUTH and GameState.has_flag(CALF_FLAG):
+		_put_npc("murmur", MURMUR_FEN_AT)
+	if coord == TOMB_BOSS and GameState.has_flag(ENDING_FLAG) and GameState.has_flag(MURAL_FLAG) and not echo:
+		_put_npc("dace", DACE_AFTER_AT)
 	if coord == WRECK_STRAND:
 		_put_gully()
 	if coord == STILL_COVE:
@@ -952,12 +961,17 @@ func _put_ottilie() -> void:
 
 ## Sister Lowe on the point, after the ending.
 func _put_lowe() -> void:
+	_put_npc("lowe", LOWE_AT)
+
+
+## Someone standing about in the current room, once.
+func _put_npc(kind: String, at: Vector2) -> void:
 	var room: Node = game.current_room
-	if room == null or _find_npc("lowe"):
+	if room == null or _find_npc(kind):
 		return
-	var lowe := Npc.new("lowe")
-	lowe.position = LOWE_AT
-	room.add_child(lowe)
+	var npc := Npc.new(kind)
+	npc.position = at
+	room.add_child(npc)
 
 
 ## Coralie and her chime.
