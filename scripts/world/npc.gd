@@ -44,6 +44,8 @@ const KINDS := {
 	"sorrel": {"texture": Art.VILLAGER_SORREL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Ottilie the ice-fisher at Still Cove (StoryDirector).
 	"ottilie": {"texture": Art.VILLAGER_OTTILIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# Coralie the beachcomber on Saltmarrow Shore, by her chime (StoryDirector).
+	"coralie": {"texture": Art.VILLAGER_CORALIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.

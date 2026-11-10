@@ -135,6 +135,10 @@ const KITE_TIME := 3.0
 const STILL_COVE := Vector2i(0, -2)
 const OTTILIE_AT := Vector2(17 * 16 + 8, 8 * 16 + 10)
 const FISHING_HOLE_AT := Vector2(19 * 16 + 8, 8 * 16 + 12)
+## Coralie on Saltmarrow Shore, beside her sea-glass chime.
+const SHORE := Vector2i(0, 0)
+const CORALIE_AT := Vector2(17 * 16 + 8, 3 * 16 + 10)
+const CHIME_AT := Vector2(20 * 16 + 8, 3 * 16 + 12)
 ## How near the post counts as there.
 const POST_REACH := 16.0
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
@@ -221,6 +225,9 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_gully()
 	if coord == STILL_COVE:
 		_put_ottilie()
+	# Coralie comes down to the shore once the opening's done with it.
+	if coord == SHORE and GameState.has_flag("met_hessa"):
+		_put_coralie()
 	if coord == GULLWATCH_STEPS:
 		# A race the game closed partway through is simply over.
 		if GameState.has_flag(RACE_FLAG):
@@ -933,6 +940,19 @@ func _put_ottilie() -> void:
 	var hole := FishingHole.new()
 	hole.position = FISHING_HOLE_AT
 	room.add_child(hole)
+
+
+## Coralie and her chime.
+func _put_coralie() -> void:
+	var room: Node = game.current_room
+	if room == null or _find_npc("coralie"):
+		return
+	var coralie := Npc.new("coralie")
+	coralie.position = CORALIE_AT
+	room.add_child(coralie)
+	var chime := GlassChime.new()
+	chime.position = CHIME_AT
+	room.add_child(chime)
 
 
 ## Captain Sorrel and the far post of her old kite-post.

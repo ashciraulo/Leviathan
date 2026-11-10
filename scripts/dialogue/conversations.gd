@@ -12,6 +12,11 @@ extends Object
 ##   "lines":  the pages, in order
 ##   "give":   items handed to Wren, {id: count} (a narration line in
 ##             "lines" says so; the jingle plays as the box opens)
+##   "trade":  takes every one of an item Wren carries, adds how many to a
+##             tally flag and pays for each: {"take": id, "tally": flag,
+##             "each": {id: count}}
+##   "reaches": with "trade", only when the tally plus what Wren carries
+##             comes to at least this many
 ##
 ## A line is a translation key, said by the speaker. To give a page to
 ## someone else, use [speaker, key]. Use "" as the speaker for narration
@@ -19,6 +24,9 @@ extends Object
 ## hear, so Wren answers her with the lamp: one flash yes, two no).
 ##
 ## Speakers: [name key, portrait texture or null].
+
+## Coralie takes Wren's sea-glass for her chime, 25 glints a piece.
+const GLASS_TRADE := {"take": "sea_glass", "tally": "coralie_glass", "each": {"glint": 25}}
 
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
@@ -41,6 +49,7 @@ const SPEAKERS := {
 	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
 	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
 	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
+	"coralie": ["NAME_CORALIE", Art.PORTRAIT_CORALIE],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -160,6 +169,25 @@ const TALKS := {
 		{"if": ["sorrel_asked"], "lines": ["SORREL_WAITING"]},
 		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
 	],
+	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
+	# (GlassChime) and pays for every piece Wren brings her.
+	"coralie": [
+		{"if": ["coralie_chime_done", "seen_ending"], "lines": ["CORALIE_END"]},
+		{"if": ["coralie_chime_done", "old_one_turned"], "lines": ["CORALIE_TURNED"]},
+		{"if": ["coralie_chime_done"], "lines": ["CORALIE_AFTER"]},
+		{
+			"if": ["coralie_asked"],
+			"has": ["sea_glass"],
+			"reaches": SeaGlass.TOTAL,
+			"trade": GLASS_TRADE,
+			"set": ["coralie_chime_done"],
+			"give": {"glint": 100},
+			"lines": ["CORALIE_DONE_1", ["", "NARRATE_GOT_GLASS_PAY"], "CORALIE_DONE_2", "CORALIE_DONE_3", ["", "NARRATE_GOT_CORALIE_SAVINGS"]],
+		},
+		{"if": ["coralie_asked"], "has": ["sea_glass"], "trade": GLASS_TRADE, "lines": ["CORALIE_HANG", ["", "NARRATE_GOT_GLASS_PAY"]]},
+		{"if": ["coralie_asked"], "lines": ["CORALIE_WAITING"]},
+		{"set": ["coralie_asked"], "lines": ["CORALIE_1", "CORALIE_1B", "CORALIE_2", "CORALIE_2B", "CORALIE_3"]},
+	],
 	# Gully on Wreck Strand, and his strongbox out in the pool (a Strongbox,
 	# hauled in with the Tide Hook).
 	"gully": [
@@ -211,9 +239,22 @@ const TALKS := {
 ## The branch `speaker` would use right now, or {} if they have nothing to say.
 static func branch_for(speaker: String) -> Dictionary:
 	for branch: Dictionary in TALKS.get(speaker, []):
-		if GameState.flags_match(branch.get("if", []), branch.get("unless", [])) and _has_all(branch.get("has", [])):
+		if GameState.flags_match(branch.get("if", []), branch.get("unless", [])) and _has_all(branch.get("has", [])) and _reaches(branch):
 			return branch
 	return {}
+
+
+## How many of a trade's items have been handed over so far.
+static func tally(trade: Dictionary) -> int:
+	return int(GameState.flags.get(trade["tally"], 0))
+
+
+## True unless the branch has "reaches" and its trade wouldn't get there.
+static func _reaches(branch: Dictionary) -> bool:
+	if not branch.has("reaches"):
+		return true
+	var trade: Dictionary = branch["trade"]
+	return tally(trade) + GameState.item_count(trade["take"]) >= int(branch["reaches"])
 
 
 ## True when Wren carries every item in `items` (a branch's "has").
@@ -247,7 +288,15 @@ static func talk(speaker: String) -> Array:
 		return []
 	for flag: String in branch.get("set", []):
 		GameState.set_flag(flag)
-	var gifts: Dictionary = branch.get("give", {})
+	var gifts: Dictionary = branch.get("give", {}).duplicate()
+	var trade: Dictionary = branch.get("trade", {})
+	if not trade.is_empty():
+		var handed := GameState.item_count(trade["take"])
+		GameState.take_item(trade["take"], handed)
+		GameState.set_flag(trade["tally"], tally(trade) + handed)
+		var each: Dictionary = trade["each"]
+		for id: String in each:
+			gifts[id] = int(gifts.get(id, 0)) + int(each[id]) * handed
 	for id: String in gifts:
 		GameState.give_item(id, int(gifts[id]), false)
 	if not gifts.is_empty():
