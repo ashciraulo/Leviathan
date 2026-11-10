@@ -485,6 +485,8 @@ CAPTION_TIDESTONE,Tidestone hums awake
 CAPTION_BELL,A bell rings
 CAPTION_BELL_QUIET,A bell hums softly
 CAPTION_SECRET,Secret chime
+CAPTION_CLOAK,Cloak snaps open
+CAPTION_CLANG,Metal clang
 CAPTION_DOOR,Stone grinds
 CAPTION_PUZZLE,Something opened
 CAPTION_CHARGED,Sword charged
@@ -655,11 +657,11 @@ CAPTION_SPORES,Spores burst
 CAPTION_TIDE_SWEEP,Waves sweep in
 CAPTION_JAW,Jaws snap
 CAPTION_SHOP_BUY,Coins change hands
-CAPTION_SHOP_SHORT,Not enough glints
+CAPTION_SHOP_SHORT,Low buzz
 CAPTION_SAVE,Soft chime
 CAPTION_ITEM,Fanfare
 CAPTION_PEARL,Pearl shimmers
-CAPTION_GAME_OVER,Slow, sinking tune
+CAPTION_GAME_OVER,"Slow, sinking tune"
 CAPTION_CLEAR,Triumphant tune
 NAME_DACE,Mother Dace
 DACE_MURAL_1,"So the Regent's gone to bones at last. Then you've earned this. Come, look."

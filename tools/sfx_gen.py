@@ -592,9 +592,11 @@ def _same(path, frames):
 ## (accessibility: captions are opt-in, never shown by default).
 UNCAPTIONED = {
     # Wren's own moves: the player pressed the button and sees it happen.
+    # (A sound an enemy or hazard also plays, like cloak_open for the
+    # Stormheron's swoop or hit_shell for the drop hammer, needs a caption.)
     "sword_swing", "sword_spin", "player_hurt", "bubble_pop", "player_fall",
-    "hit_flesh", "hit_shell", "hum_heal", "hook_fire", "hook_latch", "hook_reel",
-    "lantern_up", "lantern_down", "cloak_open", "bow_draw", "bow_loose",
+    "hit_flesh", "hum_heal", "hook_fire", "hook_latch", "hook_reel",
+    "lantern_up", "lantern_down", "bow_draw", "bow_loose",
     "ice_slide", "grass_cut", "pickup",
     # Menus and text.
     "ui_move", "ui_select", "ui_back", "ui_open", "text_blip",
@@ -629,9 +631,12 @@ def main():
         # Every effect has an opt-in caption, except the few listed in
         # UNCAPTIONED (Wren's own moves and the menus, which the screen
         # already shows).
-        sfx_block = audio_src[audio_src.index("const SFX"):]
+        sfx_block = audio_src[audio_src.index("const SFX := {"):]
         sfx_block = sfx_block[:sfx_block.index("\n}\n")]
-        for name, body in re.findall(r'^\t"([a-z0-9_]+)": \{([^\n]*)\}', sfx_block, re.M):
+        bodies = dict(re.findall(r'^\t"([a-z0-9_]+)": \{(.*?)\},?$', sfx_block, re.M | re.S))
+        for name in set(re.findall(r'^\t"([a-z0-9_]+)": \{', sfx_block, re.M)) - set(bodies):
+            stale.append("%s: can't read its Audio.SFX entry (keep it on one line)" % name)
+        for name, body in sorted(bodies.items()):
             if "caption" not in body and name not in UNCAPTIONED:
                 stale.append("%s has no caption in Audio.SFX (add one, or list it in UNCAPTIONED with why)" % name)
         for name in SOUNDS:
