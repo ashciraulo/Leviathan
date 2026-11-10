@@ -86,7 +86,7 @@ func _set_up() -> void:
 	_grow_arms()
 	# Its entrance: it peers out of the bell's mouth and moans, and the
 	# great bell shudders on its beam.
-	Audio.play_sfx("knell_moan", position, 0.8)
+	Audio.play_sfx("knell_moan", global_position, 0.8)
 	Feel.shake(2.0)
 
 
@@ -104,7 +104,7 @@ func _grow_arms() -> void:
 		arm.cut.connect(_on_arm_cut)
 		_room.add_child(arm)
 		arms.append(arm)
-	Audio.play_sfx("splash", position, 0.6)
+	Audio.play_sfx("splash", global_position, 0.6)
 
 
 func _on_arm_cut() -> void:
@@ -114,7 +114,7 @@ func _on_arm_cut() -> void:
 	if mode == Mode.ARMS:
 		mode = Mode.HIDDEN
 		_ink = INK_EVERY * 0.6
-		Audio.play_sfx("knell_moan", position)
+		Audio.play_sfx("knell_moan", global_position)
 
 
 ## The Stonebreaker rang the bell.
@@ -127,7 +127,7 @@ func on_bell_rung() -> void:
 	_hits_this_daze = 0
 	position = _home + Vector2(0, 14)
 	_hurtbox.collision_layer = 1 << (Layers.ENEMY_HURTBOX - 1)
-	Audio.play_sfx("knell_moan", position, 1.4)
+	Audio.play_sfx("knell_moan", global_position, 1.4)
 
 
 func _think(delta: float) -> void:
@@ -182,7 +182,7 @@ func _blocks_hit(_direction: Vector2) -> bool:
 
 func _on_hurt() -> void:
 	_hits_this_daze += 1
-	Audio.play_sfx("knell_moan", position, 1.8)
+	Audio.play_sfx("knell_moan", global_position, 1.8)
 	Feel.shake(1.5)
 
 
@@ -204,7 +204,7 @@ func _die() -> void:
 			arm.queue_free()
 	_sprite.position = _sprite_origin
 	_sprite.frame = FRAME_OUT
-	Audio.play_sfx("knell_moan", position, 0.6)
+	Audio.play_sfx("knell_moan", global_position, 0.6)
 	for i in 4:
 		_flash = 0.1
 		Feel.shake(2.0)

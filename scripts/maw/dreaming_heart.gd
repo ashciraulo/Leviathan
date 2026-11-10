@@ -30,7 +30,7 @@ const STAGES := [
 	["gale", GaleSprites.STORMHERON, 4, 46],
 	["glacier", GlacierSprites.RIMEBACK, 4, 54],
 	["belfry", BelfrySprites.KNELL, 2, 38],
-	["tomb", TombSprites.REGENT, 4, 62],
+	["tomb", TombSprites.REGENT, 5, 62],
 ]
 ## Where each stage's bell rises, in tiles from the room's corner.
 const BELL_TILES := [
