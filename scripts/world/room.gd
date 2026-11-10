@@ -119,6 +119,10 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## An ambience loop for this room alone (audio/ambience/<id>), in place of
 ## its region's: "" uses the region's.
 @export var ambience := ""
+## Music for this room alone: a cue from audio/music/, or "none" to leave
+## only the ambience (the Ebb Shelf and Grotto, where the Old One lies
+## closest to the shore). "" plays its region's or dungeon's track.
+@export var music := ""
 ## Windmere: the direction and strength (px/s) of the gusts that sweep
 ## this room. Zero means calm.
 @export var wind := Vector2.ZERO

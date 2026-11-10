@@ -30,6 +30,12 @@ func _notification(what: int) -> void:
 		SaveManager.save_clock()
 
 
+## Leaving the game (to the title or the credits): no hollow's muffle
+## carries over.
+func _exit_tree() -> void:
+	Audio.set_muffled(false, 0.01)
+
+
 func _ready() -> void:
 	camera = GameCamera.new()
 	add_child(camera)
@@ -83,9 +89,14 @@ func _on_room_entered(coord: Vector2i) -> void:
 ## The room's track, or the boss theme while a boss is still up in it.
 func _play_room_music() -> void:
 	if current_room:
-		var cue := "boss" if _room_has_boss() else Audio.cue_for_room(current_room.biome, current_room.dungeon)
+		var cue := "boss" if _room_has_boss() else _room_music()
 		Audio.play_music(cue)
+		Audio.set_muffled(current_room.cave)
 		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon, current_room.ambience, current_room.cave))
+
+
+func _room_music() -> String:
+	return Audio.music_for_room(current_room.biome, current_room.dungeon, current_room.music)
 
 
 func _room_has_boss() -> bool:
@@ -100,7 +111,7 @@ func _on_boss_defeated() -> void:
 	for shot in get_tree().get_nodes_in_group("enemy_shots"):
 		shot.queue_free()
 	if current_room and not _game_over:
-		Audio.play_music(Audio.cue_for_room(current_room.biome, current_room.dungeon), 2.5)
+		Audio.play_music(_room_music(), 2.5)
 
 
 func _process(delta: float) -> void:

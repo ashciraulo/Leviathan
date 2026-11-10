@@ -9,6 +9,7 @@ biome = "sunken_verge"
 chest_item = "glint"
 chest_count = 50
 ambience = "ebb"
+music = "none"
 layout = "###########;;###########
 #####~~~~~;;;;~~~~~~####
 ###~~~~;;;;##;;;;~~~~###

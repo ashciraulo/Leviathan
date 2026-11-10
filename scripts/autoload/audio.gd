@@ -226,6 +226,13 @@ var _music_tween: Tween
 ## a fade still dips, and a cue change during a phrase stays dipped.
 var _fade_db: Array[float] = [-60.0, -60.0]
 var _duck_db := 0.0
+## In a hollow the music sounds as if through rock: quieter and dulled.
+const MUFFLE_DB := -5.0
+const MUFFLE_HZ := 900.0
+var muffled := false
+var _muffle_db := 0.0
+var _muffle_tween: Tween
+var _low_pass: AudioEffectLowPassFilter
 ## Plays the lullaby phrases over the (ducked) music.
 var _phrase: AudioStreamPlayer
 
@@ -341,7 +348,34 @@ func _set_duck(db: float) -> void:
 
 func _apply_music_volume() -> void:
 	for i in _music.size():
-		_music[i].volume_db = maxf(_fade_db[i] + _duck_db, -80.0)
+		_music[i].volume_db = maxf(_fade_db[i] + _duck_db + _muffle_db, -80.0)
+
+
+## Muffles the music in a hollow or grotto (see Room.cave), and lifts it
+## again outside: a low-pass filter on the Music bus and a few dB down,
+## eased over `fade` seconds.
+func set_muffled(on: bool, fade: float = FADE_TIME) -> void:
+	if on == muffled:
+		return
+	muffled = on
+	var bus := AudioServer.get_bus_index("Music")
+	if _low_pass == null and bus >= 0:
+		_low_pass = AudioEffectLowPassFilter.new()
+		_low_pass.cutoff_hz = 20000.0
+		AudioServer.add_bus_effect(bus, _low_pass)
+	if _muffle_tween:
+		_muffle_tween.kill()
+	_muffle_tween = create_tween().set_parallel(true)
+	_muffle_tween.tween_method(_set_muffle, _muffle_db, MUFFLE_DB if on else 0.0, fade)
+	if _low_pass:
+		# Swept on a log scale, so the dulling sounds even.
+		_muffle_tween.tween_method(func(k: float) -> void: _low_pass.cutoff_hz = exp(k),
+			log(_low_pass.cutoff_hz), log(MUFFLE_HZ if on else 20000.0), fade)
+
+
+func _set_muffle(db: float) -> void:
+	_muffle_db = db
+	_apply_music_volume()
 
 
 ## Fades the music out, and cuts off a lullaby phrase still ringing.
@@ -406,7 +440,16 @@ func _duck(length: float) -> void:
 	_duck_tween.tween_method(_set_duck, DUCK_DB, 0.0, 0.6)
 
 
-## Which music fits a room: its dungeon, else its region.
+## The track a room plays: its own (Room.music: a cue, or "none" for
+## only the ambience), else its dungeon's or region's.
+static func music_for_room(biome: String, dungeon: String, own: String = "") -> String:
+	if own == "none":
+		return ""
+	return own if own != "" else cue_for_room(biome, dungeon)
+
+
+## Which music fits a room: its dungeon, else its region. Also names the
+## areas in the hidden playtime record.
 static func cue_for_room(biome: String, dungeon: String) -> String:
 	if dungeon != "":
 		return "dungeon_" + dungeon
