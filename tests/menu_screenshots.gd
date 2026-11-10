@@ -114,8 +114,14 @@ func _ready() -> void:
 
 	# Out of breath: the game over screen.
 	await _wait(1.0)
+	# The jarred sea sprite would breathe Wren back to life, and the tunic
+	# soaks up a light hit: empty the jar and hit hard.
+	for i in GameState.jars.size():
+		if GameState.jars[i] == Items.JAR_SPRITE:
+			GameState.jars[i] = Items.JAR_EMPTY
 	GameState.bubbles = 1
-	game.player.take_damage(1, game.player.global_position + Vector2(10, 0))
+	game.player._invuln = 0.0
+	game.player.take_damage(4, game.player.global_position + Vector2(10, 0))
 	await _wait(3.0)
 	await _capture("43_game_over")
 	game.queue_free()

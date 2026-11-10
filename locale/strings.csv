@@ -75,6 +75,8 @@ HINT_SATCHEL_DRINK,%s: drink
 HINT_MAP,Move the cursor to look around
 HINT_MAP_FLY,%s: blow the Wayshell and fly here
 HINT_OPTIONS,Left / right: change
+HINT_OPEN,%s: open
+HINT_CHOOSE,%s: choose
 HINT_CONTROLS,%s: change    %s: back
 HINT_CONTROLS_WAIT,Press the new key or button. %s cancels.
 ITEM_TIDE_HOOK,Tide Hook
