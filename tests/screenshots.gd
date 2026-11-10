@@ -48,11 +48,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-<<<<<<< Updated upstream
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie"]:
-=======
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "contrast"]:
->>>>>>> Stashed changes
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "contrast"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
