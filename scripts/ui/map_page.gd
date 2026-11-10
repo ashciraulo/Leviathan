@@ -41,6 +41,12 @@ const BOSS_FLAGS := {"hull": "boss_hull", "kiln": "boss_kiln", "mire": "boss_mir
 var _view: Control
 var _area := ""
 var _rooms: Array[Vector2i] = []
+## Overworld rooms Wren hasn't seen yet but could walk into from one they
+## have: drawn faint, under fog, so the edge of the known world shows.
+var _fringe: Array[Vector2i] = []
+## coord -> doorway tiles in the room's layout as it stands now (an
+## alt_layout can open one, as at Lullaby Point).
+var _doors: Dictionary = {}
 var _rects: Array = []
 var _cursor := 0
 var _texture: ImageTexture
@@ -73,6 +79,18 @@ func on_open() -> void:
 		if _shown(coord):
 			_rooms.append(coord)
 	_rooms.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+	_fringe.clear()
+	_doors.clear()
+	for coord in _rooms:
+		var found: Array[Vector2i] = []
+		var rows := RoomInfo.rows_now(coord)
+		for y in rows.size():
+			for x in rows[y].length():
+				if rows[y][x] == "D":
+					found.append(Vector2i(x, y))
+		_doors[coord] = found
+	if _area == "":
+		_fringe = _find_fringe()
 	_build_texture()
 	_rects = _rooms.map(func(c: Vector2i) -> Rect2: return _room_rect(c))
 	_cursor = maxi(_rooms.find(GameState.room_coord), 0)
@@ -106,6 +124,39 @@ func _shown(coord: Vector2i) -> bool:
 	return GameState.has_seen(coord) or (_area != "" and GameState.has_dungeon_item(_area, "map"))
 
 
+## Unseen overworld rooms that join a seen one through an open edge.
+func _find_fringe() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for coord in _rooms:
+		for dir: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next := coord + dir
+			if out.has(next) or _rooms.has(next) or not RoomInfo.has_room(next) \
+					or str(RoomInfo.get_room(next)["dungeon"]) != "":
+				continue
+			if _joined(coord, next, dir):
+				out.append(next)
+	return out
+
+
+## True when the shared edge of two side-by-side rooms is open somewhere.
+func _joined(a: Vector2i, b: Vector2i, dir: Vector2i) -> bool:
+	var ra := RoomInfo.rows_now(a)
+	var rb := RoomInfo.rows_now(b)
+	var count := Room.ROWS if dir.x != 0 else Room.COLS
+	for i in count:
+		var ta: String
+		var tb: String
+		if dir.x != 0:
+			ta = ra[i][Room.COLS - 1 if dir.x > 0 else 0]
+			tb = rb[i][0 if dir.x > 0 else Room.COLS - 1]
+		else:
+			ta = ra[Room.ROWS - 1 if dir.y > 0 else 0][i]
+			tb = rb[0 if dir.y > 0 else Room.ROWS - 1][i]
+		if ta != "#" and tb != "#":
+			return true
+	return false
+
+
 func _stone_awake(coord: Vector2i) -> bool:
 	return GameState.flags.get("tidestone_%d_%d" % [coord.x, coord.y], false) \
 		or GameState.tidestone_position(coord) != GameState.NO_POSITION
@@ -124,18 +175,23 @@ func _build_texture() -> void:
 	_texture = null
 	if _rooms.is_empty():
 		return
+	var drawn: Array[Vector2i] = []
+	drawn.append_array(_rooms)
+	drawn.append_array(_fringe)
 	var lo := _rooms[0]
 	var hi := _rooms[0]
-	for c in _rooms:
+	for c in drawn:
 		lo = Vector2i(mini(lo.x, c.x), mini(lo.y, c.y))
 		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
 	_origin = lo
 	var span := hi - lo + Vector2i.ONE
 	var image := Image.create_empty(span.x * Room.COLS, span.y * Room.ROWS, false, Image.FORMAT_RGBA8)
-	for coord in _rooms:
+	for coord in drawn:
 		var info := RoomInfo.get_room(coord)
 		var colors: Array = BIOME_COLORS.get(info["biome"], DEFAULT_COLORS)
-		var fade := 1.0 if GameState.has_seen(coord) else 0.45
+		# Unseen rooms: dimmed in a dungeon (its map shows them), and
+		# only a faint shape under fog past the edge of the known world.
+		var fade := 1.0 if GameState.has_seen(coord) else (0.18 if _fringe.has(coord) else 0.45)
 		var rows := RoomInfo.rows_now(coord)
 		var base := (coord - lo) * Vector2i(Room.COLS, Room.ROWS)
 		for y in rows.size():
@@ -144,7 +200,7 @@ func _build_texture() -> void:
 				# Sea-glass hides on the map: its tile shows as what's beside it.
 				if ch == "*" and x > 0:
 					ch = rows[y][x - 1]
-				var color: Color = colors[1] if ch == "#" or ch == "$" else (colors[2] if ch == "~" else colors[0])
+				var color := _tile_color(ch, colors, str(info["dungeon"]) == "")
 				# A faint grain on floors, darker at room edges.
 				if ch != "#" and ch != "~" and (x + y) % 2 == 0:
 					color = color.darkened(0.06)
@@ -152,6 +208,37 @@ func _build_texture() -> void:
 					color = color.lerp(MenuKit.FILL_DARK, 1.0 - fade)
 				image.set_pixel(base.x + x, base.y + y, color)
 	_texture = ImageTexture.create_from_image(image)
+
+
+## A layout letter's colour on the map, close to how it looks in the world.
+## Veiled planks show as the water they hide in.
+## Some letters mean other things in a dungeon (x is a wisp there), so the
+## overworld's scenery, flats and ice only colour the overworld.
+func _tile_color(ch: String, colors: Array, overworld: bool) -> Color:
+	var ground: Color = colors[0]
+	var wall: Color = colors[1]
+	var water: Color = colors[2]
+	match ch:
+		"#", "$":
+			return wall
+		"~", "v":
+			return water
+		"Q", ",":
+			return water.darkened(0.35)
+		"Y":
+			return ground.lerp(wall, 0.6)
+	if not overworld:
+		return ground
+	match ch:
+		"r", "d":
+			return ground.lerp(water, 0.45)
+		"x", "I":
+			return ground.lerp(Color("#e8f4ff"), 0.6)
+		":":
+			return ground.darkened(0.25)
+	if Prop.is_prop(ch):
+		return ground.lerp(wall, 0.45)
+	return ground
 
 
 ## A room's rect in map space (before scrolling), in screen pixels.
@@ -215,6 +302,15 @@ func _draw_view() -> void:
 			if GameState.has_seen(coord) or _stone_awake(coord):
 				var marker := MenuKit.Marker.STONE_AWAKE if _stone_awake(coord) else MenuKit.Marker.STONE_ASLEEP
 				MenuKit.draw_marker(_view, marker, rect.position + Vector2(tile) * PX + Vector2(1, 0))
+		if _area == "" and GameState.has_seen(coord):
+			# Ways in: dungeon mouths, cottages, caves.
+			for tile: Vector2i in _doors.get(coord, []):
+				MenuKit.draw_marker(_view, MenuKit.Marker.DOOR, rect.position + Vector2(tile) * PX + Vector2(1, 0))
+			# Sea-glass still lying somewhere in a room Wren has walked:
+			# a twinkle in its corner, never where the piece is.
+			if not info.get("glass", []).is_empty() and not GameState.has_flag("sea_glass_%d_%d" % [coord.x, coord.y]):
+				if int(Time.get_ticks_msec() / 180 + coord.x * 3 + coord.y * 5) % 9 < 3:
+					MenuKit.draw_marker(_view, MenuKit.Marker.GLASS, rect.position + Vector2(ROOM_PX.x - 5, 5))
 		if _area != "" and GameState.has_dungeon_item(_area, "compass"):
 			# The compass marks the dungeon's boss until it is calmed.
 			if info.get("boss", Vector2i(-1, -1)) != Vector2i(-1, -1) and not _boss_calmed(coord):

@@ -18,13 +18,21 @@ and test the Saltmarrow art style before the vertical slice.
 
 The first open imports the translation file, which takes a few seconds.
 
-## Playable builds (Windows, Linux, web)
+## Playable builds (Windows, macOS, Linux, web)
 
-No Godot needed: on GitHub, open **Actions > Build PC > Run workflow**. When
-it finishes (about five minutes), download **Leviathan-windows** or
-**Leviathan-linux** from the run's page and unzip it (the Linux one holds a
-`.tar.gz`; unpack that too, which keeps the game executable). Pushing a tag like
-`v0.2.0` builds them too.
+**Download:** <https://github.com/ashciraulo/Leviathan/releases/latest> has
+the newest release for Windows (`Leviathan-windows.zip`), macOS
+(`Leviathan-macos.zip`) and Linux (`Leviathan-linux.tar.gz`). A release is
+published when a tag like `v0.2.0` is pushed. The first time, Windows may warn
+about an unknown app (*More info > Run anyway*), and on macOS right-click the
+app and choose *Open* (it isn't notarised).
+
+Every PR and push to `main` also exports all three (**Build PC** workflow)
+and starts each on its own system, a Windows, a Mac and a Linux runner, where
+it plays from the title screen into a new game by itself
+(`Leviathan -- --boot-check=<file>`, `scripts/core/boot_check.gd`). CI fails
+if any of them doesn't get there or logs a script error. Those builds can be
+downloaded from the run's page too.
 
 **Play in a browser:** <https://ashciraulo.github.io/Leviathan/> is rebuilt
 from `main` on every push (the **Web build** workflow). Saves stay in that

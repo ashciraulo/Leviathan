@@ -28,7 +28,7 @@ const FILL_DARK := Color("#10223a")
 const INK := Color("#0c1626")
 
 ## Map marker frames in map_markers.png.
-enum Marker { WREN, STONE_ASLEEP, STONE_AWAKE, CHEST, BOSS, DOOR }
+enum Marker { WREN, STONE_ASLEEP, STONE_AWAKE, CHEST, BOSS, DOOR, GLASS }
 
 
 ## A nine-slice rope-and-brass panel covering rect.

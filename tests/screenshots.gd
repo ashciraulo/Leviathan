@@ -48,7 +48,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "contrast"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "contrast"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -136,6 +136,14 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _coralie_shots()
+			"lowe_after":
+				game.queue_free()
+				await _wait(0.2)
+				await _lowe_after_shots()
+			"epilogue":
+				game.queue_free()
+				await _wait(0.2)
+				await _epilogue_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1610,6 +1618,53 @@ func _coralie_shots() -> void:
 	await _wait(0.2)
 
 
+## The credits after the ending, with the epilogue's scenes between the
+## names: each one held mid-screen.
+func _epilogue_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	var credits: Control = (load("res://scenes/credits.tscn") as PackedScene).instantiate()
+	add_child(credits)
+	await _wait(0.2)
+	credits._leaving = true
+	credits.set_process(false)
+	# Where each scene sits in the roll, as _draw lays it out.
+	var y: float = 216.0 + Art.TITLE_LOGO.get_height() + credits.GAP
+	var names := ["epilogue_1_forge", "epilogue_2_lanterns", "epilogue_3_doorstep", "epilogue_4_rope", "epilogue_5_cliff"]
+	for s in credits._vignette_count():
+		y += credits.LINE * (credits.SECTIONS[s] as Array).size() + credits.GAP
+		credits._scroll = y - 216.0 + 80.0
+		credits._time = 3.0 + s
+		credits.queue_redraw()
+		await _wait(0.1)
+		await _capture(names[s])
+		y += CreditsVignettes.SIZE.y + CreditsVignettes.GAP
+	credits.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+
+
+## Sister Lowe alone on Lullaby Point after the ending, watching the Maw.
+func _lowe_after_shots() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-20, 0))
+	var point: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(point)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.6)
+	point.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	point.player.try_interact()
+	await _wait(2.4)
+	await _capture("epilogue_6_lowe_keeps_watch")
+	point.queue_free()
+	await _wait(0.2)
+
+
 ## Captain Sorrel at Gullwatch Steps, her kite racing Wren across the
 ## water, and Wren first to the far post.
 func _sorrel_shots() -> void:
@@ -2068,6 +2123,25 @@ func _sea_glass_shots(game: Node) -> void:
 		game.respawn()
 		await _wait(2.2)
 		await _capture(shots[coord][0])
+	# The overworld map partway through: Saltmarrow, Brinewood and the
+	# Gloamfen walked, the rest under fog; doors marked, and a twinkle where
+	# sea-glass still lies.
+	for x in range(0, 7):
+		for y in range(-2, 3):
+			if RoomInfo.has_room(Vector2i(x, y)) and str(RoomInfo.get_room(Vector2i(x, y))["dungeon"]) == "":
+				GameState.mark_seen(Vector2i(x, y))
+	GameState.set_flag("sea_glass_1_1")
+	await _jump(game, Vector2i(4, -1), Vector2i(9, 5))
+	var pause: PauseMenu = null
+	for child in game.get_children():
+		if child is PauseMenu:
+			pause = child
+	if pause:
+		pause.open(PauseMenu.Tab.MAP)
+		await _wait(0.5)
+		await _capture("glass_overworld_map")
+		pause.close()
+		await _wait(0.1)
 
 
 func _echoes_shots(game: Node) -> void:

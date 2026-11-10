@@ -48,6 +48,7 @@ func _ready() -> void:
 	_bob_logo()
 	Audio.play_music("title")
 	Audio.play_ambience("saltmarrow")
+	BootCheck.run_if_asked(self)
 
 	var menu := VBoxContainer.new()
 	menu.add_theme_constant_override("separation", 0)

@@ -139,6 +139,12 @@ const FISHING_HOLE_AT := Vector2(19 * 16 + 8, 8 * 16 + 12)
 const SHORE := Vector2i(0, 0)
 const CORALIE_AT := Vector2(17 * 16 + 8, 3 * 16 + 10)
 const CHIME_AT := Vector2(20 * 16 + 8, 3 * 16 + 12)
+## After the ending, Sister Lowe stands alone on Lullaby Point, watching
+## the Maw where Vael keeps watch.
+const LOWE_AT := Vector2(16 * 16 + 8, 8 * 16 + 10)
+## Nettle's signal in the ending is answered from beyond the village's
+## south gate, the way to the shore and the bay.
+const BAY_ANSWER := Vector2(12 * 16, 12 * 16 + 10)
 ## How near the post counts as there.
 const POST_REACH := 16.0
 const DOORBELL_HUNG_AT := Vector2(11 * 16 + 24, 10 * 16 + 15)
@@ -228,6 +234,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 	# Coralie comes down to the shore once the opening's done with it.
 	if coord == SHORE and GameState.has_flag("met_hessa"):
 		_put_coralie()
+	if coord == LULLABY_POINT and GameState.has_flag(ENDING_FLAG):
+		_put_lowe()
 	if coord == GULLWATCH_STEPS:
 		# A race the game closed partway through is simply over.
 		if GameState.has_flag(RACE_FLAG):
@@ -942,6 +950,16 @@ func _put_ottilie() -> void:
 	room.add_child(hole)
 
 
+## Sister Lowe on the point, after the ending.
+func _put_lowe() -> void:
+	var room: Node = game.current_room
+	if room == null or _find_npc("lowe"):
+		return
+	var lowe := Npc.new("lowe")
+	lowe.position = LOWE_AT
+	room.add_child(lowe)
+
+
 ## Coralie and her chime.
 func _put_coralie() -> void:
 	var room: Node = game.current_room
@@ -1300,6 +1318,17 @@ func the_ending() -> void:
 		await scene.lamp(hessa.global_position, Cutscene.LAMP_HERE)
 	await scene.narrate(["ENDING_HOME_1", "ENDING_HOME_2"])
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	# Nettle, across the square with her paper lantern, signals too: yes,
+	# and, if Wren taught her the long glow, I'm here. From beyond the gate,
+	# towards the bay, someone answers.
+	var nettle := _find_npc("nettle")
+	if nettle:
+		await scene.wait(0.4)
+		await scene.lamp(nettle.global_position, Cutscene.LAMP_YES)
+		if GameState.has_flag("nettle_learned"):
+			await scene.lamp(nettle.global_position, Cutscene.LAMP_HERE)
+			await scene.wait(0.8)
+			await scene.lamp(game.current_room.global_position + BAY_ANSWER, Cutscene.LAMP_HERE)
 	await scene.wait(1.0)
 	scene.set_veil_colour(Color.BLACK)
 	await scene.darken(2.0)

@@ -44,6 +44,9 @@ const KINDS := {
 	"sorrel": {"texture": Art.VILLAGER_SORREL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Ottilie the ice-fisher at Still Cove (StoryDirector).
 	"ottilie": {"texture": Art.VILLAGER_OTTILIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# Sister Lowe on Lullaby Point after the ending (StoryDirector): no
+	# orders left to give, so she talks standing still.
+	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3, "near": 0, "talk": 0, "wander": 0.0},
 	# Coralie the beachcomber on Saltmarrow Shore, by her chime (StoryDirector).
 	"coralie": {"texture": Art.VILLAGER_CORALIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
