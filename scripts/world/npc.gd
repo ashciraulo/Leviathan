@@ -36,6 +36,9 @@ const KINDS := {
 	"liesl": {"texture": Art.VILLAGER_LIESL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Wick, Gloamfen's lamplighter child, at Fenmouth (StoryDirector).
 	"wick": {"texture": Art.VILLAGER_WICK, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# Gully the salvager, dozing by the figurehead on Wreck Strand
+	# (StoryDirector). He wakes when Wren comes near.
+	"gully": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.

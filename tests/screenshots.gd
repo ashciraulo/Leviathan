@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.6)
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "seaglass"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "seaglass"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -112,6 +112,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _wick_shots()
+			"gully":
+				game.queue_free()
+				await _wait(0.2)
+				await _gully_shots()
 			"liesl":
 				game.queue_free()
 				await _wait(0.2)
@@ -1459,6 +1463,52 @@ func _wick_shots() -> void:
 	reach.player._invuln = 0.0
 	await _capture("86_it_catches")
 	reach.queue_free()
+	await _wait(0.2)
+
+
+## Gully dozing by the Lantern Wake's figurehead on Wreck Strand, waking
+## to talk, and his strongbox hauled out of the pool on the Tide Hook.
+func _gully_shots() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(StoryDirector.WRECK_STRAND, StoryDirector.GULLY_AT + Vector2(-90, 60))
+	var strand: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(strand)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(1.0)
+	strand.player.facing = Vector2.LEFT
+	strand.player._invuln = 0.0
+	await _capture("87_gully_dozing_by_the_figurehead")
+	strand.player.global_position = strand.current_room.global_position + StoryDirector.GULLY_AT + Vector2(0, 18)
+	strand.player.facing = Vector2.UP
+	await _wait(0.3)
+	strand.player.try_interact()
+	var box := _dialogue_box(strand)
+	for i in 3:
+		await _wait(0.4)
+		box.advance()
+		box.advance()
+	await _wait(1.6)
+	await _capture("88_gully_and_the_lantern_wake")
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	strand.player.global_position = strand.current_room.global_position + Vector2(9 * 16 + 8, 4 * 16 + 10)
+	strand.player.facing = Vector2.RIGHT
+	await _wait(0.5)
+	strand.player._invuln = 0.0
+	strand.player.use_item("tide_hook")
+	await _wait(0.24)
+	await _capture("89_hauling_the_strongbox")
+	await _wait(1.5)
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	strand.queue_free()
 	await _wait(0.2)
 
 

@@ -37,6 +37,7 @@ const SPEAKERS := {
 	"ide": ["NAME_IDE", Art.PORTRAIT_IDE],
 	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
 	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
+	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -121,6 +122,16 @@ const TALKS := {
 		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
 		{"if": ["liesl_asked"], "lines": ["LIESL_WAITING"]},
 		{"set": ["liesl_asked"], "lines": ["LIESL_1", "LIESL_1B", "LIESL_2", "LIESL_2B", "LIESL_3", "LIESL_3B"]},
+	],
+	# Gully on Wreck Strand, and his strongbox out in the pool (a Strongbox,
+	# hauled in with the Tide Hook).
+	"gully": [
+		{"if": ["gully_paid", "seen_ending"], "lines": ["GULLY_END"]},
+		{"if": ["gully_paid", "old_one_turned"], "lines": ["GULLY_TURNED"]},
+		{"if": ["gully_paid"], "lines": ["GULLY_AFTER", "GULLY_AFTER_2"]},
+		{"if": ["gully_box_hauled"], "set": ["gully_paid"], "give": {"glint": 100}, "lines": ["GULLY_BOX_1", "GULLY_BOX_2", ["", "NARRATE_GOT_SALVAGE"]]},
+		{"if": ["gully_asked"], "lines": ["GULLY_WAITING"]},
+		{"set": ["gully_asked"], "lines": ["GULLY_1", "GULLY_1B", "GULLY_2", "GULLY_2B", "GULLY_3", "GULLY_3B"]},
 	],
 	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
 	# five that have gone dark (FenLantern).
