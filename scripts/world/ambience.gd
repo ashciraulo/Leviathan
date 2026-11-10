@@ -4,7 +4,8 @@ extends Node2D
 ## with their shadows sliding over the ground, fish gliding under the water
 ## (now and then one jumps), shore crabs that scuttle off when Wren comes
 ## near, butterflies in Brinewood, fireflies and mist over the Gloamfen,
-## wind streaks over the heights, embers
+## wind streaks over the heights and sand blowing over the dunes, ash and
+## embers
 ## drifting up off Cinderreach's lava, and buzzards' shadows circling the
 ## Ossuary. It has no collisions and does no harm: it only draws. A room
 ## outside the dungeons adds one (see Room).
@@ -17,15 +18,17 @@ const SPLASH := preload("res://assets/ambient/splash.png")
 
 ## How much of each kind of life a biome has.
 const LIFE := {
-	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4},
+	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2},
 	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3},
-	"cinderreach": {"embers": 14},
+	"cinderreach": {"embers": 14, "ash": 40},
 	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4},
 	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5},
-	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3},
-	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3},
-	"ossuary": {"buzzards": 2},
+	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60},
+	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2},
+	"ossuary": {"buzzards": 2, "gusts": 4},
 }
+## Wind streak colours: sea air is white, the dunes blow sand.
+const GUST_COLOUR := {"ossuary": Color(0.7, 0.55, 0.36), "cinderreach": Color(0.75, 0.7, 0.68)}
 ## Gulls fly this high: their shadow falls this far below them.
 const GULL_HEIGHT := 26.0
 ## Crabs bolt when Wren comes this close (px), and settle this far away.
@@ -52,6 +55,8 @@ var splashes: Array[Dictionary] = []
 ## Weather: low mist drifting through the woods and fens, and wind streaks
 ## racing over the heights.
 var mist: Array[Dictionary] = []
+## Flakes sifting down: grey ash over Cinderreach, snow over Frostspine.
+var ash: Array[Dictionary] = []
 var gusts: Array[Dictionary] = []
 var _water: Array[Vector2i] = []
 var _sand: Array[Vector2i] = []
@@ -95,6 +100,13 @@ func _ready() -> void:
 		mist.append(_new_mist(true))
 	for i in int(life.get("gusts", 0)):
 		gusts.append(_new_gust(true))
+	for i in int(life.get("ash", 0)):
+		ash.append(_new_ash(true))
+	# Snow falls the same way, only white.
+	for i in int(life.get("snow", 0)):
+		var flake := _new_ash(true)
+		flake["shade"] = 1.0
+		ash.append(flake)
 
 
 ## Sorts the room's tiles: open water, sand by the water (for crabs), and
@@ -187,6 +199,12 @@ func _new_gust(anywhere: bool) -> Dictionary:
 		"wait": 0.0 if anywhere else _rnd.randf_range(0.5, 3.0)}
 
 
+## A flake of ash, falling slowly and swaying as it goes.
+func _new_ash(anywhere: bool) -> Dictionary:
+	return {"pos": Vector2(_rnd.randf_range(0.0, Room.SIZE.x), _rnd.randf_range(0.0, Room.SIZE.y) if anywhere else -4.0),
+		"fall": _rnd.randf_range(8.0, 16.0), "clock": _rnd.randf() * TAU, "shade": _rnd.randf_range(0.18, 0.32) if _rnd.randf() < 0.7 else _rnd.randf_range(0.8, 0.9)}
+
+
 func _new_crab() -> Dictionary:
 	var at := _pick(_sand)
 	return {"pos": at, "home": at, "clock": _rnd.randf() * 3.0, "fleeing": false, "dir": Vector2.ZERO}
@@ -231,6 +249,14 @@ func _process(delta: float) -> void:
 		m["pos"] = (m["pos"] as Vector2) + Vector2(float(m["speed"]) * delta, 0.0)
 		if (m["pos"] as Vector2).x - (m["size"] as Vector2).x > Room.SIZE.x:
 			m.merge(_new_mist(false), true)
+	for a in ash:
+		a["clock"] = float(a["clock"]) + delta
+		a["pos"] = (a["pos"] as Vector2) + Vector2(sin(float(a["clock"]) * 1.3) * 6.0, float(a["fall"])) * delta
+		if (a["pos"] as Vector2).y > Room.SIZE.y + 4.0:
+			var shade := float(a["shade"])
+			a.merge(_new_ash(false), true)
+			if shade >= 1.0:
+				a["shade"] = 1.0
 	for g in gusts:
 		if float(g["wait"]) > 0.0:
 			g["wait"] = float(g["wait"]) - delta
@@ -383,8 +409,18 @@ func _draw_high() -> void:
 		var alpha := sin(clampf(t, 0.0, 1.0) * PI) * 0.75
 		var start: Vector2 = (g["pos"] as Vector2).floor()
 		var length := float(g["length"])
-		_high.draw_rect(Rect2(start, Vector2(length, 1)), Color(1, 1, 1, alpha))
-		_high.draw_rect(Rect2(start + Vector2(length * 0.3, -2).floor(), Vector2(length * 0.4, 1).floor()), Color(1, 1, 1, alpha * 0.6))
+		var tint: Color = GUST_COLOUR.get(_room.biome if _room else "", Color.WHITE)
+		_high.draw_rect(Rect2(start, Vector2(length, 1)), Color(tint, alpha))
+		_high.draw_rect(Rect2(start + Vector2(length * 0.3, -2).floor(), Vector2(length * 0.4, 1).floor()), Color(tint, alpha * 0.6))
+	for a in ash:
+		var grey := float(a["shade"])
+		var at := (a["pos"] as Vector2).floor()
+		if grey >= 1.0:
+			# A snowflake: white, with a faint blue shadow so it shows on snow.
+			_high.draw_rect(Rect2(at + Vector2(1, 1), Vector2(2, 2)), Color(0.45, 0.55, 0.75, 0.35))
+			_high.draw_rect(Rect2(at, Vector2(2, 2)), Color(1, 1, 1, 0.95))
+		else:
+			_high.draw_rect(Rect2(at, Vector2(2, 2)), Color(grey, grey * 0.95, grey * 0.92, 0.85))
 	for g in gulls:
 		if float(g["wait"]) > 0.0:
 			continue
