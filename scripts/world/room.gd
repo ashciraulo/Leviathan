@@ -393,6 +393,11 @@ func _build() -> void:
 		var sink := SinkField.new()
 		sink.name = "SinkField"
 		add_child(sink)
+	# Dust, embers, snow and the like hanging in a dungeon's air.
+	if DungeonAir.AIR.has(dungeon):
+		var air := DungeonAir.new()
+		air.name = "Air"
+		add_child(air)
 	# Gulls, fish, crabs and the like, on the overworld only.
 	if dungeon == "":
 		var life := Ambience.new()

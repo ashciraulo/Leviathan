@@ -128,6 +128,24 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=air: each dungeon's air (dust, embers, spores, rain, snow,
+	# drips, sand), in its first room.
+	if OS.get_environment("SHOTS_ONLY") == "air":
+		await _room_shots(game, {
+			Vector2i(10, 10): ["air_hull", Vector2i(11, 10)],
+			Vector2i(21, 10): ["air_kiln", Vector2i(11, 10)],
+			Vector2i(25, 10): ["air_mire", Vector2i(11, 10)],
+			Vector2i(28, 10): ["air_gale", Vector2i(11, 11)],
+			Vector2i(32, 10): ["air_glacier", Vector2i(11, 11)],
+			Vector2i(36, 10): ["air_belfry", Vector2i(11, 11)],
+			Vector2i(40, 10): ["air_tomb", Vector2i(11, 10)],
+			Vector2i(44, 10): ["air_maw", Vector2i(11, 10)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=hud_fade: Wren and chests under the HUD's corner panels.
 	if OS.get_environment("SHOTS_ONLY") == "hud_fade":
 		await _room_shots(game, {
