@@ -98,6 +98,8 @@ func _ready() -> void:
 		await _test_edge_survey()
 		await _test_scene_music()
 		await _test_calf_rest()
+		await _test_old_ones_scales()
+		await _test_nettle_signals()
 		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
@@ -7337,6 +7339,107 @@ func _test_edge_survey() -> void:
 	_check(first.call("ferrin") == "FERRIN_DONE_1", "all three in")
 	Conversations.talk("ferrin")
 	_check(GameState.item_count("glint") == glints + 200 and first.call("ferrin") == "FERRIN_AFTER", "Ferrin finishes his map and pays")
+	GameState.reset_new_game()
+
+
+## Loads the room and puts Wren a tile below `tile`, facing up at it.
+func _stand_below(coord: Vector2i, tile: Vector2i) -> Node:
+	GameState.set_checkpoint(coord, Vector2(tile) * 16.0 + Vector2(8, 30))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	return game
+
+
+## Agna's hand-bell: six shed scales, one in each puzzle cave, then Nettle.
+func _test_old_ones_scales() -> void:
+	GameState.reset_new_game()
+	_check(StoryDirector.SHED_SCALES.size() == ShedScale.IDS.size(), "every scale has a spot")
+	for id: String in StoryDirector.SHED_SCALES:
+		var spot: Array = StoryDirector.SHED_SCALES[id]
+		var tile: Vector2i = spot[1]
+		var game: Node = await _stand_below(spot[0], tile)
+		var room: Room = game.current_room
+		_check(room.get_children().any(func(c: Node) -> bool: return c is ShedScale and (c as ShedScale).id == id), "the %s scale lies in room %s" % [id, spot[0]])
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "the %s scale is on dry floor with dry floor below" % id)
+		_check(game.player.try_interact(), "Wren can pick up the %s scale" % id)
+		await _play_scene(game, 10.0)
+		_check(GameState.has_flag(ShedScale.flag_for(id)), "and does")
+		game.queue_free()
+		await _wait(0.1)
+		# Once picked up, it's gone.
+		game = await _stand_below(spot[0], tile)
+		_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is ShedScale), "the %s scale stays picked up" % id)
+		game.queue_free()
+		await _wait(0.1)
+	_check(ShedScale.found() == 6, "all six found")
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in ["met_agna", "tidebell_kiln", "agna_gave_sword", "met_hessa", "nettle_learned"]:
+		GameState.set_flag(flag)
+	_check(first.call("agna") == "AGNA_SMITH", "Agna waits for the Wayshell before asking")
+	GameState.set_flag("seen_wayshell")
+	_check(first.call("agna") == "AGNA_SCALES_1", "then asks for scale")
+	Conversations.talk("agna")
+	for id: String in ShedScale.IDS:
+		_check(first.call("agna") == "AGNA_SCALES_WAITING", "not done before the %s scale" % id)
+		GameState.set_flag(ShedScale.flag_for(id))
+	var glints := GameState.item_count("glint")
+	_check(first.call("agna") == "AGNA_SCALES_DONE_1", "six scales")
+	Conversations.talk("agna")
+	_check(GameState.item_count("glint") == glints + 250 and GameState.has_flag("agna_bell_cast"), "Agna pours the bell and pays")
+	_check(first.call("agna") == "AGNA_BELL_WAITING", "and wants it delivered")
+	var gives_bell := func() -> bool: return Conversations.branch_for("nettle").get("set", []).has("nettle_got_bell")
+	_check(gives_bell.call(), "Wren gives Nettle the bell")
+	Conversations.talk("nettle")
+	_check(first.call("agna") == "AGNA_SMITH" and not gives_bell.call(), "once")
+	GameState.reset_new_game()
+
+
+## Nettle's signals: "I'm here" from three old signal stones.
+func _test_nettle_signals() -> void:
+	GameState.reset_new_game()
+	for id: String in StoryDirector.SIGNAL_STONES:
+		var spot: Array = StoryDirector.SIGNAL_STONES[id]
+		var tile: Vector2i = spot[1]
+		var game: Node = await _stand_below(spot[0], tile)
+		var room: Room = game.current_room
+		_check(room.get_children().any(func(c: Node) -> bool: return c is SignalStone and (c as SignalStone).id == id), "the %s signal stone stands in room %s" % [id, spot[0]])
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "the %s stone is on dry floor with dry floor below" % id)
+		_check(game.player.try_interact(), "Wren can look at the %s stone" % id)
+		await _play_scene(game, 10.0)
+		_check(not GameState.has_flag("signal_stone_" + id), "but can't light it before Nettle asks")
+		game.queue_free()
+		await _wait(0.1)
+	# The first stone plays the signal scene and hands control back.
+	for flag in ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"]:
+		GameState.set_flag(flag)
+	var stacks: Array = StoryDirector.SIGNAL_STONES["stacks"]
+	var game: Node = await _stand_below(stacks[0], stacks[1])
+	_check(game.player.try_interact(), "Wren lights the Stacks stone")
+	await _play_scene(game, 15.0)
+	_check(GameState.has_flag("signal_stone_stacks") and not Cutscene.active and not DialogueBox.is_open, "the light is answered, and the scene ends")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in ["met_hessa", "nettle_learned"]:
+		GameState.set_flag(flag)
+	_check(first.call("nettle") == "NETTLE_AGAIN", "Nettle waits for the Wayshell before asking")
+	GameState.set_flag("seen_wayshell")
+	_check(first.call("nettle") == "NETTLE_SIGNALS_1", "then asks for the signals")
+	Conversations.talk("nettle")
+	for id: String in StoryDirector.SIGNAL_STONES:
+		_check(first.call("nettle") == "NETTLE_SIGNALS_WAITING", "not done before the %s stone" % id)
+		Conversations.talk("signal_stone_" + id)
+		_check(first.call("signal_stone_" + id) == "NARRATE_SIGNAL_LIT", "the %s stone stays lit" % id)
+	var glints := GameState.item_count("glint")
+	Conversations.talk("nettle")
+	_check(GameState.item_count("glint") == glints + 150 and GameState.has_flag("nettle_signals_done"), "Nettle saw all three")
+	GameState.set_flag("nettle_got_bell")
+	_check(first.call("nettle") == "NETTLE_NEARLY", "bell and signals: nearly a keeper")
 	GameState.reset_new_game()
 
 

@@ -129,7 +129,14 @@ const TALKS := {
 		{"if": ["tidebell_hull"], "unless": ["heard_nettle_bell"], "set": ["heard_nettle_bell"], "lines": ["NETTLE_BELL_1", ["", "NARRATE_WREN_FLASH_ONCE"], "NETTLE_BELL_2"]},
 		# The lamp lessons, whenever Wren first stops to talk after meeting Hessa.
 		{"if": ["met_hessa"], "unless": ["nettle_learned"], "set": ["nettle_learned"], "lines": ["NETTLE_LEARN_1", "NETTLE_LEARN_2", ["", "NARRATE_WREN_LONG_GLOW"], "NETTLE_LEARN_3"]},
+		# Agna's hand-bell, cast from the Old One's shed scale.
+		{"if": ["agna_bell_cast"], "unless": ["nettle_got_bell"], "set": ["nettle_got_bell"], "lines": [["", "NARRATE_HAND_BELL"], "NETTLE_GOT_BELL_1", ["", "NARRATE_NETTLE_RINGS"], "NETTLE_GOT_BELL_2"]},
+		# Nettle's signals: "I'm here" from the three old signal stones (SignalStone).
+		{"if": ["nettle_signals_ask", "signal_stone_stacks", "signal_stone_skerry", "signal_stone_brink"], "unless": ["nettle_signals_done"], "set": ["nettle_signals_done"], "give": {"glint": 150}, "lines": ["NETTLE_SIGNALS_DONE_1", "NETTLE_SIGNALS_DONE_2", "NETTLE_SIGNALS_DONE_3", "NETTLE_SIGNALS_DONE_4", ["", "NARRATE_GOT_SIGNAL_FEE"]]},
+		{"if": ["nettle_learned", "seen_wayshell"], "unless": ["nettle_signals_ask"], "set": ["nettle_signals_ask"], "lines": ["NETTLE_SIGNALS_1", "NETTLE_SIGNALS_1B", "NETTLE_SIGNALS_2", "NETTLE_SIGNALS_2B", "NETTLE_SIGNALS_3"]},
+		{"if": ["nettle_signals_ask"], "unless": ["nettle_signals_done"], "lines": ["NETTLE_SIGNALS_WAITING"]},
 		{"if": ["nettle_learned", "seen_ending"], "lines": ["NETTLE_END"]},
+		{"if": ["nettle_got_bell", "nettle_signals_done"], "lines": ["NETTLE_NEARLY"]},
 		{"if": ["nettle_learned", "old_one_turned"], "lines": ["NETTLE_TURNED"]},
 		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
 		{"if": ["nettle_learned"], "lines": ["NETTLE_AGAIN"]},
@@ -142,6 +149,12 @@ const TALKS := {
 		# The last singers: Bram, who stoked the Kiln for the Choir.
 		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
+		# The Old One's scales: six shed pieces from the puzzle caves (ShedScale)
+		# for a hand-bell, which goes to Nettle.
+		{"if": ["agna_scales_ask", "shed_scale_dragline", "shed_scale_rimelight", "shed_scale_emberwell", "shed_scale_drybone", "shed_scale_gustway", "shed_scale_lampless"], "unless": ["agna_bell_cast"], "set": ["agna_bell_cast"], "give": {"glint": 250}, "lines": ["AGNA_SCALES_DONE_1", ["", "NARRATE_AGNA_POURS"], "AGNA_SCALES_DONE_2", "AGNA_SCALES_DONE_3", "AGNA_SCALES_DONE_4", ["", "NARRATE_GOT_SCALE_PURSE"]]},
+		{"if": ["agna_gave_sword", "seen_wayshell"], "unless": ["agna_scales_ask"], "set": ["agna_scales_ask"], "lines": ["AGNA_SCALES_1", "AGNA_SCALES_1B", "AGNA_SCALES_2", "AGNA_SCALES_2B", "AGNA_SCALES_3"]},
+		{"if": ["agna_scales_ask"], "unless": ["agna_bell_cast"], "lines": ["AGNA_SCALES_WAITING"]},
+		{"if": ["agna_bell_cast"], "unless": ["nettle_got_bell"], "lines": ["AGNA_BELL_WAITING"]},
 		{"if": ["agna_gave_sword", "seen_ending"], "lines": ["AGNA_END"]},
 		{"if": ["agna_gave_sword", "old_one_turned"], "lines": ["AGNA_TURNED"]},
 		{"if": ["agna_gave_sword"], "lines": ["AGNA_SMITH"]},
@@ -190,6 +203,8 @@ const TALKS := {
 		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "lines": ["OTTILIE_SIGNAL_WAITING"]},
 		{"if": ["ottilie_paid", "seen_hessa_confession"], "unless": ["ottilie_signal"], "set": ["ottilie_signal"], "lines": ["OTTILIE_SIGNAL_1", "OTTILIE_SIGNAL_1B", "OTTILIE_SIGNAL_2", "OTTILIE_SIGNAL_2B"]},
+		# Ottilie's Knits: once she's paid Wren, she knits jumpers for glints.
+		{"if": ["ottilie_paid"], "unless": ["ottilie_knits_told"], "set": ["ottilie_knits_told"], "lines": ["OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},
 		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
 		{"if": ["ottilie_paid"], "lines": ["OTTILIE_AFTER"]},
 		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"]]},
@@ -334,6 +349,23 @@ const TALKS := {
 		{"if": ["survey_stake_verge"], "lines": ["NARRATE_STAKE_STANDS"]},
 		{"if": ["ferrin_survey_ask"], "set": ["survey_stake_verge"], "lines": ["NARRATE_STAKE_DRIVEN"]},
 		{"lines": ["NARRATE_STAKE_CAIRN"]},
+	],
+	# Nettle's old signal stones on the far headlands (SignalStone). Lighting
+	# one plays a short scene (StoryDirector.signal_from_stone).
+	"signal_stone_stacks": [
+		{"if": ["signal_stone_stacks"], "lines": ["NARRATE_SIGNAL_LIT"]},
+		{"if": ["nettle_signals_ask"], "set": ["signal_stone_stacks"], "lines": ["NARRATE_SIGNAL_LAMP"]},
+		{"lines": ["NARRATE_SIGNAL_STONE"]},
+	],
+	"signal_stone_skerry": [
+		{"if": ["signal_stone_skerry"], "lines": ["NARRATE_SIGNAL_LIT"]},
+		{"if": ["nettle_signals_ask"], "set": ["signal_stone_skerry"], "lines": ["NARRATE_SIGNAL_LAMP"]},
+		{"lines": ["NARRATE_SIGNAL_STONE"]},
+	],
+	"signal_stone_brink": [
+		{"if": ["signal_stone_brink"], "lines": ["NARRATE_SIGNAL_LIT"]},
+		{"if": ["nettle_signals_ask"], "set": ["signal_stone_brink"], "lines": ["NARRATE_SIGNAL_LAMP"]},
+		{"lines": ["NARRATE_SIGNAL_STONE"]},
 	],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur

@@ -1188,3 +1188,57 @@ LIESL_MARKS_1,"A Liesl on the grotto wall, with a little bell beside her?"
 LIESL_MARKS_1B,"We always said Gran drowned at her table, laying it."
 LIESL_MARKS_2,"She didn't. She climbed, and counted, and waited."
 LIESL_MARKS_3,"She lived. That's why there's a me. I'll set her a place tonight."
+AGNA_SCALES_1,"Bell-metal needs scale in it, or it rings flat. The Choir carted all mine off."
+AGNA_SCALES_1B,"But the Old One sheds when it rolls, and the sea shoves the scale up into caves."
+AGNA_SCALES_2,"Six good pieces would do it. Enough for one small bell. My first in thirty years."
+AGNA_SCALES_2B,"Grey, big as your hand, shines like the inside of a shell. You'll know it."
+AGNA_SCALES_3,"Try the caves the sea's been at. The ones nobody goes into on purpose."
+AGNA_SCALES_WAITING,"Six pieces of scale, keeper. Caves the sea's been at. I'll keep the forge hot."
+AGNA_SCALES_DONE_1,"Six! Let's see them. Oh, that's good scale. Older than me, some of it."
+NARRATE_AGNA_POURS,"Agna works the bellows till the forge roars, then pours the bronze in one long breath."
+AGNA_SCALES_DONE_2,"There. A hand-bell, small enough for a child to carry. Which is the idea."
+AGNA_SCALES_DONE_3,"Give it to that little one in Saltmarrow, the one forever flashing lamps at things."
+AGNA_SCALES_DONE_4,"Every keeper needs a bell. And here's something for your trouble."
+NARRATE_GOT_SCALE_PURSE,Wren got 250 Glints.
+AGNA_BELL_WAITING,"Has the little one got that bell yet? Go on. It's no use sitting in your satchel."
+NARRATE_FOUND_SCALE,"A shed scale, grey and big as a hand. It shines like the inside of a shell."
+NARRATE_SCALES_1,Wren tucks it into the satchel. That makes one.
+NARRATE_SCALES_2,Wren tucks it into the satchel. That makes two.
+NARRATE_SCALES_3,Wren tucks it into the satchel. That makes three.
+NARRATE_SCALES_4,Wren tucks it into the satchel. That makes four.
+NARRATE_SCALES_5,Wren tucks it into the satchel. That makes five.
+NARRATE_SCALES_6,Wren tucks it into the satchel. That makes six.
+NARRATE_HAND_BELL,Wren hands Nettle the little bell from Agna's forge.
+NETTLE_GOT_BELL_1,"For me? A real bell? Not a pretend one? From the Kiln?"
+NARRATE_NETTLE_RINGS,"Nettle rings it, very carefully. It's small, but it carries right across the square."
+NETTLE_GOT_BELL_2,"I'll ring it every morning from the end of the dock. So the Old One knows I'm here."
+NETTLE_SIGNALS_1,"Hessa says keepers used to signal from the far headlands, all along the coast."
+NETTLE_SIGNALS_1B,"One flashed 'I'm here', then the next cliff answered, and the next. Like a chain."
+NETTLE_SIGNALS_2,"Nobody's done it since before I was born. Would you? From the old signal stones?"
+NETTLE_SIGNALS_2B,"Hessa says they're on the Stormcrown Stacks, out on the Skerries, and Saltgrave Brink."
+NETTLE_SIGNALS_3,"I'll watch from the dock every night. If I fall asleep, signal louder."
+NETTLE_SIGNALS_WAITING,"The Stacks, the Skerries, and the Brink. I've been watching every night!"
+NETTLE_SIGNALS_DONE_1,"I saw all three! Tiny little stars, way out past the point. Did you see us answer?"
+NETTLE_SIGNALS_DONE_2,"Well. Hessa held me up in the lantern room. My paper lamp's too small to see."
+NETTLE_SIGNALS_DONE_3,"She did the glowing. But I said 'I'm here' with her, every time."
+NETTLE_SIGNALS_DONE_4,"She says this is the old keepers' signal fee. She was laughing, I think."
+NARRATE_GOT_SIGNAL_FEE,Wren got 150 Glints.
+NETTLE_NEARLY,"Bell in one hand, lamp in the other. Hessa says I'm nearly a keeper. Nearly!"
+NARRATE_SIGNAL_STONE,"An old signal stone, worn flat on top. Just the right height for a lamp."
+NARRATE_SIGNAL_LAMP,"Wren sets the lamp on the stone and lets it glow, long and steady. I'm here."
+NARRATE_SIGNAL_ANSWER,"Far off across the water, a small light answers. Long and steady."
+NARRATE_SIGNAL_LIT,"A pale ring on the stone where Wren's lamp stood. Someone saw it."
+OTTILIE_KNITS_1,"That jumper's gone at the elbows, keeper. Hessa never could darn."
+OTTILIE_KNITS_1B,"I've wool, I've dye, and I've long evenings with nothing to fill them."
+OTTILIE_KNITS_2,"Bring me glints for the wool and I'll knit you a new one. Stripes and all."
+OTTILIE_KNITS_THANKS,"There. Wear it in good health. The stripes are the hard part, you know."
+JUMPER_KELP,Kelp Jumper
+JUMPER_KELP_INFO,"Dyed with bladderwrack from the Shore. Smells faintly of low tide."
+JUMPER_EMBER,Ember Jumper
+JUMPER_EMBER_INFO,"Rust-red, like the Kiln's coals. Warm before you've even put it on."
+JUMPER_PLUM,Plum Jumper
+JUMPER_PLUM_INFO,"Dyed with fen-berries. Wick swears it glows a little in the dark."
+JUMPER_FROST,Rimefrost Jumper
+JUMPER_FROST_INFO,"Pale as Still Cove ice. Ottilie knitted it twice as thick."
+JUMPER_STORM,Stormcloud Jumper
+JUMPER_STORM_INFO,"Grey as a squall off the Spire. Ottilie's best work, and she knows it."
