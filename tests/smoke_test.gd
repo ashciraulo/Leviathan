@@ -5,6 +5,8 @@ extends Node
 ## Uses save slot 2 so it never touches a real save.
 
 const TEST_SLOT := 2
+## Key prefixes of text that never reaches the dialogue box (_menu_text).
+const MENU_TEXT_PREFIXES: Array[String] = ["OPT_"]
 
 var _failures := PackedStringArray()
 var _checks := 0
@@ -508,6 +510,15 @@ func _finish_talk(game: Node) -> int:
 	return pages
 
 
+## Strings shown only in menus, the HUD, the title or the credits, never in
+## the dialogue box.
+func _menu_text(key: String) -> bool:
+	for prefix in MENU_TEXT_PREFIXES:
+		if key.begins_with(prefix):
+			return true
+	return false
+
+
 ## Saltmarrow's villagers, their portraits, Marga's rope errand (a chain of
 ## story flags across two people), Pell wandering, and the village sign.
 func _test_villagers() -> void:
@@ -570,6 +581,19 @@ func _test_villagers() -> void:
 	for carving: Array in Tidestone.CARVINGS.values():
 		for key: String in carving:
 			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
+	# And every other string the game has: anything new (a carving line, a
+	# narrated find, a scene) can only reach the box in one piece. Menu and
+	# help text that is never shown there is left out by prefix.
+	var csv := FileAccess.open("res://locale/strings.csv", FileAccess.READ)
+	csv.get_csv_line()
+	var too_long: Array[String] = []
+	while not csv.eof_reached():
+		var row := csv.get_csv_line()
+		if row.size() < 2 or row[0] == "" or _menu_text(row[0]):
+			continue
+		if fit_box.lines_for(row[0], false) > DialogueBox.MAX_LINES:
+			too_long.append(row[0])
+	_check(too_long.is_empty(), "every line the box can show fits it (too long: %s)" % ", ".join(too_long))
 	# Large text: the same box, one big line per page, long pages split.
 	var was_large := Settings.large_text
 	Settings.large_text = true
@@ -4274,12 +4298,13 @@ func _test_audio() -> void:
 	Settings.high_contrast = contrast_was
 	outlined.free()
 	_check(on == Palette.CONTRAST_WREN and off.a == 0.0, "high contrast outlines Wren only when it's on")
+	var shared_loop := (Audio._load(Audio.MUSIC_DIR, "region_saltmarrow") as AudioStreamOggVorbis).loop
 	Audio.play_music("region_saltmarrow")
 	_check(Audio.music_cue == "region_saltmarrow", "music cues switch")
 	var playing: AudioStreamPlayer = Audio._music[Audio._music_index]
 	var track := playing.stream as AudioStreamOggVorbis
 	_check(track != null and track.loop, "region music loops")
-	_check(not (Audio._load(Audio.MUSIC_DIR, "region_saltmarrow") as AudioStreamOggVorbis).loop, "looping doesn't change the shared track")
+	_check((Audio._load(Audio.MUSIC_DIR, "region_saltmarrow") as AudioStreamOggVorbis).loop == shared_loop, "looping doesn't change the shared track")
 	for cue: String in Audio.MUSIC_CUES:
 		if cue.begins_with("region_") or cue.begins_with("dungeon_") or cue.begins_with("bell_") or cue in ["title", "overworld", "boss", "miniboss", "credits", "lullaby"]:
 			_check(Audio._load(Audio.MUSIC_DIR, cue) != null, "%s has a track" % cue)
@@ -4303,6 +4328,11 @@ func _test_audio() -> void:
 	phrase = Audio._phrase.stream as AudioStreamPlaylist
 	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")
 	Audio._phrase.stop()
+	Audio.stop_music(0.01)
+	# The credits play once, as the soundtrack plan has them.
+	Audio.play_music("credits", 0.01)
+	var credits := Audio._music[Audio._music_index].stream as AudioStreamOggVorbis
+	_check(credits != null and not credits.loop, "the credits music plays once")
 	Audio.stop_music(0.01)
 	# Every track the game asks for by name has a file: the flight, and the
 	# last two bosses' own themes.
@@ -4463,6 +4493,11 @@ func _test_credits() -> void:
 	await _wait(0.2)
 	_check(after._vignette_count() == CreditsVignettes.KINDS.size(), "after the ending, the epilogue's scenes come between the names")
 	_check(after._height > plain_height, "and the roll makes room for them")
+	# The credits music plays once, so the roll ends before it does.
+	var music_length: float = Audio._load(Audio.MUSIC_DIR, "credits").get_length()
+	_check((after._height / after._speed <= music_length + 0.05 or after._speed == after.SPEED * after.MAX_SPEED_UP) and after._speed >= after.SPEED,
+		"the roll (%.0f s) ends before the credits music (%.0f s)" % [after._height / after._speed, music_length])
+	print("credits roll %.1f s at %.1f px/s (plain %.1f s); music %.1f s" % [after._height / after._speed, after._speed, plain_height / after.SPEED, music_length])
 	after._leaving = true
 	after.queue_free()
 	await _wait(0.1)

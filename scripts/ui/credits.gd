@@ -5,6 +5,8 @@ extends Control
 const TITLE_SCENE := "res://scenes/title.tscn"
 const SPEED := 14.0
 const FAST := 4.0
+## The most the roll speeds up to end with a short credits track.
+const MAX_SPEED_UP := 2.0
 const LINE := 14.0
 const GAP := 26.0
 const FRAME_SIZE := Vector2(96, 80)
@@ -23,6 +25,8 @@ var _time := 0.0
 var _scroll := 0.0
 var _leaving := false
 var _height := 0.0
+## Pixels a second: SPEED, or quicker if the music is shorter than the roll.
+var _speed := SPEED
 ## The button that chose Credits may still be held: it only speeds the
 ## roll up once it has been let go.
 var _fast_armed := false
@@ -41,6 +45,10 @@ func _ready() -> void:
 		_height += LINE * section.size() + GAP
 	_height += _vignette_count() * (CreditsVignettes.SIZE.y + CreditsVignettes.GAP)
 	_height += 60.0
+	# The credits music plays once: the roll never outlasts it.
+	var music: AudioStream = Audio._load(Audio.MUSIC_DIR, "credits")
+	if music and music.get_length() > 0.0:
+		_speed = clampf(_height / music.get_length(), SPEED, SPEED * MAX_SPEED_UP)
 
 
 func _process(delta: float) -> void:
@@ -49,7 +57,7 @@ func _process(delta: float) -> void:
 	if not fast:
 		_fast_armed = true
 	fast = fast and _fast_armed
-	_scroll += delta * SPEED * (FAST if fast else 1.0)
+	_scroll += delta * _speed * (FAST if fast else 1.0)
 	if _scroll >= _height and not _leaving:
 		_leave()
 	queue_redraw()
