@@ -73,10 +73,10 @@ const TALKS := {
 		# Helm reaches (QuestFind).
 		{"if": ["marlo_pearls_ask", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"], "unless": ["marlo_pearls_done"], "set": ["marlo_pearls_done"], "give": {"glint": 180}, "lines": [["", "NARRATE_HAND_PEARLS"], "MARLO_PEARLS_DONE_1", "MARLO_PEARLS_DONE_2", "MARLO_PEARLS_DONE_3", ["", "NARRATE_GOT_PEARL_PURSE"]]},
 		# All three found before he asked.
-		{"if": ["met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"], "unless": ["marlo_pearls_ask"], "set": ["marlo_pearls_ask", "marlo_pearls_done"], "give": {"glint": 180}, "lines": [["", "NARRATE_HAND_PEARLS"], "MARLO_PEARLS_EARLY", "MARLO_PEARLS_1", "MARLO_PEARLS_EARLY_2", "MARLO_PEARLS_DONE_3", ["", "NARRATE_GOT_PEARL_PURSE"]]},
+		{"if": ["met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"], "unless": ["marlo_pearls_ask"], "set": ["marlo_pearls_ask", "marlo_pearls_done"], "give": {"glint": 180}, "lines": [["", "NARRATE_HAND_PEARLS"], "MARLO_PEARLS_EARLY", "MARLO_PEARLS_EARLY_2", "MARLO_PEARLS_DONE_1", "MARLO_PEARLS_DONE_2", "MARLO_PEARLS_DONE_3", ["", "NARRATE_GOT_PEARL_PURSE"]]},
+		{"if": ["met_marlo", "tidebell_hull"], "unless": ["marlo_puffers", "seen_ending"], "set": ["marlo_puffers"], "lines": ["MARLO_PUFFERS_1", "MARLO_PUFFERS_2"]},
 		{"if": ["met_marlo"], "has": ["divers_helm"], "unless": ["marlo_pearls_ask"], "set": ["marlo_pearls_ask"], "lines": ["MARLO_PEARLS_1", "MARLO_PEARLS_1B", "MARLO_PEARLS_2", "MARLO_PEARLS_2B"]},
 		{"if": ["marlo_pearls_done"], "unless": ["marlo_pearls_after"], "set": ["marlo_pearls_after"], "lines": ["MARLO_PEARLS_AFTER"]},
-		{"if": ["met_marlo", "tidebell_hull"], "unless": ["marlo_puffers", "seen_ending"], "set": ["marlo_puffers"], "lines": ["MARLO_PUFFERS_1", "MARLO_PUFFERS_2"]},
 		{"if": ["marlo_pearls_ask"], "unless": ["marlo_pearls_done"], "lines": ["MARLO_PEARLS_WAITING"]},
 		{"if": ["seen_ending"], "lines": ["MARLO_END"]},
 		{"if": ["met_marlo"], "lines": ["MARLO_AGAIN"]},
@@ -422,9 +422,9 @@ const TALKS := {
 	"find_chime_pass": [{"set": ["found_chime_pass"], "lines": ["NARRATE_FOUND_CHIME"]}],
 	"find_chime_fen": [{"set": ["found_chime_fen"], "lines": ["NARRATE_FOUND_CHIME"]}],
 	"find_chime_wood": [{"set": ["found_chime_wood"], "lines": ["NARRATE_FOUND_CHIME"]}],
-	"find_pearl_verge": [{"set": ["found_pearl_verge"], "lines": ["NARRATE_FOUND_PEARL"]}],
-	"find_pearl_tangle": [{"set": ["found_pearl_tangle"], "lines": ["NARRATE_FOUND_PEARL"]}],
-	"find_pearl_deep": [{"set": ["found_pearl_deep"], "lines": ["NARRATE_FOUND_PEARL"]}],
+	"find_pearl_verge": [{"set": ["found_pearl_verge"], "lines": ["NARRATE_FOUND_OYSTER"]}],
+	"find_pearl_tangle": [{"set": ["found_pearl_tangle"], "lines": ["NARRATE_FOUND_OYSTER"]}],
+	"find_pearl_deep": [{"set": ["found_pearl_deep"], "lines": ["NARRATE_FOUND_OYSTER"]}],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
