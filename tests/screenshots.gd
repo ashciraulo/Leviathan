@@ -1975,18 +1975,18 @@ func _far_story_shots() -> void:
 		await _wait(0.1)
 	game.queue_free()
 	await _wait(0.2)
-	# Previews: Ferrin and the skull, stood in rooms that exist today.
-	for shot in [["far_2_ferrin_preview", Vector2i(4, -4), "ferrin"], ["far_3_calf_preview", StoryDirector.FENMOUTH, "calf"]]:
+	# Ferrin on Edgewatch Bluff, and his stake driven in on the Frostspine.
+	var stake: Array = StoryDirector.SURVEY_STAKES["frost"]
+	for shot in [["far_2_ferrin", StoryDirector.FERRIN_ROOM, Vector2(StoryDirector.FERRIN_AT) + Vector2(0, 20), []], ["far_4_frost_stake", stake[0], Vector2(stake[1]) * 16.0 + Vector2(8, 30), ["ferrin_survey_ask"]]]:
 		GameState.reset_new_game()
-		GameState.set_checkpoint(shot[1], Vector2(12 * 16 + 8, 8 * 16 + 14))
+		for flag: String in shot[3]:
+			GameState.set_flag(flag)
+		GameState.set_checkpoint(shot[1], shot[2])
 		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 		add_child(game)
 		await _wait(0.2)
 		for enemy in get_tree().get_nodes_in_group("enemies"):
 			enemy.queue_free()
-		var thing: Node2D = Npc.new("ferrin") if shot[2] == "ferrin" else CalfSkull.new()
-		thing.position = Vector2(12 * 16 + 8, 7 * 16 + 10)
-		game.current_room.add_child(thing)
 		await _wait(2.8)
 		game.player.facing = Vector2.UP
 		await _wait(0.05)

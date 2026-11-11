@@ -25,6 +25,8 @@ static var fast := false
 
 var game: Node
 var _veil: ColorRect
+## Set by music(): the room's music is put back at the end.
+var _scored := false
 var _veil_text: Label
 
 
@@ -67,7 +69,16 @@ func begin() -> void:
 		player._hum_latched = false
 
 
+## Scores the scene with a story cue (Audio.MUSIC_CUES). When the scene
+## finishes, the room's own music comes back.
+func music(cue: String) -> void:
+	Audio.play_music(cue, 1.2)
+	_scored = true
+
+
 func finish() -> void:
+	if _scored and game and game.has_method("_play_room_music"):
+		game._play_room_music()
 	var player := _player()
 	if player:
 		player.in_cutscene = false
