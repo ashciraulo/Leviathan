@@ -681,6 +681,7 @@ def build_props():
         "journal_ice": sheet([[lit(npc_art.journal_ice(), 3)]], 16, 20),
         "rowboat": sheet([[lit(npc_art.rowboat(), 5)]], 36, 16),
         "figurehead": sheet([[lit(npc_art.figurehead(), 6)]], 24, 40),
+        "calf_skull": sheet([[lit(npc_art.calf_skull(), 22)]], 40, 28),
         "barrel": sheet([[lit(BARREL, 12)]], 16, 14),
         "fence": sheet([[lit(FENCE, 13)]], 16, 14),
         "sign": sheet([[lit(SIGN, 14)]], 16, 14),

@@ -57,6 +57,7 @@ const SPEAKERS := {
 	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
 	"coralie": ["NAME_CORALIE", Art.PORTRAIT_CORALIE],
 	"bram": ["NAME_BRAM", Art.PORTRAIT_BRAM],
+	"ferrin": ["NAME_FERRIN", Art.PORTRAIT_FERRIN],
 	"sela": ["NAME_SELA", Art.PORTRAIT_SELA],
 	"pim": ["NAME_PIM", Art.PORTRAIT_PIM],
 	"ansel": ["NAME_ANSEL", Art.PORTRAIT_ANSEL],
@@ -168,6 +169,8 @@ const TALKS := {
 	"liesl": [
 		{"if": ["sorrel_letters", "liesl_asked"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
 		{"if": ["wick_murmur_ask", "liesl_asked"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
+		# The Ebb Grotto's flood marks: a Liesl, three hundred years back.
+		{"if": ["read_grotto_marks", "liesl_asked"], "unless": ["liesl_heard_marks"], "set": ["liesl_heard_marks"], "lines": ["LIESL_MARKS_1", "LIESL_MARKS_1B", "LIESL_MARKS_2", "LIESL_MARKS_3"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
 		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
@@ -230,6 +233,9 @@ const TALKS := {
 		{"unless": ["murmur_met"], "set": ["murmur_met"], "lines": ["MURMUR_FEN_1", "MURMUR_FEN_2", "MURMUR_FEN_3"]},
 		# The Reed family's lantern, lit at last (Wick, Liesl and Wren).
 		{"if": ["murmur_lantern_lit"], "unless": ["murmur_saw_lantern"], "set": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_1", "MURMUR_LANTERN_2", "MURMUR_LANTERN_3"]},
+		# The Calf's Rest: Wren has found the little skull in the far fen.
+		{"if": ["found_calf_rest", "seen_ending"], "unless": ["murmur_left_robe"], "set": ["murmur_left_robe"], "lines": ["MURMUR_REST_1", "MURMUR_REST_2", "MURMUR_REST_3"]},
+		{"if": ["found_calf_rest"], "unless": ["seen_ending", "murmur_heard_rest"], "set": ["murmur_heard_rest"], "lines": ["MURMUR_REST_EARLY"]},
 		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
 		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
@@ -303,6 +309,44 @@ const TALKS := {
 		{"if": ["found_wren_cap"], "lines": ["GULLY_EBB_AFTER"]},
 		{"if": ["gully_ebb_told"], "lines": ["GULLY_EBB_AGAIN"]},
 		{"set": ["gully_ebb_told"], "lines": ["GULLY_EBB_1", "GULLY_EBB_2", "GULLY_EBB_3", "GULLY_EBB_4"]},
+	],
+	# Ferrin the mapmaker, camped at the far north edge of Windmere: the
+	# Edge Survey. He gives Wren three stakes to drive in where the land
+	# gives out (SurveyStake), and finishes his map when all three are in.
+	"ferrin": [
+		{"if": ["ferrin_map_done"], "lines": ["FERRIN_AFTER"]},
+		{"if": ["ferrin_survey_ask", "survey_stake_frost", "survey_stake_cinder", "survey_stake_verge"], "set": ["ferrin_map_done"], "give": {"glint": 200}, "lines": ["FERRIN_DONE_1", ["", "NARRATE_FERRIN_MAP"], "FERRIN_DONE_2", "FERRIN_DONE_3", ["", "NARRATE_GOT_SURVEY_PURSE"]]},
+		{"if": ["ferrin_survey_ask"], "lines": ["FERRIN_WAITING"]},
+		{"set": ["ferrin_survey_ask"], "lines": ["FERRIN_1", "FERRIN_1B", "FERRIN_2", "FERRIN_2B", "FERRIN_3", ["", "NARRATE_GOT_STAKES"]]},
+	],
+	# The three survey stakes (SurveyStake), one per far reach.
+	"survey_stake_frost": [
+		{"if": ["survey_stake_frost"], "lines": ["NARRATE_STAKE_STANDS"]},
+		{"if": ["ferrin_survey_ask"], "set": ["survey_stake_frost"], "lines": ["NARRATE_STAKE_DRIVEN"]},
+		{"lines": ["NARRATE_STAKE_CAIRN"]},
+	],
+	"survey_stake_cinder": [
+		{"if": ["survey_stake_cinder"], "lines": ["NARRATE_STAKE_STANDS"]},
+		{"if": ["ferrin_survey_ask"], "set": ["survey_stake_cinder"], "lines": ["NARRATE_STAKE_DRIVEN"]},
+		{"lines": ["NARRATE_STAKE_CAIRN"]},
+	],
+	"survey_stake_verge": [
+		{"if": ["survey_stake_verge"], "lines": ["NARRATE_STAKE_STANDS"]},
+		{"if": ["ferrin_survey_ask"], "set": ["survey_stake_verge"], "lines": ["NARRATE_STAKE_DRIVEN"]},
+		{"lines": ["NARRATE_STAKE_CAIRN"]},
+	],
+	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
+	# calf, whose dreams the fen-lights carry. After the ending, Murmur
+	# leaves the grey robe there.
+	"calf_skull": [
+		{"if": ["murmur_left_robe"], "lines": ["NARRATE_CALF_ROBE"]},
+		{"if": ["found_calf_rest"], "lines": ["NARRATE_CALF_AGAIN"]},
+		{"set": ["found_calf_rest"], "lines": ["NARRATE_CALF_1", "NARRATE_CALF_2", "NARRATE_CALF_3"]},
+	],
+	# The flood marks in the Ebb Grotto (GrottoMarks).
+	"grotto_marks": [
+		{"if": ["read_grotto_marks"], "lines": ["NARRATE_GROTTO_AGAIN"]},
+		{"set": ["read_grotto_marks"], "lines": ["NARRATE_GROTTO_1", "NARRATE_GROTTO_2", "NARRATE_GROTTO_3"]},
 	],
 	"lantern_boat": [
 		{"if": ["found_wren_cap"], "lines": ["NARRATE_LANTERN_BOAT_EMPTY"]},

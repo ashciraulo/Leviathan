@@ -91,6 +91,9 @@ func _ready() -> void:
 		_test_hessa_hints()
 		_test_keepers_round()
 		await _test_last_singers()
+		_test_edge_survey()
+		_test_calf_rest()
+		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
 		_test_late_reactions()
@@ -5167,7 +5170,7 @@ func _test_thin_region_screens() -> void:
 ## step to its pattern, that stays beaten.
 func _test_elites() -> void:
 	GameState.reset_new_game()
-	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle", Vector2i(6, 1): "Bogskipper", Vector2i(4, -4): "Galehawk"}
+	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle", Vector2i(6, 1): "Bogskipper", Vector2i(4, -4): "Galehawk", Vector2i(2, -2): "Sledgeseal", Vector2i(1, 3): "Siltray", Vector2i(8, 0): "Dunejaw"}
 	for coord: Vector2i in cases:
 		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
 		room.coord = coord
@@ -5179,7 +5182,10 @@ func _test_elites() -> void:
 			room.queue_free()
 			continue
 		var boss: Enemy = elites[0]
-		_check(boss.max_hp == 2 * Enemy.ELITE_HP and boss.scale.x > 1.2, "the elite is bigger and three times as hardy")
+		# max_hp is set in _init, so a fresh, unready one has its plain toughness.
+		var plain := (boss.get_script() as Script).new() as Enemy
+		_check(boss.max_hp == plain.max_hp * Enemy.ELITE_HP and boss.scale.x > 1.2, "the elite is bigger and three times as hardy")
+		plain.free()
 		boss.ai_enabled = false
 		if boss is Scuttler:
 			var crab := boss as Scuttler
@@ -5232,6 +5238,52 @@ func _test_elites() -> void:
 			hawk._think(0.016)
 			_check(hawk.mode == Galehawk.Mode.PERCH and hawk._timer > 1.0, "and its second perch is the full one")
 			hawk.ai_enabled = false
+		elif boss is Sledgeseal:
+			var seal := boss as Sledgeseal
+			var wren := Player.new()
+			wren.set_physics_process(false)
+			room.add_child(wren)
+			wren.position = seal.position + Vector2(0, 2 * Room.TILE)
+			seal.mode = Sledgeseal.Mode.SLIDE
+			seal._direction = Vector2.LEFT
+			seal._timer = 1.0
+			seal._think(0.016)
+			_check(seal.mode == Sledgeseal.Mode.REAR and seal._direction == Vector2.DOWN and seal._turned, "the elite seal turns mid-slide toward Wren")
+			seal.mode = Sledgeseal.Mode.SLIDE
+			seal._direction = Vector2.LEFT
+			seal._think(0.016)
+			_check(seal.mode == Sledgeseal.Mode.SLIDE, "but only once a slide")
+			seal.mode = Sledgeseal.Mode.IDLE
+			wren.free()
+		elif boss is Siltray:
+			var ray := boss as Siltray
+			ray._set_mode(Siltray.Mode.LEAP)
+			_check(is_equal_approx(ray._timer, Siltray.LEAP_TIME * Siltray.ELITE_REACH), "the elite ray leaps further")
+			ray._set_mode(Siltray.Mode.STRANDED)
+		elif boss is Dunejaw:
+			var jaw := boss as Dunejaw
+			var wren := Player.new()
+			wren.set_physics_process(false)
+			room.add_child(wren)
+			wren.position = jaw.position
+			jaw._set_mode(Dunejaw.Mode.BITE)
+			jaw._timer = 0.0
+			jaw._think(0.016)
+			_check(jaw.mode == Dunejaw.Mode.BURROW and jaw._rebite, "the elite dunejaw dives straight back after its first bite")
+			jaw._think(0.016)
+			_check(jaw.mode == Dunejaw.Mode.SPOUT and jaw._timer <= Dunejaw.RESPOUT_TIME, "and spouts again, quicker")
+			jaw._set_mode(Dunejaw.Mode.BITE)
+			jaw._timer = 0.0
+			jaw._think(0.016)
+			_check(jaw.mode == Dunejaw.Mode.EXPOSED, "then lies out after the second")
+			# Outrun on the second hunt, it gives up and rests before hunting again.
+			jaw._set_mode(Dunejaw.Mode.BURROW)
+			jaw._rebite = true
+			jaw._timer = -Dunejaw.HUNT_GIVE_UP - 0.1
+			wren.position = jaw.position + Vector2(120, 0)
+			jaw._think(0.016)
+			_check(not jaw._rebite and jaw._timer > 0.0 and jaw.velocity == Vector2.ZERO, "an outrun elite dunejaw gives up and rests")
+			wren.free()
 		for i in 12:
 			if not boss.dying:
 				if boss is Slagbeetle:
@@ -5240,6 +5292,10 @@ func _test_elites() -> void:
 					(boss as Bogskipper).mode = Bogskipper.Mode.HOP
 				elif boss is Galehawk:
 					(boss as Galehawk).mode = Galehawk.Mode.PERCH
+				elif boss is Dunejaw:
+					(boss as Dunejaw)._set_mode(Dunejaw.Mode.EXPOSED)
+				elif boss is Siltray:
+					(boss as Siltray)._set_mode(Siltray.Mode.STRANDED)
 				boss.take_hit(1, Vector2.RIGHT)
 		await _wait(0.4)
 		_check(GameState.has_flag(Room.elite_flag(coord)), "the fallen elite stays beaten")
@@ -6884,6 +6940,78 @@ func _test_last_singers() -> void:
 	_check(_find_kind(cold.current_room, "sela") == null, "Sela's spot is empty once she's home")
 	cold.queue_free()
 	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## Ferrin the mapmaker gives Wren three survey stakes for the far reaches,
+## and finishes his map when all three are driven in.
+func _test_edge_survey() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	_check(first.call("survey_stake_frost") == "NARRATE_STAKE_CAIRN", "before Ferrin asks, a stake spot is only a cairn")
+	Conversations.talk("survey_stake_frost")
+	_check(not GameState.has_flag("survey_stake_frost"), "and Wren can't drive a stake they don't have")
+	_check(first.call("ferrin") == "FERRIN_1", "Ferrin introduces himself")
+	Conversations.talk("ferrin")
+	_check(first.call("ferrin") == "FERRIN_WAITING", "and waits on the stakes")
+	for id in ["frost", "cinder", "verge"]:
+		_check(first.call("ferrin") == "FERRIN_WAITING", "not done before the %s stake" % id)
+		Conversations.talk("survey_stake_" + id)
+		_check(GameState.has_flag("survey_stake_" + id) and first.call("survey_stake_" + id) == "NARRATE_STAKE_STANDS", "the %s stake goes in, and stays" % id)
+	var glints := GameState.item_count("glint")
+	_check(first.call("ferrin") == "FERRIN_DONE_1", "all three in")
+	Conversations.talk("ferrin")
+	_check(GameState.item_count("glint") == glints + 200 and first.call("ferrin") == "FERRIN_AFTER", "Ferrin finishes his map and pays")
+	GameState.reset_new_game()
+
+
+## The Ebb Grotto's flood marks, and what they tell Liesl.
+func _test_grotto_marks() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var at := StoryDirector.GROTTO_MARKS_AT + Vector2(0, 16)
+	GameState.set_checkpoint(StoryDirector.EBB_GROTTO, at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tile := Vector2i(StoryDirector.GROTTO_MARKS_AT / Room.TILE)
+	_check(room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y - 1) == "#" and room.tile_at(tile.x, tile.y + 1) == ".", "the marks are on the wall, over dry floor")
+	game.player.global_position = room.global_position + at
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	_check(game.player.try_interact(), "Wren can read them")
+	await _play_scene(game, 10.0)
+	_check(GameState.has_flag("read_grotto_marks"), "and does")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag("liesl_asked")
+	_check(first.call("liesl") == "LIESL_MARKS_1", "Liesl hears of the marks")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_WAITING", "once")
+	GameState.reset_new_game()
+
+
+## The Calf's Rest: the little skull in the far fen, and Murmur's robe.
+func _test_calf_rest() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	GameState.set_flag("murmur_met")
+	_check(first.call("calf_skull") == "NARRATE_CALF_1", "Wren finds the calf's skull")
+	Conversations.talk("calf_skull")
+	_check(first.call("calf_skull") == "NARRATE_CALF_AGAIN", "once")
+	_check(first.call("murmur") == "MURMUR_REST_EARLY", "Murmur asks Wren to keep it quiet")
+	Conversations.talk("murmur")
+	_check(first.call("murmur") != "MURMUR_REST_EARLY", "once")
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	_check(first.call("murmur") == "MURMUR_REST_1", "after the ending, Murmur takes the robe out there")
+	Conversations.talk("murmur")
+	_check(first.call("calf_skull") == "NARRATE_CALF_ROBE" and first.call("murmur") == "MURMUR_END", "and it lies folded on the skull")
+	var skull := CalfSkull.new()
+	add_child(skull)
+	skull._process(0.0)
+	_check(skull._robe.visible, "where Wren can see it")
+	skull.queue_free()
 	GameState.reset_new_game()
 
 

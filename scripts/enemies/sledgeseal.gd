@@ -5,6 +5,10 @@ extends Enemy
 ## and toboggans straight at them, sliding on until it hits something. On
 ## its belly it can't turn: step aside and strike its flank as it passes or
 ## while it lies winded against the wall.
+##
+## An elite (Room.elite) can turn once: if Wren steps aside into a new line
+## mid-slide, it digs a flipper in with a lower bark, rears for a blink and
+## slides off at them on the new line.
 
 enum Mode { IDLE, REAR, SLIDE, WINDED }
 
@@ -17,11 +21,15 @@ const SLIDE_MAX := 2.0
 const WINDED_TIME := 1.2
 ## How close to the room's edge a slide may run before the seal pulls up.
 const EDGE := 12.0
+## How long an elite rears when it turns mid-slide.
+const TURN_REAR := 0.25
 
 var mode := Mode.IDLE
 var _timer := 0.0
 var _direction := Vector2.ZERO
 var _wander := Vector2.ZERO
+## An elite has used its one turn this slide.
+var _turned := false
 
 
 func _init() -> void:
@@ -53,6 +61,18 @@ func _think(delta: float) -> void:
 				_timer = SLIDE_MAX
 		Mode.SLIDE:
 			velocity = _direction * SLIDE_SPEED
+			if elite and not _turned:
+				var turn := _lined_up(get_player())
+				if turn != Vector2.ZERO and absf(turn.dot(_direction)) < 0.5:
+					_turned = true
+					mode = Mode.REAR
+					_timer = TURN_REAR
+					_direction = turn
+					velocity = Vector2.ZERO
+					if turn.x != 0.0:
+						_sprite.flip_h = turn.x < 0.0
+					Audio.play_sfx("seal_bark", global_position, 0.8)
+					return
 			# Room exits have no walls: pull up at the edge rather than
 			# sliding off the screen.
 			var ahead := position + _direction * (SLIDE_SPEED * delta + body_size.x / 2.0)
@@ -60,6 +80,7 @@ func _think(delta: float) -> void:
 				mode = Mode.WINDED
 				_timer = WINDED_TIME
 				velocity = Vector2.ZERO
+				_turned = false
 		Mode.WINDED:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:

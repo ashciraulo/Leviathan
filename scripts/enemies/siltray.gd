@@ -6,6 +6,9 @@ extends Enemy
 ## edge the fin rears and foams (the tell) and it flings itself at them.
 ## It lands on whatever is there: on dry ground or bare sand it's
 ## stranded, flopping and open to the sword, until the water reaches it.
+##
+## An elite (Room.elite) flings itself from twice as far and flies further:
+## its fin foams for the same moment, so the tell is the warning.
 
 enum Mode { SWIM, REAR, LEAP, STRANDED }
 
@@ -16,6 +19,8 @@ const REAR_TIME := 0.55
 const LEAP_SPEED := 150.0
 const LEAP_TIME := 0.32
 const STRAND_MIN := 1.4
+## An elite's reach and leap are this much longer.
+const ELITE_REACH := 2.0
 
 var mode := Mode.SWIM
 var _timer := 0.0
@@ -53,7 +58,7 @@ func _set_mode(next: Mode) -> void:
 		Mode.REAR:
 			_timer = REAR_TIME
 		Mode.LEAP:
-			_timer = LEAP_TIME
+			_timer = LEAP_TIME * (ELITE_REACH if elite else 1.0)
 		Mode.STRANDED:
 			_timer = STRAND_MIN
 
@@ -70,7 +75,7 @@ func _think(delta: float) -> void:
 			if player == null:
 				return
 			var to := player.global_position - global_position
-			if to.length() < REACH and _room_has(player):
+			if to.length() < REACH * (ELITE_REACH if elite else 1.0) and _room_has(player):
 				_direction = to.normalized()
 				velocity = Vector2.ZERO
 				_set_mode(Mode.REAR)

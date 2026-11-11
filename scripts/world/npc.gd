@@ -59,6 +59,7 @@ const KINDS := {
 	"coralie": {"texture": Art.VILLAGER_CORALIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# The last singers of the Choir, alone in four regions after the ending,
 	# and Bram at Agna's forge once he's home (StoryDirector).
+	"ferrin": {"texture": Art.VILLAGER_FERRIN, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	"bram": {"texture": Art.VILLAGER_BRAM, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	"sela": {"texture": Art.VILLAGER_SELA, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	"pim": {"texture": Art.VILLAGER_PIM, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
