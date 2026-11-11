@@ -380,9 +380,9 @@ const TALKS := {
 	# hauled in with the Tide Hook).
 	"gully": [
 		# The Lantern Wake's three ship's lanterns (QuestFind), hung back on her.
-		{"if": ["gully_lanterns_ask", "found_lantern_verge", "found_lantern_dunes", "found_lantern_cove"], "unless": ["gully_lanterns_done"], "set": ["gully_lanterns_done"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_LANTERNS"], "GULLY_LANTERNS_DONE_1", ["", "NARRATE_GULLY_HANGS"], "GULLY_LANTERNS_DONE_2", ["", "NARRATE_GOT_LANTERN_PURSE"]]},
+		{"if": ["gully_lanterns_ask", "found_lantern_tidewrack", "found_lantern_dunes", "found_lantern_cove"], "unless": ["gully_lanterns_done"], "set": ["gully_lanterns_done"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_LANTERNS"], "GULLY_LANTERNS_DONE_1", ["", "NARRATE_GULLY_HANGS"], "GULLY_LANTERNS_DONE_2", ["", "NARRATE_GOT_LANTERN_PURSE"]]},
 		# All three found before he asked.
-		{"if": ["gully_paid", "found_lantern_verge", "found_lantern_dunes", "found_lantern_cove"], "unless": ["gully_lanterns_ask"], "set": ["gully_lanterns_ask", "gully_lanterns_done"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_LANTERNS"], "GULLY_LANTERNS_EARLY", "GULLY_LANTERNS_2", ["", "NARRATE_GULLY_HANGS"], "GULLY_LANTERNS_DONE_2", ["", "NARRATE_GOT_LANTERN_PURSE"]]},
+		{"if": ["gully_paid", "found_lantern_tidewrack", "found_lantern_dunes", "found_lantern_cove"], "unless": ["gully_lanterns_ask"], "set": ["gully_lanterns_ask", "gully_lanterns_done"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_LANTERNS"], "GULLY_LANTERNS_EARLY", "GULLY_LANTERNS_2", ["", "NARRATE_GULLY_HANGS"], "GULLY_LANTERNS_DONE_2", ["", "NARRATE_GOT_LANTERN_PURSE"]]},
 		{"if": ["gully_paid", "seen_wayshell"], "unless": ["gully_lanterns_ask"], "set": ["gully_lanterns_ask"], "lines": ["GULLY_LANTERNS_1", "GULLY_LANTERNS_1B", "GULLY_LANTERNS_2"]},
 		{"if": ["gully_lanterns_ask"], "unless": ["gully_lanterns_done"], "lines": ["GULLY_LANTERNS_WAITING"]},
 		{"if": ["gully_lanterns_done"], "unless": ["gully_lanterns_after"], "set": ["gully_lanterns_after"], "lines": ["GULLY_LANTERNS_AFTER"]},
@@ -458,7 +458,7 @@ const TALKS := {
 	"find_pearl_verge": [{"set": ["found_pearl_verge"], "lines": ["NARRATE_FOUND_OYSTER"]}],
 	"find_pearl_tangle": [{"set": ["found_pearl_tangle"], "lines": ["NARRATE_FOUND_OYSTER"]}],
 	"find_pearl_deep": [{"set": ["found_pearl_deep"], "lines": ["NARRATE_FOUND_OYSTER"]}],
-	"find_lantern_verge": [{"set": ["found_lantern_verge"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
+	"find_lantern_tidewrack": [{"set": ["found_lantern_tidewrack"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
 	"find_lantern_dunes": [{"set": ["found_lantern_dunes"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
 	"find_lantern_cove": [{"set": ["found_lantern_cove"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
 	"find_seed_frost": [{"set": ["found_seed_frost"], "lines": ["NARRATE_FOUND_SEED_FROST"]}],

@@ -180,7 +180,7 @@ const FINDS := {
 	"pearl_verge": [Vector2i(1, 5), Vector2i(20, 5)],
 	"pearl_deep": [Vector2i(6, -5), Vector2i(10, 8)],
 	# Gully's errand: the Lantern Wake's three ship's lanterns.
-	"lantern_verge": [Vector2i(-1, 3), Vector2i(3, 3)],
+	"lantern_tidewrack": [Vector2i(-1, 3), Vector2i(3, 3)],
 	"lantern_dunes": [Vector2i(7, 0), Vector2i(3, 2)],
 	"lantern_cove": [Vector2i(0, -2), Vector2i(20, 7)],
 	# Lowe's errand: three stubborn plants for a garden at Lullaby Point.

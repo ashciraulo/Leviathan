@@ -7724,7 +7724,7 @@ func _test_small_finds() -> void:
 		GameState.set_flag(flag)
 	_check(first.call("gully") == "GULLY_LANTERNS_1", "Gully asks after the Lantern Wake's lanterns")
 	Conversations.talk("gully")
-	for id in ["lantern_verge", "lantern_dunes"]:
+	for id in ["lantern_tidewrack", "lantern_dunes"]:
 		GameState.set_flag(QuestFind.flag_for(id))
 	_check(first.call("gully") == "GULLY_LANTERNS_WAITING", "two lanterns aren't three")
 	GameState.set_flag(QuestFind.flag_for("lantern_cove"))
@@ -7770,7 +7770,7 @@ func _test_small_finds() -> void:
 	_check(first.call("ide") == "IDE_BOARD_1", "after the ending Ide still asks after her nameboard")
 	# Found before anyone asked: the hand-in comes straight away.
 	GameState.reset_new_game()
-	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "tidebell_belfry", "met_ide_ferry", "found_nameboard", "met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep", "gully_paid", "found_lantern_verge", "found_lantern_dunes", "found_lantern_cove", "lowe_spoke", "lowe_singers_done", "found_seed_frost", "found_seed_ember", "found_seed_fen"]:
+	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "tidebell_belfry", "met_ide_ferry", "found_nameboard", "met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep", "gully_paid", "found_lantern_tidewrack", "found_lantern_dunes", "found_lantern_cove", "lowe_spoke", "lowe_singers_done", "found_seed_frost", "found_seed_ember", "found_seed_fen"]:
 		GameState.set_flag(flag)
 	for who in ["corrin", "dunstan", "bram", "ide", "marlo", "gully", "lowe"]:
 		Conversations.talk(who)

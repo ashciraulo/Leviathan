@@ -101,11 +101,11 @@ func _draw() -> void:
 		draw_line(Vector2(-3, -2), Vector2(3, -2), Palette.OUTLINE)
 		draw_rect(Rect2(-1, -4, 2, 2), PEARL)
 	elif id.begins_with("lantern"):
-		# A ship's lantern on its side: brass cage, green glass.
+		# An upright ship's lantern: brass cage, green glass, handle on top.
 		draw_rect(Rect2(-5, -10, 10, 10), Palette.OUTLINE)
 		draw_rect(Rect2(-4, -9, 8, 8), BRASS)
 		draw_rect(Rect2(-3, -8, 6, 6), LANTERN_GLASS)
-		draw_rect(Rect2(-1, -8, 1, 6), BRASS)
+		draw_rect(Rect2(-1, -8, 2, 6), BRASS)
 		draw_rect(Rect2(-2, -12, 4, 2), Palette.OUTLINE)
 	elif id == "seed_frost":
 		# A blue frost thistle.
