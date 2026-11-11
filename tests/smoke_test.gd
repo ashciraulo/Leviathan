@@ -62,6 +62,7 @@ func _ready() -> void:
 		await _test_thin_region_screens()
 		await _test_elites()
 		await _test_far_reaches()
+		await _test_puzzle_caves()
 		await _test_every_checkpoint()
 		await _test_overworld_entrances()
 		await _test_ambience()
@@ -7509,3 +7510,69 @@ func _test_area_stats() -> void:
 	await _wait(0.1)
 	SaveManager.delete_save()
 
+
+## One short trial cave per region: a single puzzle and a glint cache.
+func _test_puzzle_caves() -> void:
+	# Dragline Cellar, west of the Shore: cracked boulders, then a crate stuck
+	# at the end of a one-wide alcove. Only the hook drags it out.
+	var shore := Room.parse_layout(((load("res://rooms/room_0_0.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(shore[6][0] == "." and shore[7][0] == ".", "the Shore opens west to Dragline Cellar")
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(Vector2i(-1, 0), Vector2(4 * Room.TILE + 8, 6 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var player: Player = game.player
+	player._invuln = 60.0
+	var hole: Room = game.current_room
+	var crates := _child_of(hole, Crate)
+	var plates := _child_of(hole, PressurePlate)
+	var bars := _child_of(hole, Bars)
+	_check(hole.cave and hole.gate == "plates" and crates.size() == 2 and plates.size() == 2 and bars.size() == 1 and not bars[0].is_open, "Dragline Cellar: two crates, two plates and a barred cache")
+	_check(hole.tile_at(20, 6) == "Y" and hole.tile_at(20, 7) == "Y", "cracked boulders hold the way in")
+	var stuck: Crate = crates[0] if (crates[0] as Crate).position.y > (crates[1] as Crate).position.y else crates[1]
+	player.global_position = _tile_pos(hole, Vector2i(18, 6))
+	player.facing = Vector2.DOWN
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(2.0)
+	var crate_tile := Vector2i(int(stuck.position.x) / Room.TILE, int(stuck.position.y) / Room.TILE)
+	_check(crate_tile.y <= 8 and crate_tile.x == 18, "the hook drags the stuck crate out of its alcove (now at %s)" % crate_tile)
+	for i in 2:
+		(crates[i] as Crate).position = (plates[i] as Node2D).position
+	await _wait(0.4)
+	_check(bars[0].is_open, "both crates on their plates open the cache")
+	game.queue_free()
+	await _wait(0.1)
+	# Rimelight Hollow, west of Glacier Foot: three ice eyes round a slick
+	# floor, the last under a pool that has to be frozen first.
+	var foot := Room.parse_layout(((load("res://rooms/room_0_-3.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(foot[6][0] == "." and foot[7][0] == ".", "Glacier Foot opens west to Rimelight Hollow")
+	GameState.reset_new_game()
+	GameState.give_item("frostfang_bow", 1, false)
+	GameState.set_checkpoint(Vector2i(-1, -3), Vector2(21 * Room.TILE + 8, 6 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var hollow: Room = game.current_room
+	for foe in _child_of(hollow, Enemy):
+		foe.free()
+	var eyes := _child_of(hollow, IceEye)
+	bars = _child_of(hollow, Bars)
+	_check(hollow.cave and hollow.gate == "eyes" and eyes.size() == 3 and bars.size() == 1 and _child_of(hollow, IceField).size() == 1, "Rimelight Hollow: three ice eyes round a slick floor")
+	player.global_position = _tile_pos(hollow, Vector2i(6, 9))
+	player.facing = Vector2.DOWN
+	for i in 2:
+		await _wait(0.6)
+		player.use_item("frostfang_bow")
+	await _wait(1.0)
+	_check(hollow.is_frozen(Vector2i(6, 10)) and eyes.any(func(e: IceEye) -> bool: return e.lit), "an arrow freezes the pool, the next opens the eye under it")
+	for eye in eyes:
+		eye.arrow_hit(Vector2.UP)
+	await _wait(0.4)
+	_check(bars[0].is_open, "all three eyes open the cache")
+	game.queue_free()
+	await _wait(0.1)
