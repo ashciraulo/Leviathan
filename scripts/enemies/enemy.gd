@@ -123,6 +123,8 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 	_knockback = direction * KNOCKBACK_SPEED * knockback_scale
 	_on_hurt()
 	if hp <= 0:
+		if is_in_group("boss"):
+			Feel.final_blow(get_parent(), global_position + _spark_offset())
 		_die()
 	return HitResult.HIT
 

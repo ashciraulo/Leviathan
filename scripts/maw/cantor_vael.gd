@@ -193,6 +193,7 @@ func note_hit(_note: Node) -> void:
 	Feel.shake(2.0)
 	Audio.play_sfx("vael_falter", global_position)
 	if hp <= 0:
+		Feel.final_blow(get_parent(), global_position + _spark_offset())
 		_listen()
 	elif mode != Mode.LISTEN:
 		# Thrown off his verse.

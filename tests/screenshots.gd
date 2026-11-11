@@ -793,6 +793,9 @@ func _hull_shots(game: Node) -> void:
 		await _capture("39_matriarch_exposed")
 		boss.mode = BarnacleMatriarch.Mode.EXPOSED
 		boss.take_hit(99, Vector2.UP)
+		# The last blow: the great star as time runs slow.
+		await get_tree().create_timer(0.5, true, false, true).timeout
+		await _capture("39b_matriarch_final_blow")
 		await _wait(3.2)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
 		await _wait(0.3)
@@ -905,9 +908,10 @@ func _kiln_shots(game: Node) -> void:
 		await _wait(1.0)
 		while boss and is_instance_valid(boss) and boss.segments.size() > 0:
 			boss.segment_smashed(boss.segments[0])
-		await _wait(1.6)
+		# The last blow holds time, then slows it, before the wyrm turns to stone.
+		await _wait(2.1)
 		await _capture("64_slagwyrm_stone")
-		await _wait(2.5)
+		await _wait(2.0)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 12)
 		await _wait(0.3)
 		await _capture("65_ember_bell")

@@ -3,12 +3,13 @@ extends Node2D
 ## A short burst drawn by hand where a blow lands (no particles: they stall
 ## the web build). HIT is a white star that snaps open and is gone; BLOCK is a
 ## spray of cold sparks thrown back the way the sword came; FALL is a ring of
-## dust puffs where a foe drops. With flashes turned off the bright core is
+## dust puffs where a foe drops; FINAL is the great star and ring of a
+## boss's last blow. With flashes turned off the bright core is
 ## left out and everything is dimmer.
 
-enum Kind { HIT, BLOCK, FALL }
+enum Kind { HIT, BLOCK, FALL, FINAL }
 
-const LIFE := {Kind.HIT: 0.14, Kind.BLOCK: 0.22, Kind.FALL: 0.38}
+const LIFE := {Kind.HIT: 0.14, Kind.BLOCK: 0.22, Kind.FALL: 0.38, Kind.FINAL: 0.7}
 const HIT_CORE := Color("#fff6d8")
 const HIT_EDGE := Color("#ffd27a")
 const BLOCK_SPARK := Color("#cfe8ff")
@@ -60,6 +61,8 @@ func _draw() -> void:
 			_draw_block(t, dim)
 		Kind.FALL:
 			_draw_fall(t, dim)
+		Kind.FINAL:
+			_draw_final(t, dim)
 
 
 func _draw_hit(t: float, dim: float) -> void:
@@ -120,3 +123,35 @@ func _draw_fall(t: float, dim: float) -> void:
 		var at := (Vector2(cos(angle), sin(angle) * 0.55) * radius - Vector2.ONE * size * 0.5).round()
 		draw_rect(Rect2(at + Vector2(0, 1), Vector2.ONE * size), Color(DUST_SHADE, fade * 0.8))
 		draw_rect(Rect2(at, Vector2.ONE * size), Color(DUST, fade * 0.9))
+
+
+func _draw_final(t: float, dim: float) -> void:
+	# Eight long rays that burst out and thin, inside a ring that rolls
+	# outward and fades.
+	var grow := 1.0 - (1.0 - minf(t * 2.5, 1.0)) * (1.0 - minf(t * 2.5, 1.0))
+	var reach := roundf(lerpf(6.0, 26.0, grow) * (1.0 - t * 0.3))
+	var fade := (1.0 - t * t) * dim
+	var pixels: Array[Rect2] = []
+	for d: Vector2 in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+		for i in range(3, int(reach)):
+			var thick := 3.0 if i < reach * 0.4 else (2.0 if i < reach * 0.75 else 1.0)
+			var side := Vector2(absf(d.y), absf(d.x)) * thick
+			pixels.append(Rect2((d * i - side * 0.5).floor(), Vector2.ONE.max(side)))
+	for d: Vector2 in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
+		for i in range(3, int(reach * 0.6)):
+			pixels.append(Rect2(d * i, Vector2.ONE * (2.0 if i < reach * 0.3 else 1.0)))
+	for px in pixels:
+		draw_rect(px.grow(1.0), Color(RIM, fade * 0.7))
+	for px in pixels:
+		draw_rect(px, Color(HIT_EDGE, fade))
+	if t < 0.5:
+		var core := HIT_CORE if Settings.flashes else HIT_EDGE
+		draw_rect(Rect2(-4, -4, 8, 8), Color(RIM, fade * 0.7))
+		draw_rect(Rect2(-3, -3, 6, 6), Color(core, (1.0 - t * 2.0) * dim))
+	# The ring: pixels round a circle, flattened a little to the floor.
+	var radius := lerpf(8.0, 40.0, minf(t * 1.4, 1.0))
+	var ring := Color(HIT_EDGE, (1.0 - t) * 0.8 * dim)
+	for i in 28:
+		var angle := TAU * float(i) / 28.0
+		var at := (Vector2(cos(angle), sin(angle) * 0.8) * radius).round()
+		draw_rect(Rect2(at, Vector2(2, 2)), ring)
