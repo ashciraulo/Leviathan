@@ -1,0 +1,32 @@
+{
+ "cue": "story_sorrow",
+ "qbpm": 56.0,
+ "bar_q": 3,
+ "bars": 16,
+ "intro_q": 0,
+ "end_q": 48,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 51.42857142857143,
+ "loop": true,
+ "parts": [
+  {
+   "name": "cello",
+   "notes": 22,
+   "low": 54,
+   "high": 65
+  },
+  {
+   "name": "piano_felt",
+   "notes": 48,
+   "low": 31,
+   "high": 66
+  },
+  {
+   "name": "pad_soft",
+   "notes": 32,
+   "low": 50,
+   "high": 55
+  }
+ ]
+}

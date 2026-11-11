@@ -1,0 +1,50 @@
+{
+ "cue": "boss_vael",
+ "qbpm": 120.0,
+ "bar_q": 3,
+ "bars": 48,
+ "intro_q": 0,
+ "end_q": 144,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 72.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "choir",
+   "notes": 60,
+   "low": 46,
+   "high": 70
+  },
+  {
+   "name": "organ",
+   "notes": 144,
+   "low": 48,
+   "high": 58
+  },
+  {
+   "name": "strings_ostinato",
+   "notes": 288,
+   "low": 46,
+   "high": 63
+  },
+  {
+   "name": "timpani",
+   "notes": 64,
+   "low": 34,
+   "high": 49
+  },
+  {
+   "name": "bell_church",
+   "notes": 12,
+   "low": 70,
+   "high": 73
+  },
+  {
+   "name": "strings_high",
+   "notes": 56,
+   "low": 70,
+   "high": 85
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "cue": "story_choir",
+ "qbpm": 71.0,
+ "bar_q": 4,
+ "bars": 16,
+ "intro_q": 0,
+ "end_q": 64,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 54.08450704225352,
+ "loop": true,
+ "parts": [
+  {
+   "name": "choir_unison",
+   "notes": 21,
+   "low": 63,
+   "high": 73
+  },
+  {
+   "name": "bell_low",
+   "notes": 4,
+   "low": 51,
+   "high": 58
+  },
+  {
+   "name": "drone",
+   "notes": 16,
+   "low": 39,
+   "high": 46
+  }
+ ]
+}

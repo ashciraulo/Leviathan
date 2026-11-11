@@ -14,7 +14,7 @@ from mtk import chord
 RANGES = {"flute": (60, 96), "reed": (53, 89), "guitar": (40, 84), "bass": (28, 60), "pad": (36, 79),
           "harp": (24, 103), "bell": (48, 96), "cello": (36, 76), "piano": (21, 108),
           "musicbox": (60, 100), "bassclarinet": (38, 77), "clarinet": (50, 91), "marimba": (45, 96),
-          "kalimba": (60, 88), "epiano": (40, 96), "whistle": (62, 93), "mandolin": (55, 88), "celesta": (60, 108), "choir": (45, 81), "strings": (28, 96)}
+          "kalimba": (60, 88), "epiano": (40, 96), "metal": (48, 90), "whistle": (62, 93), "mandolin": (55, 88), "celesta": (60, 108), "choir": (45, 81), "strings": (28, 96)}
 
 
 def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pad")) -> list[str]:
@@ -30,7 +30,13 @@ def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pa
                 problems.append(f"{p.name}: note at {start:.2f} runs outside the cue")
         if kind not in melody:
             continue
-        for start, dur, pitch, vel in p.notes:
+        # Only the top voice of a melody part is the tune (doublings below are colour).
+        tops = {}
+        for nt in p.notes:
+            k = round(nt[0], 1)
+            if k not in tops or nt[2] > tops[k][2]:
+                tops[k] = nt
+        for start, dur, pitch, vel in tops.values():
             if dur < 0.9:
                 continue
             b = int((start + 0.05) // bar_q)
@@ -47,7 +53,12 @@ def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pa
                 comp_top[b] = max(comp_top.get(b, 0), pitch)
     for p in song.parts:
         if p.name.split("_")[0] in melody:
-            for start, dur, pitch, vel in p.notes:
+            tops = {}
+            for nt in p.notes:
+                k = round(nt[0], 1)
+                if k not in tops or nt[2] > tops[k][2]:
+                    tops[k] = nt
+            for start, dur, pitch, vel in tops.values():
                 b = int((start + 0.05) // bar_q)
                 if dur >= 0.9 and pitch < comp_top.get(b, 0):
                     problems.append(f"{p.name}: held {pitch} at bar {b + 1} sits under the comping top {comp_top[b]}")
