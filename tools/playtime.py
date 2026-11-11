@@ -54,6 +54,14 @@ RATES = {
 # Wren ({id: [room, tile]}).
 ERRAND_TABLES = ("FINDS", "SHED_SCALES", "SIGNAL_STONES", "SURVEY_STAKES")
 
+# Flags set by a conversation when Wren hands something to a villager on a
+# side quest's round: the jam trade, Sorrel's three letters and the guests
+# for Hessa's lighting day. Each is one more villager to walk to.
+DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party)_[a-z0-9_]+)"')
+# Same prefixes, but not a hand-off: Marga's ask and the rimefin Ottilie
+# gives along with her own invitation.
+NOT_DELIVERIES = {"party_marga_ask", "party_rimefin"}
+
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
 # Puzzle pieces out in the overworld (side areas and challenges); letters
 # that mean a prop there (R, Z, L...) are left out. A run of veiled planks
@@ -125,7 +133,8 @@ def estimate():
 
 def errand_stops() -> int:
     """Places side quests send Wren: entries in StoryDirector's errand tables,
-    plus each trade hand-off (a conversation that sets a trade_ flag)."""
+    each delivery (a conversation that sets a DELIVERY_FLAG), and each
+    Tidestone, which Hessa's Keepers' Round sends Wren back to read."""
     with open(os.path.join(ROOT, "scripts", "story", "story_director.gd"), encoding="utf-8") as f:
         director = f.read()
     stops = 0
@@ -135,10 +144,14 @@ def errand_stops() -> int:
         stops += len(re.findall(r'^\s*"[a-z0-9_]+":\s*\[', m.group(1), re.M))
     with open(os.path.join(ROOT, "scripts", "dialogue", "conversations.gd"), encoding="utf-8") as f:
         talks = f.read()
-    trades = set()
+    deliveries = set()
     for m in re.finditer(r'"set":\s*\[([^\]]*)\]', talks):
-        trades.update(re.findall(r'"(trade_[a-z0-9_]+)"', m.group(1)))
-    stops += len(trades)
+        deliveries.update(DELIVERY_FLAG.findall(m.group(1)))
+    stops += len(deliveries - NOT_DELIVERIES)
+    with open(os.path.join(ROOT, "scripts", "world", "tidestone.gd"), encoding="utf-8") as f:
+        m = re.search(r"^const CARVINGS := \{(.*?)^\}", f.read(), re.M | re.S)
+    assert m, "Tidestone.CARVINGS not found: update errand_stops"
+    stops += len(re.findall(r"^\s*Vector2i\(", m.group(1), re.M))
     return stops
 
 
