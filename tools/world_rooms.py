@@ -97,6 +97,8 @@ SECRETS = {
     # Optional screens off the thinner regions (2026-11-11).
     (7, -3): ("tide_hook",),                  # Kestrel Reach: ride a stream to the stack, then hook down to the chest ledge
     (0, -4): ("tide_hook",),                  # Crevasse Shelf: hook over a crevasse from the slick ice
+    # Far reaches, past each region's edge (2026-11-11).
+    (4, -5): ("glowmoth_lantern",),           # Edgewatch Bluff: bars until both braziers burn (one over a crevasse)
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -119,9 +121,10 @@ SEA_GLASS = {
 # tide (0,2), and in the middle of Rimewatch Pass's ice (2,-3).
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
 PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
-# Solid things that aren't scenery: stones, chests, hook posts, NPCs, and
-# boulders, crates and hatches, which also stop the chain and the cloak.
-BLOCKERS = set("TCOKXh123456k")
+# Solid things that aren't scenery: stones, chests, hook posts, NPCs, ice
+# eyes, and boulders, crates and hatches, which also stop the chain and the
+# cloak.
+BLOCKERS = set("TCOKXEh123456k")
 
 
 def stops_flight(tile):

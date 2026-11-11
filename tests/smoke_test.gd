@@ -61,6 +61,7 @@ func _ready() -> void:
 		await _test_regional_caves()
 		await _test_thin_region_screens()
 		await _test_elites()
+		await _test_far_reaches()
 		await _test_every_checkpoint()
 		await _test_overworld_entrances()
 		await _test_ambience()
@@ -5159,6 +5160,98 @@ func _test_thin_region_screens() -> void:
 	var rows := Room.parse_layout(steps.layout)
 	_check(rows[11].substr(11, 2) == "YY" and rows[12].substr(11, 2) == "..", "Whalefall Steps' way down is blocked by cracked boulders")
 	steps.free()
+
+
+## The far reaches: late screens past each region's edge, each a chain of
+## the tools Wren has gathered.
+func _test_far_reaches() -> void:
+	# Windmere north. A deep-water channel from Windbreak Cliffs (the Diver's
+	# Helm) to Skerry Sound, whose crates open the way west.
+	var cliffs := Room.parse_layout(((load("res://rooms/room_6_-4.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(cliffs[0].substr(8, 2) == "QQ" and cliffs[3].substr(8, 2) == "QQ" and cliffs[3][7] == ".", "Windbreak Cliffs' deep channel runs north from the shore")
+	GameState.reset_new_game()
+	var sound: Room = (load("res://rooms/room_6_-5.tscn") as PackedScene).instantiate()
+	add_child(sound)
+	await _wait(0.2)
+	var rows := Room.parse_layout(sound.layout)
+	var bars: Array = _child_of(sound, Bars)
+	var plates: Array = _child_of(sound, PressurePlate)
+	var crates: Array = _child_of(sound, Crate)
+	_check(rows[12].substr(8, 2) == "QQ" and sound.gate == "plates" and plates.size() == 2 and crates.size() == 2 and bars.size() == 2 and not bars[0].is_open, "Skerry Sound: two crates, two plates and barred cliffs west")
+	# Each crate has a push onto a plate: (10,3) west twice, (13,4) east then south.
+	_check(rows[3].substr(8, 4) == "=.K." and rows[4].substr(12, 3) == ".K." and rows[3][14] == "." and rows[5][14] == "=", "each crate can be pushed onto a plate")
+	for i in 2:
+		crates[i].position = Vector2(plates[i].tile.x * Room.TILE + 8, plates[i].tile.y * Room.TILE + 12)
+	await _wait(0.3)
+	_check(bars[0].is_open and bars[1].is_open, "both plates down open the way west")
+	sound.queue_free()
+	await _wait(0.1)
+	# Stormcrown Stacks: hook over the sky to the middle stack, then shoot
+	# the two ice eyes on their pillars to open the way on.
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(Vector2i(5, -5), Vector2(17 * Room.TILE + 8, 5 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var player: Player = game.player
+	player._invuln = 60.0
+	var stacks: Room = game.current_room
+	for foe in _child_of(stacks, Enemy):
+		foe.free()
+	var before := GameState.bubbles
+	player.global_position = _tile_pos(stacks, Vector2i(17, 5))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.5)
+	var at := player.global_position - stacks.global_position
+	_check(stacks.tile_at(14, 5) == "_" and int(at.x) / Room.TILE == 11 and int(at.y - 3) / Room.TILE == 5 and GameState.bubbles == before, "the hook pulls Wren over the sky to the middle stack (at %s)" % at)
+	var eyes: Array = _child_of(stacks, IceEye)
+	bars = _child_of(stacks, Bars)
+	_check(stacks.gate == "eyes" and eyes.size() == 2 and bars.size() == 2 and not bars[0].is_open, "two ice eyes on pillars bar the way west")
+	for eye in eyes:
+		eye.arrow_hit(Vector2.UP)
+	await _wait(0.4)
+	_check(bars[0].is_open and bars[1].is_open, "both eyes shot open the way")
+	# And a post on the east stack hooks Wren home again.
+	player.global_position = _tile_pos(stacks, Vector2i(11, 7))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.5)
+	at = player.global_position - stacks.global_position
+	_check(int(at.x) / Room.TILE == 17 and int(at.y - 3) / Room.TILE == 7 and GameState.bubbles == before, "a post on the east stack hooks Wren back (at %s)" % at)
+	game.queue_free()
+	await _wait(0.1)
+	# Edgewatch Bluff: a glide over a crevasse to the far brazier; both lit
+	# open the cache.
+	GameState.reset_new_game()
+	GameState.give_item("kite_cloak", 1, false)
+	GameState.set_checkpoint(Vector2i(4, -5), Vector2(12 * Room.TILE + 8, 6 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var bluff: Room = game.current_room
+	before = GameState.bubbles
+	player.global_position = _tile_pos(bluff, Vector2i(8, 6))
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(2.5)
+	at = player.global_position - bluff.global_position
+	_check(bluff.tile_at(6, 6) == "_" and at.x < 5 * Room.TILE and GameState.bubbles == before, "the cloak carries Wren over the crevasse to the brazier's islet (at %s)" % at)
+	var fires := _child_of(bluff, Brazier)
+	bars = _child_of(bluff, Bars)
+	_check(bluff.gate == "braziers" and fires.size() == 2 and bars.size() == 1 and not bars[0].is_open and bluff.chest_item == "glint", "Edgewatch Bluff bars its cache behind two braziers")
+	for brazier in fires:
+		brazier.light(true)
+	await _wait(0.3)
+	_check(bars[0].is_open, "both braziers lit open the cache")
+	game.queue_free()
+	await _wait(0.1)
 
 
 ## The regions' elites: an ordinary foe grown big and bronze, with a second
