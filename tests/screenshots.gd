@@ -96,6 +96,10 @@ func _ready() -> void:
 			Vector2i(6, -5): ["reach_skerry_sound", Vector2i(10, 5)],
 			Vector2i(5, -5): ["reach_stormcrown_stacks", Vector2i(20, 5)],
 			Vector2i(4, -5): ["reach_edgewatch_bluff", Vector2i(13, 8)],
+			Vector2i(0, -5): ["reach_rimeglass_inlet", Vector2i(7, 9)],
+			Vector2i(1, -5): ["reach_hoarfrost_cairn", Vector2i(10, 2)],
+			Vector2i(9, -3): ["reach_brimstone_steps", Vector2i(15, 10)],
+			Vector2i(10, -3): ["reach_cinder_crown", Vector2i(11, 5)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")

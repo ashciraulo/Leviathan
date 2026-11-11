@@ -99,6 +99,7 @@ SECRETS = {
     (0, -4): ("tide_hook",),                  # Crevasse Shelf: hook over a crevasse from the slick ice
     # Far reaches, past each region's edge (2026-11-11).
     (4, -5): ("glowmoth_lantern",),           # Edgewatch Bluff: bars until both braziers burn (one over a crevasse)
+    (1, -5): ("stonebreaker", "frostfang_bow"),  # Hoarfrost Cairn: boulders, then bars until both lake eyes are shot
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
