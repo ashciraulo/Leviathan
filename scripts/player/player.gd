@@ -204,10 +204,12 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	if frozen or in_cutscene or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
-	_blow_grace = INVULN_TIME
 	# A better tunic soaks up some hits: Wren still reels (a hum is broken,
 	# a swing cut short) but no bubble pops, only a dull thud.
 	var popped := GameState.hurt(amount)
+	# A blow that popped a bubble spares Wren the fall it knocks them into.
+	if popped > 0:
+		_blow_grace = INVULN_TIME
 	_place_sword()
 	var away := global_position - from_position
 	_knockback = (away.normalized() if away.length() > 0.1 else -facing) * HURT_KNOCKBACK
@@ -553,6 +555,8 @@ func fall(back_to: Vector2) -> void:
 	# cost a bubble, so the fall doesn't take a second.
 	if _blow_grace <= 0.0:
 		GameState.damage(1)
+	# Spent: the next fall costs a bubble again.
+	_blow_grace = 0.0
 	shrink.call(1.0)
 	global_position = back_to
 	if GameState.is_dead() and _out_of_breath():
