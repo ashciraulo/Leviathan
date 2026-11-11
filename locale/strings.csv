@@ -71,6 +71,7 @@ SATCHEL_EMPTY_SLOT,Empty slot. Pick a tool and press its slot key.
 SATCHEL_BELL_COUNT,%s  (%d of %d)
 HINT_SATCHEL_TOOL,%s / %s: put on item slot
 HINT_SATCHEL_GEAR,%s: equip
+HINT_SATCHEL_JUMPER,%s: change jumper
 HINT_SATCHEL_CLEAR,%s: clear slot
 HINT_SATCHEL_DRINK,%s: drink
 HINT_MAP,Move the cursor to look around
@@ -696,6 +697,10 @@ SHOP_TITLE,Pike's Wares
 SHOP_LEAVE,Leave
 SHOP_FULL,Full
 SHOP_NO_JAR,No empty jar
+SHOP_OWNED,Owned
+SHOP_TITLE_OTTILIE,Ottilie's Knits
+JUMPER_CLASSIC,Keeper's jumper
+JUMPER_CLASSIC_INFO,"Navy stripes, as every lamp keeper wears."
 NAME_AGNA,Agna Holt
 AGNA_1,"A keeper's cap. Haven't seen one of those up the pass in years."
 AGNA_2,"That's the Kiln. Every bell on this coast was poured in there. Bronze, and the Old One's shed scale."

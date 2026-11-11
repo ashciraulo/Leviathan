@@ -170,6 +170,23 @@ func interact() -> void:
 	_sprite.frame = _spec["talk"]
 	# The game pauses while the box is open, so hide the talk mark now.
 	_mark.visible = false
+	if kind == Jumpers.SELLER:
+		_open_knits()
+
+
+## Ottilie's Knits: once she has offered them (this talk or before), her
+## jumpers for sale after the talk, and a word of thanks if Wren bought one.
+func _open_knits() -> void:
+	await Events.dialogue_finished
+	if not is_inside_tree() or not GameState.has_flag(Jumpers.SELLER_FLAG):
+		return
+	var menu := ShopMenu.new()
+	menu.stock = Jumpers.stock()
+	menu.keeper = {"portrait": Art.PORTRAIT_OTTILIE, "name": "NAME_OTTILIE", "title": "SHOP_TITLE_OTTILIE"}
+	get_tree().current_scene.add_child(menu)
+	var bought: bool = await menu.closed
+	if bought and is_inside_tree():
+		Events.conversation_requested.emit(Conversations.pages(kind, {"lines": ["OTTILIE_KNITS_THANKS"]}))
 
 
 ## A little speech bubble with three dots.

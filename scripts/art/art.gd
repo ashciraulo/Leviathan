@@ -121,6 +121,14 @@ uniform vec4 flash_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 // neighbouring frame of the sheet.
 uniform vec4 outline_color : source_color = vec4(0.0);
 uniform vec4 frame = vec4(0.0, 0.0, 1.0, 1.0);
+// Palette swap (Wren's jumper): texels matching swap_from[i] draw as
+// swap_to[i], but only from swap_row down in each frame (so a cap of the
+// same colours keeps its own). swap_count 0 = none.
+uniform int swap_count = 0;
+uniform vec4 swap_from[5];
+uniform vec4 swap_to[5];
+uniform float swap_vframes = 1.0;
+uniform float swap_row_frac = 0.0;
 varying vec4 tint;
 void vertex() {
 	tint = COLOR;
@@ -145,6 +153,14 @@ void fragment() {
 			COLOR = vec4(outline_color.rgb, outline_color.a * max(tint.a, min(tint.a * 3.0, 0.8)));
 		}
 	} else {
+		if (swap_count > 0 && fract(UV.y * swap_vframes) >= swap_row_frac) {
+			vec3 texel = texture(TEXTURE, UV).rgb;
+			for (int i = 0; i < swap_count; i++) {
+				if (distance(texel, swap_from[i].rgb) < 0.01) {
+					COLOR.rgb = swap_to[i].rgb * tint.rgb;
+				}
+			}
+		}
 		COLOR = vec4(mix(COLOR.rgb, flash_color.rgb, flash), COLOR.a);
 	}
 }
