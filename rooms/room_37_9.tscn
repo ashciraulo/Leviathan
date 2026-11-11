@@ -9,7 +9,7 @@ biome = "belfry"
 dungeon = "belfry"
 chest_item = "small_key"
 layout = "########################
-#......................#
+#.....................@#
 #......QQQQQQQQQQQQQQQ.#
 #......QQQQQQLLLLLQQQQ.#
 #......QQQQQQL...LQQQQ.#
