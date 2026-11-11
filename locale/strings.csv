@@ -45,7 +45,8 @@ ROOM_HULL_CHAIN_LOCKER,The Rotting Hull: Chain Locker
 ROOM_HULL_BOSS,The Rotting Hull: Figurehead Hold
 TOAST_GOT_TIDE_HOOK,You found the Tide Hook!
 GOT_TIDE_HOOK_1,"The Tide Hook! A barbed iron hook on a long chain, still cold from the sea."
-GOT_TIDE_HOOK_2,"Press its item key to throw it. It bites into iron rings to pull you over, and drags crates and small creatures in."
+ITEM_KEYS_EITHER,%s or %s
+GOT_TIDE_HOOK_2,"Press {key} to throw it. It bites into iron rings to pull you over, and drags crates and small creatures in."
 TOAST_GOT_MAP,You found the map.
 TOAST_GOT_COMPASS,You found the compass.
 TOAST_GOT_BIG_KEY,You found the big key!
@@ -411,7 +412,7 @@ ROOM_KILN_BOSS,The Kiln: Crucible
 DUNGEON_KILN,The Kiln
 TOAST_GOT_STONEBREAKER,You found the Stonebreaker Mallet!
 GOT_STONEBREAKER_1,"The Stonebreaker Mallet! An iron-bound head on an ash handle, heavy enough to dent an anvil."
-GOT_STONEBREAKER_2,"Press its item key to swing it down. It bursts cracked boulders, drives pegs and flips armoured shells."
+GOT_STONEBREAKER_2,"Press {key} to swing it down. It bursts cracked boulders, drives pegs into the floor and flips armoured shells."
 BOSS_SLAGWYRM,The Slagwyrm
 BELL_KILN_1,"Wren rings the Ember Bell. A low, warm note fills the foundry, and the furnaces settle."
 BELL_KILN_2,"Somewhere under the bay, the great breathing slows. The fire is banked and low."
@@ -452,7 +453,7 @@ ROOM_MIRE_BOSS,Lantern Mire: the Still Pool
 DUNGEON_MIRE,Lantern Mire
 TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!
 GOT_GLOWMOTH_LANTERN_1,"The Glowmoth Lantern! Pale moths stir inside the glass, and the dark around you thins."
-GOT_GLOWMOTH_LANTERN_2,"Press its item key to raise it, and again to lower it. Things that hide from the light can't hide from it."
+GOT_GLOWMOTH_LANTERN_2,"Press {key} to raise it, and again to lower it. Things that hide from the light can't hide from it."
 BOSS_PALE_CONGREGATION,The Pale Congregation
 BELL_MIRE_1,"Wren rings the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
 BELL_MIRE_2,"The wisps settle like snow. Far away, something huge turns over in its sleep, and lies still."
@@ -481,7 +482,7 @@ ROOM_GALE_BOSS,Gale Spire: the Crown
 DUNGEON_GALE,Gale Spire
 TOAST_GOT_KITE_CLOAK,You found the Kite Cloak!
 GOT_KITE_CLOAK_1,"The Kite Cloak! Old sailcloth stitched over a frame of cane, with a red kite painted on its back."
-GOT_KITE_CLOAK_2,"Press its item key to throw it open and glide. A fan's wind carries you further. Press the key again to land."
+GOT_KITE_CLOAK_2,"Press {key} to throw it open and glide. A fan's wind carries you further. Press {key} again to land."
 BOSS_STORMHERON,The Stormheron
 BELL_GALE_1,"Wren rings the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
 BELL_GALE_2,"Clouds part over the bay. Deep below, the great sleeper stirs."
@@ -503,7 +504,7 @@ ROOM_GLACIER_BOSS,Hollow Glacier: the Breathing Hall
 DUNGEON_GLACIER,Hollow Glacier
 TOAST_GOT_FROSTFANG_BOW,You found the Frostfang Bow!
 GOT_FROSTFANG_BOW_1,"The Frostfang Bow! Pale ash wood, tipped with two fangs of ice that never melt."
-GOT_FROSTFANG_BOW_2,"Press its item key to loose an arrow of frost. It freezes water solid where it lands, and never runs out."
+GOT_FROSTFANG_BOW_2,"Press {key} to loose an arrow of frost. It freezes water solid where it lands, and never runs out."
 BOSS_RIMEBACK,Rimeback
 BELL_GLACIER_1,"Wren rings the Frost Bell. Its note rings clear under the ice, and the old glacier settles."
 BELL_GLACIER_2,"Out in the bay, the frost on the water melts. Down in the deep, the sleeper stops shivering."
@@ -524,7 +525,7 @@ ROOM_BELFRY_BOSS,The Drowned Belfry: the Great Bell
 DUNGEON_BELFRY,The Drowned Belfry
 TOAST_GOT_DIVERS_HELM,You found the Diver's Helm!
 GOT_DIVERS_HELM_1,"The Diver's Helm! Old brass, a round glass window, and a smell of the sea that never quite leaves it."
-GOT_DIVERS_HELM_2,"You can swim deep water now. Press its item key while swimming to dive a few breaths, and attack to slash below."
+GOT_DIVERS_HELM_2,"You can swim deep water now. Press {key} while swimming to dive for a few breaths, and {attack} to slash below."
 BOSS_KNELL,Knell
 BELL_BELFRY_1,"Wren rings the Drowned Bell. Its note sinks through the green water, deeper than a bell should."
 BELL_BELFRY_2,"Far below, something vast turns in its sleep and settles. The tide along the Verge runs gentle."
@@ -739,7 +740,7 @@ ROOM_TOMB_BOSS,The Marrow Tomb: the Regent's Barrow
 DUNGEON_TOMB,The Marrow Tomb
 TOAST_GOT_ECHO_HORN,You found the Echo Horn!
 GOT_ECHO_HORN_1,"The Echo Horn! A curl of old bone bound in gold. Blow it, and the barrow answers."
-GOT_ECHO_HORN_2,"Press its item key to blow one long note. Bone that hears it shatters, and things that hide are shown."
+GOT_ECHO_HORN_2,"Press {key} to blow one long note. Bone that hears it shatters, and things that hide are shown."
 BOSS_REGENT,The Hollow Regent
 BELL_TOMB_1,"Wren rings the Marrow Bell. Its soft note goes out over the dunes, over every bone in the sand."
 BELL_TOMB_2,"The Old One's kin sleep there too. Far under the bay, it breathes out, slow as an ebbing tide."
