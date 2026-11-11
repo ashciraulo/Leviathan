@@ -8003,6 +8003,15 @@ func _test_older_secrets() -> void:
 	_check(tangle.chest_item == "glint" and sea[10][12] == "C" and sea[10][14] == "O" and sea[5][14] == "O"
 		and sea[8][14] == "Q" and sea[8][13] == "Q", "Tangle Shore: a chest on a deep-water islet, with hook posts out and back")
 	tangle.free()
+	# Three shoals out in deep water, sheltered by rocks from glides, for
+	# the Diver's Helm alone (the story thread leaves pearls on them).
+	for shoal: Array in [[Vector2i(6, 0), Vector2i(20, 8)], [Vector2i(1, 5), Vector2i(20, 5)], [Vector2i(6, -5), Vector2i(10, 8)]]:
+		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [shoal[0].x, shoal[0].y]) as PackedScene).instantiate()
+		var swim_rows := Room.parse_layout(probe.layout)
+		var at: Vector2i = shoal[1]
+		_check(swim_rows[at.y][at.x] == "." and swim_rows[at.y + 1][at.x] == "." and swim_rows[at.y - 1][at.x] == "#"
+			and swim_rows[at.y][at.x - 1] == "Q" and swim_rows[at.y][at.x + 1] == "Q", "room %s has a rock-sheltered shoal at %s" % [shoal[0], at])
+		probe.free()
 
 
 ## One short trial cave per region: a single puzzle and a glint cache.
