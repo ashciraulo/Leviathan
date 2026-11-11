@@ -899,6 +899,12 @@ func _draw_ground() -> void:
 				_draw_tile(tiles["boardwalk"] % ("v" if runs_vertical else "h"), x, y)
 			elif tile == "I" and _frozen.has(Vector2i(x, y)):
 				_draw_tile("floe_%d" % (h % 2), x, y)
+			elif tile == "v" and tiles.has("gap"):
+				# A veiled plank over a drop (the Spire's sky): the drop shows
+				# under it, and the plank only when the lantern finds it.
+				_draw_tile("%s_%d" % [tiles["gap"], 0], x, y)
+				if not _tile_at(x, y - 1) in ["_", "v"]:
+					_draw_tile(tiles["gap"] + "_lip", x, y)
 			elif tile == "~" or tile == "v" or tile == "Q":
 				# Deep water is the same deep green wherever it is (Wren's
 				# waterline is drawn to match it).

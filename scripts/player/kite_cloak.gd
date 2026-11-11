@@ -86,6 +86,12 @@ func _over_water() -> bool:
 	var tide := room.get_node_or_null("Tide") as Tide
 	if tide != null and tide.is_flooded(cell):
 		return true
+	# A veiled plank the lantern isn't showing is no footing either.
+	if tile == "v":
+		for plank: VeilPlank in get_tree().get_nodes_in_group("veil_planks"):
+			if plank.get_parent() == room and Vector2i(floori(plank.position.x / Room.TILE), floori(plank.position.y / Room.TILE)) == cell:
+				return not plank.is_real()
+		return true
 	return tile == "~" or (tile == "Q" and not GameState.has_item("divers_helm"))
 
 
