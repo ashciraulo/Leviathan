@@ -481,7 +481,7 @@ ROOM_GALE_BOSS,Gale Spire: the Crown
 DUNGEON_GALE,Gale Spire
 TOAST_GOT_KITE_CLOAK,You found the Kite Cloak!
 GOT_KITE_CLOAK_1,"The Kite Cloak! Old sailcloth stitched over a frame of cane, with a red kite painted on its back."
-GOT_KITE_CLOAK_2,"Press its item key to throw it open and glide. A fan's wind carries you further. Press it again to come down."
+GOT_KITE_CLOAK_2,"Press its item key to throw it open and glide. A fan's wind carries you further. Press the key again to land."
 BOSS_STORMHERON,The Stormheron
 BELL_GALE_1,"Wren rings the Storm Bell. Its note goes out over the crags, and the wind drops to a breath."
 BELL_GALE_2,"Clouds part over the bay. Deep below, the great sleeper stirs."
@@ -524,7 +524,7 @@ ROOM_BELFRY_BOSS,The Drowned Belfry: the Great Bell
 DUNGEON_BELFRY,The Drowned Belfry
 TOAST_GOT_DIVERS_HELM,You found the Diver's Helm!
 GOT_DIVERS_HELM_1,"The Diver's Helm! Old brass, a round glass window, and a smell of the sea that never quite leaves it."
-GOT_DIVERS_HELM_2,"You can swim deep water now. Press its item key while swimming to dive for a few breaths, and attack to slash."
+GOT_DIVERS_HELM_2,"You can swim deep water now. Press its item key while swimming to dive a few breaths, and attack to slash below."
 BOSS_KNELL,Knell
 BELL_BELFRY_1,"Wren rings the Drowned Bell. Its note sinks through the green water, deeper than a bell should."
 BELL_BELFRY_2,"Far below, something vast turns in its sleep and settles. The tide along the Verge runs gentle."

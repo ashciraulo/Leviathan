@@ -28,6 +28,8 @@ SHEET = os.path.join(ROOT, "music", "track_sheet.json")
 MUSIC_DIR = os.path.join(ROOT, "audio", "music")
 # How far a loop offset may sit from the sheet's intro length, in seconds.
 OFFSET_TOLERANCE = 0.01
+# A file this close to the cue's intro + loop length is taken as delivered.
+DELIVERED_TOLERANCE = 0.5
 
 
 def gd_list(text: str, name: str) -> list:
@@ -108,9 +110,15 @@ def main() -> int:
         offset = float(params.get("loop_offset", "0") or 0)
         if not spec["loop"] and loop:
             problems.append(f"{cue}.ogg is set to loop, but the sheet plays it once")
+        # A delivered track (as long as the cue's intro and loop) with an intro
+        # must loop back past it; a placeholder of another length may not.
+        intro = intro_seconds(cue, spec)
+        if spec["loop"] and intro > 0 and offset == 0:
+            length = ogg_seconds(ogg)
+            if abs(length - (intro + spec["body_s"])) < DELIVERED_TOLERANCE:
+                problems.append(f"{cue}.ogg has a {intro:.3f} s intro but loops back to 0 (run finalize.py --write)")
         if offset > 0:
             length = ogg_seconds(ogg)
-            intro = intro_seconds(cue, spec)
             if abs(offset - intro) > OFFSET_TOLERANCE:
                 problems.append(f"{cue}.ogg loops back to {offset:.3f} s, but its intro is {intro:.3f} s")
             if offset >= length:

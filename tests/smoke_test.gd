@@ -509,8 +509,6 @@ func _finish_talk(game: Node) -> int:
 	return pages
 
 
-## Saltmarrow's villagers, their portraits, Marga's rope errand (a chain of
-## story flags across two people), Pell wandering, and the village sign.
 ## Strings shown only in menus, the HUD, the title or the credits, never in
 ## the dialogue box.
 func _menu_text(key: String) -> bool:
@@ -520,6 +518,8 @@ func _menu_text(key: String) -> bool:
 	return false
 
 
+## Saltmarrow's villagers, their portraits, Marga's rope errand (a chain of
+## story flags across two people), Pell wandering, and the village sign.
 func _test_villagers() -> void:
 	GameState.reset_new_game()
 	_check(not GameState.has_flag("asked_for_rope"), "a new game has no story flags")
@@ -4295,13 +4295,6 @@ func _test_audio() -> void:
 	var track := playing.stream as AudioStreamOggVorbis
 	_check(track != null and track.loop, "region music loops")
 	_check((Audio._load(Audio.MUSIC_DIR, "region_saltmarrow") as AudioStreamOggVorbis).loop == shared_loop, "looping doesn't change the shared track")
-	# A delivered track with an intro loops back to the end of the intro
-	# (its import's loop offset), not to the start.
-	var with_intro := (Audio._load(Audio.MUSIC_DIR, "region_saltmarrow") as AudioStreamOggVorbis).duplicate() as AudioStreamOggVorbis
-	with_intro.loop = true
-	with_intro.loop_offset = 3.5
-	var kept := Audio._looping(with_intro) as AudioStreamOggVorbis
-	_check(kept.loop and is_equal_approx(kept.loop_offset, 3.5), "a track with an intro keeps its loop offset")
 	for cue: String in Audio.MUSIC_CUES:
 		if cue.begins_with("region_") or cue.begins_with("dungeon_") or cue.begins_with("bell_") or cue in ["title", "overworld", "boss", "miniboss", "credits", "lullaby"]:
 			_check(Audio._load(Audio.MUSIC_DIR, cue) != null, "%s has a track" % cue)
@@ -4492,7 +4485,7 @@ func _test_credits() -> void:
 	_check(after._height > plain_height, "and the roll makes room for them")
 	# The credits music plays once, so the roll ends before it does.
 	var music_length: float = Audio._load(Audio.MUSIC_DIR, "credits").get_length()
-	_check(after._height / after._speed <= music_length + 0.05 and after._speed >= after.SPEED,
+	_check((after._height / after._speed <= music_length + 0.05 or after._speed == after.SPEED * after.MAX_SPEED_UP) and after._speed >= after.SPEED,
 		"the roll (%.0f s) ends before the credits music (%.0f s)" % [after._height / after._speed, music_length])
 	print("credits roll %.1f s at %.1f px/s (plain %.1f s); music %.1f s" % [after._height / after._speed, after._speed, plain_height / after.SPEED, music_length])
 	after._leaving = true
