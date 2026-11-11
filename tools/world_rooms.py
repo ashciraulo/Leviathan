@@ -104,7 +104,7 @@ SECRETS = {
     (0, 5): ("tide_hook", "kite_cloak", "frostfang_bow"),  # Lee of the Old One: glints on a reef islet with a hook post
     (8, 3): ("kite_cloak", "frostfang_bow"),  # Saltgrave Brink: glints on a bitter-sea islet
     # Puzzle caves: one short trial room per region.
-    (-1, 0): ("stonebreaker",),               # Dragline Cellar: crates and plates past cracked boulders
+    (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (-1, -3): ("frostfang_bow",),             # Rimelight Hollow: three ice eyes round a slick floor
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or

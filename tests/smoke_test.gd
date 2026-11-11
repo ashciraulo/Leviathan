@@ -3126,7 +3126,7 @@ func _test_extras_dungeon() -> void:
 	_check(world_page._rooms.size() == 1 and world_page._rooms[0] == Vector2i(0, 0), "the overworld map starts with the Shore alone")
 	_check(world_page._fringe.has(Vector2i(1, 0)) and world_page._fringe.has(Vector2i(0, -1)),
 		"the rooms the Shore opens onto show faint under fog (%s)" % [world_page._fringe])
-	_check(not world_page._fringe.has(Vector2i(-1, 0)), "no fog where there's no room")
+	_check(world_page._fringe.has(Vector2i(-1, 0)) and not world_page._fringe.has(Vector2i(-1, -1)), "fog shows Dragline Cellar past the Shore's west gap, and nothing past a corner")
 	# Lullaby Point's doorway only exists once the seventh bell has rung.
 	GameState.mark_seen(Vector2i(2, 1))
 	world_page.on_open()
