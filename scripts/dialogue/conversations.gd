@@ -206,6 +206,8 @@ const TALKS := {
 	"ide": [
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		# The jam trade ends here: Ferrin's chart of the far shores.
+		{"if": ["trade_chart"], "unless": ["trade_done"], "set": ["trade_done", "ide_ferry"], "give": {"glint": 200}, "lines": [["", "NARRATE_HAND_CHART"], "IDE_TRADE_1", "IDE_TRADE_2", "IDE_TRADE_3", ["", "NARRATE_GOT_TRADE_PURSE"]]},
 		# Her boat's lost nameboard (QuestFind). Every branch still rows Wren over.
 		{"if": ["ide_board_ask", "found_nameboard"], "unless": ["ide_board_done"], "set": ["ide_board_done", "ide_ferry"], "give": {"glint": 100}, "lines": [["", "NARRATE_HAND_NAMEBOARD"], "IDE_BOARD_DONE_1", "IDE_BOARD_DONE_2", ["", "NARRATE_GOT_NAMEBOARD_PURSE"], "IDE_BOARD_DONE_3"]},
 		{"if": ["met_ide_ferry", "found_nameboard"], "unless": ["ide_board_ask"], "set": ["ide_board_ask", "ide_board_done", "ide_ferry"], "give": {"glint": 100}, "lines": [["", "NARRATE_HAND_NAMEBOARD"], "IDE_BOARD_EARLY", "IDE_BOARD_1B", "IDE_BOARD_1C", "IDE_BOARD_DONE_2", ["", "NARRATE_GOT_NAMEBOARD_PURSE"], "IDE_BOARD_DONE_3"]},
@@ -255,6 +257,8 @@ const TALKS := {
 		# The last singers: Ansel, her old sorter.
 		{"if": ["sorrel_asked", "ansel_met"], "unless": ["sorrel_ansel"], "set": ["sorrel_ansel"], "lines": ["SORREL_ANSEL_1", "SORREL_ANSEL_2"]},
 		{"if": ["lighting_ask", "sorrel_asked"], "unless": ["party_sorrel"], "set": ["party_sorrel"], "lines": ["SORREL_PARTY_1", "SORREL_PARTY_2"]},
+		# The jam trade: Wick's candles for kite cord, for Ferrin.
+		{"if": ["trade_candles", "sorrel_asked"], "unless": ["trade_line"], "set": ["trade_line"], "lines": [["", "NARRATE_HAND_CANDLES"], "SORREL_TRADE_1", "SORREL_TRADE_2", "SORREL_TRADE_2B", ["", "NARRATE_GOT_TRADE_LINE"]]},
 		# The post's last three letters, never sent when it shut.
 		{"if": ["letter_ottilie", "letter_liesl", "letter_agna"], "unless": ["sorrel_letters_paid"], "set": ["sorrel_letters_paid"], "give": {"glint": 150}, "lines": ["SORREL_LETTERS_DONE_1", "SORREL_LETTERS_DONE_2", ["", "NARRATE_GOT_POSTAGE"]]},
 		# Gullcry Stacks, the run no courier ever flew (its chest is the proof).
@@ -262,6 +266,7 @@ const TALKS := {
 		{"if": ["sorrel_letters"], "unless": ["sorrel_letters_paid"], "lines": ["SORREL_LETTERS_WAITING"]},
 		{"if": ["sorrel_paid"], "unless": ["sorrel_letters"], "set": ["sorrel_letters"], "lines": ["SORREL_LETTERS_1", "SORREL_LETTERS_1B", "SORREL_LETTERS_2", "SORREL_LETTERS_2B", ["", "NARRATE_TAKE_LETTERS"]]},
 		{"if": ["sorrel_paid"], "unless": ["sorrel_dared_stacks", "sorrel_saw_stacks"], "set": ["sorrel_dared_stacks"], "lines": ["SORREL_STACKS_1", "SORREL_STACKS_1B"]},
+		{"if": ["trade_line", "sorrel_paid"], "unless": ["trade_chart"], "lines": ["SORREL_TRADE_WAITING"]},
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
 		{"if": ["sorrel_paid", "old_one_turned"], "lines": ["SORREL_AFTER", "SORREL_TURNED"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
@@ -269,6 +274,8 @@ const TALKS := {
 		{"if": ["sorrel_race"], "lines": ["SORREL_FLYING"]},
 		{"if": ["sorrel_raced"], "has": ["kite_cloak"], "set": ["sorrel_race"], "lines": ["SORREL_AGAIN", "SORREL_GO"]},
 		{"has": ["kite_cloak"], "set": ["sorrel_asked", "sorrel_raced", "sorrel_race"], "lines": ["SORREL_CLOAK_1", "SORREL_CLOAK_1B", "SORREL_CLOAK_2", "SORREL_GO"]},
+		# (Before the race, the cord reminder waits below it.)
+		{"if": ["trade_line"], "unless": ["trade_chart"], "lines": ["SORREL_TRADE_WAITING"]},
 		{"if": ["sorrel_asked"], "lines": ["SORREL_WAITING"]},
 		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
 	],
@@ -374,6 +381,9 @@ const TALKS := {
 	# Edge Survey. He gives Wren three stakes to drive in where the land
 	# gives out (SurveyStake), and finishes his map when all three are in.
 	"ferrin": [
+		# The jam trade: Sorrel's kite cord for his chart, for Ide.
+		{"if": ["trade_line", "ferrin_survey_ask"], "unless": ["trade_chart"], "set": ["trade_chart"], "lines": [["", "NARRATE_HAND_LINE"], "FERRIN_TRADE_1", "FERRIN_TRADE_2", "FERRIN_TRADE_2B", ["", "NARRATE_GOT_TRADE_CHART"]]},
+		{"if": ["trade_chart", "ferrin_map_done"], "unless": ["trade_done"], "lines": ["FERRIN_TRADE_WAITING"]},
 		{"if": ["ferrin_map_done"], "lines": ["FERRIN_AFTER"]},
 		{"if": ["ferrin_survey_ask", "survey_stake_frost", "survey_stake_cinder", "survey_stake_verge"], "set": ["ferrin_map_done"], "give": {"glint": 200}, "lines": ["FERRIN_DONE_1", ["", "NARRATE_FERRIN_MAP"], "FERRIN_DONE_2", "FERRIN_DONE_3", ["", "NARRATE_GOT_SURVEY_PURSE"]]},
 		{"if": ["ferrin_survey_ask"], "lines": ["FERRIN_WAITING"]},
@@ -449,6 +459,8 @@ const TALKS := {
 	"wick": [
 		{"if": ["wick_asked", "pim_home"], "unless": ["wick_met_pim"], "set": ["wick_met_pim"], "lines": ["WICK_PIM"]},
 		{"if": ["lighting_ask", "wick_asked"], "unless": ["party_wick"], "set": ["party_wick"], "lines": ["WICK_PARTY_1", "WICK_PARTY_2"]},
+		# The jam trade: Marga's bramble jam for fen candles, for Sorrel.
+		{"if": ["trade_jam", "wick_asked"], "unless": ["trade_candles"], "set": ["trade_candles"], "lines": [["", "NARRATE_HAND_JAM"], "WICK_TRADE_1", "WICK_TRADE_2", "WICK_TRADE_2B", ["", "NARRATE_GOT_TRADE_CANDLES"]]},
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
 		# The Lampless Sink's four braziers, lit at last.
@@ -456,6 +468,7 @@ const TALKS := {
 		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
 		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
 		{"if": ["wick_gave_jar"], "unless": ["wick_told_sink", "wick_saw_sink"], "set": ["wick_told_sink"], "lines": ["WICK_SINK_1", "WICK_SINK_1B"]},
+		{"if": ["trade_candles", "wick_gave_jar"], "unless": ["trade_line"], "lines": ["WICK_TRADE_WAITING"]},
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
 		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
@@ -470,6 +483,10 @@ const TALKS := {
 		{"if": ["lighting_ask", "asked_for_rope"], "unless": ["party_marga", "party_marga_ask"], "set": ["party_marga_ask"], "lines": ["MARGA_PARTY_1", "MARGA_PARTY_2"]},
 		# Waiting on the fish, but never ahead of the rope errand and the jar.
 		{"if": ["party_marga_ask", "marga_gave_jar"], "unless": ["party_marga"], "lines": ["MARGA_PARTY_WAITING"]},
+		# The jam trade: Marga -> Wick -> Sorrel -> Ferrin -> Ide, and back to her.
+		{"if": ["trade_done"], "unless": ["marga_heard_trade"], "set": ["marga_heard_trade"], "lines": ["MARGA_TRADE_DONE_1", "MARGA_TRADE_DONE_2"]},
+		{"if": ["marga_gave_jar", "seen_wayshell"], "unless": ["trade_jam"], "set": ["trade_jam"], "lines": ["MARGA_TRADE_1", "MARGA_TRADE_1B", "MARGA_TRADE_2", ["", "NARRATE_GOT_TRADE_JAM"]]},
+		{"if": ["trade_jam"], "unless": ["trade_candles"], "lines": ["MARGA_TRADE_WAITING"]},
 		{"if": ["marga_gave_jar", "seen_ending"], "lines": ["MARGA_END"]},
 		{"if": ["marga_gave_jar", "old_one_turned"], "lines": ["MARGA_TURNED"]},
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},

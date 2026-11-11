@@ -106,6 +106,7 @@ func _ready() -> void:
 		await _test_nettle_signals()
 		await _test_lighting_day()
 		await _test_small_finds()
+		_test_jam_trade()
 		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
@@ -7746,6 +7747,50 @@ func _test_small_finds() -> void:
 	GameState.reset_new_game()
 
 
+## The jam trade: Marga's bramble jam goes round the coast, one villager to
+## the next, and comes back to her as thank-you letters.
+func _test_jam_trade() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var says := func(who: String, key: String) -> bool: return (Conversations.branch_for(who).get("lines", []) as Array).has(key)
+	for flag in ["met_hessa", "asked_for_rope", "rope_promised", "marga_thanked", "tidebell_hull", "marga_gave_jar", "wick_asked", "fen_lanterns_lit", "wick_gave_jar", "wick_told_sink", "sorrel_asked", "ferrin_survey_ask", "tidebell_belfry", "met_ide_ferry"]:
+		GameState.set_flag(flag)
+	_check(first.call("marga") == "MARGA_AFTER", "no trade before the Wayshell")
+	GameState.set_flag("seen_wayshell")
+	_check(first.call("marga") == "MARGA_TRADE_1", "then Marga sends jam to Wick")
+	_check(not says.call("wick", "WICK_TRADE_1") and not says.call("sorrel", "SORREL_TRADE_1"), "nobody trades before the jam")
+	Conversations.talk("marga")
+	_check(first.call("marga") == "MARGA_TRADE_WAITING", "Marga reminds Wren where it's going")
+	_check(says.call("wick", "WICK_TRADE_1"), "Wick takes the jam")
+	Conversations.talk("wick")
+	_check(first.call("wick") == "WICK_TRADE_WAITING" and first.call("marga") == "MARGA_AFTER", "and sends candles to Sorrel")
+	_check(says.call("sorrel", "SORREL_TRADE_1"), "Sorrel takes the candles")
+	Conversations.talk("sorrel")
+	_check(first.call("sorrel") == "SORREL_TRADE_WAITING", "and sends kite cord to Ferrin")
+	_check(says.call("ferrin", "FERRIN_TRADE_1"), "Ferrin takes the cord")
+	Conversations.talk("ferrin")
+	_check(first.call("ferrin") == "FERRIN_WAITING", "his own survey still comes first while it's open")
+	GameState.set_flag("ferrin_map_done")
+	_check(first.call("ferrin") == "FERRIN_TRADE_WAITING", "then he reminds Wren the chart's for Ide")
+	var glints := GameState.item_count("glint")
+	_check(says.call("ide", "IDE_TRADE_1") and Conversations.branch_for("ide")["set"].has("ide_ferry"), "Ide takes the chart, and still rows")
+	Conversations.talk("ide")
+	_check(GameState.item_count("glint") == glints + 200 and GameState.has_flag("trade_done"), "fares from a good week")
+	_check(first.call("ferrin") == "FERRIN_AFTER" and first.call("sorrel") != "SORREL_TRADE_WAITING" and first.call("wick") != "WICK_TRADE_WAITING", "the waiting lines stop")
+	_check(first.call("marga") == "MARGA_TRADE_DONE_1", "and the thank-yous reach Marga")
+	Conversations.talk("marga")
+	_check(first.call("marga") == "MARGA_AFTER", "once")
+	GameState.reset_new_game()
+	# Mid-trade, the waiting lines never hold up Wick's jar or Sorrel's race.
+	for flag in ["wick_asked", "fen_lanterns_lit", "sorrel_asked", "trade_jam", "trade_candles", "trade_line"]:
+		GameState.set_flag(flag)
+	_check(first.call("wick") == "WICK_DONE_1", "Wick still hands over the jar")
+	_check(first.call("sorrel") == "SORREL_TRADE_WAITING", "Sorrel reminds Wren about the cord before the race")
+	GameState.give_item("kite_cloak", 1, false)
+	_check(first.call("sorrel") == "SORREL_CLOAK_1", "but the race still comes first once Wren can glide")
+	GameState.reset_new_game()
+
+
 ## Hessa's lighting day: Nettle's surprise party, five guests, one scene.
 func _test_lighting_day() -> void:
 	GameState.reset_new_game()
@@ -7923,7 +7968,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
