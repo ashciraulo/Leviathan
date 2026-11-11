@@ -7060,6 +7060,7 @@ func _test_errands() -> void:
 	_check(GameState.item_count("glint") == glints + 150 and first.call("sorrel") == "SORREL_AFTER", "courier's pay, then back to her usual")
 	# Ottilie's sign for Hessa.
 	GameState.set_flag("ottilie_paid")
+	GameState.set_flag("ottilie_knits_told")
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
 	GameState.set_flag("ottilie_told_vael")
 	_check(first.call("ottilie") == "OTTILIE_AFTER", "before Hessa's confession, Ottilie keeps her quarrel to herself")
@@ -7565,7 +7566,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
