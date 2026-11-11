@@ -1,0 +1,132 @@
+{
+ "cue": "region_saltmarrow",
+ "lufs": -18.0,
+ "parts": {
+  "bass_upright": {
+   "insert": 3,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "guitar_nylon": {
+   "insert": 6,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_frame": {
+   "insert": 1,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highshelf",
+     "freq": 8000,
+     "gain": -6
+    }
+   ]
+  },
+  "flute_wood": {
+   "insert": 2,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 24
+    }
+   ]
+  },
+  "reed_concertina": {
+   "insert": 4,
+   "target": -33.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 3000,
+     "gain": -6,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 2000,
+     "db_oct": 24
+    }
+   ]
+  },
+  "pad_strings": {
+   "insert": 5,
+   "target": -39.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "shaker": {
+   "insert": 7,
+   "target": -43.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "notes": "Targets: gated short-term LUFS per stem (handoff balance rule, folk adventure). Shaker and reed carry most of the 2-6 kHz share, hence their cuts."
+}

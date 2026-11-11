@@ -5,8 +5,8 @@ The first cue goes through every step before any other cue is built in FL
 copy a working recipe, not an assumption.
 
 ## PC folders (approve once)
-- `C:\Users\Ashle\OneDrive\Documents\Leviathan Music\` — `projects\` (.flp, one per cue; old versions to `_old\`), `templates\`, `midi\`, `masters\` (final FLAC).
-- `C:\LeviathanMusic_Render\` — not synced: stems, raw renders. WAV -> FLAC at once, WAVs deleted.
+- `C:\Users\Ashle\OneDrive\Documents\LeviathanMusic\` (no space) — `projects\` (.flp, one per cue; old versions to `_old\`), `templates\`, `midi\`, `masters\` (final FLAC).
+- `C:\LeviathanMusic_Render\` — not synced: stems, raw renders. WAV -> FLAC at once, WAVs deleted. Made with a Remote Control `mkdir` (the folder tools can't create folders outside approved roots), then approved for the folder tools.
 
 ## Channels and candidate sounds (audition six at a time, gate, then pick)
 | Channel (= MIDI part) | Role | Candidates to audition |
@@ -31,3 +31,29 @@ copy a working recipe, not an assumption.
 
 ## Findings
 (filled in as the pilot runs)
+
+## What the pilot found (2026-11-11)
+Read the updated handoff and Out There FM's scripts first: `/mnt/project-files/leviathan/music/reference/`.
+
+- **Split stems need WAV export.** FL's FLAC export ignores "Split mixer tracks" and writes one file. Render WAV with
+  Split on, then in `device_bash`: `ffmpeg -i x.wav -c:a flac x.flac`, compare durations, delete the WAV.
+- **Stems are named after the mixer insert labels** (`sm_v3_bass_upright.flac`). Rename inserts in FL: click the label,
+  F2, ctrl+a, paste from the clipboard (typing drops characters), Enter.
+- **Octaves:** Analog Lab Upright Bass and 12 Low Strings sound an octave low (+12, `flp/maps/region_saltmarrow_transpose.json`).
+  The FL sampler's root is note 60, so drum_frame (45) gets +15 and shaker (82) -22.
+  flp_build.py used to apply a transpose twice when the channel and part share a name (+24); fixed.
+- **gate_stems.py** now judges tuning only with 5+ solo notes. Chord-heavy parts (guitar, pad) need a per-onset
+  measurement instead: the guitar's -40 c flag came from one solo note; across 352 onsets it is -0.6 c.
+- **Mix by script, not by knobs.** Template3 has Pro-Q 4 in slot 1 of inserts 1-7 and Pro-C 2, Pro-Q 4, Pro-L 2 on the
+  master (added once in FL; scripts can't add plugins). Then:
+  1. `python3 music/post/stem_balance.py music/flp/mixes/<cue>.json <stem dir> --prefix sm_v3_ > gains` sets each part's
+     gain to its short-term LUFS target after the EQ, on the neutral stems.
+  2. `flpenv/bin/python music/flp/flp_build.py --template saltmarrow_template3.flp ...` writes the notes, then
+     `python3 music/flp/flp_mix.py notes.flp music/flp/mixes/<cue>.json <gains> out.flp [--lufs-trim dB]` writes the
+     Pro-Q bands, Pro-Q output gains, Pro-C and Pro-L.
+  3. Render, measure with finalize.py, and correct Pro-L with `--lufs-trim` (Saltmarrow: +2.1).
+- **Pro-C 2 threshold:** Out There FM's "6 dB over the mix loudness" took ~4 dB off this cue; 12 dB over is gentle glue.
+- **Brightness:** the shaker and the concertina carry most of the 2-6 kHz share. The concertina preset stays buzzy even
+  low-passed (its own 2-6 kHz share is -14 dB at a 2 kHz 24 dB/oct cut); a softer reed preset may suit later cues.
+- **device_commit_files can send a stale copy:** a new filename per version, and check the md5 on the PC.
+- Saltmarrow v6: -17.96 LUFS, true peak -3.2 dBTP, seam step 5.8 dB, 2-6 kHz share -24..-26 per 6-bar section.

@@ -15,10 +15,25 @@ TEMPO = 156          # DWORD+28: BPM * 1000
 CHANNEL_NEW = 64     # WORD: starts a channel, value = channel iid
 PATTERN_NEW = 65     # WORD+1: starts a pattern block, value = pattern iid
 NOTES = 224          # DATA+16: pattern notes, 24 bytes each
-PLAYLIST = 233       # DATA+25: playlist items, 32 or 60 bytes each
+PLAYLIST = 233       # DATA+25: playlist items, 32, 60 or 80 (FL 2024+) bytes each
 PATTERN_BASE = 20480
+CHANNEL_NAME = 203   # TEXT+11: channel display name, UTF-16LE, null-terminated
 
 NOTE = struct.Struct("<IHHIHHBBBBBBBB")  # position flags channel length key group fine _ release midich pan vel modx mody
+
+
+def item_size(data: bytes) -> int:
+    """Playlist item size: 32 (old FL), 60 (FL 20-21) or 80 (FL 2024+). Picked
+    as the size at which every item carries the pattern base 20480."""
+    for size in (80, 60, 32):
+        if len(data) % size == 0 and all(
+                struct.unpack_from("<H", data, o + 4)[0] == PATTERN_BASE for o in range(0, len(data), size)):
+            return size
+    raise ValueError(f"unknown playlist item size ({len(data)} bytes)")
+
+
+def utf16z(text: str) -> bytes:
+    return text.encode("utf-16-le") + b"\0\0"
 
 
 class Flp:
@@ -87,6 +102,24 @@ class Flp:
         for i in self.find(TEMPO):
             self.events[i][1] = struct.pack("<I", int(round(bpm * 1000)))
 
+    def channel_events(self, iid: int, eid: int) -> list[int]:
+        """Indexes of event `eid` inside channel `iid`'s block."""
+        current, out = None, []
+        for i, (e, _) in enumerate(self.events):
+            if e == CHANNEL_NEW:
+                current = self.value(i)
+            elif e in (PATTERN_NEW,):
+                current = None
+            elif e == eid and current == iid:
+                out.append(i)
+        return out
+
+    def rename_channel(self, iid: int, name: str) -> None:
+        idx = self.channel_events(iid, CHANNEL_NAME)
+        if not idx:
+            raise LookupError(f"channel {iid} has no name event")
+        self.events[idx[0]][1] = utf16z(name)
+
     def notes_event(self, pattern_iid: int) -> int:
         """Index of the notes event inside pattern `pattern_iid`'s block(s)."""
         current = None
@@ -110,16 +143,18 @@ class Flp:
         data = self.events[self.notes_event(pattern_iid)][1]
         return [NOTE.unpack_from(data, o) for o in range(0, len(data), NOTE.size)]
 
-    def set_pattern_clips(self, pattern_iid: int, length_ticks: int) -> int:
+    def set_pattern_clips(self, pattern_iid: int, length_ticks: int, start: int | None = 0) -> int:
         """Every playlist clip of the pattern gets this length, with explicit
         start/end offsets (FL otherwise renders to its own idea of the end)."""
         changed = 0
         for i in self.find(PLAYLIST):
             data = bytearray(self.events[i][1])
-            size = 60 if len(data) % 60 == 0 and len(data) % 32 else 32
+            size = item_size(data)
             for o in range(0, len(data), size):
                 item_index = struct.unpack_from("<H", data, o + 6)[0]
                 if item_index == PATTERN_BASE + pattern_iid:
+                    if start is not None:
+                        struct.pack_into("<I", data, o, start)
                     struct.pack_into("<I", data, o + 8, length_ticks)
                     struct.pack_into("<ii", data, o + 24, 0, length_ticks)
                     changed += 1
