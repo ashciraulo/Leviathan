@@ -30,9 +30,9 @@
   },
   {
    "name": "bass_upright",
-   "notes": 140,
+   "notes": 164,
    "low": 41,
-   "high": 57
+   "high": 55
   },
   {
    "name": "pad_strings",

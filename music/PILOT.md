@@ -14,7 +14,7 @@ copy a working recipe, not an assumption.
 | guitar_nylon | picking | Ample Guitar M Lite 4; Analog Lab plucked guitars (not Digital Nylon: random note levels) |
 | flute_wood | lead | Analog Lab Meadow Flute (passed before); LABS flutes; not Mellotron flutes (wobble, 8va) |
 | reed_concertina | counter | Analog Lab accordion / harmonium / reed organ types; LABS reeds |
-| bass_upright | bass | Analog Lab Upright Bass (passed); Diamond upright (cap velocity 88, re-pluck held notes) |
+| bass_upright | bass | Kontakt Diamond Jazz Trio double bass (Ash's pick, v11+), with clones bass_soft / bass_a2 / bass_g3 on the same insert; Analog Lab Upright Bass is in tune but ignores velocity |
 | pad_strings | pad, well under | LABS Strings / Soft strings; Analog Lab string ensembles (check for chorus LFO) |
 | drum_frame | frame drum | FPC kits / Data\Patches\Packs hand drums (soft, no boom 90-250 Hz) |
 | shaker | shaker | FL pack shaker, soft, low-passed |
@@ -67,3 +67,23 @@ Read the updated handoff and Out There FM's scripts first: `/mnt/project-files/l
 - finalize.py's seam check compares the seam with the cue's own downbeat steps; a release-to-downbeat is +6..+8 dB.
 - Saltmarrow v8: -17.95 LUFS, true peak -3.0 dBTP, gate PASS. Re-review: the guitar pickup now rubbed a semitone
   against the new bass walk in four bridge bars; v9 picks a chord tone there. -18.01 LUFS, gate PASS.
+
+## The sampled Diamond bass (v10-v19)
+Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ignores velocity. Four independent reviews
+(v13, v15, v17, v19; v19 passed) shaped the setup. Template: `templates\saltmarrow_template8.flp`. The bass has four channels, all on insert
+3: `bass_upright`, `bass_soft`, `bass_a2` and `bass_g3`. `maps/region_saltmarrow_fix.json` drives them through `flp_build.py --fix`.
+- **Velocity:** about 0.097 dB per FL step, measured on the rendered stem by fitting level against velocity with one
+  offset per key. The audition's 0.18 was wrong. Soft notes therefore need low velocities: re-plucks 40, pickups 50, beat-4 fifths 54 under roots at 88.
+  12 steps is only about 1 dB, so an accent pair needs about 30 steps.
+- **Hot samples:** G2, Bb2 and B2 are 4-6 dB hot, so they go to `bass_soft` with VOL -5 dB. The VOL knob is square-law:
+  raw = 10000 x 10^(dB/40), checked against a render (-5 set gave -5.3 to -5.5). F2, E3 and F3 get small velocity trims.
+- **Inharmonic samples:** A2's fundamental is about -30 c while its overtones are +8. G3's fundamental is +17 c and is its
+  loudest partial. No retune fixes a sample whose partials disagree, so A2 plays the Bb2 sample on `bass_a2` (PITCH -108)
+  and G3 plays the F3 sample on `bass_g3` (PITCH +200). This is the `"play"` key in the fix map.
+- **Pitch knob:** FL's per-note fine pitch never reaches Kontakt, but the channel PITCH knob does, as pitch bend. For this
+  preset that is about 0.92-0.97 c per unit, and only up to the channel RANGE (2 semitones = 200 units): 205 jumped G3 to +30 c.
+- **Range and decay:** A3 is nearly silent, so the bass stays at G3 or below (`bass_walk()` walks down instead). Long notes
+  fade about 27 dB in 1.5 s, so the cue plucks a held root again on beat 4.
+- **Stem gate:** `gate_stems.py` takes tuning from the fundamental and harmonics 2-4, flags any key whose median or
+  strongest partial is off, and flags any key more than 3 dB off at equal velocity.
+- **Mix:** bass gain +13 dB, with bells at 72 Hz (-3 dB) and 110 Hz (-3.5 dB).

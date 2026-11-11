@@ -18,6 +18,7 @@ NOTES = 224          # DATA+16: pattern notes, 24 bytes each
 PLAYLIST = 233       # DATA+25: playlist items, 32, 60 or 80 (FL 2024+) bytes each
 PATTERN_BASE = 20480
 CHANNEL_NAME = 203   # TEXT+11: channel display name, UTF-16LE, null-terminated
+LEVELS = 219         # DATA+11: channel levels: pan (0-12800), volume, pitch (i32, knob units), ...
 
 NOTE = struct.Struct("<IHHIHHBBBBBBBB")  # position flags channel length key group fine _ release midich pan vel modx mody
 
@@ -119,6 +120,25 @@ class Flp:
         if not idx:
             raise LookupError(f"channel {iid} has no name event")
         self.events[idx[0]][1] = utf16z(name)
+
+    def set_channel_pitch(self, iid: int, units: int) -> None:
+        """The channel's PITCH knob. A plugin gets it as pitch bend, so its size in
+        cents depends on the plugin's bend range: measure it (handoff)."""
+        idx = self.channel_events(iid, LEVELS)
+        if not idx:
+            raise LookupError(f"channel {iid} has no levels event")
+        data = bytearray(self.events[idx[0]][1])
+        struct.pack_into("<i", data, 8, int(units))
+        self.events[idx[0]][1] = bytes(data)
+
+    def set_channel_volume(self, iid: int, raw: int) -> None:
+        """The channel's VOL knob, raw 0-12800 (10000 = FL's default 78%)."""
+        idx = self.channel_events(iid, LEVELS)
+        if not idx:
+            raise LookupError(f"channel {iid} has no levels event")
+        data = bytearray(self.events[idx[0]][1])
+        struct.pack_into("<i", data, 4, int(raw))
+        self.events[idx[0]][1] = bytes(data)
 
     def notes_event(self, pattern_iid: int) -> int:
         """Index of the notes event inside pattern `pattern_iid`'s block(s)."""

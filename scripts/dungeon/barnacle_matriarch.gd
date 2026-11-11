@@ -129,6 +129,8 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
+			# Still rising into view: touching her doesn't hurt yet.
+			_contact.active = _timer <= 0.0
 			if _timer <= 0.0:
 				_enter(Mode.STALK, STALK_TIME)
 		Mode.STALK:

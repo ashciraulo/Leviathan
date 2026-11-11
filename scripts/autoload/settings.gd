@@ -48,6 +48,15 @@ var pad_overrides: Dictionary = {}
 
 const TEXT_SPEEDS := [25.0, 45.0, 90.0, 10000.0]
 const AUDIO_BUSES := ["Music", "Effects", "Ambience"]
+## Web KeyboardEvent.code of keys other than letters, digits and F-keys.
+const WEB_CODES := {
+	KEY_ESCAPE: "Escape", KEY_SPACE: "Space", KEY_ENTER: "Enter", KEY_TAB: "Tab",
+	KEY_BACKSPACE: "Backspace", KEY_UP: "ArrowUp", KEY_DOWN: "ArrowDown", KEY_LEFT: "ArrowLeft",
+	KEY_RIGHT: "ArrowRight", KEY_SHIFT: "ShiftLeft", KEY_CTRL: "ControlLeft", KEY_ALT: "AltLeft",
+	KEY_COMMA: "Comma", KEY_PERIOD: "Period", KEY_SLASH: "Slash", KEY_SEMICOLON: "Semicolon",
+	KEY_APOSTROPHE: "Quote", KEY_BRACKETLEFT: "BracketLeft", KEY_BRACKETRIGHT: "BracketRight",
+	KEY_MINUS: "Minus", KEY_EQUAL: "Equal", KEY_BACKSLASH: "Backslash", KEY_QUOTELEFT: "Backquote",
+}
 ## Actions the controls screen lists, in order.
 const REMAPPABLE := ["move_up", "move_down", "move_left", "move_right", "attack", "interact",
 	"item_1", "item_2", "hum", "map", "pause", "tab_prev", "tab_next"]
@@ -262,6 +271,48 @@ func _apply_bindings() -> void:
 		# Actions with no default button (Tab Next uses a trigger): add one.
 		if not pad_done and pad_overrides.has(action):
 			InputMap.action_add_event(action, _pad(int(pad_overrides[action])))
+	_tell_touch_controls()
+
+
+## The web page's on-screen buttons (web/touch.html) press the default keys:
+## tell them which key each of those actions uses now, and its label, so a
+## remapped action still works by touch and its button shows the new key.
+func _tell_touch_controls() -> void:
+	if not OS.has_feature("web"):
+		return
+	JavaScriptBridge.eval("window.__lvBind = %s; if (window.__lvRelabel) window.__lvRelabel();"
+			% JSON.stringify(touch_bindings()), true)
+
+
+## Default key's web code -> [the web code of the key its action uses now,
+## that key's name], for each action whose key was remapped.
+func touch_bindings() -> Dictionary:
+	var out := {}
+	for action: String in REMAPPABLE:
+		var events: Array = _default_events.get(action, [])
+		var default_key := 0
+		for event: InputEvent in events:
+			if event is InputEventKey:
+				default_key = int((event as InputEventKey).physical_keycode)
+				break
+		var now := main_key(action)
+		var from := web_code(default_key)
+		var to := web_code(now)
+		if now != default_key and from != "" and to != "":
+			out[from] = [to, MenuKit.keyboard_name(action)]
+	return out
+
+
+## A key's KeyboardEvent.code on the web ("KeyL", "Digit3", "Space"), or ""
+## for a key the on-screen buttons can't press.
+static func web_code(key: int) -> String:
+	if key >= KEY_A and key <= KEY_Z:
+		return "Key" + String.chr(key)
+	if key >= KEY_0 and key <= KEY_9:
+		return "Digit" + String.chr(key)
+	if key >= KEY_F1 and key <= KEY_F12:
+		return "F%d" % (key - KEY_F1 + 1)
+	return str(WEB_CODES.get(key, ""))
 
 
 func _apply_audio() -> void:

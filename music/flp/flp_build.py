@@ -30,6 +30,10 @@ sys.path.insert(0, HERE)
 import flp_raw  # noqa: E402
 
 
+VOL_DEFAULT = 10000      # FL's channel VOL knob at its default (raw units)
+VOL_DB_PER_DECADE = 40   # the knob is square-law: 10x raw = +40 dB (check against a render)
+
+
 def channel_names(path: str) -> dict[str, int]:
     """Channel display name -> rack index (the note's rack_channel)."""
     import pyflp
@@ -52,9 +56,23 @@ def midi_notes(path: str, scale: float) -> list[tuple[int, int, int, int]]:
 
 
 def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | None = None,
-          transpose: dict | None = None, audition: str | None = None) -> dict:
+          transpose: dict | None = None, audition: str | None = None, fixes: dict | None = None) -> dict:
     """audition: a part name; its notes go to EVERY channel whose name starts
-    with "aud" (aud1..aud6), so one split render compares six presets."""
+    with "aud" (aud1..aud6), so one split render compares six presets.
+    fixes: per part, corrections for a sampled preset measured by gate_stems:
+      {"bass_upright": {"vel_cap": 112, "db_per_vel": 0.183,
+                        "keys": {"45": {"db": -4.5, "cents": 20}}}}
+    vel_cap is the highest FL velocity (0-128). A key's db moves its velocity
+    by db / db_per_vel, for samples recorded out of level.
+    A sample recorded out of tune: FL's per-note fine pitch doesn't reach
+    Kontakt, so the key's notes go to a clone of the channel ("channel":
+    "bass_up", same insert) whose PITCH knob "pitch": {"bass_up": units} retunes
+    it. Units are pitch bend, so measure their size in cents per preset.
+    A sample recorded hot: velocity is a weak lever on some presets, so the key
+    can go to a clone with a lower VOL knob, "volume_db": {"bass_soft": -5}.
+    A sample that is inharmonic (its partials disagree, so no retune fixes it):
+    "play": 46 sends the neighbouring key to the clone, whose PITCH knob moves
+    it to the written note."""
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
     flp = flp_raw.Flp.load(template)
     names = channel_names(template)
@@ -73,10 +91,25 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
         t = transpose or {}
         shift = t.get(part_name, t.get(name, 0)) if part_name == name else t.get(part_name, 0) + t.get(name, 0)
         part_notes = midi_notes(os.path.join(MUSIC, "midi", cue, part_name + ".mid"), scale)
+        fix = (fixes or {}).get(part_name, {})
         for start, length, key, vel in part_notes:
             # FL velocity runs 0-128 with 100 as default; MIDI 127 maps to 128.
-            notes.append((start, names[name], length, key + shift, min(128, round(vel * 128 / 127)), 64))
-        counts[names[name]] = counts.get(names[name], 0) + len(part_notes)
+            v = vel * 128 / 127
+            k = fix.get("keys", {}).get(str(key + shift), {})
+            if k.get("db"):
+                v += k["db"] / fix["db_per_vel"]
+            v = max(1, min(fix.get("vel_cap", 128), round(v)))
+            ch = k.get("channel", name)
+            if ch not in names:
+                raise SystemExit(f"template has no channel named {ch!r} for key {key + shift} of {part_name}")
+            # "play": a neighbouring sample stands in for a bad one (Diamond's A2 and G3
+            # are inharmonic): the clone plays that key, retuned by its PITCH knob.
+            notes.append((start, names[ch], length, k.get("play", key + shift), v, 64))
+            counts[names[ch]] = counts.get(names[ch], 0) + 1
+        for ch, units in fix.get("pitch", {}).items():
+            flp.set_channel_pitch(names[ch], units)
+        for ch, db in fix.get("volume_db", {}).items():
+            flp.set_channel_volume(names[ch], round(VOL_DEFAULT * 10 ** (db / VOL_DB_PER_DECADE)))
     flp.set_notes(pattern, notes)
     if not audition:  # mapped channels take the part's name, so the .flp reads plainly in FL
         for part_name, name in targets:
@@ -109,7 +142,9 @@ if __name__ == "__main__":
     ap.add_argument("--map", help="json: {part name: channel name}")
     ap.add_argument("--transpose", help="json: {part or channel name: semitones}, for presets measured off-octave")
     ap.add_argument("--audition", help="part name to copy onto every aud* channel")
+    ap.add_argument("--fix", help="json: per-part fixes for a sampled preset (see build())")
     a = ap.parse_args()
     print(json.dumps(build(a.template, a.cue, a.out, a.pattern,
                            json.load(open(a.map)) if a.map else None,
-                           json.load(open(a.transpose)) if a.transpose else None, a.audition), indent=1))
+                           json.load(open(a.transpose)) if a.transpose else None, a.audition,
+                           json.load(open(a.fix)) if a.fix else None), indent=1))

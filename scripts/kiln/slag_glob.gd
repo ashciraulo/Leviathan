@@ -5,6 +5,7 @@ extends Projectile
 
 ## Molten slag burns through all but nacre.
 func _init() -> void:
+	super()
 	shield_tier = 3
 
 
