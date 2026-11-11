@@ -7,6 +7,11 @@ signal shake_requested(strength: float)
 ## overlapping hits can't leave the game frozen.
 var _active_hitstops := 0
 
+## The slow motion after a boss's last blow: how slow, and for how long in
+## real seconds.
+const SLOW_SCALE := 0.4
+const SLOW_TIME := 0.5
+
 
 ## Freeze the game for a few frames when a hit connects (2 frames by default).
 func hitstop(frames: int = 2) -> void:
@@ -26,3 +31,21 @@ func hitstop(frames: int = 2) -> void:
 func shake(strength: float) -> void:
 	if Settings.screen_shake_scale > 0.0:
 		shake_requested.emit(strength * Settings.screen_shake_scale)
+
+
+## The blow that fells a boss: a long hitstop, a heavy shake, a great star
+## where it landed, then a breath of slow motion while the boss goes down.
+## All of it scales with the hitstop setting (off means no freeze and no
+## slow motion).
+func final_blow(parent: Node, at: Vector2) -> void:
+	HitSpark.spawn(parent, at, HitSpark.Kind.FINAL)
+	shake(6.0)
+	await hitstop(10)
+	var scale: float = Settings.hitstop_scale
+	if scale <= 0.0 or _active_hitstops > 0:
+		return
+	Engine.time_scale = SLOW_SCALE
+	await get_tree().create_timer(SLOW_TIME * scale, true, false, true).timeout
+	# A hitstop that started meanwhile puts time back itself.
+	if _active_hitstops == 0 and Engine.time_scale == SLOW_SCALE:
+		Engine.time_scale = 1.0

@@ -1112,6 +1112,21 @@ func _test_play() -> void:
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
 	await _wait(0.5)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
+	# A boss's last blow: the great star, time held, then a breath of slow
+	# motion, and time back to normal after.
+	var stand_in := Scuttler.new()
+	stand_in.ai_enabled = false
+	stand_in.position = Vector2(150, row_y)
+	room.add_child(stand_in)
+	stand_in.add_to_group("boss")
+	await _wait(0.1)
+	stand_in.hp = 1
+	stand_in.take_hit(1, Vector2.RIGHT)
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FINAL) and Engine.time_scale == 0.0, "a boss's last blow throws the great star and holds time")
+	await get_tree().create_timer(0.35, true, false, true).timeout
+	_check(is_equal_approx(Engine.time_scale, Feel.SLOW_SCALE), "then time runs slow a moment (%s)" % Engine.time_scale)
+	await get_tree().create_timer(Feel.SLOW_TIME + 0.2, true, false, true).timeout
+	_check(Engine.time_scale == 1.0, "and comes back to normal")
 	GameState.refill()
 
 	# Lanternmoth circles Wren, flares (its tell), then dives.
@@ -2962,7 +2977,8 @@ func _test_maw_dungeon() -> void:
 		while vael.hp > 0:
 			vael.note_hit(null)
 		_check(GameState.has_flag(CantorVael.DEFEATED_FLAG), "his song broken, Vael stops and listens")
-		await _wait(1.5)
+		# The last blow holds time and slows it a moment before he speaks.
+		await _wait(2.2)
 		await _close_dialogue(game)
 		await _wait(0.3)
 		_check(is_instance_valid(vael), "he doesn't fall: he stays")

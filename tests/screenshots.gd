@@ -789,6 +789,9 @@ func _hull_shots(game: Node) -> void:
 		await _capture("39_matriarch_exposed")
 		boss.mode = BarnacleMatriarch.Mode.EXPOSED
 		boss.take_hit(99, Vector2.UP)
+		# The last blow: the great star while time hangs.
+		await get_tree().create_timer(0.5, true, false, true).timeout
+		await _capture("39b_matriarch_final_blow")
 		await _wait(3.2)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
 		await _wait(0.3)
