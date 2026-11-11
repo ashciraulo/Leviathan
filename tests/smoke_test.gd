@@ -591,7 +591,8 @@ func _test_villagers() -> void:
 		var row := csv.get_csv_line()
 		if row.size() < 2 or row[0] == "" or _menu_text(row[0]):
 			continue
-		# Key names filled in: "{key}" as both item keys, the longest it gets.
+		# Key names filled in: "{key}" as both default item keys (a longer
+		# remapped name may run over onto another page, which the box allows).
 		if fit_box.lines_for(MenuKit.fill_keys(tr(row[0])), false) > DialogueBox.MAX_LINES:
 			too_long.append(row[0])
 	_check(too_long.is_empty(), "every line the box can show fits it (too long: %s)" % ", ".join(too_long))

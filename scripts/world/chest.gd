@@ -105,9 +105,9 @@ func interact() -> void:
 
 ## What the box says on finding an item, with the keys to press filled in
 ## from the bindings in use now (MenuKit.fill_keys).
-static func item_talk(item: String) -> PackedStringArray:
+static func item_talk(id: String) -> PackedStringArray:
 	var lines := PackedStringArray()
-	for key: String in ITEM_TALK.get(item, []):
+	for key: String in ITEM_TALK.get(id, []):
 		var text := TranslationServer.translate(key)
-		lines.append(MenuKit.fill_keys(text, item) if "{" in text else key)
+		lines.append(MenuKit.fill_keys(text, id) if "{" in text else key)
 	return lines
