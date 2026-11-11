@@ -17,6 +17,7 @@ const KINDS := {
 	"W": [Art.WRECK, 27, Vector2(40, 14), true],
 	# Placed by StoryDirector, never by a room letter.
 	"figurehead": [Art.FIGUREHEAD, 38, Vector2(12, 6), false],
+	"calf_skull": [Art.CALF_SKULL, 26, Vector2(34, 10), true],
 	"l": [Art.LANTERN_POST, 29, Vector2(6, 4), false],
 	"R": [Art.HULL, 69, Vector2(84, 18), true],
 	"J": [Art.WINDMILL, 46, Vector2(14, 8), true, 4],

@@ -124,6 +124,17 @@ const SINGERS := {
 }
 const KILN_MOUTH := Vector2i(10, -2)
 const BRAM_FORGE_AT := Vector2(16 * 16 + 8, 5 * 16 + 10)
+## The Edge Survey: Ferrin camps on Edgewatch Bluff, past the far north of
+## Windmere, and gives Wren stakes for the ends of three other far reaches
+## ({id: [room, tile]}, filled in as each reach is built).
+const FERRIN_ROOM := Vector2i(4, -5)
+const FERRIN_AT := Vector2(12 * 16 + 8, 7 * 16 + 10)
+const SURVEY_STAKES := {}
+## The Ebb Grotto, by the Sunken Verge: the flood marks on its wall.
+const EBB_GROTTO := Vector2i(0, 4)
+const GROTTO_MARKS_AT := Vector2(6 * 16 + 8, 3 * 16 + 8)
+## The Calf's Rest, south of Gloamfen: {room: tile} of the little skull.
+const CALF_REST := {}
 ## The Ebb Shelf, bared only while the tide is held out: Gully goes out to
 ## its one dry sandbar, by the lantern-boat the ebb uncovered.
 const EBB_SHELF := Vector2i(1, 4)
@@ -257,6 +268,13 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_lantern_boat()
 	if GameState.has_flag(ENDING_FLAG):
 		_put_singers(coord)
+	if coord == EBB_GROTTO:
+		_put_grotto_marks()
+	if coord == FERRIN_ROOM:
+		_put_npc("ferrin", FERRIN_AT)
+	_put_survey_stake(coord)
+	if CALF_REST.has(coord):
+		_put_calf_skull(CALF_REST[coord])
 	if coord == STILL_COVE:
 		_put_ottilie()
 	# Coralie comes down to the shore once the opening's done with it.
@@ -987,6 +1005,48 @@ func _put_ottilie() -> void:
 ## Sister Lowe on the point, after the ending.
 func _put_lowe() -> void:
 	_put_npc("lowe", LOWE_AT)
+
+
+## Ferrin's survey stake (or the cairn where it goes) at the end of a reach.
+func _put_survey_stake(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	for id: String in SURVEY_STAKES:
+		var spot: Array = SURVEY_STAKES[id]
+		if spot[0] != coord or room == null:
+			continue
+		for child in room.get_children():
+			if child is SurveyStake:
+				return
+		var stake := SurveyStake.new()
+		stake.id = id
+		stake.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
+		room.add_child(stake)
+
+
+## The flood marks on the Ebb Grotto's wall.
+func _put_grotto_marks() -> void:
+	var room: Node = game.current_room
+	if room == null:
+		return
+	for child in room.get_children():
+		if child is GrottoMarks:
+			return
+	var marks := GrottoMarks.new()
+	marks.position = GROTTO_MARKS_AT
+	room.add_child(marks)
+
+
+## The calf's skull in the far fen.
+func _put_calf_skull(tile: Vector2i) -> void:
+	var room: Node = game.current_room
+	if room == null:
+		return
+	for child in room.get_children():
+		if child is CalfSkull:
+			return
+	var skull := CalfSkull.new()
+	skull.position = Vector2(tile) * 16.0 + Vector2(8, 14)
+	room.add_child(skull)
 
 
 ## Someone standing about in the current room, once.

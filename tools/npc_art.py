@@ -655,6 +655,61 @@ def gully_frames():
     return [idle, breathe, talk]
 
 
+def calf_skull():
+    """The Old One's lost calf (the Calf's Rest, south of Gloamfen): a small
+    whale skull, side on, sunk to the jaw in the fen. A rounded braincase,
+    a short blunt snout with no teeth to speak of, one empty eye, moss and
+    reeds grown over it, and three tiny fen-lights resting on the bone.
+    40x28, foot row 26."""
+    w, h = 40, 28
+    c = [["."] * w for _ in range(h)]
+
+    def ell(cx, cy, rx, ry, ch):
+        for y in range(h):
+            for x in range(w):
+                if ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1.0:
+                    c[y][x] = ch
+
+    # Braincase, then the short snout running out to the left.
+    ell(25.0, 15.0, 12.0, 11.0, "6")
+    for x in range(4, 26):
+        t = (x - 4) / 21.0
+        top = int(round(15 - t * t * 10))
+        for y in range(top, 23):
+            c[y][x] = "6"
+    ell(5.5, 18.0, 3.0, 4.5, "6")                    # the blunt nose
+    # The jaw line, sunk at the water.
+    for x in range(4, 26):
+        c[21][x] = "-"
+    # Eye socket and blowhole.
+    ell(27.0, 12.0, 4.0, 3.5, "e")
+    # Cracks.
+    for i, (x, y) in enumerate([(33, 7), (34, 8), (34, 9), (35, 10)]):
+        c[y][x] = "-"
+    # Moss over the crown and down the side.
+    for x in range(16, 34):
+        for y in range(3, 9):
+            if c[y][x] == "6" and ((x * 7 + y * 3) % 5 < 2 or y < 6):
+                c[y][x] = "m"
+    for (x, y) in [(36, 13), (36, 14), (35, 15), (17, 10), (18, 10)]:
+        if c[y][x] == "6":
+            c[y][x] = "m"
+    # Sunk in fen moss to the jaw, the moss ragged at its edges, and reeds.
+    for x in range(2, w - 2):
+        top = 22 + (1 if (x * 5) % 7 < 3 else 0)
+        bottom = 26 - (1 if x < 5 or x > w - 6 or (x * 3) % 5 == 0 else 0)
+        for y in range(top, bottom):
+            c[y][x] = "X"
+    for x0, top in [(1, 14), (2, 16), (37, 15), (38, 17)]:
+        for y in range(top, 24):
+            c[y][x0] = "X"
+    # Three fen-lights, resting.
+    for (x, y) in [(22, 3), (11, 13), (31, 19)]:
+        c[y][x] = "N"
+        c[y][x + 1] = "N"
+    return ["".join(r) for r in c]
+
+
 def figurehead():
     """The Lantern Wake's figurehead, 24x40, washed up and planted upright in
     the sand at a lean: a keeper carved holding her lamp high, eyes shut,
@@ -926,6 +981,47 @@ def straggler_frames(rows):
     breathe = settle(idle, 9)
     # Talking: one hand comes up to the chest.
     talk = paint(idle, [(12, 1, "."), (13, 1, "."), (11, 3, "SV")])
+    return [idle, breathe, talk]
+
+
+# --------------------------------------------------------------------------
+# Ferrin, the old mapmaker who camps at the world's far edges (the Edge
+# Survey). Wide-brimmed hat, long brown coat, a striped survey pole in one
+# hand and a rolled map under the other arm.
+# --------------------------------------------------------------------------
+FERRIN = [
+    "..............d.",
+    "......TTTT....R.",
+    ".....TTTTTT...d.",
+    "..TTTTTTTTTTTTd.",
+    "...AAAAAAAAAA.R.",
+    "...AAeAAAAeAA.d.",
+    "...AAAAAAAAAA.d.",
+    "....AZZZZZZA..R.",
+    ".....ZZZZZZ...d.",
+    "...88888888888d.",
+    "..8888888888888.",
+    ".66888888888A8d.",
+    ".6668888888888R.",
+    ".66688888888888.",
+    "..8888888888888.",
+    "..88888[[88888..",
+    "..8888888888888.",
+    "..8888888888888.",
+    "...888888888888.",
+    "...88888888888..",
+    "....uu....uu....",
+    "....uu....uu....",
+    "...uuu....uuu...",
+    "................",
+]
+
+
+def ferrin_frames():
+    idle = FERRIN
+    breathe = settle(idle, 9)
+    # Talking: chin up from the map, the free hand off the pole.
+    talk = paint(idle, [(11, 12, "8"), (10, 13, "A")])
     return [idle, breathe, talk]
 
 
@@ -1319,6 +1415,7 @@ SPRITES = {
     "sela": lambda: straggler_frames(SELA),
     "pim": lambda: straggler_frames(PIM),
     "ansel": lambda: straggler_frames(ANSEL),
+    "ferrin": ferrin_frames,
     "lowe": lowe_frames,
     "tobin": tobin_frames,
     "ide": ide_frames,
@@ -1689,6 +1786,19 @@ def portrait_ansel():
     return _rows(c)
 
 
+def portrait_ferrin():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "8")                    # long brown coat
+    _box(c, 2, 27, 6, 5, "6")                          # the rolled map
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, mouth=False)
+    _ellipse(c, 16, 23, 6, 4, "Z")                     # trimmed grey beard
+    _box(c, 14, 22, 4, 1, "-")
+    _ellipse(c, 16, 9, 9, 5, "T")                      # the hat's crown
+    _box(c, 3, 11, 26, 2, "T")                         # and its wide brim
+    _box(c, 7, 10, 18, 1, "8")                         # a dark band
+    return _rows(c)
+
+
 def portrait_murmur_plain():
     """Murmur after the ending: the robe set aside for a fen-green knit."""
     c = _canvas()
@@ -1808,6 +1918,7 @@ PORTRAITS = {
     "sela": portrait_sela(),
     "pim": portrait_pim(),
     "ansel": portrait_ansel(),
+    "ferrin": portrait_ferrin(),
     "lowe": portrait_lowe(),
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),
