@@ -1,0 +1,38 @@
+{
+ "cue": "dungeon_cellar",
+ "qbpm": 96.0,
+ "bar_q": 4,
+ "bars": 32,
+ "intro_q": 0,
+ "end_q": 128,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 80.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_pizz",
+   "notes": 139,
+   "low": 45,
+   "high": 67
+  },
+  {
+   "name": "bassoon",
+   "notes": 63,
+   "low": 52,
+   "high": 69
+  },
+  {
+   "name": "drum_tom",
+   "notes": 16,
+   "low": 45,
+   "high": 45
+  },
+  {
+   "name": "harp",
+   "notes": 18,
+   "low": 69,
+   "high": 80
+  }
+ ]
+}
