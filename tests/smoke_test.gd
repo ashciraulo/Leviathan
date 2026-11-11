@@ -5624,7 +5624,7 @@ func _test_far_reaches() -> void:
 	# then a deep trench only the Diver's Helm swims.
 	var ebb := Room.parse_layout(((load("res://rooms/room_1_4.tscn") as PackedScene).instantiate() as Room).layout)
 	var wrack := Room.parse_layout(((load("res://rooms/room_1_5.tscn") as PackedScene).instantiate() as Room).layout)
-	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 22 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench")
+	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 19 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench (a rock-capped shoal in it)")
 	# The Ossuary's far south: Saltpan Hollow opens onto Ribfall Sands, shut
 	# behind a bone barricade only the Echo Horn brings down.
 	_check(Room.parse_layout(((load("res://rooms/room_9_2.tscn") as PackedScene).instantiate() as Room).layout)[12].substr(8, 2) == "..", "Saltpan Hollow opens south to Ribfall Sands")
