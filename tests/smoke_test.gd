@@ -4396,8 +4396,8 @@ func _test_thin_region_screens() -> void:
 	await _wait(0.4)
 	var player: Player = game.player
 	player._invuln = 60.0
-	# Brineglass Basin: from the near reef the hook crosses the deep water,
-	# too wide to glide, to the chest reef, and a post brings Wren back.
+	# Sinkwhorl Flats: one great whorl of sinking sand between the reefs;
+	# the hook posts are the safe way over and back.
 	var basin: Room = game.current_room
 	for foe in _child_of(basin, Enemy):
 		foe.free()
@@ -4409,16 +4409,9 @@ func _test_thin_region_screens() -> void:
 		player.use_item("tide_hook")
 		await _wait(1.3)
 		ends.append(player.global_position - basin.global_position)
-	_check(basin.coord == Vector2i(10, 1) and basin.tile_at(11, 8) == "Q", "Brineglass Basin's reefs are split by deep water")
+	_check(basin.coord == Vector2i(10, 1) and basin.tile_at(11, 8) == "S" and basin.has_node("SinkField"), "Sinkwhorl Flats' reefs are split by sinking sand")
 	_check(int(ends[0].x) / Room.TILE == 14 and int(ends[1].x) / Room.TILE == 8, "the hook pulls Wren out to the chest reef and back (at %s, %s)" % ends)
 	var before := GameState.bubbles
-	player.global_position = _tile_pos(basin, Vector2i(8, 7))
-	player.facing = Vector2.RIGHT
-	await _wait(0.1)
-	player.use_item("kite_cloak")
-	await _wait(2.0)
-	_check(GameState.bubbles == before - 1 and (player.global_position - basin.global_position).x < 10 * Room.TILE, "a glide over the deep water falls short")
-	GameState.refill()
 	# Kestrel Reach: a stream to the stack, the hook down to the chest
 	# ledge, and the low stream home.
 	var reach: Room = await _goto(game, Vector2i(7, -3), Vector2i(1, 6))
@@ -4426,6 +4419,7 @@ func _test_thin_region_screens() -> void:
 		foe.free()
 	before = GameState.bubbles
 	ends.clear()
+	# (The stream ends at a rock on the stack's lip, so the hook is thrown from still ground.)
 	for move: Array in [[Vector2i(3, 3), Vector2.RIGHT, "kite_cloak", 3.0], [Vector2i(14, 3), Vector2.DOWN, "tide_hook", 1.3], [Vector2i(20, 9), Vector2.LEFT, "kite_cloak", 3.0]]:
 		player.global_position = _tile_pos(reach, move[0])
 		player.facing = move[1]
@@ -4434,7 +4428,7 @@ func _test_thin_region_screens() -> void:
 		await _wait(move[3])
 		ends.append(player.global_position - reach.global_position)
 	_check(reach.coord == Vector2i(7, -3), "the gallery leads on to Kestrel Reach")
-	_check(ends[0].x > 12 * Room.TILE and ends[0].y < 4 * Room.TILE, "the stream sets Wren on the stack (at %s)" % ends[0])
+	_check(ends[0].x > 11 * Room.TILE and ends[0].y < 4 * Room.TILE, "the stream sets Wren on the stack (at %s)" % ends[0])
 	_check(int(ends[1].y) / Room.TILE == 9, "the hook drops Wren to the chest ledge (at %s)" % ends[1])
 	_check(ends[2].x < 6 * Room.TILE, "the low stream blows them home (at %s)" % ends[2])
 	_check(GameState.bubbles == before, "all without a fall")

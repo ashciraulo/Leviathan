@@ -78,7 +78,7 @@ func _ready() -> void:
 		await _room_shots(game, {
 			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(20, 6)],
 			Vector2i(10, 0): ["thin_whalefall_steps", Vector2i(2, 6)],
-			Vector2i(10, 1): ["thin_brineglass_basin", Vector2i(11, 2)],
+			Vector2i(10, 1): ["thin_sinkwhorl_flats", Vector2i(11, 2)],
 			Vector2i(7, -3): ["thin_kestrel_reach", Vector2i(2, 6)],
 		})
 		SaveManager.delete_save()

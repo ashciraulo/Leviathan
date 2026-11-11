@@ -4,7 +4,7 @@
 
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
-name_key = "ROOM_BRINEGLASS_BASIN"
+name_key = "ROOM_SINKWHORL_FLATS"
 biome = "ossuary"
 chest_item = "glint"
 chest_count = 200
@@ -13,11 +13,11 @@ layout = "###########..###########
 #######.......##########
 #####....U....##########
 ###...c.......##########
-##~~~~~~~~QQQQQQQQQQQQ##
-#Q~~~~~~~~QQQQQQQQQQQQQ#
-#QQ......QQQQQ.......QQ#
-#QQ......QQQQQ.O.C...QQ#
-#QQ....O.QQQQQ.......QQ#
-#QQQQQQQQQQQQQQQQQQQQQQ#
-##QQQQQQQQQQQQQQQQQQQQ##
+##SSSSSSSSSSSSSSSSSSSS##
+#SSSSSSSSSSSSSSSSSSSSSS#
+#SS......SSSSS.......SS#
+#SS......SSSSS.O.C...SS#
+#SS....O.SSSSS.......SS#
+#SSSSSSSSSSSSSSSSSSSSSS#
+##SSSSSSSSSSSSSSSSSSSS##
 ########################"
