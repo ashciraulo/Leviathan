@@ -151,6 +151,18 @@ const SIGNAL_STONES := {
 	"skerry": [Vector2i(6, -5), Vector2i(18, 7)],
 	"brink": [Vector2i(8, 3), Vector2i(5, 8)],
 }
+## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
+## Asking for it sets PARTY_FLAG (the scene plays); the scene sets
+## PARTY_DONE_FLAG. Guests stand around Hessa at these tiles.
+const PARTY_FLAG := "lighting_party"
+const PARTY_DONE_FLAG := "lighting_day"
+const PARTY_GUESTS := {
+	"nettle": Vector2i(16, 6),
+	"ottilie": Vector2i(14, 7),
+	"agna": Vector2i(17, 8),
+	"wick": Vector2i(19, 8),
+	"sorrel": Vector2i(21, 8),
+}
 ## The Ebb Grotto, by the Sunken Verge: the flood marks on its wall.
 const EBB_GROTTO := Vector2i(0, 4)
 const GROTTO_MARKS_AT := Vector2(6 * 16 + 8, 3 * 16 + 8)
@@ -275,6 +287,9 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_up_journal(coord)
 	if coord == SALTMARROW and GameState.has_flag(TOBIN_HOME_FLAG):
 		_put_tobin_home()
+	# A party that was asked for but never thrown (the game closed first).
+	if coord == SALTMARROW and GameState.has_flag(PARTY_FLAG) and not GameState.has_flag(PARTY_DONE_FLAG):
+		hessas_lighting_day.call_deferred()
 	if coord == DROWNED_LANE or coord == BELFRY_SQUARE:
 		_put_liesl(coord)
 	if coord == FENMOUTH or FenLantern.SPOTS.has(coord):
@@ -378,6 +393,8 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		vael_at_the_spire()
 	elif flag == GALE_BELL_FLAG and not GameState.has_flag(TURNED_FLAG):
 		the_old_one_turns()
+	elif flag == PARTY_FLAG and GameState.room_coord == SALTMARROW and not GameState.has_flag(PARTY_DONE_FLAG):
+		hessas_lighting_day()
 	elif flag == ROW_ASKED_FLAG and GameState.room_coord == SALTMARROW:
 		rowing_to_the_maw()
 	elif flag == HollowRegent.DEFEATED_FLAG and GameState.room_coord == TOMB_BOSS and not GameState.has_flag(MURAL_FLAG):
@@ -716,6 +733,66 @@ func hessas_confession() -> void:
 	await scene.speak("hessa", ["HESSA_CONFESS_5"])
 	# Wren answers: one flash, yes.
 	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	scene.finish()
+
+
+## Hessa's lighting day: fifty years since she first lit the lamp. That
+## evening the square is full of the friends Wren invited, and since Hessa
+## can't hear them, they all say it the keepers' way: every lantern glows
+## "I'm here" at once.
+func hessas_lighting_day() -> void:
+	if Cutscene.active or GameState.has_flag(PARTY_DONE_FLAG):
+		return
+	GameState.set_flag(PARTY_DONE_FLAG)
+	var scene := _scene()
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	await scene.darken(1.0)
+	var room: Node2D = game.current_room
+	var hessa := _find_npc("hessa")
+	var guests: Array[Npc] = []
+	var nettle_was := Vector2.ZERO
+	for kind: String in PARTY_GUESTS:
+		var at := Vector2(PARTY_GUESTS[kind]) * 16.0 + Vector2(8, 10)
+		var guest := _find_npc(kind)
+		if guest:
+			nettle_was = guest.position
+		else:
+			guest = Npc.new(kind)
+			guest.add_to_group("party_guest")
+			room.add_child(guest)
+		guest.position = at
+		guest.remove_from_group("interactable")
+		guests.append(guest)
+	if hessa:
+		game.player.global_position = hessa.global_position + HOME_FROM_HESSA
+	scene.face(Vector2.UP)
+	await scene.lift_veil(1.2)
+	await scene.narrate(["NARRATE_PARTY_1"])
+	await scene.speak("nettle", ["NETTLE_PARTY_NOW"])
+	# Every lantern at once, Wren's too.
+	for guest in guests:
+		var glow := LampGlow.new(Cutscene.LAMP_HERE)
+		glow.position = guest.global_position + Vector2(0, -14)
+		game.world.add_child(glow)
+		await scene.wait(0.12)
+	await scene.lamp(game.player.global_position + Vector2(0, -14), Cutscene.LAMP_HERE)
+	await scene.wait(0.5)
+	if hessa:
+		await scene.lamp(hessa.global_position + Vector2(0, -14), Cutscene.LAMP_HERE)
+	await scene.speak("hessa", ["HESSA_PARTY_1", "HESSA_PARTY_2", "HESSA_PARTY_3"])
+	GameState.give_item("glint", 300, false)
+	Audio.play_jingle("jingle_item")
+	await scene.narrate(["NARRATE_PARTY_2", "NARRATE_PARTY_HAT", "NARRATE_GOT_PARTY_PURSE"])
+	await scene.darken(1.0)
+	if is_instance_valid(room) and room.is_inside_tree():
+		for guest in guests:
+			if guest.is_in_group("party_guest"):
+				guest.queue_free()
+			else:
+				guest.position = nettle_was
+				guest.add_to_group("interactable")
+	await scene.lift_veil(1.0)
 	scene.finish()
 
 

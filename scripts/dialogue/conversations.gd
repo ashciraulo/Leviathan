@@ -77,6 +77,7 @@ const TALKS := {
 	"hessa": [
 		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
 		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
+		{"if": ["lighting_day"], "unless": ["hessa_party_after"], "set": ["hessa_party_after"], "lines": ["HESSA_PARTY_AFTER"]},
 		# The little cap from the lantern-boat on the Ebb Shelf.
 		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
 		# The keepers' round: once the Kiln's bell is rung, she sends Wren
@@ -133,6 +134,13 @@ const TALKS := {
 		{"if": ["agna_bell_cast"], "unless": ["nettle_got_bell"], "set": ["nettle_got_bell"], "lines": [["", "NARRATE_HAND_BELL"], "NETTLE_GOT_BELL_1", ["", "NARRATE_NETTLE_RINGS"], "NETTLE_GOT_BELL_2"]},
 		# Nettle's signals: "I'm here" from the three old signal stones (SignalStone).
 		{"if": ["nettle_signals_ask", "signal_stone_stacks", "signal_stone_skerry", "signal_stone_brink"], "unless": ["nettle_signals_done"], "set": ["nettle_signals_done"], "give": {"glint": 150}, "lines": ["NETTLE_SIGNALS_DONE_1", "NETTLE_SIGNALS_DONE_2", "NETTLE_SIGNALS_DONE_3", "NETTLE_SIGNALS_DONE_4", ["", "NARRATE_GOT_SIGNAL_FEE"]]},
+		# Hessa's lighting day: fifty years since she first lit the lamp. Nettle
+		# plans a surprise party; Wren invites the guests; setting
+		# lighting_party plays StoryDirector.hessas_lighting_day.
+		{"if": ["lighting_ask", "party_ottilie", "party_agna", "party_wick", "party_sorrel", "party_marga"], "unless": ["lighting_party"], "set": ["lighting_party"], "lines": ["NETTLE_PARTY_READY"]},
+		{"if": ["nettle_learned", "seen_hessa_confession"], "unless": ["lighting_ask"], "set": ["lighting_ask"], "lines": ["NETTLE_PARTY_1", "NETTLE_PARTY_1B", "NETTLE_PARTY_2", "NETTLE_PARTY_2B"]},
+		{"if": ["lighting_ask"], "unless": ["lighting_party"], "lines": ["NETTLE_PARTY_WAITING"]},
+		{"if": ["lighting_day"], "unless": ["nettle_party_after"], "set": ["nettle_party_after"], "lines": ["NETTLE_PARTY_AFTER"]},
 		{"if": ["nettle_learned", "seen_wayshell"], "unless": ["nettle_signals_ask"], "set": ["nettle_signals_ask"], "lines": ["NETTLE_SIGNALS_1", "NETTLE_SIGNALS_1B", "NETTLE_SIGNALS_2", "NETTLE_SIGNALS_2B", "NETTLE_SIGNALS_3"]},
 		{"if": ["nettle_signals_ask"], "unless": ["nettle_signals_done"], "lines": ["NETTLE_SIGNALS_WAITING"]},
 		# Bell and signals both done: once, ahead of the late lines.
@@ -150,6 +158,7 @@ const TALKS := {
 		# The last singers: Bram, who stoked the Kiln for the Choir.
 		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
+		{"if": ["lighting_ask", "met_agna"], "unless": ["party_agna"], "set": ["party_agna"], "lines": ["AGNA_PARTY_1", "AGNA_PARTY_2"]},
 		# The Old One's scales: six shed pieces from the puzzle caves (ShedScale)
 		# for a hand-bell, which goes to Nettle.
 		{"if": ["agna_scales_ask", "shed_scale_dragline", "shed_scale_rimelight", "shed_scale_emberwell", "shed_scale_drybone", "shed_scale_gustway", "shed_scale_lampless"], "unless": ["agna_bell_cast"], "set": ["agna_bell_cast"], "give": {"glint": 250}, "lines": ["AGNA_SCALES_DONE_1", ["", "NARRATE_AGNA_POURS"], "AGNA_SCALES_DONE_2", "AGNA_SCALES_DONE_3", "AGNA_SCALES_DONE_4", ["", "NARRATE_GOT_SCALE_PURSE"]]},
@@ -199,6 +208,7 @@ const TALKS := {
 		{"if": ["ottilie_asked", "sela_met", "letter_ottilie"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2"]},
 		{"if": ["ottilie_asked", "sela_met"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2B"]},
 		{"if": ["sorrel_letters", "ottilie_asked"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
+		{"if": ["lighting_ask", "ottilie_asked"], "unless": ["party_ottilie"], "set": ["party_ottilie", "party_rimefin"], "lines": ["OTTILIE_PARTY_1", "OTTILIE_PARTY_2", "OTTILIE_PARTY_3", ["", "NARRATE_GOT_PARTY_RIMEFIN"]]},
 		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
 		# Her old cave sign for Hessa (Wren shows it with the lamp), and the answer.
 		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
@@ -216,6 +226,7 @@ const TALKS := {
 	"sorrel": [
 		# The last singers: Ansel, her old sorter.
 		{"if": ["sorrel_asked", "ansel_met"], "unless": ["sorrel_ansel"], "set": ["sorrel_ansel"], "lines": ["SORREL_ANSEL_1", "SORREL_ANSEL_2"]},
+		{"if": ["lighting_ask", "sorrel_asked"], "unless": ["party_sorrel"], "set": ["party_sorrel"], "lines": ["SORREL_PARTY_1", "SORREL_PARTY_2"]},
 		# The post's last three letters, never sent when it shut.
 		{"if": ["letter_ottilie", "letter_liesl", "letter_agna"], "unless": ["sorrel_letters_paid"], "set": ["sorrel_letters_paid"], "give": {"glint": 150}, "lines": ["SORREL_LETTERS_DONE_1", "SORREL_LETTERS_DONE_2", ["", "NARRATE_GOT_POSTAGE"]]},
 		# Gullcry Stacks, the run no courier ever flew (its chest is the proof).
@@ -388,6 +399,7 @@ const TALKS := {
 	# five that have gone dark (FenLantern).
 	"wick": [
 		{"if": ["wick_asked", "pim_home"], "unless": ["wick_met_pim"], "set": ["wick_met_pim"], "lines": ["WICK_PIM"]},
+		{"if": ["lighting_ask", "wick_asked"], "unless": ["party_wick"], "set": ["party_wick"], "lines": ["WICK_PARTY_1", "WICK_PARTY_2"]},
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
 		# The Lampless Sink's four braziers, lit at last.
@@ -404,6 +416,10 @@ const TALKS := {
 	],
 	# Marga sends Wren to Dunstan for rope: a small errand made of flags.
 	"marga": [
+		# Rimefin pie for Hessa's lighting day (Ottilie sends the fish).
+		{"if": ["lighting_ask", "party_rimefin"], "unless": ["party_marga"], "set": ["party_marga"], "lines": [["", "NARRATE_HAND_RIMEFIN"], "MARGA_PARTY_PIE_1", "MARGA_PARTY_PIE_2"]},
+		{"if": ["lighting_ask", "asked_for_rope"], "unless": ["party_marga", "party_marga_ask"], "set": ["party_marga_ask"], "lines": ["MARGA_PARTY_1", "MARGA_PARTY_2"]},
+		{"if": ["party_marga_ask"], "unless": ["party_marga"], "lines": ["MARGA_PARTY_WAITING"]},
 		{"if": ["marga_gave_jar", "seen_ending"], "lines": ["MARGA_END"]},
 		{"if": ["marga_gave_jar", "old_one_turned"], "lines": ["MARGA_TURNED"]},
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
