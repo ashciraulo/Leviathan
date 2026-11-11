@@ -7696,6 +7696,12 @@ func _test_small_finds() -> void:
 	_check(Conversations.branch_for("ide")["set"].has("ide_ferry"), "and so does handing it in")
 	Conversations.talk("ide")
 	_check(GameState.item_count("glint") == glints + 100 and first.call("ide") == "IDE_FERRY_AGAIN", "Patience gets her name back")
+	# Met once before the ending, asked after it.
+	GameState.reset_new_game()
+	for flag in ["tidebell_belfry", "met_ide_ferry", "seen_ending"]:
+		GameState.set_flag(flag)
+	Conversations.talk("ide")
+	_check(first.call("ide") == "IDE_BOARD_1", "after the ending Ide still asks after her nameboard")
 	# Found before anyone asked: the hand-in comes straight away.
 	GameState.reset_new_game()
 	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "tidebell_belfry", "met_ide_ferry", "found_nameboard"]:
