@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room.gd" id="1_room"]
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1_room")
+name_key = "ROOM_MAW_SINUS"
+biome = "maw"
+dungeon = "maw"
+chest_item = "glint"
+chest_count = 50
+gate = "eyes"
+layout = "##..####################
+#...#____________......#
+#...#_____Z______..E...#
+#|||_____________......#
+#...____.....____......#
+#...____.....____......#
+#.O.____.O.O.____.O....#
+#...____.....____.......
+#.x.____.....____.......
+#..._____________......#
+#.C.______Z______..x...#
+#..._____________......#
+########################"

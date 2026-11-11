@@ -714,6 +714,8 @@ ROOM_TOMB_CRYPT,The Marrow Tomb: Horn Crypt
 ROOM_TOMB_ECHO,The Marrow Tomb: Echo Chamber
 ROOM_TOMB_HIDDEN,The Marrow Tomb: Forgotten Ossuary
 ROOM_TOMB_PIT,The Marrow Tomb: Bone Pit
+ROOM_TOMB_LIGHTLESS_STAIR,The Marrow Tomb: Lightless Stair
+ROOM_TOMB_MARROW_VAULT,The Marrow Tomb: Marrow Vault
 ROOM_TOMB_SKULL_CHOIR,The Marrow Tomb: Skull Choir
 ROOM_TOMB_BONE_ORCHARD,The Marrow Tomb: Bone Orchard
 ROOM_TOMB_BOSS,The Marrow Tomb: the Regent's Barrow
@@ -815,6 +817,8 @@ ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
 ROOM_MAW_TIDEWELL,The Maw: Tidewell
 ROOM_MAW_LUNG,The Maw: the Lung
 ROOM_MAW_GULLET,The Maw: the Gullet
+ROOM_MAW_SINUS,The Maw: the Sinus
+ROOM_MAW_COCHLEA,The Maw: the Cochlea
 TOAST_GOT_NACRE_BUCKLER,You found the Nacre Buckler!
 TOAST_GOT_ABYSSAL,You found the Abyssal Coat!
 TOAST_GOT_TIDECALLER_SWORD,You found the Tidecaller!
