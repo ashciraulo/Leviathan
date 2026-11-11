@@ -17,11 +17,14 @@ const CRACK_TIME := 0.55
 const CHARGE_TIME := 1.4
 const FLIPPED_TIME := 1.8
 const REST_TIME := 0.8
+## The elite's quick second crack after a wall.
+const RECRACK_TIME := 0.3
 const WANDER_DIRECTIONS := [Vector2.ZERO, Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 
 var mode := Mode.WANDER
 var _timer := 0.0
 var _direction := Vector2.ZERO
+var _bounced := false
 
 
 func _init() -> void:
@@ -53,9 +56,17 @@ func _think(delta: float) -> void:
 		Mode.CHARGE:
 			velocity = _direction * CHARGE_SPEED
 			if get_slide_collision_count() > 0:
-				mode = Mode.FLIPPED
-				_timer = FLIPPED_TIME
 				Feel.shake(2.0)
+				if elite and not _bounced:
+					_bounced = true
+					mode = Mode.CRACK
+					_timer = RECRACK_TIME
+					_direction = _turn_toward(player)
+					Audio.play_sfx("beetle_crack", global_position, 0.8)
+				else:
+					mode = Mode.FLIPPED
+					_timer = FLIPPED_TIME
+					_bounced = false
 			elif _timer <= 0.0:
 				_rest()
 		Mode.FLIPPED:
@@ -66,6 +77,14 @@ func _think(delta: float) -> void:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
 				mode = Mode.WANDER
+
+
+## Off a wall: square across the way it came, toward Wren's side.
+func _turn_toward(player: Node2D) -> Vector2:
+	var across := Vector2(-_direction.y, _direction.x)
+	if player and across.dot(player.global_position - global_position) < 0.0:
+		across = -across
+	return across
 
 
 ## The cardinal direction to Wren if Wren is lined up and close, else zero.
@@ -106,6 +125,7 @@ func _on_hurt() -> void:
 func _rest() -> void:
 	mode = Mode.REST
 	_timer = REST_TIME
+	_bounced = false
 
 
 func _make_sprite() -> Sprite2D:

@@ -6,6 +6,7 @@
 script = ExtResource("1_room")
 name_key = "ROOM_MANGROVE_DEEP"
 biome = "brinewood"
+elite = Vector2i(18, 8)
 layout = "########################
 ####......####.....#####
 ###...M.....##..M....###

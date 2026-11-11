@@ -1,7 +1,8 @@
 class_name Scuttler
 extends Enemy
 ## Chaser (a shore crab). Wanders, then crouches and flashes yellow (the tell)
-## before dashing in a straight line at Wren.
+## before dashing in a straight line at Wren. The elite (Brinewood's old
+## crab) chains its dashes: two more, each after a quicker crouch, re-aimed.
 
 enum Mode { WANDER, WINDUP, DASH, REST }
 
@@ -11,11 +12,15 @@ const SIGHT := 96.0
 const WINDUP_TIME := 0.45
 const DASH_TIME := 0.35
 const REST_TIME := 0.7
+## The elite's quick crouch between chained dashes, and how many follow.
+const CHAIN_WINDUP := 0.24
+const CHAIN_DASHES := 2
 const WANDER_DIRECTIONS := [Vector2.ZERO, Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 
 var mode := Mode.WANDER
 var _timer := 0.0
 var _direction := Vector2.ZERO
+var _chain := 0
 
 
 func _init() -> void:
@@ -47,7 +52,14 @@ func _think(delta: float) -> void:
 		Mode.DASH:
 			velocity = _direction * DASH_SPEED
 			if _timer <= 0.0 or get_slide_collision_count() > 0:
-				_rest()
+				if elite and _chain < CHAIN_DASHES:
+					_chain += 1
+					mode = Mode.WINDUP
+					_timer = CHAIN_WINDUP
+					velocity = Vector2.ZERO
+					Audio.play_sfx("scuttler_snap", global_position, 0.8)
+				else:
+					_rest()
 		Mode.REST:
 			velocity = Vector2.ZERO
 			if _timer <= 0.0:
@@ -61,6 +73,7 @@ func _on_hurt() -> void:
 func _rest() -> void:
 	mode = Mode.REST
 	_timer = REST_TIME
+	_chain = 0
 
 
 func _make_sprite() -> Sprite2D:

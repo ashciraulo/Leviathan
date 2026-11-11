@@ -17,6 +17,17 @@ const HIT_STUN := 0.25
 @export var contact_damage := 1
 ## Turn off to freeze the enemy's decisions (for tests and debugging).
 @export var ai_enabled := true
+## A region's elite (set before it enters the tree; see Room.elite): bigger,
+## three times as hardy, tinted like old bronze, and its kind's pattern grows
+## a second step (see each kind's _think). It roars when it first sees Wren,
+## and drops a heap of glints when it falls.
+var elite := false
+
+const ELITE_HP := 3
+const ELITE_SCALE := 1.3
+const ELITE_TINT := Color(1.0, 0.8, 0.6)
+const ELITE_GLINTS := 30
+const ELITE_SIGHT := 110.0
 
 ## Size of the feet collision. The hurtbox is a little taller.
 var body_size := Vector2(12, 8)
@@ -32,9 +43,12 @@ var _hurtbox: Area2D
 var _contact: DamageArea
 var _sprite: Sprite2D
 var _sprite_origin := Vector2.ZERO
+var _roared := false
 
 
 func _ready() -> void:
+	if elite:
+		max_hp *= ELITE_HP
 	hp = max_hp
 	add_to_group("enemies")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
@@ -62,12 +76,21 @@ func _ready() -> void:
 	_sprite.set_meta("contrast", Palette.CONTRAST_ENEMY)
 	add_child(_sprite)
 	_sprite_origin = _sprite.position
+	if elite:
+		scale = Vector2.ONE * ELITE_SCALE
+		_sprite.self_modulate = ELITE_TINT
 
 
 func _physics_process(delta: float) -> void:
 	_flash = maxf(_flash - delta, 0.0)
 	if dying:
 		return
+	if elite and not _roared and ai_enabled:
+		var wren := get_player()
+		if wren and wren.global_position.distance_to(global_position) < ELITE_SIGHT:
+			_roared = true
+			Audio.play_sfx("boss_roar", global_position, 1.5)
+			Feel.shake(1.5)
 	if _stun > 0.0:
 		_stun -= delta
 		velocity = _knockback
@@ -128,7 +151,14 @@ const GLINT_ODDS := 0.6
 func _die() -> void:
 	dying = true
 	Audio.play_sfx("enemy_die", global_position)
-	if not is_in_group("boss") and get_parent():
+	if elite:
+		Audio.play_sfx("boss_fall", global_position, 1.6)
+		var room := get_parent() as Room
+		if room:
+			GameState.set_flag(Room.elite_flag(room.coord))
+		if get_parent():
+			Glint.drop.call_deferred(get_parent(), position, ELITE_GLINTS)
+	elif not is_in_group("boss") and get_parent():
 		Glint.drop.call_deferred(get_parent(), position, Glint.roll(GLINT_ODDS))
 	_contact.active = false
 	_contact.set_deferred("monitorable", false)

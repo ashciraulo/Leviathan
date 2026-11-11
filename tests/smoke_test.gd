@@ -59,6 +59,7 @@ func _ready() -> void:
 		await _test_overworld_life()
 		await _test_regional_caves()
 		await _test_thin_region_screens()
+		await _test_elites()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -4545,6 +4546,65 @@ func _test_thin_region_screens() -> void:
 	var rows := Room.parse_layout(steps.layout)
 	_check(rows[11].substr(11, 2) == "YY" and rows[12].substr(11, 2) == "..", "Whalefall Steps' way down is blocked by cracked boulders")
 	steps.free()
+
+
+## The regions' elites: an ordinary foe grown big and bronze, with a second
+## step to its pattern, that stays beaten.
+func _test_elites() -> void:
+	GameState.reset_new_game()
+	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle"}
+	for coord: Vector2i in cases:
+		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
+		room.coord = coord
+		add_child(room)
+		await _wait(0.1)
+		var elites := _child_of(room, Enemy).filter(func(e: Enemy) -> bool: return e.elite)
+		_check(elites.size() == 1 and elites[0].get_class() != "" and (elites[0].get_script() as Script).get_global_name() == cases[coord], "%s has one elite %s" % [coord, cases[coord]])
+		if elites.is_empty():
+			room.queue_free()
+			continue
+		var boss: Enemy = elites[0]
+		_check(boss.max_hp == 2 * Enemy.ELITE_HP and boss.scale.x > 1.2, "the elite is bigger and three times as hardy")
+		boss.ai_enabled = false
+		if boss is Scuttler:
+			var crab := boss as Scuttler
+			crab.ai_enabled = true
+			var dashes := 1
+			for i in 3:
+				crab.mode = Scuttler.Mode.DASH
+				crab._timer = 0.0
+				crab._think(0.016)
+				if crab.mode == Scuttler.Mode.WINDUP:
+					dashes += 1
+			_check(dashes == 3 and crab.mode == Scuttler.Mode.REST, "the elite crab chains three dashes, then rests")
+			crab.ai_enabled = false
+		elif boss is Slagbeetle:
+			var bull := boss as Slagbeetle
+			bull.position = Vector2(2 * Room.TILE + 8, 9 * Room.TILE + 12)
+			bull.ai_enabled = true
+			bull.mode = Slagbeetle.Mode.CHARGE
+			bull._direction = Vector2.LEFT
+			bull._timer = 2.0
+			await _wait(0.3)
+			_check(bull.mode == Slagbeetle.Mode.CRACK and bull._bounced and absf(bull._direction.y) == 1.0, "the elite beetle shrugs off its first wall and turns")
+			bull.ai_enabled = false
+		for i in 12:
+			if not boss.dying:
+				if boss is Slagbeetle:
+					(boss as Slagbeetle).mode = Slagbeetle.Mode.FLIPPED
+				boss.take_hit(1, Vector2.RIGHT)
+		await _wait(0.4)
+		_check(GameState.has_flag(Room.elite_flag(coord)), "the fallen elite stays beaten")
+		var count := _child_of(room, Enemy).size()
+		room.queue_free()
+		await _wait(0.1)
+		var again: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
+		again.coord = coord
+		add_child(again)
+		await _wait(0.1)
+		_check(_child_of(again, Enemy).all(func(e: Enemy) -> bool: return not e.elite), "%s comes back without its elite" % coord)
+		again.queue_free()
+		await _wait(0.1)
 
 ## Overworld life: the Galehawk over Windmere, the newer foes elsewhere, and
 ## the hares, lizards and reeds.

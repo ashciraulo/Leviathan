@@ -117,6 +117,10 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## A hollow or grotto off the overworld: the light falls off toward its
 ## rock walls (see CaveShade), so it feels tucked away.
 @export var cave := false
+## The tile of this room's elite, if it has one: the foe that starts there is
+## the region's elite (bigger, tougher, with a pattern of its own; see Enemy).
+## Once beaten it stays beaten.
+@export var elite := Vector2i(-1, -1)
 ## An ambience loop for this room alone (audio/ambience/<id>), in place of
 ## its region's: "" uses the region's.
 @export var ambience := ""
@@ -638,10 +642,21 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = DungeonTiles.make(tile, self, pos)
 		_:
 			push_warning("Room %s: unknown tile '%s'" % [scene_file_path, tile])
+	if node is Enemy and Vector2i(int(pos.x) / TILE, int(pos.y) / TILE) == elite:
+		if GameState.has_flag(elite_flag(coord)):
+			node.free()
+			node = null
+		else:
+			(node as Enemy).elite = true
 	if node:
 		node.position = pos
 		_harden(node)
 		add_child(node)
+
+
+## The flag set when the elite of the room at `at` is beaten.
+static func elite_flag(at: Vector2i) -> String:
+	return "elite_%d_%d" % [at.x, at.y]
 
 
 func _make_static(layer: int, node_name: String) -> StaticBody2D:
