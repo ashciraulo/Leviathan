@@ -102,6 +102,7 @@ SECRETS = {
     (1, -5): ("stonebreaker", "frostfang_bow"),  # Hoarfrost Cairn: boulders, then bars until both lake eyes are shot
     (7, 3): ("glowmoth_lantern", "kite_cloak", "frostfang_bow"),  # the Calf's Rest: glints on a fen islet
     (0, 5): ("tide_hook", "kite_cloak", "frostfang_bow"),  # Lee of the Old One: glints on a reef islet with a hook post
+    (8, 3): ("kite_cloak", "frostfang_bow"),  # Saltgrave Brink: glints on a bitter-sea islet
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -131,7 +132,7 @@ BLOCKERS = set("TCOKXEh123456k")
 
 
 def stops_flight(tile):
-    return tile == "#" or tile in PROPS or tile in BLOCKERS or tile == "Y"
+    return tile == "#" or tile in PROPS or tile in BLOCKERS or tile in "Y%"
 
 
 def load_rooms():
@@ -198,6 +199,9 @@ def walkable(tile, items):
         return "stonebreaker" in items
     if tile == ";":
         return "old_one_turned" in items
+    if tile == "%":
+        # A bone barricade: the Echo Horn, found in the Marrow Tomb, brings it down.
+        return "tidebell_tomb" in items
     if tile in "^_":
         return False
     return True

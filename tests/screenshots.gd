@@ -104,6 +104,8 @@ func _ready() -> void:
 			Vector2i(7, 3): ["reach_calfs_rest", Vector2i(8, 6)],
 			Vector2i(1, 5): ["reach_wrack_deeps", Vector2i(12, 10)],
 			Vector2i(0, 5): ["reach_lee_of_the_old_one", Vector2i(10, 8)],
+			Vector2i(9, 3): ["reach_ribfall_sands", Vector2i(8, 3)],
+			Vector2i(8, 3): ["reach_saltgrave_brink", Vector2i(10, 8)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
