@@ -160,7 +160,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -256,6 +256,14 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _murmur_dace_shots()
+			"ebb_story":
+				game.queue_free()
+				await _wait(0.2)
+				await _ebb_story_shots()
+			"carvings":
+				game.queue_free()
+				await _wait(0.2)
+				await _carving_shots()
 			"epilogue":
 				game.queue_free()
 				await _wait(0.2)
@@ -1784,7 +1792,8 @@ func _epilogue_shots() -> void:
 ## Murmur tending Fenmouth's lanterns, and Mother Dace by the last mural.
 func _murmur_dace_shots() -> void:
 	for spot in [[StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT, [StoryDirector.CALF_FLAG], "epilogue_7_murmur_at_fenmouth"],
-			[StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT, [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG], "epilogue_8_dace_by_the_mural"]]:
+			[StoryDirector.TOMB_BOSS, StoryDirector.DACE_AFTER_AT, [HollowRegent.DEFEATED_FLAG, StoryDirector.MURAL_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG], "epilogue_8_dace_by_the_mural"],
+			[StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT, [StoryDirector.CALF_FLAG, "murmur_met", StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG], "epilogue_9_murmur_without_the_robe"]]:
 		GameState.reset_new_game()
 		for flag: String in spot[2]:
 			GameState.set_flag(flag)
@@ -1801,6 +1810,84 @@ func _murmur_dace_shots() -> void:
 		game.player.try_interact()
 		await _wait(2.4)
 		await _capture(spot[3])
+		var box := _dialogue_box(game)
+		while box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+			await _wait(0.1)
+		game.queue_free()
+		await _wait(0.2)
+
+
+## Gully out on the Ebb Shelf with the tide held out, and the cap Wren
+## finds in the lantern-boat there.
+func _ebb_story_shots() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa", "gully_paid"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(3.0)
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	game.player.try_interact()
+	var box := _dialogue_box(game)
+	for page in 2:
+		await _wait(2.6)
+		box.advance()
+	await _wait(2.8)
+	await _capture("ebb_1_gully_and_the_lantern_boat")
+	while DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	var boat: LanternBoat = null
+	for child in game.current_room.get_children():
+		if child is LanternBoat:
+			boat = child
+	game.player.global_position = boat.global_position + Vector2(0, 10)
+	game.player.facing = Vector2.UP
+	await _wait(0.3)
+	game.player.try_interact()
+	await _wait(2.6)
+	box.advance()
+	await _wait(2.6)
+	await _capture("ebb_2_the_cap_under_the_bench")
+	while DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Wren reading what the keepers cut into two Tidestones.
+func _carving_shots() -> void:
+	for spot in [[Vector2i(5, -4), "carving_1_spire_foot"], [Vector2i(32, 10), "carving_2_glacier"]]:
+		GameState.reset_new_game()
+		GameState.set_checkpoint(spot[0], Vector2(12 * Room.TILE, 8 * Room.TILE))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.2)
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			enemy.queue_free()
+		var stone: Tidestone = null
+		for child in game.current_room.get_children():
+			if child is Tidestone:
+				stone = child
+		game.player.global_position = stone.global_position + Vector2(0, 16)
+		await _wait(3.0)
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		game.player.try_interact()
+		await _wait(2.0)
+		_dialogue_box(game).advance()
+		await _wait(2.4)
+		await _capture(spot[1])
 		var box := _dialogue_box(game)
 		while box and DialogueBox.is_open:
 			box.advance()

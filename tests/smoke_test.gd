@@ -55,6 +55,7 @@ func _ready() -> void:
 		await _test_overworld_secrets()
 		await _test_tide_turning()
 		await _test_sea_bed()
+		await _test_tidestone_carvings()
 		await _test_challenges()
 		await _test_overworld_life()
 		await _test_regional_caves()
@@ -86,6 +87,9 @@ func _ready() -> void:
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
+		_test_hessa_hints()
+		_test_challenge_talk()
+		await _test_ebb_shelf()
 		_test_late_reactions()
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -553,6 +557,10 @@ func _test_villagers() -> void:
 			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
 	for key in ["WAYSHELL_1", "WAYSHELL_2", "WAYSHELL_3"]:
 		_check(fit_box.lines_for(key, true) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
+	# And what's cut into every Tidestone.
+	for carving: Array in Tidestone.CARVINGS.values():
+		for key: String in carving:
+			_check(fit_box.lines_for(key, false) <= DialogueBox.MAX_LINES, "%s fits the box" % key)
 	# Large text: the same box, one big line per page, long pages split.
 	var was_large := Settings.large_text
 	Settings.large_text = true
@@ -4607,6 +4615,8 @@ func _test_tide_turning() -> void:
 	stone.room_coord = Vector2i(0, 2)
 	add_child(stone)
 	stone.awake = true
+	# Its carving already read, so Interact goes straight to the tide.
+	GameState.set_flag(stone.read_key())
 	stone.interact()
 	_check(Tide.held() == "" and not Tide.can_turn(), "before the Old One turns, a Tidestone leaves the tide alone")
 	GameState.set_flag("old_one_turned")
@@ -5012,6 +5022,47 @@ func _test_sea_bed() -> void:
 	_check(Tide.held() == "high" and steps_tide != null and steps_tide.is_flooded(Vector2i(9, 11)) and steps_tide.cover(Vector2i(9, 11)) >= 1.0,
 		"turning the tide in at low water never bares the sea bed")
 	steps.queue_free()
+	Tide.offset = 0.0
+	GameState.reset_new_game()
+
+
+## Every Tidestone has a keeper's line cut into it. Interact reads it; after
+## the turn, a stone already read turns the tide instead.
+func _test_tidestone_carvings() -> void:
+	GameState.reset_new_game()
+	var stones := 0
+	for file in DirAccess.get_files_at("res://rooms"):
+		file = file.trim_suffix(".remap")
+		if not file.ends_with(".tscn"):
+			continue
+		var parts := file.trim_prefix("room_").trim_suffix(".tscn").split("_")
+		var coord := Vector2i(int(parts[0]), int(parts[1]))
+		var room: Room = (load("res://rooms/" + file) as PackedScene).instantiate()
+		if (room.layout + room.alt_layout).contains("T"):
+			stones += 1
+			var carving: Array = Tidestone.CARVINGS.get(coord, [])
+			_check(not carving.is_empty(), "the Tidestone in room %s has a carving" % coord)
+			for key: String in carving:
+				_check(tr(key) != key, "%s has its text" % key)
+		room.free()
+	_check(stones == Tidestone.CARVINGS.size(), "every carving belongs to a stone (%d stones)" % stones)
+	var shown: Array = []
+	var catch := func(pages: Array) -> void: shown.append_array(pages)
+	Events.conversation_requested.connect(catch)
+	var stone := Tidestone.new()
+	stone.room_coord = Vector2i(5, -4)
+	add_child(stone)
+	stone.awake = true
+	stone.interact()
+	_check(shown.size() == 2 and shown[1]["text"] == "STONE_SPIRE_FOOT", "facing a stone, Wren reads what's cut into it")
+	GameState.set_flag("old_one_turned")
+	stone.interact()
+	_check(shown.size() == 2 and Tide.held() == "high", "after the turn, a stone already read turns the tide")
+	stone.room_coord = Vector2i(0, 0)
+	stone.interact()
+	_check(shown.size() == 4 and Tide.held() == "high", "an unread stone shows its carving first, even after the turn")
+	Events.conversation_requested.disconnect(catch)
+	stone.queue_free()
 	Tide.offset = 0.0
 	GameState.reset_new_game()
 
@@ -5604,6 +5655,8 @@ func _test_wick() -> void:
 	game.player.try_interact()
 	pages = await _play_scene(game, 10.0)
 	_check(GameState.has_flag("wick_gave_jar") and GameState.item_count("jar") == jars + 1, "Wick gives Wren a jar")
+	_check(Conversations.branch_for("wick").get("lines")[0] == "WICK_SINK_1", "then wonders about the Lampless Sink")
+	GameState.set_flag("wick_told_sink")
 	_check(Conversations.branch_for("wick").get("lines") == ["WICK_AFTER"], "and is glad of every light")
 	GameState.set_flag("seen_ending")
 	_check(Conversations.branch_for("wick").get("lines")[0] == "WICK_END", "after the ending they counted the strange lights leaving")
@@ -5933,6 +5986,8 @@ func _test_sorrel() -> void:
 	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_LETTERS_1", "after the race, Sorrel's last letters come first")
 	GameState.set_flag("sorrel_letters")
 	GameState.set_flag("sorrel_letters_paid")
+	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_STACKS_1", "then she dares Wren to fly Gullcry Stacks")
+	GameState.set_flag("sorrel_dared_stacks")
 	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_END", "after the ending she flies letters again")
 
 
@@ -6145,6 +6200,13 @@ func _test_murmur_and_dace() -> void:
 	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_TURNED"], "Murmur feels the turn")
 	GameState.set_flag(StoryDirector.ENDING_FLAG)
 	_check(Conversations.branch_for("murmur").get("lines") == ["MURMUR_END"], "and sees the lights go out to sea")
+	var robed: Npc = _find_kind(room, "murmur")
+	_check(robed._sprite.texture == Art.VILLAGER_MURMUR, "met before the ending, Murmur still wears the robe")
+	var plain := Npc.new("murmur")
+	room.add_child(plain)
+	_check(plain._sprite.texture == Art.VILLAGER_MURMUR_PLAIN, "after the ending, Murmur has put the Choir robe away")
+	_check(Conversations.pages("murmur", {"lines": ["MURMUR_END"]})[0]["portrait"] == Art.PORTRAIT_MURMUR_PLAIN, "and the portrait matches")
+	plain.queue_free()
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
@@ -6196,6 +6258,7 @@ func _test_errands() -> void:
 		talk.call(who)
 	_check(first.call("sorrel") == "SORREL_LETTERS_DONE_1", "all three delivered")
 	talk.call("sorrel")
+	GameState.set_flag("sorrel_dared_stacks")
 	_check(GameState.item_count("glint") == glints + 150 and first.call("sorrel") == "SORREL_AFTER", "courier's pay, then back to her usual")
 	# Ottilie's sign for Hessa.
 	GameState.set_flag("ottilie_paid")
@@ -6231,6 +6294,117 @@ func _test_errands() -> void:
 	GameState.reset_new_game()
 
 
+## With the tide held out, Gully is out on the Ebb Shelf by a lantern-boat
+## the ebb bared, and there is a child's cap under its bench.
+func _test_ebb_shelf() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.TURNED_FLAG, Tide.HELD_FLAG, "met_hessa", "gully_asked"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "gully_ebb") == null, "until his strongbox is home, Gully stays on the Wreck Strand")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag("gully_paid")
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tile := Vector2i(StoryDirector.GULLY_EBB_AT / Room.TILE)
+	_check(_find_kind(room, "gully_ebb") != null and room.tile_at(tile.x, tile.y) == ".", "with the tide held out, Gully stands on the Shelf's dry sandbar")
+	_check(tile.y <= 8, "above the dialogue box")
+	var boat: LanternBoat = null
+	for child in room.get_children():
+		if child is LanternBoat:
+			boat = child
+	_check(boat != null, "the bared wreck can be searched")
+	_check(Conversations.branch_for("lantern_boat").get("lines") == ["NARRATE_LANTERN_BOAT"], "before Gully's story, it's only an old boat")
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 10.0)
+	_check(pages == 4 and GameState.has_flag("gully_ebb_told"), "Gully remembers the storm twelve years back (%d pages)" % pages)
+	_check(Conversations.branch_for("lantern_boat").get("lines")[1] == "NARRATE_FOUND_CAP_1", "now Wren finds the cap under the bench")
+	await _close_dialogue(game)
+	for side: Vector2 in [Vector2(0, 10), Vector2(0, -20)]:
+		game.player.global_position = boat.global_position + side
+		game.player.facing = Vector2.UP if side.y > 0 else Vector2.DOWN
+		await _wait(0.4)
+		_check(game.player.try_interact() and DialogueBox.is_open, "Wren can search the boat from the %s" % ("south" if side.y > 0 else "north"))
+		await _close_dialogue(game)
+		await _wait(0.4)
+	_check(GameState.has_flag("found_wren_cap") and Conversations.branch_for("lantern_boat").get("lines") == ["NARRATE_LANTERN_BOAT_EMPTY"], "and the boat is empty after")
+	_check(Conversations.branch_for("gully_ebb").get("lines") == ["GULLY_EBB_AFTER"], "Gully sees Wren found something")
+	_check(Conversations.branch_for("hessa").get("lines")[1] == "HESSA_CAP_1", "Wren shows Hessa the cap")
+	Conversations.talk("hessa")
+	_check(GameState.has_flag("hessa_saw_cap") and not (Conversations.branch_for("hessa").get("lines") as Array).has("HESSA_CAP_1"), "once")
+	await _close_dialogue(game)
+	game.queue_free()
+	await _wait(0.1)
+	# Meanwhile the Wreck Strand is without him; with the tide free, he's home.
+	for held in [true, false]:
+		if not held:
+			GameState.clear_flag(Tide.HELD_FLAG)
+		GameState.set_checkpoint(StoryDirector.WRECK_STRAND, StoryDirector.GULLY_AT + Vector2(0, 20))
+		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.4)
+		_check((_find_kind(game.current_room, "gully") == null) == held, "Gully %s the Wreck Strand" % ("is away from" if held else "is back on"))
+		game.queue_free()
+		await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## Sorrel, Wick and Dace each point Wren at one of the overworld trials,
+## and notice when it's done.
+func _test_challenge_talk() -> void:
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var steps := [
+		["sorrel", ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid"], "SORREL_STACKS_1", "chest_7_-4_20_2", "SORREL_STACKS_DONE_1", "SORREL_AFTER"],
+		["wick", ["wick_asked", "fen_lanterns_lit", "wick_gave_jar"], "WICK_SINK_1", "gate_5_3", "WICK_SINK_DONE_1", "WICK_AFTER"],
+		["dace", ["dace_sat"], "DACE_RING_1", "gate_8_2", "DACE_RING_DONE_1", "DACE_AGAIN"],
+	]
+	for step: Array in steps:
+		GameState.reset_new_game()
+		for flag: String in step[1]:
+			GameState.set_flag(flag)
+		_check(first.call(step[0]) == step[2], "%s points Wren at the trial" % step[0])
+		Conversations.talk(step[0])
+		_check(first.call(step[0]) == step[5], "%s says it once" % step[0])
+		GameState.set_flag(step[3])
+		_check(first.call(step[0]) == step[4], "%s notices it's done" % step[0])
+		Conversations.talk(step[0])
+		_check(first.call(step[0]) == step[5], "and then back to the usual")
+	# Done before being asked: straight to the praise, never the dare.
+	GameState.reset_new_game()
+	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "gate_5_3"]:
+		GameState.set_flag(flag)
+	Conversations.talk("wick")
+	_check(first.call("wick") == "WICK_AFTER", "a trial done unasked is praised, not dared")
+	GameState.reset_new_game()
+
+
+## Hessa always has a word on where the next bell is, if Wren asks.
+func _test_hessa_hints() -> void:
+	GameState.reset_new_game()
+	var first := func() -> String: return str(Conversations.branch_for("hessa").get("lines", [""])[0])
+	for flag in ["met_hessa", "entered_hull", "heard_hessa_hull", "tidebell_hull", "freed_mantle", "seen_wayshell"]:
+		GameState.set_flag(flag)
+	var expect := [
+		["", "HESSA_AFTER_BELL"], ["tidebell_kiln", "HESSA_HINT_MIRE_1"], ["tidebell_mire", "HESSA_HINT_GALE_1"],
+		["seen_hessa_confession", "HESSA_AFTER_TURN"], ["tidebell_glacier", "HESSA_HINT_BELFRY_1"],
+		["tidebell_belfry", "HESSA_HINT_TOMB_1"], ["tidebell_tomb", "HESSA_ROW_1"], ["hessa_rows", "HESSA_HINT_MAW"],
+		["hessa_rowed", "HESSA_HINT_MAW"], ["seen_ending", "HESSA_AFTER_END"],
+	]
+	for step: Array in expect:
+		if step[0] != "":
+			GameState.set_flag(step[0])
+		_check(first.call() == step[1], "with %s, Hessa says %s (got %s)" % [step[0], step[1], first.call()])
+	GameState.reset_new_game()
+
+
 ## No talk branch is hidden for good behind a single earlier one: a branch
 ## that matches whenever a later one does makes the later one unreachable.
 func _test_talk_order() -> void:
@@ -6259,7 +6433,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")

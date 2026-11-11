@@ -39,6 +39,9 @@ const KINDS := {
 	# Gully the salvager, dozing by the figurehead on Wreck Strand
 	# (StoryDirector). He wakes when Wren comes near.
 	"gully": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
+	# Gully out on the Ebb Shelf's sandbar while the tide is held out, by the
+	# old lantern-boat it bared (StoryDirector).
+	"gully_ebb": {"texture": Art.VILLAGER_GULLY, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
 	# Captain Sorrel, the retired kite-post captain at Gullwatch Steps
 	# (StoryDirector). Her "breathe" frame is her scarf lifting in the wind.
 	"sorrel": {"texture": Art.VILLAGER_SORREL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
@@ -48,8 +51,9 @@ const KINDS := {
 	# orders left to give, so she talks standing still.
 	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3, "near": 0, "talk": 0, "wander": 0.0},
 	# Murmur at Fenmouth after leaving the Choir, and Mother Dace by the last
-	# mural after the ending (StoryDirector).
-	"murmur": {"texture": Art.VILLAGER_MURMUR, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# mural after the ending (StoryDirector). Once the Old One has turned,
+	# Murmur has put the Choir's robe away.
+	"murmur": {"texture": Art.VILLAGER_MURMUR, "frames": 3, "near": 0, "talk": 2, "wander": 0.0, "ending_texture": Art.VILLAGER_MURMUR_PLAIN},
 	"dace": {"texture": Art.VILLAGER_DACE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Coralie the beachcomber on Saltmarrow Shore, by her chime (StoryDirector).
 	"coralie": {"texture": Art.VILLAGER_CORALIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
@@ -96,7 +100,10 @@ func _ready() -> void:
 	Layers.assign(self, Layers.WORLD, [])
 	add_child(Layers.rect_shape(Vector2(12, 7), Vector2(0, -3.5)))
 	add_child(Art.shadow())
-	_sprite = Art.sprite(_spec["texture"], _spec["frames"], 1, 22)
+	var texture: Texture2D = _spec["texture"]
+	if _spec.has("ending_texture") and GameState.has_flag(Conversations.ENDING_FLAG):
+		texture = _spec["ending_texture"]
+	_sprite = Art.sprite(texture, _spec["frames"], 1, 22)
 	add_child(_sprite)
 	_mark = Node2D.new()
 	_mark.position = Vector2(0, -30)

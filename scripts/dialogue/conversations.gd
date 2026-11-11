@@ -28,6 +28,11 @@ extends Object
 ## Coralie takes Wren's sea-glass for her chime, 25 glints a piece.
 const GLASS_TRADE := {"take": "sea_glass", "tally": "coralie_glass", "each": {"glint": 25}}
 
+## Set once the Old One has turned (StoryDirector.ENDING_FLAG).
+const ENDING_FLAG := "seen_ending"
+## Speakers who look different after the ending: Murmur without the robe.
+const LATER_PORTRAITS := {"murmur": Art.PORTRAIT_MURMUR_PLAIN}
+
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
 	"corrin": ["NAME_CORRIN", Art.PORTRAIT_CORRIN],
@@ -47,6 +52,7 @@ const SPEAKERS := {
 	"liesl": ["NAME_LIESL", Art.PORTRAIT_LIESL],
 	"wick": ["NAME_WICK", Art.PORTRAIT_WICK],
 	"gully": ["NAME_GULLY", Art.PORTRAIT_GULLY],
+	"gully_ebb": ["NAME_GULLY", Art.PORTRAIT_GULLY],
 	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
 	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
 	"coralie": ["NAME_CORALIE", Art.PORTRAIT_CORALIE],
@@ -64,12 +70,21 @@ const TALKS := {
 		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
 	],
 	"hessa": [
+		# The little cap from the lantern-boat on the Ebb Shelf.
+		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
 		# Ottilie's old cave sign, carried by Wren's lamp.
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "set": ["hessa_answered_ottilie"], "lines": [["", "NARRATE_WREN_OTTILIE_SIGNAL"], "HESSA_OTTILIE_1", "HESSA_OTTILIE_2"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
 		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
 		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
+		# Once Wren has the Wayshell, Hessa always has a word on where the
+		# next bell is, for anyone who asks her.
+		{"if": ["tidebell_tomb"], "lines": ["HESSA_HINT_MAW"]},
+		{"if": ["tidebell_belfry"], "lines": ["HESSA_HINT_TOMB_1", "HESSA_HINT_TOMB_2"]},
+		{"if": ["tidebell_glacier"], "lines": ["HESSA_HINT_BELFRY_1", "HESSA_HINT_BELFRY_2"]},
 		{"if": ["seen_hessa_confession"], "lines": ["HESSA_AFTER_TURN"]},
+		{"if": ["tidebell_mire", "seen_wayshell"], "lines": ["HESSA_HINT_GALE_1", "HESSA_HINT_GALE_2"]},
+		{"if": ["tidebell_kiln", "seen_wayshell"], "lines": ["HESSA_HINT_MIRE_1", "HESSA_HINT_MIRE_2"]},
 		{"if": ["seen_wayshell"], "lines": ["HESSA_AFTER_BELL"]},
 		{"if": ["tidebell_hull"], "unless": ["freed_mantle"], "lines": ["HESSA_MANTLE_1", "HESSA_MANTLE_2"]},
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_hessa_hull"], "set": ["heard_hessa_hull"], "lines": ["HESSA_HULL_1", "HESSA_HULL_2"]},
@@ -171,8 +186,11 @@ const TALKS := {
 	"sorrel": [
 		# The post's last three letters, never sent when it shut.
 		{"if": ["letter_ottilie", "letter_liesl", "letter_agna"], "unless": ["sorrel_letters_paid"], "set": ["sorrel_letters_paid"], "give": {"glint": 150}, "lines": ["SORREL_LETTERS_DONE_1", "SORREL_LETTERS_DONE_2", ["", "NARRATE_GOT_POSTAGE"]]},
+		# Gullcry Stacks, the run no courier ever flew (its chest is the proof).
+		{"if": ["sorrel_paid", "chest_7_-4_20_2"], "unless": ["sorrel_saw_stacks"], "set": ["sorrel_saw_stacks"], "lines": ["SORREL_STACKS_DONE_1", "SORREL_STACKS_DONE_2"]},
 		{"if": ["sorrel_letters"], "unless": ["sorrel_letters_paid"], "lines": ["SORREL_LETTERS_WAITING"]},
 		{"if": ["sorrel_paid"], "unless": ["sorrel_letters"], "set": ["sorrel_letters"], "lines": ["SORREL_LETTERS_1", "SORREL_LETTERS_1B", "SORREL_LETTERS_2", "SORREL_LETTERS_2B", ["", "NARRATE_TAKE_LETTERS"]]},
+		{"if": ["sorrel_paid"], "unless": ["sorrel_dared_stacks", "sorrel_saw_stacks"], "set": ["sorrel_dared_stacks"], "lines": ["SORREL_STACKS_1", "SORREL_STACKS_1B"]},
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
 		{"if": ["sorrel_paid", "old_one_turned"], "lines": ["SORREL_AFTER", "SORREL_TURNED"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
@@ -201,6 +219,9 @@ const TALKS := {
 	# Mother Dace by the last mural, after the ending.
 	"dace": [
 		{"unless": ["dace_sat"], "set": ["dace_sat"], "lines": ["DACE_END_1", "DACE_END_2"]},
+		# The Bone Ring, where the bone-readers' young proved their nerve.
+		{"if": ["gate_8_2"], "unless": ["dace_saw_ring"], "set": ["dace_saw_ring"], "lines": ["DACE_RING_DONE_1", "DACE_RING_DONE_2"]},
+		{"unless": ["dace_told_ring", "dace_saw_ring"], "set": ["dace_told_ring"], "lines": ["DACE_RING_1", "DACE_RING_1B"]},
 		{"lines": ["DACE_AGAIN"]},
 	],
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
@@ -232,13 +253,28 @@ const TALKS := {
 		{"if": ["gully_asked"], "lines": ["GULLY_WAITING"]},
 		{"set": ["gully_asked"], "lines": ["GULLY_1", "GULLY_1B", "GULLY_2", "GULLY_2B", "GULLY_3", "GULLY_3B"]},
 	],
+	# Gully on the Ebb Shelf with the tide held out, and the lantern-boat
+	# the ebb bared (LanternBoat).
+	"gully_ebb": [
+		{"if": ["found_wren_cap"], "lines": ["GULLY_EBB_AFTER"]},
+		{"if": ["gully_ebb_told"], "lines": ["GULLY_EBB_AGAIN"]},
+		{"set": ["gully_ebb_told"], "lines": ["GULLY_EBB_1", "GULLY_EBB_2", "GULLY_EBB_3", "GULLY_EBB_4"]},
+	],
+	"lantern_boat": [
+		{"if": ["found_wren_cap"], "lines": ["NARRATE_LANTERN_BOAT_EMPTY"]},
+		{"if": ["gully_ebb_told"], "set": ["found_wren_cap"], "lines": ["NARRATE_LANTERN_BOAT", "NARRATE_FOUND_CAP_1", "NARRATE_FOUND_CAP_2"]},
+		{"lines": ["NARRATE_LANTERN_BOAT"]},
+	],
 	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
 	# five that have gone dark (FenLantern).
 	"wick": [
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
+		# The Lampless Sink's four braziers, lit at last.
+		{"if": ["wick_gave_jar", "gate_5_3"], "unless": ["wick_saw_sink"], "set": ["wick_saw_sink"], "lines": ["WICK_SINK_DONE_1", "WICK_SINK_DONE_2"]},
 		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
 		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
+		{"if": ["wick_gave_jar"], "unless": ["wick_told_sink", "wick_saw_sink"], "set": ["wick_told_sink"], "lines": ["WICK_SINK_1", "WICK_SINK_1B"]},
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
 		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},
@@ -314,7 +350,10 @@ static func pages(speaker: String, branch: Dictionary) -> Array:
 			who = line[0]
 			key = line[1]
 		var spec: Array = SPEAKERS.get(who, ["", null])
-		out.append({"name": spec[0], "portrait": spec[1], "text": key})
+		var portrait: Variant = spec[1]
+		if LATER_PORTRAITS.has(who) and GameState.has_flag(ENDING_FLAG):
+			portrait = LATER_PORTRAITS[who]
+		out.append({"name": spec[0], "portrait": portrait, "text": key})
 	return out
 
 

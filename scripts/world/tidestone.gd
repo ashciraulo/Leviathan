@@ -4,9 +4,42 @@ extends StaticBody2D
 ## saves the game; dying brings Wren back here. Once the Old One has turned
 ## over, Wren can face an awake stone and press Interact to turn the tide
 ## (see Tide.turn): the stone rings, glows and the ground shudders.
+##
+## The keepers of the Pact raised the stones a thousand years ago along
+## their round between the seven shrines, cut from the Kiln's slag with
+## the Old One's shed scale ground in, so they hum to the bells (and, once
+## the Old One has turned, to the tide). Every keeper since has cut a line
+## into them. Facing a stone and pressing Interact reads its carving; after
+## the turn, a stone already read turns the tide instead.
 
 ## Where Wren stands after loading, relative to the stone.
 const CHECKPOINT_OFFSET := Vector2(0, 28)
+## Room -> what is cut into its stone. Most are a line under a short
+## narration; one stone holds only tally notches.
+const CARVINGS := {
+	Vector2i(0, 0): ["NARRATE_STONE_WORDS", "STONE_SHORE"],
+	Vector2i(1, 1): ["NARRATE_STONE_WORDS", "STONE_SALTMARROW"],
+	Vector2i(3, -1): ["NARRATE_STONE_WORDS", "STONE_BRINEWOOD"],
+	Vector2i(5, 0): ["NARRATE_STONE_NOTCHES", "NARRATE_STONE_NOTCHES_2"],
+	Vector2i(8, -3): ["NARRATE_STONE_WORDS", "STONE_CINDER"],
+	Vector2i(9, -1): ["NARRATE_STONE_WORDS", "STONE_KILN_MOUTH"],
+	Vector2i(3, 1): ["NARRATE_STONE_WORDS", "STONE_FEN"],
+	Vector2i(5, 2): ["NARRATE_STONE_WORDS", "STONE_MIRELIGHT"],
+	Vector2i(5, -3): ["NARRATE_STONE_WORDS", "STONE_WINDMERE"],
+	Vector2i(5, -4): ["NARRATE_STONE_WORDS", "STONE_SPIRE_FOOT"],
+	Vector2i(1, -2): ["NARRATE_STONE_WORDS", "STONE_FROST"],
+	Vector2i(1, -3): ["NARRATE_STONE_WORDS", "STONE_FROST_2"],
+	Vector2i(0, 2): ["NARRATE_STONE_WORDS", "STONE_VERGE"],
+	Vector2i(2, 3): ["NARRATE_STONE_WORDS", "STONE_VERGE_2"],
+	Vector2i(9, 0): ["NARRATE_STONE_WORDS", "STONE_DUNES"],
+	Vector2i(9, 1): ["NARRATE_STONE_WORDS", "STONE_DUNES_2"],
+	Vector2i(10, 10): ["NARRATE_STONE_WORDS", "STONE_HULL"],
+	Vector2i(21, 10): ["NARRATE_STONE_WORDS", "STONE_KILN"],
+	Vector2i(25, 10): ["NARRATE_STONE_WORDS", "STONE_MIRE"],
+	Vector2i(28, 10): ["NARRATE_STONE_WORDS", "STONE_GALE"],
+	Vector2i(32, 10): ["NARRATE_STONE_WORDS", "STONE_GLACIER"],
+	Vector2i(36, 10): ["NARRATE_STONE_WORDS", "STONE_BELFRY"],
+}
 
 var room_coord := Vector2i.ZERO
 var awake := false
@@ -35,6 +68,11 @@ func flag_key() -> String:
 	return "tidestone_%d_%d" % [room_coord.x, room_coord.y]
 
 
+## Set once Wren has read this stone's carving.
+func read_key() -> String:
+	return "tidestone_read_%d_%d" % [room_coord.x, room_coord.y]
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if not (body is Player):
 		return
@@ -48,10 +86,20 @@ func _on_body_entered(body: Node2D) -> void:
 	_sprite.frame = 1
 
 
-## Turns the tide, once the Old One has turned over. Before that the stone
-## has nothing to say.
+## Reads the stone's carving; once the Old One has turned over, a stone
+## already read turns the tide instead.
 func interact() -> void:
-	if not awake or not Tide.can_turn():
+	if not awake or DialogueBox.is_open or Cutscene.active:
+		return
+	var carving: Array = CARVINGS.get(room_coord, [])
+	if not carving.is_empty() and not (Tide.can_turn() and GameState.has_flag(read_key())):
+		GameState.set_flag(read_key())
+		var pages: Array = []
+		for key: String in carving:
+			pages.append({"name": "", "portrait": null, "text": key})
+		Events.conversation_requested.emit(pages)
+		return
+	if not Tide.can_turn():
 		return
 	var to := Tide.turn(get_tree())
 	Audio.play_sfx("tide_rise" if to == "high" else "tide_ebb", global_position)

@@ -837,6 +837,43 @@ MURMUR = [
 ]
 
 
+# After the ending Murmur sets the Choir's grey robe aside: a fen-green
+# knit and a plain brown skirt, the same pale hair, the same lantern.
+MURMUR_PLAIN = [
+    "................",
+    "......HHHH......",
+    ".....HHHHHH.....",
+    "....HHHHHHHH....",
+    "....HAAAAAAH....",
+    "....HAeAAeAH....",
+    "....HAAAAAAH....",
+    "....HHAAAAHH....",
+    "....HHHAAHHH....",
+    "...YHHYYYYHHY...",
+    "..YYHHYYYYHHYY..",
+    "..YYYHYYYYHYYY..",
+    ".AYYYYYYYYYYYYA.",
+    ".AYYYYYYYYYYYQQQ",
+    "..YYYUUUUUUYYQNQ",
+    "...MMMMMMMMMMQQQ",
+    "...MMMMMMMMMM...",
+    "...MMMMMMMMMM...",
+    "...MMMMMMMMMM...",
+    "...MMMMMMMMMM...",
+    "....MMMMMMMM....",
+    ".....AA..AA.....",
+    "....vv....vv....",
+    "................",
+]
+
+
+def murmur_plain_frames():
+    idle = MURMUR_PLAIN
+    breathe = settle(idle, 9)
+    talk = paint(idle, [(13, 13, "YA."), (14, 13, "Y.."), (15, 13, "M.."), (9, 13, "QQQ"), (10, 13, "QNQ"), (11, 13, "QQQ"), (12, 14, "A")])
+    return [idle, breathe, talk]
+
+
 def murmur_frames():
     idle = MURMUR
     breathe = settle(idle, 9)
@@ -1185,6 +1222,7 @@ SPRITES = {
     "vael_keeper": vael_keeper_frames,
     "vael": vael_frames,
     "murmur": murmur_frames,
+    "murmur_plain": murmur_plain_frames,
     "lowe": lowe_frames,
     "tobin": tobin_frames,
     "ide": ide_frames,
@@ -1512,6 +1550,21 @@ def portrait_murmur():
     return _rows(c)
 
 
+def portrait_murmur_plain():
+    """Murmur after the ending: the robe set aside for a fen-green knit."""
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "Y")                    # green knit
+    _box(c, 10, 26, 12, 2, "Y")                        # its rolled collar
+    _ellipse(c, 16, 16, 12, 12, "H")                   # long pale hair
+    _box(c, 4, 16, 24, 12, "H")
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, mouth=False)
+    _box(c, 14, 22, 4, 1, "-")                         # nearly a smile
+    _dots(c, [(13, 21), (18, 21)], "-")
+    _box(c, 22, 25, 7, 7, "Q")                         # the same lantern
+    _box(c, 24, 27, 3, 3, "N")
+    return _rows(c)
+
+
 def portrait_vael():
     c = _canvas()
     _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
@@ -1611,6 +1664,7 @@ PORTRAITS = {
     "vael_keeper": portrait_vael_keeper(),
     "vael": portrait_vael(),
     "murmur": portrait_murmur(),
+    "murmur_plain": portrait_murmur_plain(),
     "lowe": portrait_lowe(),
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),
