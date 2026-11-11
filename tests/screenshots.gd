@@ -1985,7 +1985,7 @@ func _far_story_shots() -> void:
 	await _wait(0.2)
 	# Ferrin on Edgewatch Bluff, and his stake driven in on the Frostspine.
 	var stake: Array = StoryDirector.SURVEY_STAKES["frost"]
-	for shot in [["far_2_ferrin", StoryDirector.FERRIN_ROOM, Vector2(StoryDirector.FERRIN_AT) + Vector2(0, 20), []], ["far_4_frost_stake", stake[0], Vector2(stake[1]) * 16.0 + Vector2(8, 30), ["ferrin_survey_ask"]]]:
+	for shot in [["far_2_ferrin", StoryDirector.FERRIN_ROOM, Vector2(StoryDirector.FERRIN_AT) + Vector2(0, 20), []], ["far_4_frost_stake", stake[0], Vector2(stake[1]) * 16.0 + Vector2(8, 30), ["ferrin_survey_ask"]], ["far_3_calf", Vector2i(7, 3), Vector2(StoryDirector.CALF_REST[Vector2i(7, 3)]) * 16.0 + Vector2(8, 30), []]]:
 		GameState.reset_new_game()
 		for flag: String in shot[3]:
 			GameState.set_flag(flag)
