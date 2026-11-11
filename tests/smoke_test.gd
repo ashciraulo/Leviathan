@@ -5162,7 +5162,7 @@ func _test_thin_region_screens() -> void:
 ## step to its pattern, that stays beaten.
 func _test_elites() -> void:
 	GameState.reset_new_game()
-	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle", Vector2i(6, 1): "Bogskipper", Vector2i(4, -4): "Galehawk"}
+	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle", Vector2i(6, 1): "Bogskipper", Vector2i(4, -4): "Galehawk", Vector2i(2, -2): "Sledgeseal", Vector2i(1, 3): "Siltray", Vector2i(8, 0): "Dunejaw"}
 	for coord: Vector2i in cases:
 		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
 		room.coord = coord
@@ -5174,7 +5174,10 @@ func _test_elites() -> void:
 			room.queue_free()
 			continue
 		var boss: Enemy = elites[0]
-		_check(boss.max_hp == 2 * Enemy.ELITE_HP and boss.scale.x > 1.2, "the elite is bigger and three times as hardy")
+		# max_hp is set in _init, so a fresh, unready one has its plain toughness.
+		var plain := (boss.get_script() as Script).new() as Enemy
+		_check(boss.max_hp == plain.max_hp * Enemy.ELITE_HP and boss.scale.x > 1.2, "the elite is bigger and three times as hardy")
+		plain.free()
 		boss.ai_enabled = false
 		if boss is Scuttler:
 			var crab := boss as Scuttler
@@ -5227,6 +5230,52 @@ func _test_elites() -> void:
 			hawk._think(0.016)
 			_check(hawk.mode == Galehawk.Mode.PERCH and hawk._timer > 1.0, "and its second perch is the full one")
 			hawk.ai_enabled = false
+		elif boss is Sledgeseal:
+			var seal := boss as Sledgeseal
+			var wren := Player.new()
+			wren.set_physics_process(false)
+			room.add_child(wren)
+			wren.position = seal.position + Vector2(0, 2 * Room.TILE)
+			seal.mode = Sledgeseal.Mode.SLIDE
+			seal._direction = Vector2.LEFT
+			seal._timer = 1.0
+			seal._think(0.016)
+			_check(seal.mode == Sledgeseal.Mode.REAR and seal._direction == Vector2.DOWN and seal._turned, "the elite seal turns mid-slide toward Wren")
+			seal.mode = Sledgeseal.Mode.SLIDE
+			seal._direction = Vector2.LEFT
+			seal._think(0.016)
+			_check(seal.mode == Sledgeseal.Mode.SLIDE, "but only once a slide")
+			seal.mode = Sledgeseal.Mode.IDLE
+			wren.free()
+		elif boss is Siltray:
+			var ray := boss as Siltray
+			ray._set_mode(Siltray.Mode.LEAP)
+			_check(is_equal_approx(ray._timer, Siltray.LEAP_TIME * Siltray.ELITE_REACH), "the elite ray leaps further")
+			ray._set_mode(Siltray.Mode.STRANDED)
+		elif boss is Dunejaw:
+			var jaw := boss as Dunejaw
+			var wren := Player.new()
+			wren.set_physics_process(false)
+			room.add_child(wren)
+			wren.position = jaw.position
+			jaw._set_mode(Dunejaw.Mode.BITE)
+			jaw._timer = 0.0
+			jaw._think(0.016)
+			_check(jaw.mode == Dunejaw.Mode.BURROW and jaw._rebite, "the elite dunejaw dives straight back after its first bite")
+			jaw._think(0.016)
+			_check(jaw.mode == Dunejaw.Mode.SPOUT and jaw._timer <= Dunejaw.RESPOUT_TIME, "and spouts again, quicker")
+			jaw._set_mode(Dunejaw.Mode.BITE)
+			jaw._timer = 0.0
+			jaw._think(0.016)
+			_check(jaw.mode == Dunejaw.Mode.EXPOSED, "then lies out after the second")
+			# Outrun on the second hunt, it gives up and rests before hunting again.
+			jaw._set_mode(Dunejaw.Mode.BURROW)
+			jaw._rebite = true
+			jaw._timer = -Dunejaw.HUNT_GIVE_UP - 0.1
+			wren.position = jaw.position + Vector2(120, 0)
+			jaw._think(0.016)
+			_check(not jaw._rebite and jaw._timer > 0.0 and jaw.velocity == Vector2.ZERO, "an outrun elite dunejaw gives up and rests")
+			wren.free()
 		for i in 12:
 			if not boss.dying:
 				if boss is Slagbeetle:
@@ -5235,6 +5284,10 @@ func _test_elites() -> void:
 					(boss as Bogskipper).mode = Bogskipper.Mode.HOP
 				elif boss is Galehawk:
 					(boss as Galehawk).mode = Galehawk.Mode.PERCH
+				elif boss is Dunejaw:
+					(boss as Dunejaw)._set_mode(Dunejaw.Mode.EXPOSED)
+				elif boss is Siltray:
+					(boss as Siltray)._set_mode(Siltray.Mode.STRANDED)
 				boss.take_hit(1, Vector2.RIGHT)
 		await _wait(0.4)
 		_check(GameState.has_flag(Room.elite_flag(coord)), "the fallen elite stays beaten")

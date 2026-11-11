@@ -5,6 +5,7 @@
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
 name_key = "ROOM_SHIVER_COAST"
+elite = Vector2i(11, 7)
 biome = "frostspine"
 layout = "###########..###########
 ####...........g.....###
