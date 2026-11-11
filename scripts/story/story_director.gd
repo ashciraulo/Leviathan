@@ -132,12 +132,13 @@ const FERRIN_AT := Vector2(12 * 16 + 8, 7 * 16 + 10)
 const SURVEY_STAKES := {
 	"frost": [Vector2i(1, -5), Vector2i(19, 5)],
 	"cinder": [Vector2i(10, -3), Vector2i(19, 2)],
+	"verge": [Vector2i(0, 5), Vector2i(9, 4)],
 }
 ## The Ebb Grotto, by the Sunken Verge: the flood marks on its wall.
 const EBB_GROTTO := Vector2i(0, 4)
 const GROTTO_MARKS_AT := Vector2(6 * 16 + 8, 3 * 16 + 8)
 ## The Calf's Rest, south of Gloamfen: {room: tile} of the little skull.
-const CALF_REST := {}
+const CALF_REST := {Vector2i(7, 3): Vector2i(12, 5)}
 ## The Ebb Shelf, bared only while the tide is held out: Gully goes out to
 ## its one dry sandbar, by the lantern-boat the ebb uncovered.
 const EBB_SHELF := Vector2i(1, 4)

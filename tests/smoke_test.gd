@@ -97,7 +97,7 @@ func _ready() -> void:
 		await _test_last_singers()
 		await _test_edge_survey()
 		await _test_scene_music()
-		_test_calf_rest()
+		await _test_calf_rest()
 		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
@@ -7369,6 +7369,26 @@ func _test_grotto_marks() -> void:
 
 ## The Calf's Rest: the little skull in the far fen, and Murmur's robe.
 func _test_calf_rest() -> void:
+	GameState.reset_new_game()
+	for coord: Vector2i in StoryDirector.CALF_REST:
+		var tile: Vector2i = StoryDirector.CALF_REST[coord]
+		GameState.set_checkpoint(coord, Vector2(tile) * 16.0 + Vector2(8, 30))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.4)
+		var room: Room = game.current_room
+		_check(room.get_children().any(func(c: Node) -> bool: return c is CalfSkull), "the calf's skull lies in room %s" % coord)
+		var clear := true
+		for x in range(tile.x - 1, tile.x + 2):
+			for y in [tile.y - 1, tile.y, tile.y + 1]:
+				clear = clear and room.tile_at(x, y) == "."
+		_check(clear, "on clear floor, with dry ground in front")
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		_check(game.player.try_interact(), "and Wren can look at it")
+		await _play_scene(game, 10.0)
+		game.queue_free()
+		await _wait(0.1)
 	GameState.reset_new_game()
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
 	GameState.set_flag("murmur_met")
