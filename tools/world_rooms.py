@@ -107,6 +107,7 @@ SECRETS = {
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
     (11, 0): ("tidebell_tomb",),               # Drybone Crypt: the way on is a hidden bone wall in the hall
+    (3, -5): ("tide_hook", "kite_cloak"),     # Gustway Ledges: glints past a sky gap, over a ledge the gusts sweep
     (-1, -3): ("frostfang_bow",),             # Rimelight Hollow: three ice eyes round a slick floor
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
