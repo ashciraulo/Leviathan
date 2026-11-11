@@ -98,7 +98,17 @@ jobs:
       - name: Install headless Chromium
         run: |
           npm install --no-save --no-package-lock playwright@1.49.1
-          npx playwright install --with-deps chromium
+          # The system packages come from Ubuntu's mirrors, which a runner
+          # sometimes can't reach for minutes: retry, and if they stay out
+          # of reach, use the runner's own libraries (Chromium itself comes
+          # from Playwright's CDN, not the mirrors).
+          for wait in 20 60 120; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "Couldn't install Chromium's system packages; trying again in $wait s"
+            sleep $wait
+          done
+          echo "::warning::Ubuntu's mirrors stayed out of reach: Chromium runs on the runner's own libraries"
+          npx playwright install chromium
 
       - name: Boot it in a browser
         run: node tools/web_check.mjs export/web web_title.png
