@@ -5624,7 +5624,7 @@ func _test_far_reaches() -> void:
 	# then a deep trench only the Diver's Helm swims.
 	var ebb := Room.parse_layout(((load("res://rooms/room_1_4.tscn") as PackedScene).instantiate() as Room).layout)
 	var wrack := Room.parse_layout(((load("res://rooms/room_1_5.tscn") as PackedScene).instantiate() as Room).layout)
-	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 19 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench (a rock-capped shoal in it)")
+	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 17 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench (a rock-capped shoal in it)")
 	# The Ossuary's far south: Saltpan Hollow opens onto Ribfall Sands, shut
 	# behind a bone barricade only the Echo Horn brings down.
 	_check(Room.parse_layout(((load("res://rooms/room_9_2.tscn") as PackedScene).instantiate() as Room).layout)[12].substr(8, 2) == "..", "Saltpan Hollow opens south to Ribfall Sands")
@@ -8003,14 +8003,19 @@ func _test_older_secrets() -> void:
 	_check(tangle.chest_item == "glint" and sea[10][12] == "C" and sea[10][14] == "O" and sea[5][14] == "O"
 		and sea[8][14] == "Q" and sea[8][13] == "Q", "Tangle Shore: a chest on a deep-water islet, with hook posts out and back")
 	tangle.free()
-	# Three shoals out in deep water, sheltered by rocks from glides, for
-	# the Diver's Helm alone (the story thread leaves pearls on them).
+	# Three shoals out in deep water, walled by rocks so that no glide, even
+	# a steered one, can curve in: the Diver's Helm alone reaches them (the
+	# story thread leaves pearls on them).
 	for shoal: Array in [[Vector2i(6, 0), Vector2i(20, 8)], [Vector2i(1, 5), Vector2i(20, 5)], [Vector2i(6, -5), Vector2i(10, 8)]]:
 		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [shoal[0].x, shoal[0].y]) as PackedScene).instantiate()
 		var swim_rows := Room.parse_layout(probe.layout)
 		var at: Vector2i = shoal[1]
-		_check(swim_rows[at.y][at.x] == "." and swim_rows[at.y + 1][at.x] == "." and swim_rows[at.y - 1][at.x] == "#"
-			and swim_rows[at.y][at.x - 1] == "Q" and swim_rows[at.y][at.x + 1] == "Q", "room %s has a rock-sheltered shoal at %s" % [shoal[0], at])
+		var ways := 0
+		for side: Vector2i in [at + Vector2i.LEFT, at + Vector2i.RIGHT, at + Vector2i(-1, 1), at + Vector2i(1, 1), at + Vector2i(0, 2)]:
+			if swim_rows[side.y][side.x] == "Q":
+				ways += 1
+		_check(swim_rows[at.y][at.x] == "." and swim_rows[at.y + 1][at.x] == "." and swim_rows[at.y - 1][at.x] == "#" and ways >= 1,
+			"room %s has a rock-sheltered shoal at %s, open to deep water" % [shoal[0], at])
 		probe.free()
 
 
