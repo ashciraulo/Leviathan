@@ -12,7 +12,10 @@ North is up the tower. Holes in an upper floor drop Wren to the floor below
 The way through:
   Entry -> Fan Hall -> west to the Sail Loft (beat everything; the Kite
   Cloak) -> east to the Gust Gallery (glide the fan's wind over the drop;
-  small key) -> unlock the Fan Hall's hatch north into the Bell Shaft ->
+  glints) -> east to the Lantern Span (walk the planks by lantern light,
+  hook over the break to the post) -> north to the Weathercock Roost (hook
+  up to the island, ride its stream west, hammer the pegs down; small key;
+  the low streams blow home) -> unlock the Fan Hall's hatch north into the Bell Shaft ->
   east to the Weathervane Room (glide out to the island; small key) -> back
   through the Shaft, unlock its west hatch into the Rookery (two glides,
   the pillar catching you on the way; glints) -> north into the Bell Cage
@@ -106,12 +109,12 @@ ROOMS = {
 #..u..............u....#
 #......................#
 ########################"""),
-    (29, 9): ("ROOM_GALE_GUSTS", {}, """
+    (29, 9): ("ROOM_GALE_GUSTS", {"chest_item": '"glint"', "chest_count": "50"}, """
 ########################
 #....______________....#
-#....______________....#
-#....______________....#
-#....______________..C.#
+#....______________.....
+#....______________.....
+#....______________..C..
 .....______________....#
 ....>______________....#
 .....______________....#
@@ -190,6 +193,40 @@ X...________________....
 #....__________________#
 #....__________________#
 ########################"""),
+    # East of the Gusts, the Lantern Span: a plank walk over the sky that
+    # only the raised lantern shows, broken where the hook has to carry
+    # Wren to a post; the low stream blows home. North to the Roost.
+    (30, 9): ("ROOM_GALE_LANTERN_SPAN", {}, """
+####################..##
+#...________________...#
+....________________...#
+....________________...#
+....________________...#
+#...___________...__...#
+#...vvvvvv_____.O.vv...#
+#...___________...__...#
+#...________________...#
+#...________________..<#
+#...________________..<#
+#...________________...#
+########################"""),
+    # Above it, the Weathercock Roost: hook up to the island, ride its fans'
+    # stream to the west ledge, hammer the pegs down to the key. The low
+    # stream blows home.
+    (30, 8): ("ROOM_GALE_ROOST", {"chest_item": '"small_key"'}, """
+########################
+#...._____...__________#
+#...._____.O<__________#
+#...._____..<__________#
+#....__________________#
+#....__________________#
+#....__________________#
+#iiii#_________________#
+#....__________________#
+#.C.._____.............#
+#>..._____....&........#
+#>..._____.............#
+####################..##"""),
     (28, 7): ("ROOM_GALE_BOSS", OUTSIDE, """
 ########################
 #________......________#
