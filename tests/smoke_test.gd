@@ -71,6 +71,7 @@ func _ready() -> void:
 		await _test_fast_travel()
 		await _test_credits()
 		await _test_title_talk_key()
+		await _test_hud_fade()
 		await _test_equipment()
 		await _test_side_quests()
 		await _test_shop()
@@ -4543,6 +4544,39 @@ func _test_fast_travel() -> void:
 	Engine.time_scale = 1.0
 	game.queue_free()
 	await _wait(0.1)
+
+
+## The HUD's corner panels fade while Wren is under them, and come back.
+func _test_hud_fade() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(0, -1), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var hud: Hud = null
+	var slots: ItemSlotsHud = null
+	for child in game.get_children():
+		if child is Hud:
+			hud = child
+		elif child is ItemSlotsHud:
+			slots = child
+	var player: Player = game.player
+	var room_at: Vector2 = game.current_room.global_position
+	player.global_position = room_at + Vector2(240, 120)
+	await _wait(0.4)
+	_check(is_equal_approx(hud._gauge.modulate.a, 1.0) and is_equal_approx(slots._canvas.modulate.a, 1.0),
+		"the HUD is solid with nothing under it")
+	player.global_position = room_at + Vector2(20, 14)
+	await _wait(0.4)
+	_check(hud._gauge.modulate.a < 0.5 and is_equal_approx(slots._canvas.modulate.a, 1.0),
+		"the breath plate fades while Wren is under it (%.2f)" % hud._gauge.modulate.a)
+	player.global_position = room_at + Vector2(370, 14)
+	await _wait(0.4)
+	_check(hud._gauge.modulate.a > 0.9 and slots._canvas.modulate.a < 0.5,
+		"the item slots fade instead when Wren moves under them")
+	game.queue_free()
+	await get_tree().process_frame
+	GameState.reset_new_game()
 
 
 ## The talk key (the phone's on-screen confirm button) picks a title item,
