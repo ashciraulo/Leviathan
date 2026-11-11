@@ -23,7 +23,7 @@ jobs:
   web:
     name: Export and boot the web build
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       GODOT_VERSION: 4.7.2
     steps:
@@ -79,8 +79,8 @@ jobs:
           # Imports Godot made of the exported icons don't belong on the page.
           rm -f export/web/*.import
 
-      # The heavy rooms in a browser: every dungeon room and the busiest
-      # overworld screens, timed, with pictures of the Maw and a dark room.
+      # Every room in a browser, overworld screens and dungeon rooms, timed,
+      # with pictures of the Maw and a dark room.
       # Exported before npm brings Playwright into the folder: Godot would
       # import its fonts and pictures too, and that import has crashed.
       # Fails on errors, a blank picture, or a room far slower than the rest.
@@ -98,7 +98,17 @@ jobs:
       - name: Install headless Chromium
         run: |
           npm install --no-save --no-package-lock playwright@1.49.1
-          npx playwright install --with-deps chromium
+          # The system packages come from Ubuntu's mirrors, which a runner
+          # sometimes can't reach for minutes: retry, and if they stay out
+          # of reach, use the runner's own libraries (Chromium itself comes
+          # from Playwright's CDN, not the mirrors).
+          for wait in 20 60 120; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "Couldn't install Chromium's system packages; trying again in $wait s"
+            sleep $wait
+          done
+          echo "::warning::Ubuntu's mirrors stayed out of reach: Chromium runs on the runner's own libraries"
+          npx playwright install chromium
 
       - name: Boot it in a browser
         run: node tools/web_check.mjs export/web web_title.png
@@ -113,11 +123,12 @@ jobs:
             web_saves.png
           if-no-files-found: ignore
 
-      - name: Time the heavy rooms in a browser
+      - name: Time every room in a browser
         # On main a slow room shouldn't hold back publishing the game; PRs
         # still fail on it.
         continue-on-error: ${{ github.event_name != 'pull_request' }}
-        timeout-minutes: 20
+        # All 199 rooms: ~10 min on a quick runner, ~20 on a slow one.
+        timeout-minutes: 45
         run: |
           status=0
           node tools/web_check.mjs export/web_perf --perf web_perf || status=$?

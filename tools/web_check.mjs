@@ -4,7 +4,7 @@
 //     node tools/web_check.mjs export/web [screenshot.png]
 // With --perf it runs the "Web perf" export instead (tests/web_perf.gd):
 //     node tools/web_check.mjs export/web_perf --perf out_dir
-// which tours the heavy rooms, saves a table (perf.md) and a few
+// which tours every room, saves a table (perf.md) and a few
 // screenshots in out_dir, and fails on errors or on a room far slower
 // than the overworld screens measured beside it.
 // It serves the folder over HTTP (browsers won't run Godot from file://),
@@ -32,7 +32,7 @@ const outDir = PERF ? path.resolve(rest[1] || "web_perf") : "";
 // How many times slower than the overworld screens a room may run. The
 // browser here draws in software, so only the comparison is meaningful.
 const SLOWER_LIMIT = 2.0;
-const PERF_TIMEOUT_MS = 15 * 60 * 1000;
+const PERF_TIMEOUT_MS = 40 * 60 * 1000;
 const BOOT_TIMEOUT_MS = 90000;
 const TYPES = {
   ".html": "text/html", ".js": "application/javascript", ".wasm": "application/wasm",
@@ -220,7 +220,9 @@ async function phoneCheck() {
   phone.on("pageerror", (err) => failures.push(`phone: page error: ${err.message}`));
   await phone.addInitScript(() => {
     window.__keys = [];
+    window.__ups = [];
     addEventListener("keydown", (e) => window.__keys.push(e.code), true);
+    addEventListener("keyup", (e) => window.__ups.push(e.code), true);
   });
   let up = false;
   phone.on("console", (msg) => { if (msg.text().includes("Godot Engine v")) up = true; });
@@ -248,6 +250,38 @@ async function phoneCheck() {
   await touch("touchEnd");
   const keys = await phone.evaluate(() => window.__keys);
   if (!keys.includes("ArrowRight")) failures.push(`phone: the stick didn't press Right (${keys.join(" ") || "no keys"})`);
+  // And the game itself answers a button: K on the title opens the file
+  // select, which dims the logo behind dark cards.
+  for (let i = 0; i < 240 && !(await phone.evaluate(() => window.__lvTitleReady === true).catch(() => false)); i++) await phone.waitForTimeout(250);
+  const logo = async () => brightness(await phone.screenshot({ clip: { x: 255, y: 42, width: 330, height: 72 } }));
+  const before = await logo();
+  const k = await phone.evaluate(() => { const b = [...document.querySelectorAll("#lv-touch .b")].find((e) => e.textContent === "K"); if (!b) return null; const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+  if (!k) { await ctx.close(); return failures.push("phone: the K button is missing from the on-screen controls"); }
+  let after = before;
+  for (let tries = 0; tries < 4 && after > before * 0.75; tries++) {
+    await touch("touchStart", k[0], k[1]);
+    await phone.waitForTimeout(200);
+    await touch("touchEnd");
+    for (let i = 0; i < 10 && after > before * 0.75; i++) { await phone.waitForTimeout(500); after = await logo(); }
+  }
+  if (after > before * 0.75) failures.push(`phone: tapping K on the title didn't open the file select (logo brightness ${before.toFixed(0)} -> ${after.toFixed(0)})`);
+  // A remapped action: the game tells the page, and the button follows.
+  const remapped = await phone.evaluate(() => {
+    window.__lvBind = { KeyJ: ["KeyL", "L"] };
+    window.__lvRelabel();
+    window.__keys = [];
+    const b = [...document.querySelectorAll("#lv-touch .b")].find((e) => e.getAttribute("data-code") === "KeyJ");
+    const r = b.getBoundingClientRect();
+    return [b.textContent, r.left + r.width / 2, r.top + r.height / 2];
+  });
+  await touch("touchStart", remapped[1], remapped[2]);
+  // A rebind while the button is held (the controls screen takes this very
+  // press): the release must still let go of the key that went down.
+  await phone.evaluate(() => { window.__lvBind = {}; window.__ups = []; });
+  await touch("touchEnd");
+  const sent = await phone.evaluate(() => [window.__keys, window.__ups]);
+  if (remapped[0] !== "L" || !sent[0].includes("KeyL")) failures.push(`phone: the sword button didn't follow a remap to L (shows ${remapped[0]}, sent ${sent[0].join(" ") || "nothing"})`);
+  if (!sent[1].includes("KeyL")) failures.push(`phone: a button let go of a different key than it pressed (${sent[1].join(" ") || "no key up"})`);
   await ctx.close();
 }
 
