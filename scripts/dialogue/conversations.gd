@@ -135,9 +135,10 @@ const TALKS := {
 		{"if": ["nettle_signals_ask", "signal_stone_stacks", "signal_stone_skerry", "signal_stone_brink"], "unless": ["nettle_signals_done"], "set": ["nettle_signals_done"], "give": {"glint": 150}, "lines": ["NETTLE_SIGNALS_DONE_1", "NETTLE_SIGNALS_DONE_2", "NETTLE_SIGNALS_DONE_3", "NETTLE_SIGNALS_DONE_4", ["", "NARRATE_GOT_SIGNAL_FEE"]]},
 		{"if": ["nettle_learned", "seen_wayshell"], "unless": ["nettle_signals_ask"], "set": ["nettle_signals_ask"], "lines": ["NETTLE_SIGNALS_1", "NETTLE_SIGNALS_1B", "NETTLE_SIGNALS_2", "NETTLE_SIGNALS_2B", "NETTLE_SIGNALS_3"]},
 		{"if": ["nettle_signals_ask"], "unless": ["nettle_signals_done"], "lines": ["NETTLE_SIGNALS_WAITING"]},
+		# Bell and signals both done: once, ahead of the late lines.
+		{"if": ["nettle_got_bell", "nettle_signals_done"], "unless": ["nettle_nearly_told"], "set": ["nettle_nearly_told"], "lines": ["NETTLE_NEARLY"]},
 		{"if": ["nettle_learned", "seen_ending"], "lines": ["NETTLE_END"]},
 		{"if": ["nettle_learned", "old_one_turned"], "lines": ["NETTLE_TURNED"]},
-		{"if": ["nettle_got_bell", "nettle_signals_done"], "lines": ["NETTLE_NEARLY"]},
 		{"if": ["seen_wayshell"], "lines": ["NETTLE_WAYSHELL_1", "NETTLE_WAYSHELL_2"]},
 		{"if": ["nettle_learned"], "lines": ["NETTLE_AGAIN"]},
 		{"lines": ["NETTLE_1", "NETTLE_2"]},
@@ -203,12 +204,9 @@ const TALKS := {
 		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "lines": ["OTTILIE_SIGNAL_WAITING"]},
 		{"if": ["ottilie_paid", "seen_hessa_confession"], "unless": ["ottilie_signal"], "set": ["ottilie_signal"], "lines": ["OTTILIE_SIGNAL_1", "OTTILIE_SIGNAL_1B", "OTTILIE_SIGNAL_2", "OTTILIE_SIGNAL_2B"]},
-		# Ottilie's Knits: she offers to knit when she pays Wren for the
-		# rimefin; a save from before then hears it here.
-		{"if": ["ottilie_paid"], "unless": ["ottilie_knits_told"], "set": ["ottilie_knits_told"], "lines": ["OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},
 		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
 		{"if": ["ottilie_paid"], "lines": ["OTTILIE_AFTER"]},
-		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid", "ottilie_knits_told"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"], "OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},
+		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"]]},
 		{"if": ["ottilie_asked"], "lines": ["OTTILIE_WAITING"]},
 		{"if": ["seen_hessa_confession"], "set": ["ottilie_asked"], "lines": ["OTTILIE_HESSA", "OTTILIE_1", "OTTILIE_1B", "OTTILIE_2", "OTTILIE_2B", "OTTILIE_3"]},
 		{"set": ["ottilie_asked"], "lines": ["OTTILIE_1", "OTTILIE_1B", "OTTILIE_2", "OTTILIE_2B", "OTTILIE_3"]},
