@@ -100,4 +100,14 @@ func interact() -> void:
 	tween.tween_callback(shown.queue_free)
 	if ITEM_TALK.has(item):
 		await get_tree().create_timer(0.6).timeout
-		Events.dialogue_requested.emit("", PackedStringArray(ITEM_TALK[item]))
+		Events.dialogue_requested.emit("", item_talk(item))
+
+
+## What the box says on finding an item, with the keys to press filled in
+## from the bindings in use now (MenuKit.fill_keys).
+static func item_talk(item: String) -> PackedStringArray:
+	var lines := PackedStringArray()
+	for key: String in ITEM_TALK.get(item, []):
+		var text := TranslationServer.translate(key)
+		lines.append(MenuKit.fill_keys(text, item) if "{" in text else key)
+	return lines

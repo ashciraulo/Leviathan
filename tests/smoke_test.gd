@@ -591,7 +591,8 @@ func _test_villagers() -> void:
 		var row := csv.get_csv_line()
 		if row.size() < 2 or row[0] == "" or _menu_text(row[0]):
 			continue
-		if fit_box.lines_for(row[0], false) > DialogueBox.MAX_LINES:
+		# Key names filled in: "{key}" as both item keys, the longest it gets.
+		if fit_box.lines_for(MenuKit.fill_keys(tr(row[0])), false) > DialogueBox.MAX_LINES:
 			too_long.append(row[0])
 	_check(too_long.is_empty(), "every line the box can show fits it (too long: %s)" % ", ".join(too_long))
 	# Large text: the same box, one big line per page, long pages split.
@@ -3886,6 +3887,28 @@ func _test_kiln_dungeon() -> void:
 
 ## The item model: giving, slots, equipment, jars, pearls, saving.
 func _test_items() -> void:
+	# Finding a tool names the key it's on, as bound now (remaps included).
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	var talk := Chest.item_talk("tide_hook")
+	_check(talk.size() == 2 and talk[0] == "GOT_TIDE_HOOK_1" and MenuKit.key_name("item_1") in talk[1] and not "{" in talk[1],
+		"the Tide Hook's words name its item key (%s)" % talk[1])
+	GameState.assign_slot(1, "tide_hook")
+	var bound := InputMap.action_get_events("item_2")
+	InputMap.action_erase_events("item_2")
+	var remapped := InputEventKey.new()
+	remapped.physical_keycode = KEY_P
+	InputMap.action_add_event("item_2", remapped)
+	talk = Chest.item_talk("tide_hook")
+	_check(talk[1].begins_with("Press P "), "a remapped item key is the one named (%s)" % talk[1])
+	InputMap.action_erase_events("item_2")
+	for event in bound:
+		InputMap.action_add_event("item_2", event)
+	GameState.give_item("divers_helm", 1, false)
+	GameState.assign_slot(0, "")
+	talk = Chest.item_talk("divers_helm")
+	_check(MenuKit.key_name("attack") in talk[1] and (tr("ITEM_KEYS_EITHER") % [MenuKit.key_name("item_1"), MenuKit.key_name("item_2")]) in talk[1],
+		"a tool on neither key names both, and the attack key too (%s)" % talk[1])
 	GameState.reset_new_game()
 	_check(GameState.has_item("driftwood_sword") and GameState.equipped_item(Items.SWORD) == "driftwood_sword",
 		"a new file starts with the driftwood sword equipped")

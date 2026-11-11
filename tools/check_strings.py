@@ -16,6 +16,11 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KEY = re.compile(r'"([A-Z][A-Z0-9]*_[A-Z0-9_]+)"')
+# "{key}" (an item's key) and "{attack}" etc. (Settings.REMAPPABLE actions)
+# in a string become key names when shown (MenuKit.fill_keys).
+KEY_TOKEN = re.compile(r"\{([a-z_0-9]+)\}")
+ACTIONS = set(re.findall(r'"([a-z_0-9]+)"', re.search(r"const REMAPPABLE := \[(.*?)\]",
+    open(os.path.join(ROOT, "scripts", "autoload", "settings.gd"), encoding="utf-8").read(), re.S).group(1)))
 # Uppercase literals that are not text keys.
 NOT_KEYS = {"KEY_ESCAPE"}
 
@@ -55,8 +60,13 @@ def missing_glyphs():
             # Godot skips columns headed "_..." (translator notes).
             if col < len(header) and header[col].startswith("_"):
                 continue
-            # "\n" in a cell is Godot's line break, not text.
-            missing = sorted({ch for ch in text.replace("\\n", "") if ch not in GLYPHS and ch not in "\n\t"})
+            # "\n" in a cell is Godot's line break, not text, and "{key}" or
+            # "{attack}" is filled in with a key name (MenuKit.fill_keys).
+            for token in KEY_TOKEN.findall(text):
+                if token != "key" and token not in ACTIONS:
+                    problems.append("line %d: %s names {%s}, which is not an action" % (n, row[0], token))
+            shown = KEY_TOKEN.sub("", text).replace("\\n", "")
+            missing = sorted({ch for ch in shown if ch not in GLYPHS and ch not in "\n\t"})
             if missing:
                 lang = header[col] if col < len(header) else "column %d" % col
                 problems.append("line %d: %s (%s) uses letters the font lacks: %s"
