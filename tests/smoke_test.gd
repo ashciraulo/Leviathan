@@ -44,6 +44,7 @@ func _ready() -> void:
 		await _test_extras_dungeon()
 		await _test_echoes_dungeon()
 		await _test_foes_dungeon()
+		await _test_qa_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -3362,6 +3363,78 @@ func _test_foes_dungeon() -> void:
 	room = await _goto(game, Vector2i(41, 9), Vector2i(1, 6))
 	var guards := _child_of(room, Marrowguard)
 	_check(not guards.is_empty() and guards[0].max_hp == 6 and guards[0].contact_damage == 2, "a Tomb Marrowguard is twice as tough and hits harder")
+	game.queue_free()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
+## QA pass: no edge crossing, hook pull or rising bell leaves Wren inside
+## something solid.
+func _test_qa_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(36, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	var player: Player = game.player
+	player._invuln = 600.0
+	# The Bone Pit's east edge is open, but the Marrow Vault's bars stand
+	# just inside it until its plates are solved: Wren stays in the Pit.
+	var room := await _goto(game, Vector2i(41, 9), Vector2i(21, 6))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(23, 6)) + Vector2(7, 0)
+	game.call("_change_room", Vector2i.RIGHT)
+	await _wait(0.6)
+	_check(game.current_room.coord == Vector2i(41, 9), "closed bars over the far edge hold Wren in the Bone Pit")
+	_check(player.global_position.x < room.global_position.x + Room.SIZE.x, "and keep them on this side of the edge")
+	GameState.set_flag(RoomPuzzle.flag_for(Vector2i(42, 9)))
+	game.set("_hatch_blocked", [Vector2i.ZERO, 0])
+	player.global_position = _tile_pos(room, Vector2i(23, 6)) + Vector2(7, 0)
+	game.call("_change_room", Vector2i.RIGHT)
+	await _wait(0.8)
+	_check(game.current_room.coord == Vector2i(42, 9), "once the Vault's gate is solved, the way east is open")
+	room = game.current_room
+	await _calm(room)
+	# A hooked crate stops a tile short of Wren, from any distance.
+	for gap in [36.0, 40.0, 44.0, 48.0, 56.0]:
+		var crate := Crate.new()
+		crate.position = _tile_pos(room, Vector2i(20, 3)) - room.global_position
+		room.add_child(crate)
+		player.global_position = crate.global_position - Vector2(gap, 0)
+		player.velocity = Vector2.ZERO
+		await _wait(0.05)
+		var steps := 0
+		while not crate.pull_towards(player.global_position, 2.0) and steps < 200:
+			steps += 1
+			await get_tree().physics_frame
+		var apart := absf(crate.global_position.x - player.global_position.x)
+		_check(apart >= 12.0, "a crate hooked from %.0f px stops clear of Wren (%.0f px apart)" % [gap, apart])
+		crate.queue_free()
+	# Cut short mid-drag, it never settles on Wren's tile.
+	var cut := Crate.new()
+	cut.position = _tile_pos(room, Vector2i(20, 3)) - room.global_position
+	room.add_child(cut)
+	await _wait(0.05)
+	cut._pull_to = cut.position - Vector2(Room.TILE, 0)
+	cut.position.x -= 10.0
+	player.global_position = room.global_position + cut._pull_to
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	cut.stop_pull()
+	_check(absf(cut.global_position.x - player.global_position.x) >= 12.0, "a drag cut short doesn't drop the crate on Wren")
+	cut.queue_free()
+	# A Tidebell rising where Wren stands stays ghostly until they step off.
+	player.global_position = _tile_pos(room, Vector2i(16, 2))
+	var bell := Tidebell.new()
+	bell.rise = true
+	bell.position = player.global_position - room.global_position
+	room.add_child(bell)
+	var shape: CollisionShape2D = bell.get_children().filter(func(n: Node) -> bool: return n is CollisionShape2D)[0]
+	await _wait(2.0)
+	_check(shape.disabled, "a bell rising on Wren isn't solid while they stand in it")
+	player.global_position += Vector2(0, 32)
+	await _wait(0.4)
+	_check(not shape.disabled, "once Wren steps off, the bell is solid")
 	game.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)
