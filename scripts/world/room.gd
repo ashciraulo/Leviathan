@@ -755,15 +755,15 @@ func _on_lines(start: int, size: int, lines: Dictionary) -> bool:
 	return false
 
 
-## True when a run of veiled planks crosses a drop (_) rather than water:
-## some plank in the run touches a gap tile. Worked out once per room (the
-## layout doesn't change), since the ground redraws every water frame.
 ## True when the tile is a veiled plank over a drop (drawn as the drop, and
 ## no water or damp edges round it, which would give the path away).
 func is_drop_plank(x: int, y: int) -> bool:
 	return _tile_at(x, y) == "v" and (BIOMES.get(biome, {}).has("gap") or _plank_over_drop(x, y))
 
 
+## True when a run of veiled planks crosses a drop (_) rather than water:
+## some plank in the run touches a gap tile. Worked out once per room (the
+## layout doesn't change), since the ground redraws every water frame.
 func _plank_over_drop(x: int, y: int) -> bool:
 	if _drop_planks == null:
 		_drop_planks = {}

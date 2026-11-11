@@ -155,15 +155,16 @@ ROOMS = {
     # in a drop between two shores; an ice eye on the east shore and two
     # skulls in the drop must all wake at once. Only the east shore sees
     # the eye and only the island hears both skulls, so Wren shoots, crosses
-    # (hook or glide) and blows the horn before the eye shuts.
+    # (hook or glide) and blows the horn before the eye shuts. Posts on
+    # both shores and both sides of the island make the hook a way back.
     (43, 8): ("ROOM_MAW_SINUS", {"chest_item": '"glint"', "chest_count": "50", "gate": '"eyes"'}, """
 ##..####################
-#..._____________......#
-#...______Z______..E...#
+#...#____________......#
+#...#_____Z______..E...#
 #|||_____________......#
 #...____.....____......#
 #...____.....____......#
-#.O.____...O.____......#
+#.O.____.O.O.____.O....#
 #...____.....____.......
 #.x.____.....____.......
 #..._____________......#
@@ -173,7 +174,9 @@ ROOMS = {
     # Above the Sinus, the Cochlea: two crates sit in nooks above a palate
     # pool. Wren drags each across by hook while the Old One breathes out
     # (risen water stops a drag), then pushes them east through a bone wall
-    # the horn finds, onto two plates; the big key lies behind the bars.
+    # the horn finds, one along each row into a two-wide alcove (two crates
+    # can't wall Wren in there), onto two plates; the big key lies behind
+    # the bars.
     (43, 7): ("ROOM_MAW_COCHLEA", {"chest_item": '"big_key"', "gate": '"plates"'}, """
 ########################
 ############K#K#########
@@ -181,9 +184,9 @@ ROOMS = {
 ###########+,,,,########
 ###########,,,,,########
 ###########,,,,,########
-#.......___......$==####
+#.......___......$.=####
+#.......___......$.=####
 #.......___......#######
-#.......___........#####
 #.......___........|C###
 #.......___........#####
 #.......___.....x..#####

@@ -2654,10 +2654,15 @@ func _test_maw_dungeon() -> void:
 	await _wait(0.8)
 	_check(_child_of(room, SingingSkull).all(func(z: SingingSkull) -> bool: return z.lit) and not (sinus_bars[0] as Bars).is_open, "from the island both skulls sing, but the eye sleeps and the bars hold")
 	await _wait(SingingSkull.SING_TIME + 0.5)
-	# Back on the east shore (a test shortcut for the glide back).
-	player.global_position = _tile_pos(room, Vector2i(18, 6))
+	# The east shore's post carries Wren back.
+	player.global_position = _tile_pos(room, Vector2i(12, 6))
+	player.facing = Vector2.RIGHT
 	player.velocity = Vector2.ZERO
 	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(floori(local.x / Room.TILE) == 17 and floori(local.y / Room.TILE) == 6, "the shore's post carries Wren back off the island (at %s)" % local)
 	player.global_position = _tile_pos(room, Vector2i(19, 6))
 	player.facing = Vector2.UP
 	player.velocity = Vector2.ZERO
@@ -2699,7 +2704,7 @@ func _test_maw_dungeon() -> void:
 	var coch_crates: Array = _child_of(room, Crate)
 	coch_crates.sort_custom(func(a: Crate, b: Crate) -> bool: return a.position.x < b.position.x)
 	var coch_bars: Array = _child_of(room, Bars)
-	_check(coch_crates.size() == 2 and _child_of(room, PressurePlate).size() == 2 and coch_bars.size() == 1 and not (coch_bars[0] as Bars).is_open and _child_of(room, BoneWall).size() == 1, "two crates in their nooks, two plates, a hidden bone wall, bars on the big key")
+	_check(coch_crates.size() == 2 and _child_of(room, PressurePlate).size() == 2 and coch_bars.size() == 1 and not (coch_bars[0] as Bars).is_open and _child_of(room, BoneWall).size() == 2, "two crates in their nooks, two plates, a hidden bone wall, bars on the big key")
 	player.global_position = _tile_pos(room, Vector2i(7, 8))
 	player.facing = Vector2.RIGHT
 	player.velocity = Vector2.ZERO
@@ -2743,14 +2748,21 @@ func _test_maw_dungeon() -> void:
 	for i in 6:
 		right_crate._slide(Vector2.RIGHT)
 		await _wait(0.4)
-	player.global_position = _tile_pos(room, Vector2i(11, 7))
+	_check(not (coch_bars[0] as Bars).is_open, "one plate alone leaves the bars shut")
+	# The other goes down a row from the drained pool, then along it.
+	player.global_position = _tile_pos(room, Vector2i(12, 5))
 	player.velocity = Vector2.ZERO
 	await _wait(0.2)
-	for i in 7:
+	left_crate._slide(Vector2.DOWN)
+	await _wait(0.4)
+	player.global_position = _tile_pos(room, Vector2i(11, 8))
+	player.velocity = Vector2.ZERO
+	await _wait(0.2)
+	for i in 8:
 		left_crate._slide(Vector2.RIGHT)
 		await _wait(0.4)
 	await _wait(0.2)
-	_check(floori(right_crate.position.x / Room.TILE) == 19 and floori(left_crate.position.x / Room.TILE) == 18 and (coch_bars[0] as Bars).is_open, "both crates on the plates, the bars open (cols %d, %d)" % [floori(left_crate.position.x / Room.TILE), floori(right_crate.position.x / Room.TILE)])
+	_check(floori(right_crate.position.x / Room.TILE) == 19 and floori(left_crate.position.x / Room.TILE) == 19 and floori(left_crate.position.y / Room.TILE) == 7 and (coch_bars[0] as Bars).is_open, "both crates on the plates, the bars open (cols %d, %d)" % [floori(left_crate.position.x / Room.TILE), floori(right_crate.position.x / Room.TILE)])
 	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Cochlea's chest holds the big key")
 	player.global_position = _tile_pos(room, Vector2i(18, 9))
 	player.velocity = Vector2.ZERO
