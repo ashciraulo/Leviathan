@@ -8,7 +8,7 @@ name_key = "ROOM_CREVASSE_SHELF"
 biome = "frostspine"
 chest_item = "glint"
 chest_count = 200
-layout = "########################
+layout = "####..##################
 #.......################
 #..O....################
 #.....C.#xxxxxxxxxxxxx##

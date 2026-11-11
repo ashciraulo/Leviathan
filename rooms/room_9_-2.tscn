@@ -7,7 +7,7 @@ script = ExtResource("1_room")
 name_key = "ROOM_SLAG_FIELDS"
 biome = "cinderreach"
 elite = Vector2i(19, 8)
-layout = "########################
+layout = "###############..#######
 #~~~~~~~~..........~~~~#
 #~~~~~~~...e........~~~#
 #~~~~~..............~~~#
