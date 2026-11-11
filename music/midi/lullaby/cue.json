@@ -1,0 +1,32 @@
+{
+ "cue": "lullaby",
+ "qbpm": 80.0,
+ "bar_q": 3,
+ "bars": 16,
+ "intro_q": 0,
+ "end_q": 48,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 36.0,
+ "loop": false,
+ "parts": [
+  {
+   "name": "musicbox",
+   "notes": 31,
+   "low": 74,
+   "high": 86
+  },
+  {
+   "name": "harp",
+   "notes": 64,
+   "low": 38,
+   "high": 64
+  },
+  {
+   "name": "choir_oo",
+   "notes": 48,
+   "low": 50,
+   "high": 60
+  }
+ ]
+}

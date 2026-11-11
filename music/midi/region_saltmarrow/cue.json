@@ -1,0 +1,56 @@
+{
+ "cue": "region_saltmarrow",
+ "qbpm": 100.5,
+ "bar_q": 3,
+ "bars": 66,
+ "intro_q": 6,
+ "end_q": 198,
+ "ppq": 96,
+ "intro_s": 3.582089552238806,
+ "loop_end_s": 118.2089552238806,
+ "loop": true,
+ "parts": [
+  {
+   "name": "guitar_nylon",
+   "notes": 396,
+   "low": 41,
+   "high": 69
+  },
+  {
+   "name": "flute_wood",
+   "notes": 125,
+   "low": 64,
+   "high": 77
+  },
+  {
+   "name": "reed_concertina",
+   "notes": 47,
+   "low": 64,
+   "high": 77
+  },
+  {
+   "name": "bass_upright",
+   "notes": 140,
+   "low": 41,
+   "high": 55
+  },
+  {
+   "name": "pad_strings",
+   "notes": 120,
+   "low": 50,
+   "high": 60
+  },
+  {
+   "name": "drum_frame",
+   "notes": 148,
+   "low": 45,
+   "high": 45
+  },
+  {
+   "name": "shaker",
+   "notes": 240,
+   "low": 82,
+   "high": 82
+  }
+ ]
+}
