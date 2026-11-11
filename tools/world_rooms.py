@@ -292,6 +292,12 @@ def steps_from(rooms, coord, x, y, items):
             if walkable(rows_for(rooms[nc], items)[ny][nx], items)]
 
 
+def start_tile(rooms, items):
+    """Where the walk starts: the first open tile of the start screen."""
+    rows = rows_for(rooms[START[0]], items)
+    return START[0], next((x, y) for y in range(ROWS) for x in range(COLS) if walkable(rows[y][x], items))
+
+
 def stranded(rooms, items, seen):
     """Tiles Wren can reach with `items` but never walk, pull or glide back
     from to the start (a hook pull out to an islet with no post home)."""
@@ -299,8 +305,11 @@ def stranded(rooms, items, seen):
     for node in seen:
         for step in steps_from(rooms, node[0], node[1][0], node[1][1], items):
             back.setdefault(step, []).append(node)
-    start = min(n for n in seen if n[0] == START[0])
-    home = {start}
+    # Home is where the walk began, and any dungeon door: Wren comes back out
+    # of a dungeon on its door holding something new, which may be the way out.
+    home = {start_tile(rooms, items)}
+    home |= {n for n in seen if rooms[n[0]]["door_to"] in DUNGEONS
+             and rows_for(rooms[n[0]], items)[n[1][1]][n[1][0]] == "D"}
     queue = deque(home)
     while queue:
         for prev in back.get(queue.popleft(), ()):
@@ -312,10 +321,7 @@ def stranded(rooms, items, seen):
 
 def explore(rooms, items):
     """Every (room, tile) reachable with `items`, and the doors touched."""
-    start_room = START[0]
-    start_rows = rows_for(rooms[start_room], items)
-    first = next((x, y) for y in range(ROWS) for x in range(COLS) if walkable(start_rows[y][x], items))
-    seen = {(start_room, first)}
+    seen = {start_tile(rooms, items)}
     queue = deque(seen)
     doors = set()
     while queue:
