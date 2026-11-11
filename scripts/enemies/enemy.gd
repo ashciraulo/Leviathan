@@ -131,7 +131,7 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 	_flash = 0.12
 	# Squashed flat for a moment by the blow (only foes that don't already
 	# animate their own scale).
-	if _squash > 0.0 or _sprite.scale.is_equal_approx(_sprite_base_scale):
+	if damage > 0 and (_squash > 0.0 or _sprite.scale.is_equal_approx(_sprite_base_scale)):
 		_squash = SQUASH_TIME
 	_stun = HIT_STUN
 	_knockback = direction * KNOCKBACK_SPEED * knockback_scale
