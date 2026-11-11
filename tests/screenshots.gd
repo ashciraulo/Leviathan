@@ -89,6 +89,20 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=secrets: exploration secrets in the older regions.
+	if OS.get_environment("SHOTS_ONLY") == "secrets":
+		await _room_shots(game, {
+			Vector2i(1, 0): ["secret_tidepools", Vector2i(11, 9)],
+			Vector2i(2, 0): ["secret_barnacle_wall", Vector2i(15, 3)],
+		})
+		GameState.set_flag(Tide.TURNED_FLAG)
+		GameState.set_flag(Tide.HELD_FLAG)
+		await _room_shots(game, {Vector2i(1, 0): ["secret_tidepools_held_out", Vector2i(11, 9)]})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=far_reaches: the late screens past each region's edge.
 	if OS.get_environment("SHOTS_ONLY") == "far_reaches":
 		await _room_shots(game, {

@@ -65,6 +65,7 @@ func _ready() -> void:
 		await _test_elites()
 		await _test_far_reaches()
 		await _test_puzzle_caves()
+		await _test_older_secrets()
 		await _test_every_checkpoint()
 		await _test_overworld_entrances()
 		await _test_ambience()
@@ -7775,6 +7776,40 @@ func _test_area_stats() -> void:
 
 
 ## One short trial cave per region: a single puzzle and a glint cache.
+## Exploration secrets in the older regions: each needs a tool found later,
+## so the early screens pay out on the way back.
+func _test_older_secrets() -> void:
+	GameState.reset_new_game()
+	# Tidepools: a rock pool whose floor is sea bed, with a chest in it.
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
+	var pools: Room = (load("res://rooms/room_1_0.tscn") as PackedScene).instantiate()
+	add_child(pools)
+	await _wait(0.1)
+	var tide := pools.get_node_or_null("Tide") as Tide
+	var bed := Vector2i(7, 10)
+	_check(pools.chest_item == "glint" and pools.tile_at(6, 10) == "C" and tide != null and tide.is_flooded(bed),
+		"Tidepools: the rock pool's chest is under water even at low tide")
+	_check(pools.freeze(Vector2i(8, 10)).is_empty(), "frost can't lay a path over the sea bed")
+	GameState.set_flag(Tide.TURNED_FLAG)
+	GameState.set_flag(Tide.HELD_FLAG)
+	await _wait(0.1)
+	_check(tide != null and not tide.is_flooded(bed) and not tide.is_flooded(Vector2i(9, 10)), "held out, the tide bares the pool floor up to the chest")
+	pools.queue_free()
+	GameState.reset_new_game()
+	Tide.offset = 0.0
+	# Barnacle Wall: a cove in the north-east corner behind a cracked boulder.
+	var wall: Room = (load("res://rooms/room_2_0.tscn") as PackedScene).instantiate()
+	var rows := Room.parse_layout(wall.layout)
+	_check(wall.chest_item == "glint" and rows[2][21] == "C" and rows[3][18] == "Y", "Barnacle Wall: a chest in a cove behind a cracked boulder")
+	var sealed := rows.duplicate()
+	sealed[3] = sealed[3].replace("Y", "#")
+	_check(not _walkable_from(sealed, Vector2i(5, 6)).has(Vector2i(21, 3)), "the boulder seals the cove")
+	var broken := rows.duplicate()
+	broken[3] = broken[3].replace("Y", ".")
+	_check(_walkable_from(broken, Vector2i(5, 6)).has(Vector2i(21, 3)), "broken, it lets Wren in")
+	wall.free()
+
+
 func _test_puzzle_caves() -> void:
 	# Dragline Cellar, west of the Shore: cracked boulders, then a crate stuck
 	# at the end of a one-wide alcove. Only the hook drags it out.
