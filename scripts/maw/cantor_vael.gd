@@ -188,10 +188,13 @@ func _chant(wren: Player, angry: bool) -> void:
 func note_hit(_note: Node) -> void:
 	if dying:
 		return
+	var was_worn := is_worn()
 	hp -= 1
 	_flash = 0.15
 	Feel.shake(2.0)
 	Audio.play_sfx("vael_falter", global_position)
+	if not was_worn:
+		_check_worn()
 	if hp <= 0:
 		Feel.final_blow(get_parent(), global_position + _spark_offset())
 		_listen()

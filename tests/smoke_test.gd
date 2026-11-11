@@ -1137,6 +1137,15 @@ func _test_play() -> void:
 	room.add_child(stand_in)
 	stand_in.add_to_group("boss")
 	await _wait(0.1)
+	# Worn down to half, a boss gives off puffs of strain.
+	stand_in.max_hp = 4
+	stand_in.hp = 4
+	stand_in.take_hit(1, Vector2.RIGHT)
+	_check(not stand_in.is_worn() and not room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.WEAR), "a boss above half health shows no wear")
+	stand_in.take_hit(1, Vector2.RIGHT)
+	_check(stand_in.is_worn() and room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.WEAR), "the blow that wears a boss to half sends up puffs")
+	await _wait(1.0)
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.WEAR), "and the puffs keep coming")
 	stand_in.hp = 1
 	stand_in.take_hit(1, Vector2.RIGHT)
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FINAL) and Engine.time_scale == 0.0, "a boss's last blow throws the great star and holds time")

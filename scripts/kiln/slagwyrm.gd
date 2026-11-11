@@ -460,3 +460,8 @@ func _draw_fx() -> void:
 		var t: float = 1.0 - puff["life"] / 0.6
 		var at: Vector2 = puff["at"] - origin + Vector2(0, -10 - t * 14.0)
 		_fx.draw_circle(at, 3.0 + t * 6.0, Color(0.9, 0.92, 0.95, 0.5 * (1.0 - t)))
+
+
+## Its lost segments already show the wear.
+func _shows_wear() -> bool:
+	return false

@@ -798,6 +798,13 @@ func _hull_shots(game: Node) -> void:
 		await _wait(0.35)
 		await _capture("39_matriarch_exposed")
 		boss.mode = BarnacleMatriarch.Mode.EXPOSED
+		# Worn to half: puffs of strain rise off her.
+		boss.hp = boss.max_hp / 2
+		boss._check_worn()
+		await _wait(0.25)
+		boss._puff_wear()
+		await _wait(0.15)
+		await _capture("39a_matriarch_worn")
 		boss.take_hit(99, Vector2.UP)
 		# The last blow: the great star as time runs slow.
 		await get_tree().create_timer(0.5, true, false, true).timeout
