@@ -32,7 +32,7 @@ const outDir = PERF ? path.resolve(rest[1] || "web_perf") : "";
 // How many times slower than the overworld screens a room may run. The
 // browser here draws in software, so only the comparison is meaningful.
 const SLOWER_LIMIT = 2.0;
-const PERF_TIMEOUT_MS = 25 * 60 * 1000;
+const PERF_TIMEOUT_MS = 40 * 60 * 1000;
 const BOOT_TIMEOUT_MS = 90000;
 const TYPES = {
   ".html": "text/html", ".js": "application/javascript", ".wasm": "application/wasm",

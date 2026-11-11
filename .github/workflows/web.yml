@@ -23,7 +23,7 @@ jobs:
   web:
     name: Export and boot the web build
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       GODOT_VERSION: 4.7.2
     steps:
@@ -117,7 +117,8 @@ jobs:
         # On main a slow room shouldn't hold back publishing the game; PRs
         # still fail on it.
         continue-on-error: ${{ github.event_name != 'pull_request' }}
-        timeout-minutes: 30
+        # All 199 rooms: ~10 min on a quick runner, ~20 on a slow one.
+        timeout-minutes: 45
         run: |
           status=0
           node tools/web_check.mjs export/web_perf --perf web_perf || status=$?
