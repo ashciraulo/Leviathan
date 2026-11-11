@@ -97,6 +97,8 @@ SECRETS = {
     # Optional screens off the thinner regions (2026-11-11).
     (7, -3): ("tide_hook",),                  # Kestrel Reach: ride a stream to the stack, then hook down to the chest ledge
     (0, -4): ("tide_hook",),                  # Crevasse Shelf: hook over a crevasse from the slick ice
+    # Far reaches, past each region's edge (2026-11-11).
+    (4, -5): ("glowmoth_lantern",),           # Edgewatch Bluff: bars until both braziers burn (one over a crevasse)
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled

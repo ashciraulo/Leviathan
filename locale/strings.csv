@@ -361,6 +361,7 @@ SIGN_SALTMARROW,"Saltmarrow. Mind the lamp, mind the tide."
 SIGN_BARNACLE_WALL,"Barnacle Wall. Built to keep the sea out. The sea moved in anyway."
 SIGN_BRINEWOOD,"Brinewood. The roots drink the tide and give back only shade."
 SIGN_MILL_ROW,"Mill Row. The sails turn whichever way the Old One breathes."
+SIGN_EDGEWATCH_BLUFF,"Edgewatch Bluff. North of here, the charts give up."
 SIGN_BRINE_SPRING,"Brine Spring. Salt water, welling up a long way from the sea."
 SIGN_ASHFALL_GATE,"Ashfall Gate. The hills are warm here, like something asleep."
 SIGN_BLEACHED_STRAND,"Bleached Strand. Whatever these bones were, the sea wore them white."
@@ -569,6 +570,9 @@ ROOM_WHALEFALL_STEPS,Whalefall Steps
 ROOM_SINKWHORL_FLATS,Sinkwhorl Flats
 ROOM_KESTREL_REACH,Kestrel Reach
 ROOM_CREVASSE_SHELF,Crevasse Shelf
+ROOM_SKERRY_SOUND,Skerry Sound
+ROOM_STORMCROWN_STACKS,Stormcrown Stacks
+ROOM_EDGEWATCH_BLUFF,Edgewatch Bluff
 ROOM_TIDEWRACK_STRAND,Tidewrack Strand
 ROOM_BLEACHED_STRAND,Bleached Strand
 ROOM_RIB_HOLLOW,Rib Hollow

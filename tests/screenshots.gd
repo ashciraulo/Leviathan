@@ -89,6 +89,19 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=far_reaches: the late screens past each region's edge.
+	if OS.get_environment("SHOTS_ONLY") == "far_reaches":
+		await _room_shots(game, {
+			Vector2i(6, -4): ["reach_windbreak_channel", Vector2i(6, 3)],
+			Vector2i(6, -5): ["reach_skerry_sound", Vector2i(10, 5)],
+			Vector2i(5, -5): ["reach_stormcrown_stacks", Vector2i(20, 5)],
+			Vector2i(4, -5): ["reach_edgewatch_bluff", Vector2i(13, 8)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=elites: one tougher, bigger foe in each region, on sight.
 	if OS.get_environment("SHOTS_ONLY") == "elites":
 		await _room_shots(game, {
