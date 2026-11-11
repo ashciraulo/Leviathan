@@ -113,6 +113,8 @@ func _ready() -> void:
 			Vector2i(3, 2): ["secret_witheroot_hollow", Vector2i(12, 3)],
 			Vector2i(7, -2): ["secret_ashfall_gate", Vector2i(16, 4)],
 			Vector2i(10, -2): ["secret_kiln_mouth", Vector2i(4, 5)],
+			Vector2i(10, 0): ["secret_whalefall_steps", Vector2i(13, 3)],
+			Vector2i(8, 0): ["secret_rib_hollow", Vector2i(19, 9)],
 			Vector2i(6, -5): ["secret_skerry_sound_shoal", Vector2i(10, 5)],
 		})
 		GameState.set_flag(Tide.TURNED_FLAG)

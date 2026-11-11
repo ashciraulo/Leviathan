@@ -8268,6 +8268,20 @@ func _test_older_secrets() -> void:
 	_check(kiln_wall.size() == 1 and (kiln_wall[0] as BoneWall).concealed and (kiln_wall[0] as BoneWall).tile == Vector2i(4, 4) and (kiln_wall[0] as BoneWall)._into_room() == Vector2.DOWN
 		and Room.parse_layout(kiln.layout)[2][5] == "C", "Kiln Mouth: a concealed wall beside the Kiln's door, a chamber and chest behind")
 	kiln.queue_free()
+	# Whalefall Steps: a ledge over a pool, its chest in the crag; a hook post
+	# beyond it pulls Wren across (or the pool freezes, or a glide clears it).
+	var fall: Room = (load("res://rooms/room_10_0.tscn") as PackedScene).instantiate()
+	var fall_rows := Room.parse_layout(fall.layout)
+	_check(fall.chest_item == "glint" and fall_rows[1][17] == "C" and fall_rows[2][18] == "O" and fall_rows[2][17] == "."
+		and fall_rows[2].substr(15, 2) == "~~" and fall_rows[3][17] == "~", "Whalefall Steps: a ledge over a pool, a hook post beyond it, a chest above")
+	_check(not _walkable_from(fall_rows, Vector2i(10, 7)).has(Vector2i(17, 2)), "no dry way onto the ledge")
+	fall.free()
+	# Rib Hollow: a bone barricade walls a niche in the south-east crag.
+	var ribs: Room = (load("res://rooms/room_8_0.tscn") as PackedScene).instantiate()
+	var rib_rows := Room.parse_layout(ribs.layout)
+	_check(ribs.chest_item == "glint" and rib_rows[10][20] == "%" and rib_rows[10][21] == "C" and rib_rows[9][21] == "#" and rib_rows[11][21] == "#",
+		"Rib Hollow: a chest in a niche behind a bone barricade")
+	ribs.free()
 	# Three shoals out in deep water, walled by rocks so that no glide, even
 	# a steered one, can curve in: the Diver's Helm alone reaches them (the
 	# story thread leaves pearls on them).
