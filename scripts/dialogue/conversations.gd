@@ -108,6 +108,8 @@ const TALKS := {
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_corrin_hull"], "set": ["heard_corrin_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
 		# Grandad's message bottles, washed back in by strange currents (QuestFind).
 		{"if": ["corrin_bottles_ask", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand"], "unless": ["corrin_bottles_done"], "set": ["corrin_bottles_done"], "give": {"glint": 120}, "lines": ["CORRIN_BOTTLES_DONE_1", "CORRIN_BOTTLES_DONE_2", "CORRIN_BOTTLES_DONE_3", ["", "NARRATE_GOT_BOTTLE_PURSE"]]},
+		# All three found before he asked.
+		{"if": ["talked_corrin_quest", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask", "corrin_bottles_done"], "give": {"glint": 120}, "lines": [["", "NARRATE_HAND_BOTTLES"], "CORRIN_BOTTLES_EARLY", "CORRIN_BOTTLES_DONE_2", "CORRIN_BOTTLES_DONE_3", ["", "NARRATE_GOT_BOTTLE_PURSE"]]},
 		{"if": ["talked_corrin_quest", "seen_wayshell"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask"], "lines": ["CORRIN_BOTTLES_1", "CORRIN_BOTTLES_1B", "CORRIN_BOTTLES_2"]},
 		{"if": ["corrin_bottles_ask"], "unless": ["corrin_bottles_done"], "lines": ["CORRIN_BOTTLES_WAITING"]},
 		{"if": ["corrin_bottles_done"], "unless": ["corrin_bottles_after"], "set": ["corrin_bottles_after"], "lines": ["CORRIN_BOTTLES_AFTER"]},
@@ -124,7 +126,7 @@ const TALKS := {
 		# Admiral gets his introduction even when the crab turns up late.
 		{"if": ["pell_gave_pearl"], "unless": ["heard_pell_admiral"], "set": ["heard_pell_admiral"], "lines": ["PELL_CRAB_AGAIN"]},
 		# His lucky shell, dropped by Brinewood's spring (QuestFind).
-		{"if": ["pell_shell_ask", "found_pell_shell"], "unless": ["pell_shell_done"], "set": ["pell_shell_done"], "give": {"glint": 40}, "lines": ["PELL_SHELL_DONE_1", "PELL_SHELL_DONE_2", ["", "NARRATE_GOT_PELL_SAVINGS"]]},
+		{"if": ["pell_shell_ask", "found_pell_shell"], "unless": ["pell_shell_done"], "set": ["pell_shell_done"], "lines": ["PELL_SHELL_DONE_1", "PELL_SHELL_DONE_2", ["", "NARRATE_GOT_PELL_SHELL"]]},
 		{"if": ["talked_pell_quest", "seen_wayshell"], "unless": ["pell_shell_ask"], "set": ["pell_shell_ask"], "lines": ["PELL_SHELL_1", "PELL_SHELL_1B", "PELL_SHELL_2"]},
 		{"if": ["pell_shell_ask"], "unless": ["pell_shell_done"], "lines": ["PELL_SHELL_WAITING"]},
 		{"if": ["talked_pell_quest", "seen_ending"], "lines": ["PELL_END"]},
@@ -460,6 +462,8 @@ const TALKS := {
 		# A boat for Tobin, from the driftwood behind Barnacle Wall (QuestFind),
 		# once Wren has said hello to Tobin.
 		{"if": ["dunstan_boat_ask", "found_driftwood"], "unless": ["dunstan_boat_done"], "set": ["dunstan_boat_done"], "lines": [["", "NARRATE_HAND_DRIFTWOOD"], "DUNSTAN_BOAT_DONE_1", ["", "NARRATE_DUNSTAN_CARVES"], "DUNSTAN_BOAT_DONE_2", ["", "NARRATE_GOT_TOY_BOAT"]]},
+		# The driftwood found before he asked.
+		{"if": ["tobin_home", "talked_tobin_home", "found_driftwood"], "unless": ["dunstan_boat_ask"], "set": ["dunstan_boat_ask", "dunstan_boat_done"], "lines": [["", "NARRATE_HAND_DRIFTWOOD"], "DUNSTAN_BOAT_EARLY", ["", "NARRATE_DUNSTAN_CARVES"], "DUNSTAN_BOAT_DONE_2", ["", "NARRATE_GOT_TOY_BOAT"]]},
 		{"if": ["tobin_home", "talked_tobin_home"], "unless": ["dunstan_boat_ask"], "set": ["dunstan_boat_ask"], "lines": ["DUNSTAN_BOAT_1", "DUNSTAN_BOAT_1B", "DUNSTAN_BOAT_2"]},
 		{"if": ["dunstan_boat_ask"], "unless": ["dunstan_boat_done"], "lines": ["DUNSTAN_BOAT_WAITING"]},
 		{"if": ["seen_ending"], "lines": ["DUNSTAN_END"]},

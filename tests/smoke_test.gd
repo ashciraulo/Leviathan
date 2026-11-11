@@ -7665,6 +7665,13 @@ func _test_small_finds() -> void:
 	GameState.set_flag(QuestFind.flag_for("driftwood"))
 	Conversations.talk("dunstan")
 	_check(GameState.has_flag("dunstan_boat_done") and first.call("tobin") == "TOBIN_BOAT", "two boats, one for Tobin")
+	# Found before anyone asked: the hand-in comes straight away.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood"]:
+		GameState.set_flag(flag)
+	Conversations.talk("corrin")
+	Conversations.talk("dunstan")
+	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done"), "things found early are handed straight in")
 	GameState.reset_new_game()
 
 
