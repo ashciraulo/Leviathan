@@ -8274,12 +8274,14 @@ func _test_older_secrets() -> void:
 	var fall_rows := Room.parse_layout(fall.layout)
 	_check(fall.chest_item == "glint" and fall_rows[1][17] == "C" and fall_rows[2][18] == "O" and fall_rows[2][17] == "."
 		and fall_rows[2].substr(15, 2) == "~~" and fall_rows[3][17] == "~", "Whalefall Steps: a ledge over a pool, a hook post beyond it, a chest above")
-	_check(not _walkable_from(fall_rows, Vector2i(10, 7)).has(Vector2i(17, 2)), "no dry way onto the ledge")
+	var dry_fall := _walkable_from(fall_rows, Vector2i(10, 8))
+	_check(dry_fall.has(Vector2i(14, 2)) and not dry_fall.has(Vector2i(17, 2)), "the hook spot is on dry ground, the ledge isn't")
+	_check(fall_rows[3][18] == "#", "rock under the post, so a pull from below can't drop Wren in the pool")
 	fall.free()
 	# Rib Hollow: a bone barricade walls a niche in the south-east crag.
 	var ribs: Room = (load("res://rooms/room_8_0.tscn") as PackedScene).instantiate()
 	var rib_rows := Room.parse_layout(ribs.layout)
-	_check(ribs.chest_item == "glint" and rib_rows[10][20] == "%" and rib_rows[10][21] == "C" and rib_rows[9][21] == "#" and rib_rows[11][21] == "#",
+	_check(ribs.chest_item == "glint" and rib_rows[10][20] == "%" and rib_rows[10][21] == "." and rib_rows[10][22] == "C" and rib_rows[9].substr(21, 2) == "##" and rib_rows[11].substr(21, 2) == "##",
 		"Rib Hollow: a chest in a niche behind a bone barricade")
 	ribs.free()
 	# Three shoals out in deep water, walled by rocks so that no glide, even
