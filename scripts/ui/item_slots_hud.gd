@@ -17,8 +17,14 @@ func _ready() -> void:
 	add_child(_canvas)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_canvas.queue_redraw()
+	_canvas.modulate.a = HudFade.step(_canvas.modulate.a, HudFade.covered(get_tree(), slots_rect()), delta)
+
+
+## The two slots' screen rect, with their key names.
+static func slots_rect() -> Rect2:
+	return Rect2(SLOT_AT[0] - Vector2(4, 3), SLOT_AT[1] - SLOT_AT[0] + Vector2(28, 26))
 
 
 func _draw_slots() -> void:
