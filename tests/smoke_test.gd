@@ -45,6 +45,7 @@ func _ready() -> void:
 		await _test_echoes_dungeon()
 		await _test_foes_dungeon()
 		await _test_qa_dungeon()
+		await _test_air_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -3456,6 +3457,60 @@ func _test_qa_dungeon() -> void:
 	await get_tree().process_frame
 	_check(camera.offset == Vector2.ZERO, "a pause settles the screen shake (%s)" % camera.offset)
 	get_tree().paused = false
+	game.queue_free()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
+## Every dungeon's air has something in it; the overworld has none of it.
+func _test_air_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(10, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	game.player._invuln = 600.0
+	var firsts := {"hull": Vector2i(10, 10), "kiln": Vector2i(21, 10), "mire": Vector2i(25, 10), "gale": Vector2i(28, 10),
+		"glacier": Vector2i(32, 10), "belfry": Vector2i(36, 10), "tomb": Vector2i(40, 10), "maw": Vector2i(44, 10)}
+	for dungeon: String in firsts:
+		var room := await _goto(game, firsts[dungeon], Vector2i(11, 10))
+		var air := room.get_node_or_null("Air") as DungeonAir
+		_check(air != null, "%s: the air has something in it" % dungeon)
+		if air == null:
+			continue
+		var specks: int = air._motes.size() + air._falls.size() + air._rises.size() + air._rain.size() + air._drips.size() + air._trickles.size()
+		_check(specks >= 3, "%s: %d specks in the air" % [dungeon, specks])
+		_check(air.z_index < Darkness.Z, "%s: under the Mire's dark, so it can't light it" % dungeon)
+	var kiln := await _goto(game, Vector2i(21, 10), Vector2i(11, 10))
+	_check(not (kiln.get_node("Air") as DungeonAir)._rises.is_empty(), "embers lift off the Kiln's lava")
+	var belfry := await _goto(game, Vector2i(36, 10), Vector2i(11, 11))
+	var bubbles: DungeonAir = belfry.get_node("Air")
+	_check(not bubbles._rises.is_empty() and not bubbles._drips.is_empty(), "the Belfry drips and bubbles")
+	# The drips run their whole course: gather, fall, ring, and again.
+	var landed := false
+	var deadline := Time.get_ticks_msec() + 6000
+	while Time.get_ticks_msec() < deadline and not landed:
+		for d in bubbles._drips:
+			landed = landed or d.ring >= 0.0
+		await _wait(0.1)
+	_check(landed, "a drip lands on the floor with a ring")
+	# In the Tomb, nothing in the air comes near a hidden bone wall's seam,
+	# whose leaking dust is the only sign of it.
+	var seam_room := await _goto(game, Vector2i(40, 8), Vector2i(11, 10))
+	var seam_air: DungeonAir = seam_room.get_node("Air")
+	_check(not seam_air._seams.is_empty(), "the Tomb's air knows where its hidden walls are")
+	var near := false
+	for tile in seam_air._roof:
+		near = near or not seam_air._clear_of_seams(Vector2(tile * Room.TILE))
+	_check(not near, "and no sand trickles near one")
+	var outside := await _goto(game, Vector2i(1, 1), Vector2i(11, 6))
+	_check(outside.get_node_or_null("Air") == null, "the overworld has its own life instead")
+	# High contrast: the air steps back.
+	var was := Settings.high_contrast
+	Settings.high_contrast = true
+	var hull := await _goto(game, Vector2i(10, 10), Vector2i(11, 10))
+	_check(is_equal_approx((hull.get_node("Air") as DungeonAir)._fade, DungeonAir.CONTRAST_FADE), "with high contrast on, the air fades back")
+	Settings.high_contrast = was
 	game.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)
