@@ -303,48 +303,62 @@ func _test_every_checkpoint() -> void:
 			_check(free >= 2, "%s: Wren can walk off from where they wake (%d of 4 ways open)" % [label, free])
 			game.queue_free()
 			await _wait(0.05)
+	get_tree().paused = false
 	_check(stones >= 20, "the world has its Tidestones (%d)" % stones)
 	SaveManager.delete_save()
 	GameState.reset_new_game()
 
 
 ## Fair entrances on the overworld (tests/walker.gd checks the dungeons): no
-## foe waits within three tiles of a way in from the next room.
+## foe waits within three tiles of a way in from the next room or a doorway,
+## in either of a room's layouts. Galehawks are left out: they circle high,
+## out of reach, until they stoop.
 func _test_overworld_entrances() -> void:
 	var rooms := RoomInfo.all()
 	var checked := 0
 	for coord: Vector2i in rooms:
 		if rooms[coord]["dungeon"] != "":
 			continue
-		var room := (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate() as Room
-		room.coord = coord
-		add_child(room)
-		var foes: Array[Vector2] = []
-		for node in room.find_children("*", "Enemy", true, false):
-			if not node.is_in_group("boss"):
-				foes.append((node as Node2D).position)
-		var ways := {Vector2i.UP: [], Vector2i.DOWN: [], Vector2i.LEFT: [], Vector2i.RIGHT: []}
-		for x in Room.COLS:
-			ways[Vector2i.UP].append(Vector2i(x, 0))
-			ways[Vector2i.DOWN].append(Vector2i(x, Room.ROWS - 1))
-		for y in Room.ROWS:
-			ways[Vector2i.LEFT].append(Vector2i(0, y))
-			ways[Vector2i.RIGHT].append(Vector2i(Room.COLS - 1, y))
-		for side: Vector2i in ways:
-			if not rooms.has(coord + side):
-				continue
-			for edge: Vector2i in ways[side]:
-				if not room.raw_tile(edge.x, edge.y) in [".", ":", ","]:
-					continue
+		var scene := load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene
+		var probe := scene.instantiate() as Room
+		var alt := probe.alt_flag if probe.alt_layout != "" else ""
+		probe.free()
+		for use_alt: bool in ([false, true] if alt != "" else [false]):
+			GameState.reset_new_game()
+			if use_alt:
+				GameState.set_flag(alt)
+			var room := scene.instantiate() as Room
+			room.coord = coord
+			add_child(room)
+			var foes: Array[Vector2] = []
+			for node in room.find_children("*", "Enemy", true, false):
+				if not node.is_in_group("boss") and not node is Galehawk:
+					foes.append((node as Node2D).position)
+			# Ways in: open border tiles facing a room, and doorways.
+			var ways: Array[Vector2] = []
+			for x in Room.COLS:
+				for y in Room.ROWS:
+					var tile := room.raw_tile(x, y)
+					var centre := Vector2(x * Room.TILE + Room.TILE / 2.0, y * Room.TILE + Room.TILE / 2.0)
+					if tile == "D":
+						ways.append(centre)
+						continue
+					var side := Vector2i(-1 if x == 0 else (1 if x == Room.COLS - 1 else 0), -1 if y == 0 else (1 if y == Room.ROWS - 1 else 0))
+					if side == Vector2i.ZERO or not tile in [".", ":", ",", "r", ";"]:
+						continue
+					for out: Vector2i in [Vector2i(side.x, 0), Vector2i(0, side.y)]:
+						if out != Vector2i.ZERO and rooms.has(coord + out):
+							ways.append(centre - Vector2(out) * Room.TILE)
+			for at in ways:
 				checked += 1
-				var at := Vector2(edge.x * Room.TILE + Room.TILE / 2.0, edge.y * Room.TILE + Room.TILE / 2.0) - Vector2(side) * Room.TILE
 				for foe in foes:
 					if foe.distance_to(at) < Room.TILE * 3.0:
-						_check(false, "room %s: a foe at tile %s waits %d px from the way in at %s" % [coord, Vector2i(foe / Room.TILE), int(foe.distance_to(at)), edge])
+						_check(false, "room %s%s: a foe at tile %s waits %d px from the way in at tile %s" % [coord, " (after %s)" % alt if use_alt else "", Vector2i(foe / Room.TILE), int(foe.distance_to(at)), Vector2i(at / Room.TILE)])
 						break
-		room.queue_free()
-		await _wait(0.02)
-	_check(checked > 100, "the overworld's ways in were checked (%d edge tiles)" % checked)
+			room.queue_free()
+			await _wait(0.02)
+	GameState.reset_new_game()
+	_check(checked > 100, "the overworld's ways in were checked (%d)" % checked)
 
 
 func _write_json(path: String, data: Dictionary) -> void:
