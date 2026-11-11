@@ -4552,7 +4552,7 @@ func _test_thin_region_screens() -> void:
 ## step to its pattern, that stays beaten.
 func _test_elites() -> void:
 	GameState.reset_new_game()
-	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle"}
+	var cases := {Vector2i(3, -1): "Scuttler", Vector2i(9, -2): "Slagbeetle", Vector2i(6, 1): "Bogskipper", Vector2i(4, -4): "Galehawk"}
 	for coord: Vector2i in cases:
 		var room: Room = (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate()
 		room.coord = coord
@@ -4588,10 +4588,43 @@ func _test_elites() -> void:
 			await _wait(0.3)
 			_check(bull.mode == Slagbeetle.Mode.CRACK and bull._bounced and absf(bull._direction.y) == 1.0, "the elite beetle shrugs off its first wall and turns")
 			bull.ai_enabled = false
+		elif boss is Bogskipper:
+			var skip := boss as Bogskipper
+			var wren := Player.new()
+			wren.add_to_group("player")
+			wren.set_physics_process(false)
+			room.add_child(wren)
+			wren.position = skip.position + Vector2(0, -90)
+			var start := skip.position
+			skip.ai_enabled = true
+			await _wait(0.5)
+			_check(skip.mode == Bogskipper.Mode.HIDDEN and skip.position.y < start.y - 4.0, "the elite skipper creeps after Wren under the mud")
+			skip.ai_enabled = false
+			wren.free()
+		elif boss is Galehawk:
+			var hawk := boss as Galehawk
+			hawk.ai_enabled = true
+			hawk._restoop = true
+			hawk.mode = Galehawk.Mode.STOOP
+			hawk._timer = 0.0
+			hawk._think(0.016)
+			_check(hawk.mode == Galehawk.Mode.PERCH and hawk._timer <= Galehawk.RESTOOP_PERCH, "the elite hawk's first perch is short")
+			hawk._timer = 0.0
+			hawk._think(0.016)
+			_check(hawk.mode == Galehawk.Mode.MARK and not hawk._restoop, "then it stoops again")
+			hawk.mode = Galehawk.Mode.STOOP
+			hawk._timer = 0.0
+			hawk._think(0.016)
+			_check(hawk.mode == Galehawk.Mode.PERCH and hawk._timer > 1.0, "and its second perch is the full one")
+			hawk.ai_enabled = false
 		for i in 12:
 			if not boss.dying:
 				if boss is Slagbeetle:
 					(boss as Slagbeetle).mode = Slagbeetle.Mode.FLIPPED
+				elif boss is Bogskipper:
+					(boss as Bogskipper).mode = Bogskipper.Mode.HOP
+				elif boss is Galehawk:
+					(boss as Galehawk).mode = Galehawk.Mode.PERCH
 				boss.take_hit(1, Vector2.RIGHT)
 		await _wait(0.4)
 		_check(GameState.has_flag(Room.elite_flag(coord)), "the fallen elite stays beaten")

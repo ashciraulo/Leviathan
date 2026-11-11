@@ -4,6 +4,9 @@ extends Enemy
 ## where it can't be hit. When Wren comes close it heaves up out of the mud,
 ## mouth open and shaking (the tell), then leaps at Wren. After a few hops
 ## around it burrows again.
+##
+## An elite (Room.elite) doesn't wait: under the mud its eyes come creeping
+## after Wren from much further off, and it surfaces right beside them.
 
 enum Mode { HIDDEN, RISE, LEAP, HOP, BURROW }
 
@@ -15,6 +18,9 @@ const LEAP_HEIGHT := 10.0
 const HOP_TIME := 2.4
 const HOP_SPEED := 36.0
 const BURROW_TIME := 0.4
+## An elite stalks Wren under the mud from this far off, at this speed.
+const STALK_RANGE := 120.0
+const STALK_SPEED := 22.0
 
 var mode := Mode.HIDDEN
 var _timer := 0.0
@@ -38,7 +44,11 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.HIDDEN:
 			velocity = Vector2.ZERO
-			if player and global_position.distance_to(player.global_position) < WAKE_RANGE:
+			if elite and player:
+				var to := player.global_position - global_position
+				if to.length() < STALK_RANGE and to.length() >= WAKE_RANGE * 0.5:
+					velocity = to.normalized() * STALK_SPEED
+			if player and global_position.distance_to(player.global_position) < (WAKE_RANGE * 0.5 if elite else WAKE_RANGE):
 				mode = Mode.RISE
 				_timer = RISE_TIME
 				_set_exposed(true)
@@ -95,6 +105,9 @@ func _update_sprite() -> void:
 	match mode:
 		Mode.HIDDEN:
 			_sprite.frame = 0
+			# The stalking eyes bob as they push through the mud.
+			if velocity != Vector2.ZERO:
+				_sprite.position.y += 1.0 if int(Time.get_ticks_msec() / 150) % 2 == 0 else 0.0
 		Mode.RISE:
 			_sprite.frame = 1
 			if ai_enabled:

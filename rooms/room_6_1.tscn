@@ -5,6 +5,7 @@
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
 name_key = "ROOM_LUMEN_POOL"
+elite = Vector2i(5, 8)
 biome = "gloamfen"
 chest_item = "breath_pearl"
 layout = "########################
