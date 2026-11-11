@@ -10,6 +10,10 @@ const SAVED_TIME := 1.6
 const SAVED_AT := Vector2(370, 202)
 
 var _gauge: Control
+## Top right: the small-key count's panel (fades with the item slots).
+var _corner: Control
+## Bottom right: the saved ring.
+var _ring: Control
 var _toast: Label
 var _toast_tween: Tween
 var _keys: Label
@@ -28,6 +32,17 @@ func _ready() -> void:
 	_gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_gauge.draw.connect(_draw_gauge)
 	add_child(_gauge)
+	_corner = Control.new()
+	_corner.name = "Corner"
+	_corner.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_corner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_corner.draw.connect(_draw_corner)
+	add_child(_corner)
+	_ring = Control.new()
+	_ring.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring.draw.connect(_draw_saved)
+	add_child(_ring)
 
 	_toast = UI.label("")
 	_toast.name = "Toast"
@@ -48,16 +63,29 @@ func _ready() -> void:
 	_keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_keys.position = Vector2(KEYS_AT.x + 14, KEYS_AT.y + 2)
 	_keys.add_theme_color_override("font_color", Palette.KEY_TEXT)
-	add_child(_keys)
+	_corner.add_child(_keys)
 
 
 func _process(delta: float) -> void:
 	_saved = maxf(_saved - delta, 0.0)
 	_gauge.queue_redraw()
+	_ring.queue_redraw()
 	var in_dungeon := GameState.dungeon != ""
-	_keys.visible = in_dungeon
+	_corner.visible = in_dungeon
 	if in_dungeon:
 		_keys.text = "x%d" % GameState.keys(GameState.dungeon)
+		_corner.modulate.a = HudFade.step(_corner.modulate.a, HudFade.covered(get_tree(), keys_rect()), delta)
+	_gauge.modulate.a = HudFade.step(_gauge.modulate.a, HudFade.covered(get_tree(), plate_rect()), delta)
+
+
+## The breath plate's screen rect.
+static func plate_rect() -> Rect2:
+	return Rect2(2, 2, GameState.max_bubbles * BUBBLE_SPACING + 5, 23)
+
+
+## The key count's screen rect.
+static func keys_rect() -> Rect2:
+	return Rect2(KEYS_AT - Vector2(2, 2), Vector2(36, 19))
 
 
 func show_toast(text_key: String) -> void:
@@ -79,7 +107,7 @@ func show_toast(text_key: String) -> void:
 
 func _draw_gauge() -> void:
 	var count: int = GameState.max_bubbles
-	var plate := Rect2(2, 2, count * BUBBLE_SPACING + 5, 23)
+	var plate := plate_rect()
 	if Settings.high_contrast:
 		_gauge.draw_rect(plate.grow(1), Palette.CONTRAST_WREN)
 	_gauge.draw_rect(plate, Palette.UI_DARK)
@@ -93,23 +121,25 @@ func _draw_gauge() -> void:
 	_gauge.draw_rect(bar, Palette.RESONANCE_EMPTY)
 	var fill: float = GameState.resonance / GameState.resonance_max
 	_gauge.draw_rect(Rect2(bar.position, Vector2(bar.size.x * fill, bar.size.y)), Palette.RESONANCE)
-	if GameState.dungeon != "":
-		_gauge.draw_rect(Rect2(KEYS_AT - Vector2(2, 2), Vector2(36, 19)), Palette.UI_DARK)
-		_gauge.draw_texture(Art.SMALL_KEY, KEYS_AT + Vector2(-3, -1))
 	for third in [1, 2]:
 		var x: float = bar.position.x + bar.size.x * third / 3.0
 		_gauge.draw_rect(Rect2(x, bar.position.y, 1, bar.size.y), Palette.OUTLINE)
-	if _saved > 0.0:
-		_draw_saved()
+
+
+func _draw_corner() -> void:
+	_corner.draw_rect(keys_rect(), Palette.UI_DARK)
+	_corner.draw_texture(Art.SMALL_KEY, KEYS_AT + Vector2(-3, -1))
 
 
 ## Six bubbles chasing round a ring, fading in and out.
 func _draw_saved() -> void:
+	if _saved <= 0.0:
+		return
 	var alpha := clampf(minf(_saved / 0.4, (SAVED_TIME - _saved) / 0.2), 0.0, 1.0)
 	var turn := (SAVED_TIME - _saved) * 5.0
-	_gauge.draw_circle(SAVED_AT + Vector2(1, 1), 10.0, Color(Palette.UI_DARK, 0.8 * alpha))
+	_ring.draw_circle(SAVED_AT + Vector2(1, 1), 10.0, Color(Palette.UI_DARK, 0.8 * alpha))
 	for i in 6:
 		var a := turn + i * TAU / 6.0
 		var at := (SAVED_AT + Vector2(cos(a), sin(a)) * 5.0).round()
 		var lead := 1.0 - i / 6.0
-		_gauge.draw_rect(Rect2(at, Vector2(2, 2)), Color(Palette.RESONANCE, alpha * (0.45 + 0.55 * lead)))
+		_ring.draw_rect(Rect2(at, Vector2(2, 2)), Color(Palette.RESONANCE, alpha * (0.45 + 0.55 * lead)))
