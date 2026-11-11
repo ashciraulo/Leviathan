@@ -156,6 +156,8 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
+			# Not up out of the floor yet: _surface turns its touch on.
+			_contact.active = false
 			if _timer <= 0.0:
 				_surface()
 		Mode.SURFACE:

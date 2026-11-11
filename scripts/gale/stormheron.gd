@@ -26,6 +26,8 @@ const HITS_PER_LANDING := 2
 const FLY_TIME := 1.1
 const CROUCH_TIME := 0.7
 const SWOOP_SPEED := 230.0
+const SWOOP_AIM_LEAD := 0.3
+const SWOOP_RAMP := 0.2
 const FEATHER_SPEED := 95.0
 ## Where on the sheet (48x48 frames).
 const FRAME_PERCH := 0
@@ -33,6 +35,7 @@ const FRAME_FLARE := 1
 const FRAME_FLY := 2
 const FRAME_GROUNDED := 3
 
+var _aimed := false
 var mode := Mode.INTRO
 var rod: LightningRod
 var _room: Room
@@ -134,6 +137,7 @@ func _think(delta: float) -> void:
 				_facing = signf(to_wren.x)
 			if _timer <= 0.0:
 				if hp * 2 <= max_hp and _throws == 1 and wren:
+					_aimed = false
 					_enter(Mode.CROUCH, CROUCH_TIME)
 					Audio.play_sfx("heron_cry", global_position, 1.3)
 				elif _throws >= THROWS_PER_STORM:
@@ -160,14 +164,21 @@ func _think(delta: float) -> void:
 				_fly_from = position
 				_start_fly(_next_rod(wren))
 		Mode.CROUCH:
-			if _timer <= 0.0:
+			# The aim is set a moment before it leaps (SWOOP_AIM_LEAD), so a
+			# step aside after that is always enough, however close Wren is.
+			if not _aimed and _timer <= SWOOP_AIM_LEAD:
+				_aimed = true
 				_swoop_dir = to_wren.normalized() if to_wren != Vector2.ZERO else Vector2.DOWN
+			if _timer <= 0.0:
+				_aimed = false
 				_facing = signf(_swoop_dir.x) if _swoop_dir.x != 0.0 else _facing
 				_throws += 1
 				_enter(Mode.SWOOP, 1.6)
 				Audio.play_sfx("cloak_open", global_position, 0.6)
 		Mode.SWOOP:
-			position += _swoop_dir * SWOOP_SPEED * delta
+			# It springs off slower and gathers speed.
+			var ramp := clampf((1.6 - _timer) / SWOOP_RAMP, 0.35, 1.0)
+			position += _swoop_dir * SWOOP_SPEED * ramp * delta
 			var local := position
 			if _timer <= 0.0 or local.x < 8.0 or local.x > Room.SIZE.x - 8.0 or local.y < 8.0 or local.y > Room.SIZE.y - 8.0:
 				_fly_from = position

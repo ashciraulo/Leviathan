@@ -81,6 +81,9 @@ var diving := false
 var _state_time := 0.0
 var _knockback := Vector2.ZERO
 var _invuln := 0.0
+## Time since the last blow that hurt Wren, counting down: a fall in that
+## time (knocked over an edge) costs no extra bubble.
+var _blow_grace := 0.0
 var _flash := 0.0
 var _hum_latched := false
 ## The charge chime already played for this hold.
@@ -148,6 +151,7 @@ func _physics_process(delta: float) -> void:
 		_attack_buffered = 0.0
 	lantern_oil = maxf(lantern_oil - delta, 0.0)
 	_invuln = maxf(_invuln - delta, 0.0)
+	_blow_grace = maxf(_blow_grace - delta, 0.0)
 	_flash = maxf(_flash - delta, 0.0)
 	match state:
 		State.MOVE:
@@ -200,6 +204,7 @@ func take_damage(amount: int, from_position: Vector2) -> void:
 	if frozen or in_cutscene or _invuln > 0.0 or state in [State.DEAD, State.FALL]:
 		return
 	end_item()
+	_blow_grace = INVULN_TIME
 	# A better tunic soaks up some hits: Wren still reels (a hum is broken,
 	# a swing cut short) but no bubble pops, only a dull thud.
 	var popped := GameState.hurt(amount)
@@ -544,7 +549,10 @@ func fall(back_to: Vector2) -> void:
 	var tween := create_tween()
 	tween.tween_method(shrink, 1.0, 0.1, 0.35)
 	await tween.finished
-	GameState.damage(1)
+	# Knocked over the edge by a blow (or out of a glide): that blow already
+	# cost a bubble, so the fall doesn't take a second.
+	if _blow_grace <= 0.0:
+		GameState.damage(1)
 	shrink.call(1.0)
 	global_position = back_to
 	if GameState.is_dead() and _out_of_breath():

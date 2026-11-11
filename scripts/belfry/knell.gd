@@ -99,6 +99,7 @@ func _grow_arms() -> void:
 	for spot: Vector2i in ARM_SPOTS:
 		var arm := Tentacle.new()
 		arm.fast = hp * 2 <= max_hp
+		arm.held = mode == Mode.INTRO
 		var t := vtile + spot
 		arm.position = Vector2(t.x * Room.TILE + Room.TILE / 2.0, t.y * Room.TILE + Room.TILE - 4)
 		arm.cut.connect(_on_arm_cut)
@@ -138,6 +139,9 @@ func _think(delta: float) -> void:
 		Mode.INTRO:
 			if _timer <= 0.0:
 				mode = Mode.ARMS
+				for arm in arms:
+					if is_instance_valid(arm):
+						arm.held = false
 				# Every arm already cut (in the opening moments): straight in.
 				_on_arm_cut()
 		Mode.ARMS, Mode.HIDDEN:

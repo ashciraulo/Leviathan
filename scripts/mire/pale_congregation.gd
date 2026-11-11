@@ -166,6 +166,8 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
+			# Still gathering out of the dark: its touch doesn't hurt yet.
+			_contact.active = _timer <= 0.0
 			if _timer <= 0.0:
 				mode = Mode.SWIM
 		Mode.SWIM:
@@ -215,7 +217,10 @@ func _move_wisps(delta: float, wren: Player, raised: bool) -> void:
 			wisp["home"] = false
 			var spot := _wren_point(wren) + Vector2(0, -8) + Vector2.from_angle(_orbit_angle + TAU * i / wisps.size()) * _orbit
 			at = at.move_toward(spot, PULL_SPEED * delta)
+			if at.distance_to(spot) < 3.0:
+				wisp["ringed"] = true
 		else:
+			wisp["ringed"] = false
 			var slot := slots[i]
 			var spot := center + Vector2(slot.x * _facing, slot.y)
 			# Once home, they keep their place in the calf's outline.
@@ -226,8 +231,11 @@ func _move_wisps(delta: float, wren: Player, raised: bool) -> void:
 		wisp["at"] = at
 		var area: DamageArea = wisp["area"]
 		area.position = at
-		# Gathering out of the dark at the start, they don't burn yet.
-		area.active = mode != Mode.DYING and mode != Mode.INTRO
+		# Gathering out of the dark at the start, they don't burn yet; nor
+		# while streaming out to the ring round Wren or back to the calf, so
+		# raising the lantern never burns Wren as they fly past.
+		var settled: bool = wisp["home"] or wisp.get("ringed", false)
+		area.active = mode != Mode.DYING and mode != Mode.INTRO and settled
 	_swarm.queue_redraw()
 
 
