@@ -176,7 +176,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers", "far_story"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -276,6 +276,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _ebb_story_shots()
+			"far_story":
+				game.queue_free()
+				await _wait(0.2)
+				await _far_story_shots()
 			"singers":
 				game.queue_free()
 				await _wait(0.2)
@@ -1894,6 +1898,55 @@ func _ebb_story_shots() -> void:
 		await _wait(0.1)
 	game.queue_free()
 	await _wait(0.2)
+
+
+## The Ebb Grotto's flood marks, and previews of Ferrin and the calf's
+## skull (their far-reach rooms are still being built).
+func _far_story_shots() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.EBB_GROTTO, StoryDirector.GROTTO_MARKS_AT + Vector2(0, 16))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(3.0)
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	game.player.try_interact()
+	var box := _dialogue_box(game)
+	await _wait(2.6)
+	box.advance()
+	await _wait(2.8)
+	await _capture("far_1_grotto_marks")
+	while box and DialogueBox.is_open:
+		box.advance()
+		box.advance()
+		await _wait(0.1)
+	game.queue_free()
+	await _wait(0.2)
+	# Previews: Ferrin and the skull, stood in rooms that exist today.
+	for shot in [["far_2_ferrin_preview", Vector2i(4, -4), "ferrin"], ["far_3_calf_preview", StoryDirector.FENMOUTH, "calf"]]:
+		GameState.reset_new_game()
+		GameState.set_checkpoint(shot[1], Vector2(12 * 16 + 8, 8 * 16 + 14))
+		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.2)
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			enemy.queue_free()
+		var thing: Node2D = Npc.new("ferrin") if shot[2] == "ferrin" else CalfSkull.new()
+		thing.position = Vector2(12 * 16 + 8, 7 * 16 + 10)
+		game.current_room.add_child(thing)
+		await _wait(2.8)
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		game.player.try_interact()
+		box = _dialogue_box(game)
+		await _wait(2.6)
+		await _capture(shot[0])
+		while box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+			await _wait(0.1)
+		game.queue_free()
+		await _wait(0.2)
 
 
 ## The last singers, each alone in their own region after the ending.

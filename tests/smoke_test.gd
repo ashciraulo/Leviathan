@@ -91,6 +91,9 @@ func _ready() -> void:
 		_test_hessa_hints()
 		_test_keepers_round()
 		await _test_last_singers()
+		_test_edge_survey()
+		_test_calf_rest()
+		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
 		_test_late_reactions()
@@ -6932,6 +6935,78 @@ func _test_last_singers() -> void:
 	_check(_find_kind(cold.current_room, "sela") == null, "Sela's spot is empty once she's home")
 	cold.queue_free()
 	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## Ferrin the mapmaker gives Wren three survey stakes for the far reaches,
+## and finishes his map when all three are driven in.
+func _test_edge_survey() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	_check(first.call("survey_stake_frost") == "NARRATE_STAKE_CAIRN", "before Ferrin asks, a stake spot is only a cairn")
+	Conversations.talk("survey_stake_frost")
+	_check(not GameState.has_flag("survey_stake_frost"), "and Wren can't drive a stake they don't have")
+	_check(first.call("ferrin") == "FERRIN_1", "Ferrin introduces himself")
+	Conversations.talk("ferrin")
+	_check(first.call("ferrin") == "FERRIN_WAITING", "and waits on the stakes")
+	for id in ["frost", "cinder", "verge"]:
+		_check(first.call("ferrin") == "FERRIN_WAITING", "not done before the %s stake" % id)
+		Conversations.talk("survey_stake_" + id)
+		_check(GameState.has_flag("survey_stake_" + id) and first.call("survey_stake_" + id) == "NARRATE_STAKE_STANDS", "the %s stake goes in, and stays" % id)
+	var glints := GameState.item_count("glint")
+	_check(first.call("ferrin") == "FERRIN_DONE_1", "all three in")
+	Conversations.talk("ferrin")
+	_check(GameState.item_count("glint") == glints + 200 and first.call("ferrin") == "FERRIN_AFTER", "Ferrin finishes his map and pays")
+	GameState.reset_new_game()
+
+
+## The Ebb Grotto's flood marks, and what they tell Liesl.
+func _test_grotto_marks() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var at := StoryDirector.GROTTO_MARKS_AT + Vector2(0, 16)
+	GameState.set_checkpoint(StoryDirector.EBB_GROTTO, at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tile := Vector2i(StoryDirector.GROTTO_MARKS_AT / Room.TILE)
+	_check(room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y - 1) == "#" and room.tile_at(tile.x, tile.y + 1) == ".", "the marks are on the wall, over dry floor")
+	game.player.global_position = room.global_position + at
+	game.player.facing = Vector2.UP
+	await _wait(0.05)
+	_check(game.player.try_interact(), "Wren can read them")
+	await _play_scene(game, 10.0)
+	_check(GameState.has_flag("read_grotto_marks"), "and does")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.set_flag("liesl_asked")
+	_check(first.call("liesl") == "LIESL_MARKS_1", "Liesl hears of the marks")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_WAITING", "once")
+	GameState.reset_new_game()
+
+
+## The Calf's Rest: the little skull in the far fen, and Murmur's robe.
+func _test_calf_rest() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	GameState.set_flag("murmur_met")
+	_check(first.call("calf_skull") == "NARRATE_CALF_1", "Wren finds the calf's skull")
+	Conversations.talk("calf_skull")
+	_check(first.call("calf_skull") == "NARRATE_CALF_AGAIN", "once")
+	_check(first.call("murmur") == "MURMUR_REST_EARLY", "Murmur asks Wren to keep it quiet")
+	Conversations.talk("murmur")
+	_check(first.call("murmur") != "MURMUR_REST_EARLY", "once")
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	_check(first.call("murmur") == "MURMUR_REST_1", "after the ending, Murmur takes the robe out there")
+	Conversations.talk("murmur")
+	_check(first.call("calf_skull") == "NARRATE_CALF_ROBE" and first.call("murmur") == "MURMUR_END", "and it lies folded on the skull")
+	var skull := CalfSkull.new()
+	add_child(skull)
+	skull._process(0.0)
+	_check(skull._robe.visible, "where Wren can see it")
+	skull.queue_free()
 	GameState.reset_new_game()
 
 
