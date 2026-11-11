@@ -5,6 +5,7 @@ extends Projectile
 
 ## A chunk of ice is too heavy for cork.
 func _init() -> void:
+	super()
 	shield_tier = 2
 
 

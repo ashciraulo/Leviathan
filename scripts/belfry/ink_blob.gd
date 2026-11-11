@@ -5,6 +5,7 @@ extends Projectile
 
 ## Ink soaks through cork.
 func _init() -> void:
+	super()
 	shield_tier = 2
 
 

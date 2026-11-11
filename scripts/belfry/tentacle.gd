@@ -12,6 +12,9 @@ const REAR_TIME := 0.6
 const SLAM_TIME := 0.3
 const REST_TIME := 1.4
 
+## Set while the Knell is still making its entrance: the arm sways but
+## doesn't strike yet.
+var held := false
 var severed := false
 var fast := false
 var _sprite: Sprite2D
@@ -88,7 +91,7 @@ func _physics_process(delta: float) -> void:
 		"sway":
 			_sprite.frame = 0
 			_sprite.position.x = -8 + roundf(sin(_time * 2.0) * 1.5)
-			if _timer <= 0.0 and wren and not wren.diving and wren.global_position.distance_to(global_position) < REACH + 20.0:
+			if _timer <= 0.0 and not held and not Cutscene.active and wren and not wren.frozen and not wren.diving and wren.global_position.distance_to(global_position) < REACH + 20.0:
 				_mode = "rear"
 				_timer = REAR_TIME * (0.85 if fast else 1.0)
 				var to := wren.global_position - global_position

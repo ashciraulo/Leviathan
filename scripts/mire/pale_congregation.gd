@@ -35,6 +35,10 @@ const LIFT := 14.0
 ## Where it may swim: the open floor, clear of the border walls.
 const ARENA := Rect2(3.0 * 16.0, 3.0 * 16.0, 18.0 * 16.0, 8.0 * 16.0)
 
+## How long wisps stay harmless after the lantern goes up, while they fly
+## out to the ring.
+const WISP_SETTLE := 0.5
+var _since_lantern := 99.0
 var mode := Mode.INTRO
 ## Formation slots (the calf's outline), relative to the heart, facing right.
 var slots: Array[Vector2] = []
@@ -166,6 +170,8 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
+			# Still gathering out of the dark: its touch doesn't hurt yet.
+			_contact.active = _timer <= 0.0
 			if _timer <= 0.0:
 				mode = Mode.SWIM
 		Mode.SWIM:
@@ -196,6 +202,11 @@ func _think(delta: float) -> void:
 func _move_wisps(delta: float, wren: Player, raised: bool) -> void:
 	if raised and not _was_raised:
 		Audio.play_sfx("wisp_chime", global_position)
+	# Only a fresh raise gives them their moment to fly out (flicking the
+	# lantern up and down doesn't keep them harmless).
+	if raised and not _was_raised and _since_lantern >= WISP_SETTLE * 3.0:
+		_since_lantern = 0.0
+	_since_lantern += delta
 	_was_raised = raised
 	if raised:
 		_orbit = maxf(_orbit - ORBIT_SHRINK * delta, 6.0)
@@ -226,8 +237,12 @@ func _move_wisps(delta: float, wren: Player, raised: bool) -> void:
 		wisp["at"] = at
 		var area: DamageArea = wisp["area"]
 		area.position = at
-		# Gathering out of the dark at the start, they don't burn yet.
-		area.active = mode != Mode.DYING and mode != Mode.INTRO
+		# Gathering out of the dark at the start, they don't burn yet; nor
+		# for a moment after the lantern goes up (WISP_SETTLE), while they
+		# stream out of the calf to the ring round Wren, so raising the
+		# lantern never burns Wren as they fly past.
+		var settled: bool = not raised or _since_lantern >= WISP_SETTLE
+		area.active = mode != Mode.DYING and mode != Mode.INTRO and settled
 	_swarm.queue_redraw()
 
 

@@ -102,6 +102,8 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.INTRO:
 			velocity = Vector2.ZERO
+			# Still pulling itself together: its touch doesn't hurt yet.
+			_contact.active = _timer <= 0.0
 			if _timer <= 0.0:
 				mode = Mode.WALK
 		Mode.WALK:

@@ -15,12 +15,22 @@
 (function(){
   var KEYS={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyJ:74,KeyK:75,KeyU:85,KeyI:73,KeyH:72,KeyM:77,KeyQ:81,KeyE:69,Escape:27};
   var NAMES={ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight',Escape:'Escape'};
+  // The game fills window.__lvBind when keys are remapped: each button's
+  // default key -> [the key its action uses now, that key's label].
+  function bound(code){var b=window.__lvBind&&window.__lvBind[code];return b?b[0]:code;}
+  function kc(code){return KEYS[code]||(/^(Key|Digit).$/.test(code)?code.charCodeAt(code.length-1):0);}
   function send(code,down){
     var c=document.getElementById('canvas')||document.querySelector('canvas');
     if(!c)return;
-    var key=NAMES[code]||code.slice(3).toLowerCase();
-    c.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code:code,key:key,keyCode:KEYS[code],which:KEYS[code],bubbles:true,cancelable:true}));
+    var key=NAMES[code]||(/^(Key|Digit)/.test(code)?code.replace(/^(Key|Digit)/,'').toLowerCase():code);
+    c.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code:code,key:key,keyCode:kc(code),which:kc(code),bubbles:true,cancelable:true}));
   }
+  // Buttons show the key they press, so "Press L" in the game matches.
+  function relabel(){
+    var bs=document.querySelectorAll('#lv-touch .b');
+    for(var i=0;i<bs.length;i++){var d=bs[i].getAttribute('data-code'),b=window.__lvBind&&window.__lvBind[d];var t=b?b[1]:bs[i].getAttribute('data-label');bs[i].textContent=t;bs[i].style.fontSize=t.length>3?'10px':'';}
+  }
+  window.__lvRelabel=relabel;
   function build(){
     var root=document.createElement('div');root.id='lv-touch';
     // Right: K (talk/use) right, J (sword) bottom, U and I left and top.
@@ -33,13 +43,16 @@
     var pad=document.createElement('div');pad.id='lv-pad';var knob=document.createElement('div');knob.id='lv-knob';pad.appendChild(knob);root.appendChild(pad);
     stick(pad,knob);
     document.body.appendChild(root);
+    relabel();
     return root;
   }
   function btn(code,label){
-    var b=document.createElement('div');b.className='b';b.textContent=label;
-    var held=0;
-    function down(e){e.preventDefault();if(!held++){b.classList.add('down');send(code,true);}}
-    function up(e){e.preventDefault();if(held&&!--held||e.type==='touchcancel'){held=0;b.classList.remove('down');send(code,false);}}
+    var b=document.createElement('div');b.className='b';b.textContent=label;b.setAttribute('data-code',code);b.setAttribute('data-label',label);
+    // The release goes out as the key that was pressed, even if a rebind
+    // (on the controls screen, by this very press) moved the action since.
+    var held=0,sent=code;
+    function down(e){e.preventDefault();if(!held++){b.classList.add('down');sent=bound(code);send(sent,true);}}
+    function up(e){e.preventDefault();if(held&&!--held||e.type==='touchcancel'){held=0;b.classList.remove('down');send(sent,false);}}
     b.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++)down(e);},{passive:false});
     b.addEventListener('touchend',function(e){for(var i=0;i<e.changedTouches.length;i++)up(e);},{passive:false});
     b.addEventListener('touchcancel',up,{passive:false});
