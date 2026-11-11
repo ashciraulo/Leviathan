@@ -3437,6 +3437,25 @@ func _test_qa_dungeon() -> void:
 	player.global_position += Vector2(0, 32)
 	await _wait(0.4)
 	_check(not shape.disabled, "once Wren steps off, the bell is solid")
+	# Bars slammed shut rise back out of the deck to where they stood.
+	var bars := Bars.new()
+	bars.position = _tile_pos(room, Vector2i(14, 2)) - room.global_position
+	room.add_child(bars)
+	var up_y: float = bars._sprite.position.y
+	bars.open(true)
+	bars.close()
+	await _wait(0.3)
+	_check(is_equal_approx(bars._sprite.position.y, up_y) and is_equal_approx(bars._sprite.modulate.a, 1.0) and bars.visible, "bars that slam shut rise back to where they stood")
+	bars.queue_free()
+	# A shake caught by a pause settles rather than freezing off centre.
+	var camera: Camera2D = game.camera
+	Feel.shake(6.0)
+	await get_tree().process_frame
+	get_tree().paused = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(camera.offset == Vector2.ZERO, "a pause settles the screen shake (%s)" % camera.offset)
+	get_tree().paused = false
 	game.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)

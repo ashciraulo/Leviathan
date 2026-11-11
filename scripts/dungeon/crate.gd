@@ -9,6 +9,8 @@ const PUSH_DELAY := 0.3
 const SLIDE_TIME := 0.22
 
 var _push_time := 0.0
+## True once a blocked push has thudded, until Wren lets go.
+var _bumped := false
 var _sliding := false
 ## The tile centre the crate is being dragged towards, while hooked.
 var _pull_to := Vector2.INF
@@ -33,6 +35,7 @@ func _physics_process(delta: float) -> void:
 	var wants := player._input_direction() if player else Vector2.ZERO
 	if player == null or player.state != Player.State.MOVE or wants == Vector2.ZERO:
 		_push_time = 0.0
+		_bumped = false
 		return
 	var dir := Enemy.cardinal(wants)
 	var rel := global_position - player.global_position
@@ -45,13 +48,20 @@ func _physics_process(delta: float) -> void:
 			_slide(dir)
 	else:
 		_push_time = 0.0
+		_bumped = false
 
 
 func _slide(dir: Vector2, gliding: bool = false) -> void:
 	var step := dir * Room.TILE
 	if test_move(global_transform, step) or _someone_in(step):
 		Feel.shake(0.4)
+		# A dull thud the first time it won't budge, so "blocked" never
+		# reads as "still pushing".
+		if not gliding and not _bumped:
+			_bumped = true
+			Audio.play_sfx("block", global_position, 0.8)
 		return
+	_bumped = false
 	_sliding = true
 	var on_ice := _on_ice()
 	# One scrape per push; a glide across ice carries on under the first.

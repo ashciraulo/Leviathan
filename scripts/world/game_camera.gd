@@ -8,10 +8,15 @@ var _trauma := 0.0
 
 
 func _ready() -> void:
+	# Keeps running through a pause, so a shake caught by a dialogue or the
+	# pause menu settles instead of leaving the view knocked off centre.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	Feel.shake_requested.connect(_on_shake_requested)
 
 
 func _process(delta: float) -> void:
+	if get_tree().paused:
+		_trauma = 0.0
 	if _trauma <= 0.0:
 		offset = Vector2.ZERO
 		return
