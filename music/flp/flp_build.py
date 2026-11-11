@@ -78,7 +78,10 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
     names = channel_names(template)
     scale = flp.ppq / meta["ppq"]
     notes, counts = [], {}
-    if audition:
+    if audition and "=" in audition:  # "musicbox=aud1,aud2;harp=aud3": several parts in one render
+        targets = [(part, ch) for group in audition.split(";") for part, chs in [group.split("=")]
+                   for ch in chs.split(",")]
+    elif audition:
         targets = [(audition, n) for n in sorted(names) if n.lower().startswith("aud")]
         if not targets:
             raise SystemExit("audition template needs channels named aud1, aud2 ...")
@@ -119,6 +122,10 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
         raise SystemExit("template has no tempo event")
     flp.set_tempo(meta["qbpm"])
     end = round(meta["end_q"] * flp.ppq)
+    if not meta.get("loop", True):
+        # One-shots: two bars of room after the last note, so a Song-mode render keeps the
+        # release and reverb tail (finalize.py trims the silence after it).
+        end += round(2 * meta["bar_q"] * flp.ppq)
     clips = flp.set_pattern_clips(pattern, end)
     if clips == 0:
         raise SystemExit(f"pattern {pattern} has no clip in the playlist; place it at bar 1 in the template")
@@ -141,7 +148,7 @@ if __name__ == "__main__":
     ap.add_argument("--pattern", type=int, default=1)
     ap.add_argument("--map", help="json: {part name: channel name}")
     ap.add_argument("--transpose", help="json: {part or channel name: semitones}, for presets measured off-octave")
-    ap.add_argument("--audition", help="part name to copy onto every aud* channel")
+    ap.add_argument("--audition", help="part name to copy onto every aud* channel, or part=aud1,aud2;part2=aud3")
     ap.add_argument("--fix", help="json: per-part fixes for a sampled preset (see build())")
     a = ap.parse_args()
     print(json.dumps(build(a.template, a.cue, a.out, a.pattern,

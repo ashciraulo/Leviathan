@@ -13,8 +13,9 @@ For a looping cue this script:
      seconds> in its .import file. The import keeps loop=false: the game turns
      looping on for its own copy (Audio._looping), and the shared track stays
      unlooped so one-shot uses of it still end.
-One-shot cues (bells, lullaby, credits) keep their natural tail, with a
-short fade over the last 50 ms so they never end on a cut.
+One-shot cues (bells, lullaby, credits) keep their natural tail: the .flp
+leaves two bars of room after the last note, the silence after the tail is
+trimmed, and the last 50 ms fade so they never end on a cut.
 Nothing here changes the music's level: loudness is set inside FL (Pro-L 2),
 and this only measures it, so the .flp stays the single source.
 """
@@ -81,7 +82,13 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
                       tail_folded_s=round(n / rate, 2))
         measured = body
     else:
-        out = audio
+        # One-shots render with two bars of room after the last note (flp_build), so the tail
+        # rings out; trim the silence after it, keeping 0.1 s, then fade the last 50 ms.
+        level = np.abs(audio).max(axis=1)
+        loud = np.nonzero(level > 10 ** (-70 / 20))[0]
+        stop = min(audio.shape[0], (loud[-1] if loud.size else end) + int(0.1 * rate))
+        report["cut_db"] = round(20 * np.log10(level[max(0, stop - int(0.15 * rate)):stop].max() + 1e-12), 1)
+        out = audio[:max(stop, end)].copy()
         fade = int(0.05 * rate)
         out[-fade:] *= np.linspace(1, 0, fade)[:, None]
         measured = out
@@ -94,6 +101,8 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         problems.append(f"loudness {lufs:.1f} LUFS, target {spec['lufs']:.0f} (fix the Pro-L 2 gain in FL)")
     if tp > TP_MAX:
         problems.append(f"true peak {tp:.2f} dBTP is over {TP_MAX}")
+    if not spec["loop"] and report["cut_db"] > -50:
+        problems.append(f"the tail is cut at {report['cut_db']} dBFS: give the render more room after the last note")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")
     # The handoff's slam limit is +6 dB; a seam no bigger than the cue's usual downbeat step is a downbeat,

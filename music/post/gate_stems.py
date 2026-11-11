@@ -1,14 +1,15 @@
 """Gates FL's split-stem renders against the cue's MIDI before mixing.
 
-    python3 music/post/gate_stems.py <cue> <stem dir> [--map part=stem_file ...]
+    python3 music/post/gate_stems.py <cue> <stem dir> [part=stem_file ...] [--octave part=+1 ...]
 
 For each part's stem (FL "Split mixer tracks" render, one insert per part):
 - sounding octave and tuning: the strongest partial near each written note's
   fundamental, per note, so a preset an octave off or detuned shows up;
 - per-note pitch spread (a lead can average 0 cents and still scatter);
 - note-level evenness: the level of each note's attack against its velocity;
-- wobble: amplitude modulation 3-9 Hz inside held notes (hidden LFOs, chorus);
-- stray sound before the part's first note, and silent notes.
+- wobble inside held notes (hidden LFOs, chorus, a detuned layer) and the
+  left channel's pitch against the right;
+- stray sound before the part's first note, silent notes, and notes that stop dead.
 Drums and other unpitched parts only get the stray-sound and silent-note checks.
 Fails print what to change (preset swap, transpose, fine-tune).
 """
@@ -24,6 +25,9 @@ import soundfile
 
 MUSIC = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UNPITCHED = ("drum", "shaker", "perc", "taiko", "anvil", "tom", "timpani")
+# Struck and plucked parts whose held notes should only decay: a flute's vibrato or an accordion's
+# musette beating is the instrument, but on a bell or music box it is a fault.
+STRUCK = ("musicbox", "bell", "celesta", "glock", "harp", "chime", "mallet")
 
 
 def notes_of(path: str, qbpm: float) -> list[tuple[float, float, int, int]]:
@@ -98,7 +102,9 @@ def note_pitch(x: np.ndarray, rate: int, midi: int) -> tuple[float, float]:
     return float(cents), int(octv), float(strongest)
 
 
-def gate(cue: str, stem_dir: str, mapping: dict[str, str]) -> list[str]:
+def gate(cue: str, stem_dir: str, mapping: dict[str, str], octaves: dict[str, int] | None = None) -> list[str]:
+    """octaves: parts meant to sound away from their written notes (a glockenspiel
+    doubling a melody an octave up: --octave box_shine=1)."""
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
     problems = []
     for part in meta["parts"]:
@@ -114,16 +120,72 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str]) -> list[str]:
         pre = mono[: max(0, first - int(0.02 * rate))]
         if pre.size and 20 * np.log10(np.abs(pre).max() + 1e-9) > -60:
             problems.append(f"{name}: sound before its first note ({20 * np.log10(np.abs(pre).max()):.0f} dBFS)")
+        # Notes that stop dead: a sampled or gated preset can cut its sound off long before the
+        # written note ends (lullaby review v5, MAJOR 1: every music box note dropped 25-34 dB in
+        # under 10 ms). Look for a cliff in the 10 ms envelope between 150 ms after each onset and
+        # the next onset of the part (or the written end), where a natural decay never falls that fast.
+        if not any(u in name for u in UNPITCHED):
+            hop = int(0.01 * rate)
+            env = 20 * np.log10(np.array([np.abs(mono[k:k + hop]).max() for k in range(0, mono.size - hop, hop)]) + 1e-9)
+            onsets = sorted({n[0] for n in notes})
+            cut = 0
+            for k, on in enumerate(onsets):
+                stop = onsets[k + 1] if k + 1 < len(onsets) else on + max(n[1] for n in notes if n[0] == on)
+                seg = env[int((on + 0.15) * 100): int(stop * 100)]
+                if seg.size > 3 and seg.max() > -60 and (-np.diff(seg)).max() > 20:
+                    cut += 1
+            if cut > max(1, len(onsets) // 10):
+                problems.append(f"{name}: {cut} of {len(onsets)} notes stop dead (a >20 dB drop within 10 ms "
+                                "before the next note): the preset gates or cuts its sound; swap it")
+        # Wobble and a detuned second layer (lullaby review v6, MINOR: Celestia's left channel sat
+        # +13 c over its right, so every held note beat at 4-9 Hz, 8-16 dB deep). For solo notes held
+        # 0.6 s or more: the peak-to-peak ripple of the 20 ms envelope around a smooth decay, and the
+        # pitch of the left channel against the right.
+        if not any(u in name for u in UNPITCHED) and x.shape[1] == 2:
+            wob, lr = [], []
+            for nt in notes:
+                nxt = min((o[0] for o in notes if o[0] > nt[0] + 0.01), default=nt[0] + nt[1])
+                span = min(nxt - nt[0], 1.2)
+                # Until the next onset: an earlier note may still ring, but none starts inside.
+                if span < 0.6 or any(o is not nt and nt[0] - 0.01 < o[0] < nt[0] + 0.01 for o in notes):
+                    continue
+                i = int(nt[0] * rate)
+                seg2 = x[i + int(0.08 * rate): i + int(span * rate)]
+                hop, w = int(0.005 * rate), int(0.02 * rate)
+                env = 20 * np.log10(np.sqrt(np.convolve(seg2.mean(axis=1) ** 2, np.ones(w) / w, "same"))[::hop] + 1e-9)
+                if env.max() < -60:
+                    continue
+                tt = np.arange(env.size)
+                r = env - np.polyval(np.polyfit(tt, env, 2), tt)
+                wob.append(r.max() - r.min())
+                lr.append(note_pitch(seg2[:, 0], rate, nt[2])[0] - note_pitch(seg2[:, 1], rate, nt[2])[0])
+            if len(wob) >= 5:
+                if abs(np.median(lr)) > 6:
+                    problems.append(f"{name}: left channel sounds {np.median(lr):+.0f} cents from the right (a detuned "
+                                    "layer that beats): zero the preset's detune/spread or pick another preset")
+                if any(u in name for u in STRUCK) and np.median(wob) > 8:
+                    problems.append(f"{name}: held notes wobble {np.median(wob):.1f} dB peak to peak (beating layers, "
+                                    "chorus or an LFO): turn it off in the preset or pick another")
         levels, level_keys, cents, octs, by_key = [], [], [], [], {}
         # Only notes that sound alone are measured for pitch and evenness:
         # a chord's notes mask each other.
         alone = [all(o is nt or o[0] >= nt[0] + nt[1] or o[0] + o[1] <= nt[0] for o in notes) for nt in notes]
+        # A melody that rings over itself (a music box held into the next note) has no strictly solo
+        # notes, and v7's first box preset sounded two octaves up without the gate measuring a note.
+        # Then use every note whose measured half second no other onset enters, the tail of an
+        # earlier note being far quieter than a fresh attack.
+        if sum(alone) < 5:
+            alone = [all(o is nt or not nt[0] - 0.02 < o[0] < nt[0] + min(nt[1], 0.5) for o in notes)
+                     and not any(o is not nt and o[0] <= nt[0] < o[0] + o[1] and nt[0] - o[0] < 0.25 for o in notes)
+                     for nt in notes]
         for (start, dur, midi, vel), solo in zip(notes, alone):
             i = int(start * rate)
             seg = mono[i: i + int(min(dur, 0.5) * rate)]
             if seg.size < 256:
                 continue
-            lvl = 20 * np.log10(np.sqrt(np.mean(seg[: int(0.08 * rate)] ** 2)) + 1e-9)
+            # Judged over the note's first half second, not its first 80 ms: a slow-attack choir
+            # or pad swells in and was flagged silent (lullaby review v5, NOTE 1).
+            lvl = 20 * np.log10(np.sqrt(np.mean(seg ** 2)) + 1e-9)
             if lvl < -60:
                 problems.append(f"{name}: silent note {midi} at {start:.2f} s")
                 continue
@@ -140,7 +202,7 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str]) -> list[str]:
         # A part that is mostly chords leaves few solo notes; one note can't judge a part.
         if len(octs) >= 5:
             octave = max(set(octs), key=octs.count)
-            if octave:
+            if octave != (octaves or {}).get(name, 0):
                 problems.append(f"{name}: sounds {octave:+d} octave(s) from the written notes "
                                 f"(transpose the part {-12 * octave:+d} or swap the preset)")
             c = np.array(cents)
@@ -180,8 +242,15 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str]) -> list[str]:
 
 if __name__ == "__main__":
     cue, stem_dir = sys.argv[1], sys.argv[2]
-    mapping = dict(a.split("=", 1) for a in sys.argv[3:] if "=" in a)
-    found = gate(cue, stem_dir, mapping)
+    mapping, octaves, args = {}, {}, sys.argv[3:]
+    for i, a in enumerate(args):
+        if "=" in a:
+            k, v = a.split("=", 1)
+            if i and args[i - 1] == "--octave":
+                octaves[k] = int(v)
+            else:
+                mapping[k] = v
+    found = gate(cue, stem_dir, mapping, octaves)
     for p in found:
         print("GATE:", p)
     print("PASS" if not found else f"{len(found)} problem(s)")

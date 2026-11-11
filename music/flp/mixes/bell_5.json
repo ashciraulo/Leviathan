@@ -1,0 +1,26 @@
+{
+ "cue": "bell_5",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Big Crystal Bells (Analog Lab), insert 3: icy and pure. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "parts": {
+  "bell_rime": {
+   "insert": 3,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

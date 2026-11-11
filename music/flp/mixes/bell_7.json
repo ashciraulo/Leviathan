@@ -1,0 +1,26 @@
+{
+ "cue": "bell_7",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Kalimba (Analog Lab), insert 7, sounding an octave up: bone-dry wood and metal, short. Gate: --octave bell_marrow=+1. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "parts": {
+  "bell_marrow": {
+   "insert": 7,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

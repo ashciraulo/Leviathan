@@ -119,6 +119,15 @@ def main() -> None:
                 lim = j
     if 0 not in proq or comp is None or lim is None:
         raise SystemExit("template needs Pro-C 2, Pro-Q 4 and Pro-L 2 on the master")
+    pre = g["pre_lufs"]
+    gain = round(mix["lufs"] - pre + LIMIT_LOSS + trim, 2)
+    # Pro-L 2's gain only goes from 0 to +30 dB, so a negative make-up gain would be clamped to 0 and the
+    # cue would come out too loud (bell_3 v2/v3). Take the excess off every part instead.
+    shift = min(0.0, gain - 0.5)
+    if shift:
+        g["gains"] = {k: round(v + shift, 2) for k, v in g["gains"].items()}
+        pre, gain = pre + shift, round(gain - shift, 2)
+        print(f"Pro-L gain would be negative: parts {shift:+.2f} dB")
     for part, cfg in mix["parts"].items():
         j = proq.get(cfg["insert"])
         if j is None:
@@ -127,13 +136,11 @@ def main() -> None:
         print(f"insert {cfg['insert']} {part:16s} out {g['gains'][part]:+6.2f} dB  " +
               ", ".join(f"{b['shape']} {b['freq']:g}" for b in cfg["eq"]))
     ev[proq[0]][1] = proq_set(bytes(ev[proq[0]][1]), mix.get("master_eq", []), 0.0)
-    pre = g["pre_lufs"]
     fab_set(ev[comp][1], 0, 5)                       # style Bus
     over = mix.get("comp_over_lufs", 12.0)
     fab_set(ev[comp][1], 1, round(pre + over, 1))    # threshold
     fab_set(ev[comp][1], 2, 0.6)                     # ratio 2:1
     fab_set(ev[comp][1], 14, 0)                      # auto gain off
-    gain = round(mix["lufs"] - pre + LIMIT_LOSS + trim, 2)
     fab_set(ev[lim][1], 0, gain)
     fab_set(ev[lim][1], 18, -1.1)
     print(f"mix {pre:.2f} LUFS -> Pro-C threshold {pre + over:.1f}, Pro-L gain {gain:+.2f} dB, ceiling -1.1 dBTP")

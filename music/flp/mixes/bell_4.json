@@ -1,0 +1,42 @@
+{
+ "cue": "bell_4",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Sustained Bells (Analog Lab, Maxime Audfray), insert 5, an octave below the written notes for a tower bell, over Low Strings (Analog Lab, Takashi Odanaka) on insert 8. Gate: --octave bell_gale=-1. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "parts": {
+  "bell_gale": {
+   "insert": 5,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 50,
+     "db_oct": 12
+    }
+   ]
+  },
+  "strings_swell": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

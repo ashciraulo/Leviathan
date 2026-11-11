@@ -87,3 +87,18 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Stem gate:** `gate_stems.py` takes tuning from the fundamental and harmonics 2-4, flags any key whose median or
   strongest partial is off, and flags any key more than 3 dB off at equal velocity.
 - **Mix:** bass gain +13 dB, with bells at 72 Hz (-3 dB) and 110 Hz (-3.5 dB).
+
+## Batch 2: the lullaby and the seven bells (2026-11-12)
+- **Audition:** gate candidate presets on one MIDI line before choosing (a scratch cue with the box line, transposed
+  -12). Rejected for wobble or detune: Celestia (a second layer 13 c sharp on the left), Church Bell, AnaBell, Belle
+  Bell, Bell Dong, Resonance Bells, Marimba; Glass Bells +10 c; Clangorous keys 67/74 off; Air Bell arpeggiates;
+  MUSIC BOX 2 sounds two octaves up. Several presets sound an octave off on purpose; pass `--octave part=N` to the gate.
+- **Gate:** `gate_stems.py` now measures envelope wobble on struck parts (fails over 8 dB median ripple) and the
+  L-vs-R pitch of stereo parts (fails over 6 c). When fewer than five notes are strictly solo it falls back to notes
+  that start alone, so an always-overlapping line (a music box) is still checked for octave.
+- **Balance:** a template's insert Pro-Q gains are left over from wherever it was saved, so the first stem balance is
+  only relative. Render once, measure the stems with known gains, then set gain = old gain + delta.
+- **Loudness:** Pro-L 2's gain cannot go below 0 dB. A cue whose parts already sum above target came out 1.7 LU hot
+  twice (bell_3) because the negative make-up gain was clamped. `flp_mix.py` now takes the excess off every part.
+- **Dialogs:** in a save or open dialog, click the name box, ctrl+a, type, zoom to check it before Return; the box
+  sometimes comes up empty. In Analog Lab: CLEAR ALL, wait, click the search box, paste, Return.

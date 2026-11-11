@@ -1,0 +1,31 @@
+{
+ "cue": "bell_6",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Full Range Glockenspiel (Analog Lab), insert 4, sounding an octave up, low-passed hard so it reads as a bell heard through water. Gate: --octave bell_verge=+1. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "parts": {
+  "bell_verge": {
+   "insert": 4,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 1600,
+     "db_oct": 24
+    }
+   ]
+  }
+ }
+}
