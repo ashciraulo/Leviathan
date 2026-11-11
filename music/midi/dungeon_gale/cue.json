@@ -1,0 +1,44 @@
+{
+ "cue": "dungeon_gale",
+ "qbpm": 138.0,
+ "bar_q": 3.5,
+ "bars": 72,
+ "intro_q": 0.0,
+ "end_q": 252.0,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 109.56521739130434,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_runs",
+   "notes": 396,
+   "low": 59,
+   "high": 81
+  },
+  {
+   "name": "flute",
+   "notes": 80,
+   "low": 69,
+   "high": 85
+  },
+  {
+   "name": "timpani",
+   "notes": 192,
+   "low": 35,
+   "high": 52
+  },
+  {
+   "name": "bell_tubular",
+   "notes": 32,
+   "low": 59,
+   "high": 66
+  },
+  {
+   "name": "bass_arco",
+   "notes": 192,
+   "low": 35,
+   "high": 52
+  }
+ ]
+}

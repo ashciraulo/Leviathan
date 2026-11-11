@@ -1,0 +1,44 @@
+{
+ "cue": "region_windmere",
+ "qbpm": 126.0,
+ "bar_q": 4,
+ "bars": 48,
+ "intro_q": 0,
+ "end_q": 192,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 91.42857142857143,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_pizz",
+   "notes": 240,
+   "low": 40,
+   "high": 66
+  },
+  {
+   "name": "flute",
+   "notes": 96,
+   "low": 64,
+   "high": 85
+  },
+  {
+   "name": "drum_snare",
+   "notes": 96,
+   "low": 38,
+   "high": 38
+  },
+  {
+   "name": "pad_strings",
+   "notes": 72,
+   "low": 51,
+   "high": 61
+  },
+  {
+   "name": "harp",
+   "notes": 85,
+   "low": 56,
+   "high": 71
+  }
+ ]
+}

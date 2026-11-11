@@ -1,0 +1,44 @@
+{
+ "cue": "story_flight",
+ "qbpm": 98.0,
+ "bar_q": 3,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 72,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 44.08163265306123,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_high",
+   "notes": 62,
+   "low": 50,
+   "high": 86
+  },
+  {
+   "name": "harp",
+   "notes": 84,
+   "low": 50,
+   "high": 93
+  },
+  {
+   "name": "choir_ah",
+   "notes": 72,
+   "low": 56,
+   "high": 66
+  },
+  {
+   "name": "horns_french",
+   "notes": 27,
+   "low": 62,
+   "high": 83
+  },
+  {
+   "name": "bass_arco",
+   "notes": 24,
+   "low": 38,
+   "high": 47
+  }
+ ]
+}
