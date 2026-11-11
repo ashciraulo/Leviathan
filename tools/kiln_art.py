@@ -126,8 +126,10 @@ def wall_top(seed):
         if px[y][x] == STONE[4]:
             px[y][x] = SOOT
     if rnd.random() < 0.5:
-        x = rnd.choice((7, 15)) - (4 if seed % 2 else 0)
-        px[rnd.choice((3, 11))][x % T] = EMBER_DIM
+        # In a joint of that slab row (each row's joints are offset).
+        y = rnd.choice((3, 11))
+        shift = 4 if (y // 8 + seed) % 2 else 0
+        px[y][(rnd.choice((7, 15)) - shift) % T] = EMBER_DIM
     return px
 
 
