@@ -52,18 +52,25 @@ def midi_notes(path: str, scale: float) -> list[tuple[int, int, int, int]]:
 
 
 def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | None = None,
-          transpose: dict | None = None) -> dict:
+          transpose: dict | None = None, audition: str | None = None) -> dict:
+    """audition: a part name; its notes go to EVERY channel whose name starts
+    with "aud" (aud1..aud6), so one split render compares six presets."""
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
     flp = flp_raw.Flp.load(template)
     names = channel_names(template)
     scale = flp.ppq / meta["ppq"]
     notes, counts = [], {}
-    for part in meta["parts"]:
-        name = (mapping or {}).get(part["name"], part["name"])
+    if audition:
+        targets = [(audition, n) for n in sorted(names) if n.lower().startswith("aud")]
+        if not targets:
+            raise SystemExit("audition template needs channels named aud1, aud2 ...")
+    else:
+        targets = [(part["name"], (mapping or {}).get(part["name"], part["name"])) for part in meta["parts"]]
+    for part_name, name in targets:
         if name not in names:
             raise SystemExit(f"template has no channel named {name!r} (has {sorted(names)})")
-        shift = (transpose or {}).get(part["name"], 0)
-        part_notes = midi_notes(os.path.join(MUSIC, "midi", cue, part["name"] + ".mid"), scale)
+        shift = (transpose or {}).get(part_name, 0) + (transpose or {}).get(name, 0)
+        part_notes = midi_notes(os.path.join(MUSIC, "midi", cue, part_name + ".mid"), scale)
         for start, length, key, vel in part_notes:
             # FL velocity runs 0-128 with 100 as default; MIDI 127 maps to 128.
             notes.append((start, names[name], length, key + shift, min(128, round(vel * 128 / 127)), 64))
@@ -92,8 +99,9 @@ if __name__ == "__main__":
     ap.add_argument("--out", required=True)
     ap.add_argument("--pattern", type=int, default=1)
     ap.add_argument("--map", help="json: {part name: channel name}")
-    ap.add_argument("--transpose", help="json: {part name: semitones}, for presets measured off-octave")
+    ap.add_argument("--transpose", help="json: {part or channel name: semitones}, for presets measured off-octave")
+    ap.add_argument("--audition", help="part name to copy onto every aud* channel")
     a = ap.parse_args()
     print(json.dumps(build(a.template, a.cue, a.out, a.pattern,
                            json.load(open(a.map)) if a.map else None,
-                           json.load(open(a.transpose)) if a.transpose else None), indent=1))
+                           json.load(open(a.transpose)) if a.transpose else None, a.audition), indent=1))
