@@ -805,6 +805,8 @@ DACE_AGAIN,"Sit a while, if you like. The dead don't mind company."
 ROOM_BELFRY_UNDERCROFT,The Drowned Belfry: Undercroft
 ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
 ROOM_MAW_TIDEWELL,The Maw: Tidewell
+ROOM_MAW_LUNG,The Maw: the Lung
+ROOM_MAW_GULLET,The Maw: the Gullet
 TOAST_GOT_NACRE_BUCKLER,You found the Nacre Buckler!
 TOAST_GOT_ABYSSAL,You found the Abyssal Coat!
 TOAST_GOT_TIDECALLER_SWORD,You found the Tidecaller!

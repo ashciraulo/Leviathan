@@ -2244,10 +2244,84 @@ func _test_maw_dungeon() -> void:
 	var braziers := _child_of(room, Brazier)
 	var chest: Chest = _child_of(room, Chest)[0]
 	_check(braziers.size() == 4 and not chest.visible, "the Dim Gallery's chest waits on four braziers")
+	_check(room.tile_at(17, 1) == "|" and room.tile_at(18, 1) == "|" and room.tile_at(17, 0) == "." and room.tile_at(18, 0) == ".", "bars stand in the Gallery's way north")
 	for b: Brazier in braziers:
 		b.light()
 	await _wait(0.2)
 	_check(chest.visible, "with every brazier lit, the chest appears")
+	_check(_child_of(room, Bars).all(func(b: Bars) -> bool: return b.is_open), "and the bars north onto the Lung open")
+
+	# The Lung: the crate crosses the palate floor only while it's dry; the
+	# plate opens the pool, and a dive under the grates reaches the big key.
+	GameState.give_item("divers_helm")
+	MawBreath.elapsed = 0.0
+	room = await _goto(game, Vector2i(45, 8), Vector2i(17, 11))
+	await _calm(room)
+	var lung_crate: Crate = _child_of(room, Crate)[0]
+	var lung_bars: Array = _child_of(room, Bars)
+	_check(lung_bars.size() == 2 and not (lung_bars[0] as Bars).is_open, "bars shut the Lung's pool off")
+	MawBreath.elapsed = MawBreath.OUT_TIME + MawBreath.IN_TELL_TIME + 0.5
+	await _wait(0.1)
+	var crate_at := lung_crate.position
+	for i in 3:
+		lung_crate._slide(Vector2.RIGHT)
+		await _wait(0.4)
+	_check(lung_crate.position.x < crate_at.x + 2 * Room.TILE + 1.0, "the risen water stops the crate at the palate's edge (moved %s)" % (lung_crate.position - crate_at))
+	MawBreath.elapsed = 0.0
+	await _wait(0.1)
+	for step: Vector2 in [Vector2.DOWN, Vector2.DOWN, Vector2.DOWN, Vector2.DOWN]:
+		lung_crate._slide(step)
+		await _wait(0.3)
+	while lung_crate.position.x < 14 * Room.TILE:
+		var before := lung_crate.position
+		lung_crate._slide(Vector2.RIGHT)
+		await _wait(0.3)
+		if lung_crate.position == before:
+			break
+	await _wait(0.2)
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false) and (lung_bars[0] as Bars).is_open, "with the floor dry, the crate crosses onto the plate (at %s)" % lung_crate.position)
+	MawBreath.elapsed = MawBreath.OUT_TIME + MawBreath.IN_TELL_TIME + 0.2
+	player.global_position = _tile_pos(room, Vector2i(16, 4))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	_check(room.flooded() and player.swimming() and player.use_item("divers_helm"), "in the risen pool, Wren dives")
+	Input.action_press("move_right")
+	await _wait(1.0)
+	Input.action_release("move_right")
+	await _wait(DiversHelm.DIVE_TIME)
+	local = player.global_position - room.global_position
+	_check(local.x > 17.5 * Room.TILE and not player.diving, "under the grates Wren comes up beside the big key (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Lung's chest holds the big key")
+	MawBreath.elapsed = 0.0
+	await _wait(0.1)
+
+	# The Gullet: the boulder breaks to the Stonebreaker, the hook crosses
+	# from the palate floor to the ledge, and the drop swallows Wren back
+	# down to the Throat.
+	GameState.give_item("stonebreaker")
+	room = await _goto(game, Vector2i(43, 10), Vector2i(21, 10))
+	await _calm(room)
+	_check(_child_of(room, Boulder).size() == 1 and room.tile_at(2, 2) == "O", "a boulder bars the Gullet's palate, and a post stands on the ledge")
+	(_child_of(room, Boulder)[0] as Boulder).mallet_hit(Vector2.LEFT)
+	await _wait(0.6)
+	_check(_child_of(room, Boulder).is_empty(), "the Stonebreaker breaks the boulder")
+	player.global_position = _tile_pos(room, Vector2i(2, 9))
+	player.facing = Vector2.UP
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.y) / Room.TILE == 3 and int(local.x) / Room.TILE == 2, "the hook carries Wren up onto the ledge (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "glint"), "glints wait on the Gullet's ledge")
+	player.facing = Vector2.RIGHT
+	Input.action_press("move_right")
+	await _wait(1.5)
+	Input.action_release("move_right")
+	await _wait(1.2)
+	_check(game.current_room.coord == Vector2i(44, 10), "stepping off the ledge, the Gullet swallows Wren down to the Throat (in %s)" % game.current_room.coord)
+	GameState.refill()
 
 	# The Choir Loft: Cantor Vael.
 	room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))
