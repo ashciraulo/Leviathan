@@ -220,7 +220,9 @@ async function phoneCheck() {
   phone.on("pageerror", (err) => failures.push(`phone: page error: ${err.message}`));
   await phone.addInitScript(() => {
     window.__keys = [];
+    window.__ups = [];
     addEventListener("keydown", (e) => window.__keys.push(e.code), true);
+    addEventListener("keyup", (e) => window.__ups.push(e.code), true);
   });
   let up = false;
   phone.on("console", (msg) => { if (msg.text().includes("Godot Engine v")) up = true; });
@@ -254,7 +256,7 @@ async function phoneCheck() {
   const logo = async () => brightness(await phone.screenshot({ clip: { x: 255, y: 42, width: 330, height: 72 } }));
   const before = await logo();
   const k = await phone.evaluate(() => { const b = [...document.querySelectorAll("#lv-touch .b")].find((e) => e.textContent === "K"); if (!b) return null; const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
-  if (!k) return failures.push("phone: the K button is missing from the on-screen controls");
+  if (!k) { await ctx.close(); return failures.push("phone: the K button is missing from the on-screen controls"); }
   let after = before;
   for (let tries = 0; tries < 4 && after > before * 0.75; tries++) {
     await touch("touchStart", k[0], k[1]);
@@ -273,9 +275,13 @@ async function phoneCheck() {
     return [b.textContent, r.left + r.width / 2, r.top + r.height / 2];
   });
   await touch("touchStart", remapped[1], remapped[2]);
+  // A rebind while the button is held (the controls screen takes this very
+  // press): the release must still let go of the key that went down.
+  await phone.evaluate(() => { window.__lvBind = {}; window.__ups = []; });
   await touch("touchEnd");
-  const sent = await phone.evaluate(() => window.__keys);
-  if (remapped[0] !== "L" || !sent.includes("KeyL")) failures.push(`phone: the sword button didn't follow a remap to L (shows ${remapped[0]}, sent ${sent.join(" ") || "nothing"})`);
+  const sent = await phone.evaluate(() => [window.__keys, window.__ups]);
+  if (remapped[0] !== "L" || !sent[0].includes("KeyL")) failures.push(`phone: the sword button didn't follow a remap to L (shows ${remapped[0]}, sent ${sent[0].join(" ") || "nothing"})`);
+  if (!sent[1].includes("KeyL")) failures.push(`phone: a button let go of a different key than it pressed (${sent[1].join(" ") || "no key up"})`);
   await ctx.close();
 }
 

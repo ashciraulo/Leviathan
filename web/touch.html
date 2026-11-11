@@ -22,7 +22,6 @@
   function send(code,down){
     var c=document.getElementById('canvas')||document.querySelector('canvas');
     if(!c)return;
-    code=bound(code);
     var key=NAMES[code]||(/^(Key|Digit)/.test(code)?code.replace(/^(Key|Digit)/,'').toLowerCase():code);
     c.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code:code,key:key,keyCode:kc(code),which:kc(code),bubbles:true,cancelable:true}));
   }
@@ -49,9 +48,11 @@
   }
   function btn(code,label){
     var b=document.createElement('div');b.className='b';b.textContent=label;b.setAttribute('data-code',code);b.setAttribute('data-label',label);
-    var held=0;
-    function down(e){e.preventDefault();if(!held++){b.classList.add('down');send(code,true);}}
-    function up(e){e.preventDefault();if(held&&!--held||e.type==='touchcancel'){held=0;b.classList.remove('down');send(code,false);}}
+    // The release goes out as the key that was pressed, even if a rebind
+    // (on the controls screen, by this very press) moved the action since.
+    var held=0,sent=code;
+    function down(e){e.preventDefault();if(!held++){b.classList.add('down');sent=bound(code);send(sent,true);}}
+    function up(e){e.preventDefault();if(held&&!--held||e.type==='touchcancel'){held=0;b.classList.remove('down');send(sent,false);}}
     b.addEventListener('touchstart',function(e){for(var i=0;i<e.changedTouches.length;i++)down(e);},{passive:false});
     b.addEventListener('touchend',function(e){for(var i=0;i<e.changedTouches.length;i++)up(e);},{passive:false});
     b.addEventListener('touchcancel',up,{passive:false});
