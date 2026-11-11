@@ -89,6 +89,22 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=elites: one tougher, bigger foe in each region, on sight.
+	if OS.get_environment("SHOTS_ONLY") == "elites":
+		await _room_shots(game, {
+			Vector2i(3, -1): ["elite_scuttler", Vector2i(13, 6)],
+			Vector2i(9, -2): ["elite_slagbeetle", Vector2i(14, 9)],
+			Vector2i(6, 1): ["elite_bogskipper", Vector2i(5, 4)],
+			Vector2i(4, -4): ["elite_galehawk", Vector2i(10, 7)],
+			Vector2i(2, -2): ["elite_sledgeseal", Vector2i(5, 7)],
+			Vector2i(1, 3): ["elite_siltray", Vector2i(12, 9)],
+			Vector2i(8, 0): ["elite_dunejaw", Vector2i(16, 4)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=regional_caves: the small caves off each region, and their ways in.
 	if OS.get_environment("SHOTS_ONLY") == "regional_caves":
 		GameState.give_item("frostfang_bow")
