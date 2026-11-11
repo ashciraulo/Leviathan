@@ -206,8 +206,13 @@ const TALKS := {
 	"ide": [
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		# Her boat's lost nameboard (QuestFind). Every branch still rows Wren over.
+		{"if": ["ide_board_ask", "found_nameboard"], "unless": ["ide_board_done"], "set": ["ide_board_done", "ide_ferry"], "give": {"glint": 100}, "lines": [["", "NARRATE_HAND_NAMEBOARD"], "IDE_BOARD_DONE_1", "IDE_BOARD_DONE_2", ["", "NARRATE_GOT_NAMEBOARD_PURSE"], "IDE_BOARD_DONE_3"]},
+		{"if": ["met_ide_ferry", "found_nameboard"], "unless": ["ide_board_ask"], "set": ["ide_board_ask", "ide_board_done", "ide_ferry"], "give": {"glint": 100}, "lines": [["", "NARRATE_HAND_NAMEBOARD"], "IDE_BOARD_EARLY", "IDE_BOARD_1B", "IDE_BOARD_DONE_2", ["", "NARRATE_GOT_NAMEBOARD_PURSE"], "IDE_BOARD_DONE_3"]},
+		{"if": ["ide_rowed_again"], "unless": ["ide_board_ask"], "set": ["ide_board_ask", "ide_ferry"], "lines": ["IDE_BOARD_1", "IDE_BOARD_1B", "IDE_BOARD_2", "IDE_BOARD_2B"]},
+		{"if": ["ide_board_ask"], "unless": ["ide_board_done"], "set": ["ide_ferry"], "lines": ["IDE_BOARD_WAITING"]},
 		{"if": ["seen_ending"], "set": ["ide_ferry"], "lines": ["IDE_END"]},
-		{"set": ["ide_ferry"], "lines": ["IDE_FERRY_AGAIN"]},
+		{"set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_FERRY_AGAIN"]},
 	],
 	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
@@ -419,6 +424,7 @@ const TALKS := {
 	"find_pearl_verge": [{"set": ["found_pearl_verge"], "lines": ["NARRATE_FOUND_PEARL"]}],
 	"find_pearl_tangle": [{"set": ["found_pearl_tangle"], "lines": ["NARRATE_FOUND_PEARL"]}],
 	"find_pearl_deep": [{"set": ["found_pearl_deep"], "lines": ["NARRATE_FOUND_PEARL"]}],
+	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.

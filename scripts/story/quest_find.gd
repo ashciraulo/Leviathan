@@ -3,7 +3,7 @@ extends StaticBody2D
 ## A small thing lying about for a villager's errand (StoryDirector.FINDS):
 ## one of Corrin's grandad's message bottles, Pell's lucky shell, a piece
 ## of pale driftwood for Dunstan, one of the Choir's chimes for Bram, or an
-## oyster with a pearl in it for Marlo. Picking it up is a conversation with no
+## oyster with a pearl in it for Marlo, or the nameboard off Ide's boat. Picking it up is a conversation with no
 ## speaker (Conversations "find_<id>"), which sets found_<id>; then it's
 ## gone for good.
 
@@ -21,9 +21,11 @@ const CORD := Color("#a08a64")
 const OYSTER := Color("#8a8478")
 const OYSTER_LIGHT := Color("#b8b0a0")
 const PEARL := Color("#f4f0ea")
+const BOARD := Color("#4a78a8")
+const BOARD_DARK := Color("#34587e")
 
 ## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
-## "chime_*" or "pearl_*".
+## "chime_*", "pearl_*" or "nameboard".
 var id := ""
 var _time := 0.0
 
@@ -90,6 +92,13 @@ func _draw() -> void:
 		draw_line(Vector2(-4, -4), Vector2(4, -4), OYSTER_LIGHT)
 		draw_line(Vector2(-3, -2), Vector2(3, -2), Palette.OUTLINE)
 		draw_rect(Rect2(-1, -4, 2, 2), PEARL)
+	elif id == "nameboard":
+		# A long blue board with a few salt-eaten white letters.
+		draw_rect(Rect2(-11, -7, 22, 7), Palette.OUTLINE)
+		draw_rect(Rect2(-10, -6, 20, 5), BOARD)
+		draw_rect(Rect2(-10, -2, 20, 1), BOARD_DARK)
+		for x in [-8, -4, -1, 3, 7]:
+			draw_rect(Rect2(x, -5, 2, 2), PAPER)
 	else:
 		# A long bleached branch.
 		draw_rect(Rect2(-10, -5, 20, 5), Palette.OUTLINE)

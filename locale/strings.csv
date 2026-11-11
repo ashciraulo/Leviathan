@@ -1341,3 +1341,16 @@ MARLO_PEARLS_AFTER,"Mum wore the pearls to market. Told everyone they're from he
 NARRATE_FOUND_PEARL,"An old oyster, big as a hand. Inside sits a pearl, pale as moonlight on still water."
 NARRATE_HAND_PEARLS,"Wren sets three pearls on Marlo's counter, one by one."
 NARRATE_GOT_PEARL_PURSE,Wren got 180 Glints.
+IDE_BOARD_1,"My boat had a name once. Painted on a board across her stern, in my gran's hand."
+IDE_BOARD_1B,"The bad water tore it off and took it. She's felt like a stranger's boat ever since."
+IDE_BOARD_2,"If a blue board with white letters turns up on some far shore, would you bring it home?"
+IDE_BOARD_2B,"Now. In you get, and sit low."
+IDE_BOARD_WAITING,"No sign of my nameboard yet? Never mind. In you get, and sit low."
+IDE_BOARD_DONE_1,"That's it! That's Gran's lettering. 'Patience.' Still there, under all that salt."
+IDE_BOARD_DONE_2,"I'll nail her name back on tonight. Here, that's for bringing it home."
+IDE_BOARD_DONE_3,"And this ride's on Patience. Sit low."
+IDE_BOARD_EARLY,"Where did you find that? That's my boat's name. 'Patience.' In my gran's own hand."
+NARRATE_FOUND_NAMEBOARD,"A long painted board, blue, with white letters. The salt has eaten most of them."
+NARRATE_FOUND_NAMEBOARD_2,"P... TIEN... Somebody's boat is missing its name."
+NARRATE_HAND_NAMEBOARD,Wren hands Ide the blue board.
+NARRATE_GOT_NAMEBOARD_PURSE,Wren got 100 Glints.
