@@ -7838,3 +7838,46 @@ func _test_puzzle_caves() -> void:
 	_check(crypt.tile_at(7, 4) == "." and _child_of(crypt, BoneWall).is_empty(), "the horn opens the hidden way north")
 	game.queue_free()
 	await _wait(0.1)
+	# Gustway Ledges, west of Edgewatch Bluff: a one-wide ledge over the sky
+	# that gusts sweep from the north, with nooks to shelter in, then a gap
+	# to the cache that the hook (or the cloak) crosses both ways.
+	var bluff := Room.parse_layout(((load("res://rooms/room_4_-5.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(bluff[7][0] == "." and bluff[8][0] == ".", "Edgewatch Bluff opens west to Gustway Ledges")
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(Vector2i(3, -5), Vector2(20 * Room.TILE + 8, 8 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var ledges: Room = game.current_room
+	var ledge_rows := Room.parse_layout(ledges.layout)
+	_check(ledges.wind.y > 0.0 and ledges.has_node("Gust") and ledge_rows[8].substr(4, 12) == "____________" and ledge_rows[6].substr(10, 2) == ".." and ledge_rows[6].substr(14, 2) == "..", "Gustway Ledges: a ledge over the sky, gusts from the north, wider steps to wait them out on")
+	# A gust shoves Wren south, but not while they still blink from a fall.
+	var gust: Gust = ledges.get_node("Gust")
+	gust.phase = Gust.Phase.BLOWING
+	gust._timer = 5.0
+	player.global_position = _tile_pos(ledges, Vector2i(18, 8))
+	var held := player.global_position.y
+	player._invuln = 1.0
+	await _wait(0.3)
+	var still := player.global_position.y
+	player._invuln = 0.0
+	await _wait(0.3)
+	_check(is_equal_approx(still, held) and player.global_position.y > still + 5.0, "the gust spares Wren while they blink, then shoves them south (%s, %s, %s)" % [held, still, player.global_position.y])
+	# Still the gusts for the throws: the landings sit right by the drop.
+	ledges.get_node("Gust").free()
+	var ledge_breath := GameState.bubbles
+	for throw: Array in [[Vector2i(7, 7), Vector2.LEFT, Vector2i(2, 7)], [Vector2i(3, 6), Vector2.RIGHT, Vector2i(7, 6)]]:
+		player.global_position = _tile_pos(ledges, throw[0])
+		player.facing = throw[1]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.5)
+		var at := player.global_position - ledges.global_position
+		var want: Vector2i = throw[2]
+		_check(int(at.x) / Room.TILE == want.x and int(at.y - 3) / Room.TILE == want.y and game.current_room == ledges and GameState.bubbles == ledge_breath,
+			"Gustway: the hook carries Wren from %s to %s (at %s)" % [throw[0], want, at])
+	game.queue_free()
+	await _wait(0.1)

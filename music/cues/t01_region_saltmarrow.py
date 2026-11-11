@@ -46,6 +46,16 @@ def bars(text):
     return seq(text.replace("|", ""), E)
 
 
+TOP = 55  # G3, the highest bass note the sampled upright plays well
+
+
+def bass_walk(sym, root):
+    """Section C's bass: the root, then two chord tones up, or down where going
+    up would pass G3 (the sampled bass's A3 is nearly silent)."""
+    above = voicing(sym, root + 1, root + 12)[:2]
+    return [root] + (above if max(above) <= TOP else voicing(sym, root - 12, root - 1)[::-1][:2])
+
+
 # --- guitar: a different picking figure per section ---
 for b, sym in enumerate(CHORDS):
     t = song.bar(b)
@@ -71,8 +81,7 @@ for b, sym in enumerate(CHORDS):
         guitar.chord(t + 3 * E, 2 * E, tones[:3], 56, roll=0.04)
         # The pickup steps down to the next bar, unless it would rub a semitone
         # against the bass walk's last note (review of v8): then a chord tone.
-        broot = 29 + (bass_of(sym) - 5) % 12 + 12
-        bass_last = voicing(sym, broot + 1, broot + 12)[1]
+        bass_last = bass_walk(sym, 29 + (bass_of(sym) - 5) % 12 + 12)[-1]
         pick = tones[0] - (1 if tones[0] % 12 in (0, 5) else 2)
         if abs(pick - bass_last) % 12 in (1, 11):
             pick = min((m for m in voicing(sym, 45, 64) if abs(m - bass_last) % 12 not in (1, 11) and m != bass_last
@@ -127,19 +136,22 @@ for b, sym in enumerate(CHORDS):
     # (F/C has the fifth in the bass already, so it moves to the chord's root.)
     want = (cpc + 7) % 12 if (cpc + 7) % 12 != root % 12 else cpc
     fifth = min((m for m in range(root - 9, 56) if m % 12 == want), key=lambda m: abs(m - root - 4))
-    above = [m for m in voicing(sym, root + 1, root + 12)][:2]  # the next chord tones up from the bass
     nxt = CHORDS[(b + 1) if b + 1 < len(CHORDS) else SEC["A"]]
     nroot = 41 + (bass_of(nxt) - 5) % 12
     if sec in ("A", "A3"):
         bass.note(t, 3 * E * 0.9, root, 88)
-        bass.note(t + 3 * E, 3 * E * 0.85, fifth, 76)
+        bass.note(t + 3 * E, 3 * E * 0.85, fifth, 54)  # well under the root: ~0.1 dB a step on this bass
         if sec == "A3" and b % 4 == 3:  # approach note into the next bar
-            bass.note(t + 5 * E, E * 0.8, nroot + (1 if nroot < root else -1), 70)
+            bass.note(t + 5 * E, E * 0.8, nroot + (1 if nroot < root else -1), 54)
     elif sec in ("A2", "B"):
-        bass.note(t, 5 * E * 0.92, root, 84)
-        bass.note(t + 5 * E, E * 0.8, fifth if b % 2 else root, 66)
+        # The sampled bass fades fast, so the bar's long root is plucked again
+        # softly on beat 4 rather than held for five eighths. The sample answers
+        # velocity at only ~0.1 dB a step, so soft notes need low velocities.
+        bass.note(t, 3 * E * 0.92, root, 84)
+        bass.note(t + 3 * E, 2 * E * 0.9, root, 40)
+        bass.note(t + 5 * E, E * 0.8, fifth if b % 2 else root, 50)
     else:
-        for i, p in enumerate([root] + above):
+        for i, p in enumerate(bass_walk(sym, root)):
             bass.note(t + i * 2 * E, 2 * E * 0.9, p, 80 - 6 * i)
 
 # --- string pad: B and A'' only, low and soft, under everything ---

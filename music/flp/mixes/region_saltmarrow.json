@@ -12,6 +12,18 @@
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 72,
+     "gain": -3.0,
+     "q": 1.4
+    },
+    {
+     "shape": "bell",
+     "freq": 110,
+     "gain": -3.5,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
      "freq": 3000,
      "db_oct": 12
