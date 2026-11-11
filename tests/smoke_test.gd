@@ -5911,6 +5911,9 @@ func _test_tidestone_carvings() -> void:
 	stone.interact()
 	_check(shown.size() == 2 and shown[1]["text"] == "STONE_SPIRE_FOOT", "facing a stone, Wren reads what's cut into it")
 	GameState.set_flag("old_one_turned")
+	# Turned at low water, the tide runs in (pinned: earlier tests' rooms
+	# with tides run the shared clock on).
+	Tide.offset = Tide.offset_for(Tide.Phase.LOW, 0.5)
 	stone.interact()
 	_check(shown.size() == 2 and Tide.held() == "high", "after the turn, a stone already read turns the tide")
 	stone.room_coord = Vector2i(0, 0)
