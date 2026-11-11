@@ -5,6 +5,7 @@
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
 name_key = "ROOM_RIB_HOLLOW"
+elite = Vector2i(10, 4)
 biome = "ossuary"
 layout = "########################
 ####..........*.....####

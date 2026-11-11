@@ -5,6 +5,7 @@
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
 name_key = "ROOM_BELFRY_SQUARE"
+elite = Vector2i(7, 9)
 biome = "sunken_verge"
 door_to = Vector2i(36, 10)
 door_spawn = Vector2i(11, 10)

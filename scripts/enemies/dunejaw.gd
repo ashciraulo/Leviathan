@@ -5,6 +5,10 @@ extends Enemy
 ## It closes on Wren; then a spout of sand and a dry rattle mark where it's
 ## about to burst up (the tell). It bites, and lies out on the sand a moment
 ## afterwards: that's when to strike.
+##
+## An elite (Room.elite) bites twice: after the first bite it drops straight
+## back under, races after Wren and spouts again (a shorter rattle, pitched
+## low) before it lies out.
 
 enum Mode { BURROW, SPOUT, BITE, EXPOSED }
 
@@ -15,9 +19,15 @@ const SPOUT_TIME := 0.6
 const BITE_TIME := 0.35
 const EXPOSED_TIME := 1.1
 const REST_TIME := 0.8
+## An elite's second spout is this short, and it hunts at this speed.
+const RESPOUT_TIME := 0.45
+const HUNT_SPEED := 70.0
+const HUNT_GIVE_UP := 1.5
 
 var mode := Mode.BURROW
 var _timer := 0.0
+## An elite still has its second bite to come.
+var _rebite := false
 
 
 func _init() -> void:
@@ -56,14 +66,19 @@ func _think(delta: float) -> void:
 	match mode:
 		Mode.BURROW:
 			var player := get_player()
-			if player == null or _timer > 0.0 or not _in_room(player):
+			# The second hunt gives up if Wren outruns it for long enough.
+			if _rebite and _timer < -HUNT_GIVE_UP:
+				_rebite = false
+			if player == null or (_timer > 0.0 and not _rebite) or not _in_room(player):
 				return
 			var to := player.global_position - global_position
 			if to.length() <= STRIKE_RANGE:
 				_set_mode(Mode.SPOUT)
-				Audio.play_sfx("jaw_rattle", global_position)
+				if _rebite:
+					_timer = RESPOUT_TIME
+				Audio.play_sfx("jaw_rattle", global_position, 0.8 if _rebite else 1.0)
 			else:
-				velocity = to.normalized() * BURROW_SPEED
+				velocity = to.normalized() * (HUNT_SPEED if _rebite else BURROW_SPEED)
 		Mode.SPOUT:
 			# It holds still where it will come up: step off the spot.
 			if _timer <= 0.0:
@@ -71,7 +86,12 @@ func _think(delta: float) -> void:
 				Audio.play_sfx("jaw_snap", global_position)
 		Mode.BITE:
 			if _timer <= 0.0:
-				_set_mode(Mode.EXPOSED)
+				if elite and not _rebite:
+					_rebite = true
+					_set_mode(Mode.BURROW)
+				else:
+					_rebite = false
+					_set_mode(Mode.EXPOSED)
 		Mode.EXPOSED:
 			if _timer <= 0.0:
 				_set_mode(Mode.BURROW)
@@ -91,6 +111,7 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 	var result := super.take_hit(damage, direction)
 	# Struck while out, it dives at once.
 	if result == HitResult.HIT and not dying:
+		_rebite = false
 		_set_mode(Mode.BURROW)
 	return result
 
