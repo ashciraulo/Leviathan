@@ -240,7 +240,9 @@ func _physics_process(delta: float) -> void:
 	var now := level()
 	var now_phase := phase()
 	if now_phase != _phase:
-		if now_phase == Phase.RISING and _wren_here():
+		# A room with only sea bed (a rock pool) never visibly floods on the
+		# breathing tide, so it doesn't sound the rush.
+		if now_phase == Phase.RISING and _wren_here() and _shapes.size() > _seabed.size():
 			Audio.play_sfx("tide_rise", global_position + Room.SIZE / 2.0)
 		_phase = now_phase
 	var frame := int(Time.get_ticks_msec() / 600) % 2
