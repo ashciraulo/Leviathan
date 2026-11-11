@@ -19,6 +19,9 @@ const CLIMB_TIME := 0.5
 ## Rest between dives, so a hawk never stoops twice in a row.
 const REST := 1.6
 const EDGE := 20.0
+## An elite's first perch is this short before it stoops again.
+const RESTOOP_PERCH := 0.4
+const RESTOOP_MARK := 0.5
 
 var mode := Mode.CIRCLE
 var _timer := 0.0
@@ -31,6 +34,8 @@ var _height := HEIGHT
 var _grounded_mask := 0
 var _grounded_layer := 0
 var _hurtbox_layer := 0
+## An elite still has its second stoop to come.
+var _restoop := false
 
 
 func _init() -> void:
@@ -74,10 +79,12 @@ func _think(delta: float) -> void:
 					mode = Mode.MARK
 					_timer = MARK_TIME
 					_mark = spot
+					_restoop = elite
 					Audio.play_sfx("hawk_shriek", global_position)
 		Mode.MARK:
 			# Hang over the mark: the shadow slides there and stops.
 			velocity = (_mark - position) * 8.0
+			_height = move_toward(_height, HEIGHT, HEIGHT * delta / RESTOOP_MARK)
 			if _timer <= 0.0:
 				mode = Mode.STOOP
 				_timer = STOOP_TIME
@@ -88,11 +95,24 @@ func _think(delta: float) -> void:
 			_height = HEIGHT * maxf(_timer / STOOP_TIME, 0.0)
 			if _timer <= 0.0:
 				mode = Mode.PERCH
-				_timer = PERCH_TIME
+				_timer = RESTOOP_PERCH if _restoop else PERCH_TIME
 				_lift(false)
 				Audio.play_sfx("wingbeat", global_position, 0.8)
 		Mode.PERCH:
 			velocity = Vector2.ZERO
+			if _timer <= 0.0 and _restoop:
+				_restoop = false
+				var room := get_parent() as Room
+				var player := get_player()
+				var spot := _inside(room.to_local(player.global_position)) if room != null and player != null else position
+				if room == null or _can_land(room, spot):
+					mode = Mode.MARK
+					_timer = RESTOOP_MARK
+					_mark = spot
+					_lift(true)
+					Audio.play_sfx("wingbeat", global_position)
+					Audio.play_sfx("hawk_shriek", global_position, 1.3)
+					return
 			if _timer <= 0.0:
 				mode = Mode.CLIMB
 				_timer = CLIMB_TIME
