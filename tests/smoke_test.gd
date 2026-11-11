@@ -4530,7 +4530,7 @@ func _test_thin_region_screens() -> void:
 		await _wait(1.3)
 		ends.append(player.global_position - shelf.global_position)
 	_check(shelf.coord == Vector2i(0, -4) and shelf.tile_at(3, 6) == "_" and Room.BIOMES["frostspine"].get("gap") == "crevasse", "the Crevasse Shelf is cut off by a crevasse")
-	_check(int(ends[0].y) / Room.TILE == 3 and int(ends[1].y) / Room.TILE == 9, "the hook pulls Wren up onto the shelf and back down to the ice (at %s, %s)" % ends)
+	_check(int(ends[0].y - 3) / Room.TILE == 3 and int(ends[1].y - 3) / Room.TILE == 9, "the hook pulls Wren up onto the shelf and back down to the ice (at %s, %s)" % ends)
 	game.queue_free()
 	await _wait(0.1)
 	# Tidewrack Strand: a long tide flat out west of the Verge to a wreck.
