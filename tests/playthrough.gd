@@ -242,6 +242,10 @@ func _interact_all(coord: Vector2i) -> void:
 		var what := "after the ending: %s in %s" % [thing.name, coord]
 		_game.player.global_position = thing.global_position + Vector2(0, 14)
 		_game.player.facing = Vector2.UP
+		# Let Wren's body land first: a Tidestone wakes at a touch, and only
+		# an awake stone can be read.
+		for frame in 4:
+			await get_tree().physics_frame
 		thing.interact()
 		var waited := 0.0
 		while waited < 30.0:
@@ -257,6 +261,10 @@ func _interact_all(coord: Vector2i) -> void:
 		_check(not Cutscene.active, "%s: no scene is left running" % what)
 		_check(not get_tree().paused, "%s: the game isn't left paused" % what)
 		_check(not _game.busy and not _game.player.frozen, "%s: Wren can move again" % what)
+		if thing is Tidestone:
+			var stone := thing as Tidestone
+			_check(stone.awake, "%s: the stone wakes at Wren's touch" % what)
+			_check(Tidestone.carving_for(coord).is_empty() or GameState.has_flag(stone.read_key()), "%s: its carving is read" % what)
 		_keep_safe()
 
 
