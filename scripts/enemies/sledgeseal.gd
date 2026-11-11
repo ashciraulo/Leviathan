@@ -69,6 +69,8 @@ func _think(delta: float) -> void:
 					_timer = TURN_REAR
 					_direction = turn
 					velocity = Vector2.ZERO
+					if turn.x != 0.0:
+						_sprite.flip_h = turn.x < 0.0
 					Audio.play_sfx("seal_bark", global_position, 0.8)
 					return
 			# Room exits have no walls: pull up at the edge rather than

@@ -69,6 +69,8 @@ func _think(delta: float) -> void:
 			# The second hunt gives up if Wren outruns it for long enough.
 			if _rebite and _timer < -HUNT_GIVE_UP:
 				_rebite = false
+				_timer = REST_TIME
+				return
 			if player == null or (_timer > 0.0 and not _rebite) or not _in_room(player):
 				return
 			var to := player.global_position - global_position

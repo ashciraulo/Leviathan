@@ -4963,6 +4963,13 @@ func _test_elites() -> void:
 			jaw._timer = 0.0
 			jaw._think(0.016)
 			_check(jaw.mode == Dunejaw.Mode.EXPOSED, "then lies out after the second")
+			# Outrun on the second hunt, it gives up and rests before hunting again.
+			jaw._set_mode(Dunejaw.Mode.BURROW)
+			jaw._rebite = true
+			jaw._timer = -Dunejaw.HUNT_GIVE_UP - 0.1
+			wren.position = jaw.position + Vector2(120, 0)
+			jaw._think(0.016)
+			_check(not jaw._rebite and jaw._timer > 0.0 and jaw.velocity == Vector2.ZERO, "an outrun elite dunejaw gives up and rests")
 			wren.free()
 		for i in 12:
 			if not boss.dying:
