@@ -5286,6 +5286,8 @@ func _test_far_reaches() -> void:
 		Vector2i(6, 3): [[Vector2i(17, 8), Vector2.RIGHT, Vector2i(20, 8)], [Vector2i(20, 9), Vector2.LEFT, Vector2i(17, 9)]],
 		# The Verge's far south: a reef islet's cache, there and back.
 		Vector2i(0, 5): [[Vector2i(19, 8), Vector2.UP, Vector2i(19, 3)], [Vector2i(19, 4), Vector2.DOWN, Vector2i(19, 8)]],
+		# The Ossuary's far south: over the bitter sea to Saltgrave Brink and back.
+		Vector2i(8, 3): [[Vector2i(17, 9), Vector2.LEFT, Vector2i(12, 9)], [Vector2i(12, 10), Vector2.RIGHT, Vector2i(17, 10)]],
 	}
 	for coord: Vector2i in hooks:
 		GameState.reset_new_game()
@@ -5358,6 +5360,32 @@ func _test_far_reaches() -> void:
 	var ebb := Room.parse_layout(((load("res://rooms/room_1_4.tscn") as PackedScene).instantiate() as Room).layout)
 	var wrack := Room.parse_layout(((load("res://rooms/room_1_5.tscn") as PackedScene).instantiate() as Room).layout)
 	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 22 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench")
+	# The Ossuary's far south: Saltpan Hollow opens onto Ribfall Sands, shut
+	# behind a bone barricade only the Echo Horn brings down.
+	_check(Room.parse_layout(((load("res://rooms/room_9_2.tscn") as PackedScene).instantiate() as Room).layout)[12].substr(8, 2) == "..", "Saltpan Hollow opens south to Ribfall Sands")
+	GameState.reset_new_game()
+	GameState.give_item("echo_horn", 1, false)
+	GameState.set_checkpoint(Vector2i(9, 3), Vector2(8 * Room.TILE + 8, 1 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var sands: Room = game.current_room
+	for foe in _child_of(sands, Enemy):
+		foe.free()
+	_check(_child_of(sands, BoneWall).size() == 2 and _child_of(sands, SinkField).size() == 1 and sands.tile_at(1, 9) == "Y", "Ribfall Sands: a bone barricade, sinking sand, and a cracked boulder at the far side")
+	player.global_position = _tile_pos(sands, Vector2i(8, 1))
+	player.facing = Vector2.DOWN
+	await _wait(0.3)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(_child_of(sands, BoneWall).is_empty(), "the horn brings Ribfall's barricade down")
+	game.queue_free()
+	await _wait(0.1)
+	var brink: Room = (load("res://rooms/room_8_3.tscn") as PackedScene).instantiate()
+	_check(brink.sign_key == "SIGN_SALTGRAVE_BRINK" and brink.chest_item == "glint" and brink.chest_count == 200, "Saltgrave Brink: a sign at the edge, and glints out on an islet")
+	brink.free()
 	# Cinder Crown: two crates onto two plates open the crown's cache.
 	_check(Room.parse_layout(((load("res://rooms/room_9_-2.tscn") as PackedScene).instantiate() as Room).layout)[0].substr(15, 2) == "..", "the Slag Fields open north to Brimstone Steps")
 	GameState.reset_new_game()
