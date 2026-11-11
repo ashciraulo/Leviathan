@@ -60,6 +60,8 @@ func _ready() -> void:
 		await _test_regional_caves()
 		await _test_thin_region_screens()
 		await _test_elites()
+		await _test_every_checkpoint()
+		await _test_overworld_entrances()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -257,6 +259,107 @@ func _test_save_load() -> void:
 	_check(SaveManager.is_newer(JSON.parse_string(FileAccess.get_file_as_string(path))),
 		"the newer save is still there")
 	SaveManager.delete_save()
+
+
+## Every Tidestone, saved and loaded: the file wakes in the stone's room with
+## Wren standing clear (not in a wall, water or a pit) and free to walk off.
+func _test_every_checkpoint() -> void:
+	var rooms := RoomInfo.all()
+	var stones := 0
+	for coord: Vector2i in rooms:
+		for at: Vector2i in rooms[coord]["stones"]:
+			stones += 1
+			var spot := Vector2(at.x * Room.TILE + Room.TILE / 2.0, at.y * Room.TILE + Room.TILE - 4) + Tidestone.CHECKPOINT_OFFSET
+			var label := "the Tidestone at %s in room %s" % [at, coord]
+			if OS.get_environment("CHECKPOINT_TRACE") != "":
+				print("checkpoint ", label)
+			GameState.reset_new_game()
+			GameState.set_checkpoint(coord, spot)
+			SaveManager.save_game()
+			GameState.reset_new_game()
+			if not SaveManager.load_game():
+				_check(false, "%s: the save loads" % label)
+				continue
+			var bubbles := GameState.bubbles
+			var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+			add_child(game)
+			await _wait(0.1)
+			# A room's first visit may open a dialogue, which pauses the game.
+			if DialogueBox.is_open:
+				for node in get_tree().root.find_children("*", "DialogueBox", true, false):
+					(node as DialogueBox).close()
+			get_tree().paused = false
+			await _wait(0.5)
+			var player: Player = game.player
+			_check(game.current_room != null and game.current_room.coord == coord, "%s: the file wakes in the stone's room" % label)
+			var room_pos: Vector2 = game.current_room.global_position if game.current_room else Vector2.ZERO
+			var drift := player.global_position.distance_to(room_pos + spot)
+			_check(player.state != Player.State.FALL and player.state != Player.State.DEAD and GameState.bubbles == bubbles,
+				"%s: Wren wakes on solid ground (state %d, bubbles %d of %d)" % [label, player.state, GameState.bubbles, bubbles])
+			_check(drift < 6.0, "%s: Wren wakes where the stone put them, not pushed out of a wall (%.1f px off)" % [label, drift])
+			var free := 0
+			for step: Vector2 in [Vector2(4, 0), Vector2(-4, 0), Vector2(0, 4), Vector2(0, -4)]:
+				if not player.test_move(player.global_transform, step):
+					free += 1
+			_check(free >= 2, "%s: Wren can walk off from where they wake (%d of 4 ways open)" % [label, free])
+			game.queue_free()
+			await _wait(0.05)
+	get_tree().paused = false
+	_check(stones >= 20, "the world has its Tidestones (%d)" % stones)
+	SaveManager.delete_save()
+	GameState.reset_new_game()
+
+
+## Fair entrances on the overworld (tests/walker.gd checks the dungeons): no
+## foe waits within three tiles of a way in from the next room or a doorway,
+## in either of a room's layouts. Galehawks are left out: they circle high,
+## out of reach, until they stoop.
+func _test_overworld_entrances() -> void:
+	var rooms := RoomInfo.all()
+	var checked := 0
+	for coord: Vector2i in rooms:
+		if rooms[coord]["dungeon"] != "":
+			continue
+		var scene := load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene
+		var probe := scene.instantiate() as Room
+		var alt := probe.alt_flag if probe.alt_layout != "" else ""
+		probe.free()
+		for use_alt: bool in ([false, true] if alt != "" else [false]):
+			GameState.reset_new_game()
+			if use_alt:
+				GameState.set_flag(alt)
+			var room := scene.instantiate() as Room
+			room.coord = coord
+			add_child(room)
+			var foes: Array[Vector2] = []
+			for node in room.find_children("*", "Enemy", true, false):
+				if not node.is_in_group("boss") and not node is Galehawk:
+					foes.append((node as Node2D).position)
+			# Ways in: open border tiles facing a room, and doorways.
+			var ways: Array[Vector2] = []
+			for x in Room.COLS:
+				for y in Room.ROWS:
+					var tile := room.raw_tile(x, y)
+					var centre := Vector2(x * Room.TILE + Room.TILE / 2.0, y * Room.TILE + Room.TILE / 2.0)
+					if tile == "D":
+						ways.append(centre)
+						continue
+					var side := Vector2i(-1 if x == 0 else (1 if x == Room.COLS - 1 else 0), -1 if y == 0 else (1 if y == Room.ROWS - 1 else 0))
+					if side == Vector2i.ZERO or not tile in [".", ":", ",", "r", ";"]:
+						continue
+					for out: Vector2i in [Vector2i(side.x, 0), Vector2i(0, side.y)]:
+						if out != Vector2i.ZERO and rooms.has(coord + out):
+							ways.append(centre - Vector2(out) * Room.TILE)
+			for at in ways:
+				checked += 1
+				for foe in foes:
+					if foe.distance_to(at) < Room.TILE * 3.0:
+						_check(false, "room %s%s: a foe at tile %s waits %d px from the way in at tile %s" % [coord, " (after %s)" % alt if use_alt else "", Vector2i(foe / Room.TILE), int(foe.distance_to(at)), Vector2i(at / Room.TILE)])
+						break
+			room.queue_free()
+			await _wait(0.02)
+	GameState.reset_new_game()
+	_check(checked > 100, "the overworld's ways in were checked (%d)" % checked)
 
 
 func _write_json(path: String, data: Dictionary) -> void:
@@ -1335,6 +1438,99 @@ func _test_gale_dungeon() -> void:
 	local = player.global_position - room.global_position
 	_check(GameState.bubbles == GameState.max_bubbles and local.x > 19 * Room.TILE and player.state == Player.State.MOVE, "the fan's wind carries Wren across to the far ledge (at %s)" % local)
 
+	# The Lantern Span: the planks over the sky show only in the raised
+	# lantern's light; the hook carries Wren over the break to the post,
+	# and the low stream blows home.
+	for item in ["glowmoth_lantern", "tide_hook", "stonebreaker"]:
+		GameState.give_item(item)
+	room = await _goto(game, Vector2i(30, 9), Vector2i(1, 3))
+	await _calm(room)
+	var span_planks := _child_of(room, VeilPlank)
+	_check(span_planks.size() == 8 and span_planks.all(func(p: VeilPlank) -> bool: return not p.is_real()), "the Span's planks aren't there in the dark")
+	player.global_position = _tile_pos(room, Vector2i(3, 6))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	before = GameState.bubbles
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(2.4)
+	local = player.global_position - room.global_position
+	_check(local.x < 4 * Room.TILE and GameState.bubbles == before - 1, "a glide ending over the unlit planks drops Wren back on the ledge (at %s)" % local)
+	GameState.refill()
+	await _wait(1.0)
+	player.global_position = _tile_pos(room, Vector2i(3, 6))
+	player.velocity = Vector2.ZERO
+	player.use_item("glowmoth_lantern")
+	Input.action_press("move_right")
+	await _wait(0.9)
+	Input.action_release("move_right")
+	local = player.global_position - room.global_position
+	_check(local.x > 6.5 * Room.TILE and local.x < 10 * Room.TILE, "by lantern light Wren walks out along the planks (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(9, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.2)
+	player.use_item("glowmoth_lantern")
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	_check(player.use_item("tide_hook"), "standing on a plank, Wren lowers the lantern and fires the hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 15 and player.state == Player.State.MOVE, "the hook carries Wren over the break to the post (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(21, 9))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	before = GameState.bubbles
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(4.5)
+	local = player.global_position - room.global_position
+	_check(local.x < 4 * Room.TILE and GameState.bubbles == before, "the low stream blows Wren home across the Span (at %s)" % local)
+
+	# The Weathercock Roost: hook up to the island, ride its fans' stream
+	# to the west ledge, hammer the pegs down to the key, and ride the low
+	# stream back.
+	room = await _goto(game, Vector2i(30, 8), Vector2i(20, 11))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(11, 9))
+	player.facing = Vector2.UP
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(int(local.y) / Room.TILE == 3 and local.x > 10 * Room.TILE and local.x < 13 * Room.TILE, "the hook lifts Wren onto the Roost's island (at %s)" % local)
+	player.facing = Vector2.LEFT
+	await _wait(0.1)
+	before = GameState.bubbles
+	player.use_item("kite_cloak")
+	await _wait(3.5)
+	local = player.global_position - room.global_position
+	_check(local.x < 5 * Room.TILE and GameState.bubbles == before, "the island's fans carry Wren to the west ledge (at %s)" % local)
+	var roost_pegs := _child_of(room, Peg)
+	_check(roost_pegs.size() == 4, "a row of pegs fences the key off")
+	player.global_position = _tile_pos(room, Vector2i(2, 6))
+	player.facing = Vector2.DOWN
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("stonebreaker")
+	await _wait(0.6)
+	_check(roost_pegs.any(func(p: Peg) -> bool: return p.down), "the mallet drives a peg flush")
+	Input.action_press("move_down")
+	await _wait(0.6)
+	Input.action_release("move_down")
+	local = player.global_position - room.global_position
+	_check(local.y > 7.5 * Room.TILE, "over the hammered peg Wren reaches the key (at %s)" % local)
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "small_key"), "the Roost's chest holds a small key")
+	player.global_position = _tile_pos(room, Vector2i(2, 10))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	before = GameState.bubbles
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.5)
+	local = player.global_position - room.global_position
+	_check(local.x > 10 * Room.TILE and GameState.bubbles == before, "the low stream blows Wren back to the way in (at %s)" % local)
+
 	# The Bell Shaft: falling through its floor drops Wren to the Fan Hall.
 	room = await _goto(game, Vector2i(28, 8), Vector2i(11, 11))
 	await _calm(room)
@@ -1547,13 +1743,64 @@ func _test_glacier_dungeon() -> void:
 	room = await _goto(game, Vector2i(33, 9), Vector2i(1, 6))
 	_check(room.tile_at(3, 5) == "~", "back in the room, the lake is open water again")
 
+	# The Sluice: one crate slides down the ice channel once its pools are
+	# frozen; the other is hooked out of its pocket, pushed onto the ice
+	# past a frozen pool, and slides on towards its plate.
+	GameState.give_item("tide_hook")
+	room = await _goto(game, Vector2i(34, 9), Vector2i(1, 8))
+	await _calm(room)
+	var sluice_crates: Array = _child_of(room, Crate)
+	sluice_crates.sort_custom(func(a: Crate, b: Crate) -> bool: return a.position.y < b.position.y)
+	var sluice_bars: Bars = _child_of(room, Bars)[0]
+	_check(sluice_crates.size() == 2 and not sluice_bars.is_open, "two crates, two plates, and bars on the key")
+	var top: Crate = sluice_crates[0]
+	for i in 4:
+		top._slide(Vector2.RIGHT)
+		await _wait(0.3)
+	top._slide(Vector2.RIGHT)
+	await _wait(0.4)
+	_check(floori(top.position.x / Room.TILE) == 5, "open water stops the crate at the channel's mouth (col %d)" % floori(top.position.x / Room.TILE))
+	room.freeze(Vector2i(6, 2))
+	room.freeze(Vector2i(14, 2))
+	await _wait(0.1)
+	top._slide(Vector2.RIGHT)
+	await _wait(2.0)
+	_check(floori(top.position.x / Room.TILE) == 20, "frozen over, the channel carries the crate onto its plate (col %d)" % floori(top.position.x / Room.TILE))
+	var low: Crate = sluice_crates[1]
+	player.global_position = _tile_pos(room, Vector2i(15, 11))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	_check(floori(low.position.x / Room.TILE) == 16, "the hook drags the second crate out of its pocket (col %d)" % floori(low.position.x / Room.TILE))
+	player.global_position = _tile_pos(room, Vector2i(18, 9))
+	for i in 3:
+		low._slide(Vector2.LEFT)
+		await _wait(0.4)
+	low._slide(Vector2.LEFT)
+	await _wait(0.4)
+	_check(floori(low.position.x / Room.TILE) == 13, "open water stops it at the lane's pool (col %d)" % floori(low.position.x / Room.TILE))
+	room.freeze(Vector2i(11, 11))
+	await _wait(0.1)
+	low._slide(Vector2.LEFT)
+	await _wait(2.0)
+	_check(floori(low.position.x / Room.TILE) == 3, "over the frozen pool it slides the length of the ice (col %d)" % floori(low.position.x / Room.TILE))
+	low._slide(Vector2.LEFT)
+	await _wait(0.4)
+	low._slide(Vector2.LEFT)
+	await _wait(0.4)
+	await _wait(0.2)
+	_check(sluice_bars.is_open and GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "both plates down, the bars open on the key (low crate at col %d)" % floori(low.position.x / Room.TILE))
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "small_key"), "the Sluice's chest holds a small key")
+
 	# The Eye Gallery: every eye open at once opens the gate.
 	room = await _goto(game, Vector2i(32, 8), Vector2i(11, 11))
 	await _calm(room)
 	var eyes := _child_of(room, IceEye)
 	_check(eyes.size() == 3, "the Eye Gallery has three ice eyes")
-	var chest: Chest = _child_of(room, Chest)[0]
-	_check(not chest.visible, "its chest is hidden")
+	var gallery_bars: Array = _child_of(room, Bars)
+	_check(gallery_bars.size() == 3 and room.tile_at(1, 6) == "|" and room.tile_at(0, 6) == ".", "bars shut the Gallery's way west")
 	player.global_position = _tile_pos(room, Vector2i(2, 10))
 	player.velocity = Vector2.ZERO
 	player.facing = Vector2.UP
@@ -1565,7 +1812,55 @@ func _test_glacier_dungeon() -> void:
 	eyes[1].arrow_hit(Vector2.UP)
 	eyes[2].arrow_hit(Vector2.UP)
 	await _wait(0.5)
-	_check(chest.visible and GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "with every eye open the chest appears")
+	_check((gallery_bars[0] as Bars).is_open and GameState.flags.get(RoomPuzzle.flag_for(room.coord), false), "with every eye open the bars west open")
+
+	# The Icefall: hook to the island, wake its eye to open the bars, ride
+	# the fans' stream to the far ledge, break the boulder to the key; the low stream
+	# blows home.
+	for item in ["tide_hook", "kite_cloak", "stonebreaker"]:
+		GameState.give_item(item)
+	room = await _goto(game, Vector2i(31, 8), Vector2i(22, 6))
+	await _calm(room)
+	player.global_position = _tile_pos(room, Vector2i(19, 6))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	var at := player.global_position - room.global_position
+	_check(int(at.x) / Room.TILE == 13 and int(at.y) / Room.TILE == 6, "the hook carries Wren to the Icefall's island (at %s)" % at)
+	var icefall_bars: Array = _child_of(room, Bars)
+	_check(icefall_bars.size() == 4 and not (icefall_bars[0] as Bars).is_open, "bars cut the island in two")
+	await _shoot(room, player, Vector2i(12, 5), Vector2.UP)
+	await _wait(0.3)
+	_check((icefall_bars[0] as Bars).is_open, "an arrow wakes the island's eye and the bars open")
+	player.global_position = _tile_pos(room, Vector2i(12, 8))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	var icefall_before := GameState.bubbles
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.0)
+	at = player.global_position - room.global_position
+	_check(at.x < 5 * Room.TILE and GameState.bubbles == icefall_before, "the fans' stream carries Wren to the far ledge (at %s)" % at)
+	var icefall_boulders := _child_of(room, Boulder)
+	_check(icefall_boulders.size() == 1, "a boulder blocks the way up to the key")
+	player.global_position = _tile_pos(room, Vector2i(2, 6))
+	player.facing = Vector2.UP
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("stonebreaker")
+	await _wait(0.6)
+	_check(_child_of(room, Boulder).is_empty(), "the mallet breaks it")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "small_key"), "the Icefall's chest holds a small key")
+	player.global_position = _tile_pos(room, Vector2i(2, 10))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(3.5)
+	at = player.global_position - room.global_position
+	_check(at.x > 18 * Room.TILE and GameState.bubbles == icefall_before, "the low stream blows Wren home (at %s)" % at)
 
 	# The Slide Hall: the crate slides on ice till the pool stops it;
 	# frozen over, it slides on to the plate.

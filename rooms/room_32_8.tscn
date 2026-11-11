@@ -7,19 +7,17 @@ script = ExtResource("1_room")
 name_key = "ROOM_GLACIER_EYES"
 biome = "glacier"
 dungeon = "glacier"
-chest_item = "small_key"
 gate = "eyes"
-chest_hidden = true
 layout = "###########GG###########
 #......................#
 #.E..................E.#
 #......................#
 #...IIIIIIIIIIIIIIII...#
-#...IIIIIIIIIIIIIIII...#
-#...IIIIIIIIIIIIIIII...X
-#...IIIIIIIIIIIIIIII...X
+.|..IIIIIIIIIIIIIIII...#
+.|..IIIIIIIIIIIIIIII...X
+.|..IIIIIIIIIIIIIIII...X
 #...IIIIIIIIIIIIIIII...#
 #......................#
-#..........C...........#
+#......................#
 #E.....................#
 ###########..###########"
