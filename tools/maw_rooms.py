@@ -14,7 +14,9 @@ tool Wren has found is needed somewhere.
 The way through:
   The Throat (entry) -> the Palate (map) -> west to the Hollows (hook or
   glide across the gap; small key) -> east to the Dim Gallery (light the four
-  braziers, crossing the veiled planks by lantern light; big key) -> the
+  braziers, crossing the veiled planks by lantern light) -> its bars open
+  north onto the Lung (crate onto the plate between breaths, then a dive
+  under the grates; big key) -> the
   Palate's north hatch into the Veins (compass) -> the great door -> the
   Choir Loft, Cantor Vael -> the Dreaming Heart.
 """
@@ -49,8 +51,8 @@ ROOMS = {
 #,,,,,,,,,,,,,,,,,,,,,,#
 #......................#
 #..##..............##..#
-#..##..............##..#
-#......................#
+...##..............##..#
+.......................#
 ###########DD###########"""),
     (44, 9): ("ROOM_MAW_PALATE", {"chest_item": '"map"'}, """
 ###########XX###########
@@ -80,9 +82,9 @@ ROOMS = {
 #.....____.............#
 #.....____.............#
 ########################"""),
-    (45, 9): ("ROOM_MAW_LANTERNS", {"chest_item": '"big_key"', "gate": '"braziers"', "chest_hidden": "true"}, """
-########################
-#.............___......#
+    (45, 9): ("ROOM_MAW_LANTERNS", {"chest_item": '"glint"', "chest_count": "50", "gate": '"braziers"', "chest_hidden": "true"}, """
+#################..#####
+#.............___||....#
 #..j..........___...j..#
 #.............___......#
 #.............___......#
@@ -109,6 +111,41 @@ ROOMS = {
 #.x.,,,,,,,,,,,+,,,....#
 #...,,,,,,,,,,,,,,,....#
 #...,,,,,,,,,,,,,,,....#
+########################"""),
+    # The Lung, above the Dim Gallery: the big key on an island ringed by
+    # grates, past bars that open on a plate. The crate only crosses the
+    # palate floor while the Old One breathes out (risen water stops it
+    # dead), so Wren pushes between breaths; then a dive under the grates.
+    (45, 8): ("ROOM_MAW_LUNG", {"chest_item": '"big_key"', "gate": '"plates"'}, """
+########################
+#.....,,,,,,,,,#,,,,,,,#
+#.....,,,,,,,,,#,LLLLL,#
+#.....,,,,,,,,,#,L...L,#
+#..K..,,,,,,,,,#,L.C.L,#
+#.....,,,,,,,,,|,L...L,#
+#.....,,,,#,,,,|,LLLLL,#
+#.....,,,,,,,,,#,,,,+,,#
+#.....,,,,,,,,=#,,,,,,,#
+#.....,,,,,,,,,#########
+#......................#
+#......................#
+#################..#####"""),
+    # Optional: west of the Throat, the Gullet. Past a boulder only the
+    # Stonebreaker moves, the hook crosses from the palate floor to a ledge
+    # over the drop; the drop itself swallows Wren back down to the Throat.
+    (43, 10): ("ROOM_MAW_GULLET", {"chest_item": '"glint"', "chest_count": "100", "falls_through": "true", "fall_to": "Vector2i(44, 10)", "fall_spawn": "Vector2i(5, 10)"}, """
+########################
+#..._________..........#
+#.O._________..........#
+#C.._________...x......#
+#____________..........#
+#____________#.........#
+#____________#.........#
+#____________#.........#
+#____________#.........#
+#,,,,,,,,,,,,#.........#
+#,,,,,,,+,,,,Y..........
+#,,,,,,,,,,,,#..........
 ########################"""),
     (44, 8): ("ROOM_MAW_GALLERY", {"chest_item": '"compass"'}, """
 ###########GG###########

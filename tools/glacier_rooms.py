@@ -12,12 +12,21 @@ I is ice: Wren slides on it, and so do crates. Frost arrows freeze water
 The way through:
   Entry -> Crevasse Hall (map; cross the ice bridge) -> west to the
   Bowyer's Cave (beat everything; the Frostfang Bow) -> east to the Black
-  Pool (freeze a way out to the island; small key) -> unlock the Hall's
-  hatch north into the Eye Gallery (open all three ice eyes at once; small
-  key) -> unlock its east hatch into the Slide Hall (freeze the pool in the
-  crate's way and slide it onto the plate; big key) -> the Gallery's great
-  door -> Rimeback.
-  Off the main path: the Frozen Pond west of the Entry (compass).
+  Pool (freeze a way out to the island; glints) -> east to the Sluice
+  (freeze the channel's pools so one crate slides to its plate; hook the
+  other out of its pocket and send it over the frozen pool down its lane;
+  small key) -> unlock the Hall's
+  hatch north into the Eye Gallery (open all three ice eyes at once: the
+  bars west open) -> the Icefall (hook to the island, wake its eye to open the bars, ride
+  the fans' stream to the far ledge, break the boulder; small key) -> back
+  to the Gallery and unlock its east hatch into the Slide Hall (freeze the pool in the
+  crate's way and slide it onto the plate; the bars open north) -> the
+  Rime Vault (freeze a way out to the middle of the lake, then freeze a
+  lane west, east and north for the arrows and wake all three eyes at once
+  from there; big key) -> the Gallery's great door -> Rimeback.
+  Off the main path: the Frozen Pond west of the Entry (compass); the Frost
+  Ford east of the Entry (ponds small enough to freeze whole, one per
+  arrow; glints).
 """
 
 import os
@@ -45,9 +54,9 @@ ROOMS = {
 #..I.III......III.II...#
 #.IIIIII......IIIIII...#
 #..IIII........IIII....#
-...........T...........#
-.......................#
-.......................#
+...........T............
+........................
+........................
 #.....~~.......~~......#
 #.....~~...a...~~......#
 #......................#
@@ -95,7 +104,7 @@ ROOMS = {
 #...IIIaII....IIcIII...#
 #......................#
 ########################"""),
-    (33, 9): ("ROOM_GLACIER_POOL", {"chest_item": '"small_key"'}, """
+    (33, 9): ("ROOM_GLACIER_POOL", {"chest_item": '"glint"', "chest_count": "50"}, """
 ########################
 #......................#
 #..~~~~~~~~~~~~~~~~~~..#
@@ -104,28 +113,28 @@ ROOMS = {
 ...~~~~~~~.C..~~~~~~~..#
 ...~~~~~~~....~~~~~~~..#
 ...~~~~~~~....~~~~~~~..#
-#..~~~~~~~....~~~~~~~..#
-#..~~~~##########~~~~..#
+#..~~~~~~~....~~~~~~~...
+#..~~~~##########~~~~...
 #..~~~~~~~~~~~~~~~~~~..#
 #..a...................#
 ########################"""),
-    (32, 8): ("ROOM_GLACIER_EYES", {"chest_item": '"small_key"', "gate": '"eyes"', "chest_hidden": "true"}, """
+    (32, 8): ("ROOM_GLACIER_EYES", {"gate": '"eyes"'}, """
 ###########GG###########
 #......................#
 #.E..................E.#
 #......................#
 #...IIIIIIIIIIIIIIII...#
-#...IIIIIIIIIIIIIIII...#
-#...IIIIIIIIIIIIIIII...X
-#...IIIIIIIIIIIIIIII...X
+.|..IIIIIIIIIIIIIIII...#
+.|..IIIIIIIIIIIIIIII...X
+.|..IIIIIIIIIIIIIIII...X
 #...IIIIIIIIIIIIIIII...#
 #......................#
-#..........C...........#
+#......................#
 #E.....................#
 ###########..###########"""),
-    (33, 8): ("ROOM_GLACIER_SLIDE", {"chest_item": '"big_key"', "gate": '"plates"'}, """
-########################
-#...............#.C.#..#
+    (33, 8): ("ROOM_GLACIER_SLIDE", {"gate": '"plates"'}, """
+##################..####
+#...............#...#..#
 #...............#...#..#
 #...............#|||#..#
 #..IIIIIIIIIIIIIIIIII..#
@@ -136,6 +145,70 @@ ROOMS = {
 #..........a...........#
 #......................#
 #......................#
+########################"""),
+    (33, 7): ("ROOM_GLACIER_RIME_VAULT", {"chest_item": '"big_key"', "gate": '"eyes"'}, """
+########################
+############C###########
+###########E|###########
+#######~~~~~~~~~~#######
+#######~~~~~~~~~~#######
+#######~~~~~~~~~~#######
+######E~~~~..~~~~E######
+#######~~~~..~~~~#######
+#######~~~~~~~~~~#######
+#######~~~~~~~~~~#######
+#...a..................#
+#......................#
+##################..####"""),
+    (33, 10): ("ROOM_GLACIER_FROST_FORD", {"chest_item": '"glint"', "chest_count": "100"}, """
+########################
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~....#
+#...###############....#
+....~~.~~.~~.~~.~~.....#
+....~~.~~.~~.~~.~~...C.#
+....###############....#
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~..a.#
+#...~~~~~~~~~~~~~~~....#
+#...~~~~~~~~~~~~~~~....#
+########################"""),
+    # East of the Black Pool, the Sluice: two crates for two plates. One
+    # slides down an ice channel once its pools are frozen; the other sits
+    # in a pocket Wren can't get behind, so the hook drags it out first.
+    (34, 9): ("ROOM_GLACIER_SLUICE", {"chest_item": '"small_key"', "gate": '"plates"'}, """
+########################
+#......#################
+#.K...~IIIIIII~~IIII=###
+#......#################
+#......................#
+#..................#####
+#.........a........|.C##
+#..................#####
+.......................#
+.......................#
+#############........###
+#=..IIIIIII~~........K##
+########################"""),
+    # West of the Eye Gallery, behind the bars its eyes open: the Icefall.
+    # The hook reaches the island, an arrow wakes the eye that opens the
+    # bars across it, the fans' stream carries Wren over to the far ledge,
+    # and the mallet breaks the boulder before the key. The low stream
+    # blows home.
+    (31, 8): ("ROOM_GLACIER_ICEFALL", {"chest_item": '"small_key"', "gate": '"eyes"'}, """
+########################
+#....______________....#
+#.Ca.______________....#
+#...._____..E._____....#
+#...._____...._____....#
+##Y##_____...._____.....
+#...._____..O._____.....
+#....#####||||#####.....
+#...._____...<_____....#
+#...._____...<_____....#
+#>..._____...._____....#
+#>...______________....#
 ########################"""),
     (32, 7): ("ROOM_GLACIER_BOSS", OUTSIDE, """
 ########################

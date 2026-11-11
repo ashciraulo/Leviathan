@@ -272,3 +272,82 @@ def tumbleburr(frame):
         if 0 <= x < 16 and 0 <= y < 16:
             c[y][x] = "{"
     return ["".join(r) for r in c]
+
+
+# Galehawk: a slate-backed hawk that rides the updraughts above the heights.
+# It circles high (its shadow sweeps the turf), hangs over Wren with a
+# shriek (the tell), then stoops on the spot and sits there a moment,
+# wings mantled, before it climbs again. Seen from above. 20x16 frames:
+# soar, stoop, perch. Its own materials, passed to lit() as a palette.
+HAWK_RAMPS = {
+    "a": ["#9AA2AE", "#78808E", "#5A6270", "#404652", "#2A2E38"],   # slate back
+    "b": ["#F4ECDC", "#DCCFB6", "#BCAE92", "#968A70", "#6A604C"],   # barred pale front
+    "c": ["#FFE08A", "#F0B840", "#C8902A", "#96661E", "#5E3E12"],   # beak and feet
+    "d": ["#3A3A44", "#2A2A32", "#1C1C24", "#121218", "#08080C"],   # wingtips, eye
+}
+HAWK_PALETTE = (HAWK_RAMPS, {})
+
+
+def galehawk(frame):
+    return [r.replace(" ", ".") for r in GALEHAWK[frame]]
+
+
+GALEHAWK = {
+    # Wings spread on an updraught, primaries fingered at the tips.
+    "soar": [
+        "         cc         ",
+        "        dbbd        ",
+        "        abba        ",
+        "     aaaabbaaaa     ",
+        "  aaaaaaabbaaaaaaa  ",
+        " daaaaaaabbaaaaaaad ",
+        "dd daaaaabbaaaaad dd",
+        "d d  daaabbaaad  d d",
+        "       aabbaa       ",
+        "        aaaa        ",
+        "       aaaaaa       ",
+        "      daaaaaad      ",
+        "      dadaadad      ",
+        "                    ",
+        "                    ",
+        "                    ",
+    ],
+    # Wings folded tight: a dart, head down the screen.
+    "stoop": [
+        "                    ",
+        "        dadd        ",
+        "        aaaa        ",
+        "       aaaaaa       ",
+        "      daabbaad      ",
+        "      dabbbbad      ",
+        "      dabbbbad      ",
+        "      daabbaad      ",
+        "       dabbad       ",
+        "       daabad       ",
+        "        abba        ",
+        "        dbbd        ",
+        "         cc         ",
+        "         cc         ",
+        "                    ",
+        "                    ",
+    ],
+    # Down on the turf, wings mantled out, talons showing.
+    "perch": [
+        "                    ",
+        "                    ",
+        "         cc         ",
+        "        dbbd        ",
+        "        abba        ",
+        "       aabbaa       ",
+        "    daaabbbbaaad    ",
+        "  ddaaaabbbbaaaadd  ",
+        " d daaaabbbbaaaad d ",
+        "    daaabbbbaaad    ",
+        "       aabbaa       ",
+        "       aaaaaa       ",
+        "      daaaaaad      ",
+        "       c dd c       ",
+        "      cc    cc      ",
+        "                    ",
+    ],
+}

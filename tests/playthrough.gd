@@ -155,7 +155,7 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		var bosses := get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room.is_ancestor_of(b))
 		_check(bosses.size() == 1, "%s: one boss in %s" % [id, boss_room])
 		if bosses.size() == 1:
-			_check(Audio.music_cue == "boss", "%s: the boss theme plays (%s)" % [id, Audio.music_cue])
+			_check(Audio.music_cue.begins_with("boss"), "%s: the boss theme plays (%s)" % [id, Audio.music_cue])
 			if bosses[0] is DreamingHeart:
 				return await _finale(bosses[0])
 			bosses[0]._die()
@@ -261,7 +261,7 @@ func _finale(heart: DreamingHeart) -> bool:
 	await _play_scene(20.0)
 	var room: Room = _game.current_room
 	_check(room != null and room.coord == home, "after the ending: Continue starts at home (%s)" % (room.coord if room else null))
-	_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and Audio.music_cue != "boss", "after the ending: the Old One stays asleep (%s)" % Audio.music_cue)
+	_check(GameState.has_flag(DreamingHeart.DEFEATED_FLAG) and not Audio.music_cue.begins_with("boss"), "after the ending: the Old One stays asleep (%s)" % Audio.music_cue)
 	_check(_can_step(), "after the ending: Wren isn't stuck in a wall")
 	return true
 
@@ -339,6 +339,10 @@ func _items_and_glints() -> void:
 	await _play_scene(20.0)
 	_keep_safe()
 	var wren: Player = _game.player
+	# Eight dungeons' chests can leave the purse near full: spend down so
+	# there's room to count what's picked up here.
+	if GameState.item_count("glint") > 500:
+		GameState.take_item("glint", GameState.item_count("glint") - 500)
 	var start := GameState.item_count("glint")
 	# Enemies: ten Scuttlers fall, and glints are left.
 	for i in 10:

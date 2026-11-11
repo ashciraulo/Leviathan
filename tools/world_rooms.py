@@ -18,7 +18,8 @@ Item gates (keep in step with the game):
   Tide Hook        zips Wren in a straight line to a hook post (O) up to
                    HOOK_RANGE tiles away, over water, lava, gaps and floor
   Kite Cloak       glides up to GLIDE_TILES straight ahead over holes, lava,
-                   water and low hazards (streams only blow in dungeons)
+                   water and low hazards; launched along a fan's stream
+                   (> <), it rides the stream to its far end
   Stonebreaker     breaks cracked boulders (Y)
   Glowmoth Lantern shows veiled planks (v)
   Frostfang Bow    freezes open water (~) into ice to walk on
@@ -87,6 +88,15 @@ SECRETS = {
     # Challenges, each with a Breath Pearl.
     (7, -4): ("kite_cloak",),                 # Gullcry Stacks: glide stack to stack over the chasm
     (5, 3): ("glowmoth_lantern", "frostfang_bow", "kite_cloak"),  # Lampless Sink (the braziers need the lantern)
+    # Regional caves (2026-11-10).
+    (9, 2): ("tide_hook", "frostfang_bow", "kite_cloak"),  # Saltpan Hollow: a bitter-sea islet with a hook post
+    (1, -4): ("frostfang_bow",),              # Icefall Grotto: bars until every ice eye is shot open
+    (8, -4): ("glowmoth_lantern",),           # Clinker Vault: bars until both islet braziers burn
+    (6, -3): ("kite_cloak",),                 # Sailwind Gallery: ride a fan's stream over the sky gap
+    (2, -1): ("stonebreaker",),               # Rootbound Hollow: cracked boulders wall off the chest
+    # Optional screens off the thinner regions (2026-11-11).
+    (7, -3): ("tide_hook",),                  # Kestrel Reach: ride a stream to the stack, then hook down to the chest ledge
+    (0, -4): ("tide_hook",),                  # Crevasse Shelf: hook over a crevasse from the slick ice
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -135,7 +145,9 @@ def load_rooms():
         flag = re.search(r'^alt_flag = "(.*?)"', text, re.M)
         chest = re.search(r'^chest_item = "(.*?)"', text, re.M)
         biome = re.search(r'^biome = "(.*?)"', text, re.M)
+        gate = re.search(r'^gate = "(.*?)"', text, re.M)
         rooms[coord] = {
+            "gate": gate.group(1) if gate else "",
             "biome": biome.group(1) if biome else "saltmarrow",
             "layout": field("layout"),
             "alt": field("alt_layout"),
@@ -147,6 +159,11 @@ def load_rooms():
     return rooms
 
 
+# Gates that need a tool: braziers only catch from the raised Glowmoth
+# Lantern, ice eyes only open to a frost arrow.
+GATE_TOOLS = {"braziers": "glowmoth_lantern", "eyes": "frostfang_bow"}
+
+
 # Regions whose "~" is lava: the Frostfang Bow can't freeze it, so it acts
 # like dungeon lava (^): the chain and the cloak cross it, nothing walks it.
 LAVA_BIOMES = {"cinderreach"}
@@ -154,6 +171,9 @@ LAVA_BIOMES = {"cinderreach"}
 
 def rows_for(room, items):
     rows = room["alt"] if room["alt"] and room["alt_flag"] in items else room["layout"]
+    if room["gate"] in GATE_TOOLS and GATE_TOOLS[room["gate"]] not in items:
+        # A gate this room's puzzle can't be solved without keeps its bars shut.
+        rows = [r.replace("|", "#") for r in rows]
     if room["biome"] in LAVA_BIOMES:
         return [r.replace("~", "^") for r in rows]
     return rows
@@ -198,12 +218,50 @@ def hook_hops(rows, x, y, items):
     return out
 
 
+FANS = {">": 1, "<": -1}
+FAN_REACH = 22
+
+
+def in_stream(rows, x, y, dx):
+    """True when (x, y) lies in the stream of a fan in its row blowing dx
+    (WindFan: a stream runs from the fan until a wall or the room's rim)."""
+    if not (0 < x < COLS - 1):
+        return False
+    for step in range(1, FAN_REACH + 1):
+        fx = x - dx * step
+        if not (0 <= fx < COLS):
+            return False
+        t = rows[y][fx]
+        if FANS.get(t) == dx:
+            return True
+        if t == "#":
+            return False
+    return False
+
+
+def stream_hops(rows, x, y, dx, items):
+    """Tiles a glide launched down a fan's stream can come down on: anywhere
+    along it that isn't water, to where the stream ends."""
+    out = []
+    tx = x + dx
+    while 0 < tx < COLS - 1 and rows[y][tx] != "#":
+        if stops_flight(rows[y][tx]):
+            break
+        if rows[y][tx] != "~" and walkable(rows[y][tx], items):
+            out.append((tx, y))
+        tx += dx
+    return out
+
+
 def glide_hops(rows, x, y, items):
     """Tiles the Kite Cloak sets Wren down on from (x, y). Only walls and
     solid scenery stop it; it can come down early anywhere that isn't water."""
     if "kite_cloak" not in items:
         return []
     out = []
+    for dx in (1, -1):
+        if in_stream(rows, x, y, dx):
+            out += stream_hops(rows, x, y, dx, items)
     for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         for step in range(1, GLIDE_WATER_TILES + 1):
             tx, ty = x + dx * step, y + dy * step
@@ -219,12 +277,54 @@ def glide_hops(rows, x, y, items):
     return out
 
 
+def steps_from(rooms, coord, x, y, items):
+    """Every (room, tile) Wren can go to in one move from (x, y): a step,
+    across a screen edge, or a hook pull or glide."""
+    rows = rows_for(rooms[coord], items)
+    steps = []
+    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        nx, ny, nc = x + dx, y + dy, coord
+        if not (0 <= nx < COLS and 0 <= ny < ROWS):
+            nc = (coord[0] + dx, coord[1] + dy)
+            if nc not in rooms:
+                continue
+            nx, ny = nx % COLS, ny % ROWS
+        steps.append((nc, (nx, ny)))
+    steps += [(coord, hop) for hop in hook_hops(rows, x, y, items) + glide_hops(rows, x, y, items)]
+    return [(nc, (nx, ny)) for nc, (nx, ny) in steps
+            if walkable(rows_for(rooms[nc], items)[ny][nx], items)]
+
+
+def start_tile(rooms, items):
+    """Where the walk starts: the first open tile of the start screen."""
+    rows = rows_for(rooms[START[0]], items)
+    return START[0], next((x, y) for y in range(ROWS) for x in range(COLS) if walkable(rows[y][x], items))
+
+
+def stranded(rooms, items, seen):
+    """Tiles Wren can reach with `items` but never walk, pull or glide back
+    from to the start (a hook pull out to an islet with no post home)."""
+    back = {}
+    for node in seen:
+        for step in steps_from(rooms, node[0], node[1][0], node[1][1], items):
+            back.setdefault(step, []).append(node)
+    # Home is where the walk began, and any dungeon door: Wren comes back out
+    # of a dungeon on its door holding something new, which may be the way out.
+    home = {start_tile(rooms, items)}
+    home |= {n for n in seen if rooms[n[0]]["door_to"] in DUNGEONS
+             and rows_for(rooms[n[0]], items)[n[1][1]][n[1][0]] == "D"}
+    queue = deque(home)
+    while queue:
+        for prev in back.get(queue.popleft(), ()):
+            if prev not in home:
+                home.add(prev)
+                queue.append(prev)
+    return sorted(seen - home)
+
+
 def explore(rooms, items):
     """Every (room, tile) reachable with `items`, and the doors touched."""
-    start_room = START[0]
-    start_rows = rows_for(rooms[start_room], items)
-    first = next((x, y) for y in range(ROWS) for x in range(COLS) if walkable(start_rows[y][x], items))
-    seen = {(start_room, first)}
+    seen = {start_tile(rooms, items)}
     queue = deque(seen)
     doors = set()
     while queue:
@@ -233,23 +333,10 @@ def explore(rooms, items):
         rows = rows_for(room, items)
         if rows[y][x] == "D" and room["door_to"]:
             doors.add(room["door_to"])
-        steps = []
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            nx, ny, nc = x + dx, y + dy, coord
-            if not (0 <= nx < COLS and 0 <= ny < ROWS):
-                nc = (coord[0] + dx, coord[1] + dy)
-                if nc not in rooms:
-                    continue
-                nx, ny = nx % COLS, ny % ROWS
-            steps.append((nc, (nx, ny)))
-        steps += [(coord, hop) for hop in hook_hops(rows, x, y, items) + glide_hops(rows, x, y, items)]
-        for nc, (nx, ny) in steps:
-            if (nc, (nx, ny)) in seen:
-                continue
-            if not walkable(rows_for(rooms[nc], items)[ny][nx], items):
-                continue
-            seen.add((nc, (nx, ny)))
-            queue.append((nc, (nx, ny)))
+        for step in steps_from(rooms, coord, x, y, items):
+            if step not in seen:
+                seen.add(step)
+                queue.append(step)
     return seen, doors
 
 
@@ -314,6 +401,14 @@ def main():
             print("  %d new screens: %s" % (len(fresh), " ".join("%d,%d" % c for c in fresh)))
             if dungeons:
                 print("  dungeons open: %s" % ", ".join(dungeons))
+    # No softlocks: from anywhere Wren gets to, with what they hold by then,
+    # there is a way back (no hook pull out to an islet with no post home).
+    for items, _, _, reached in stages:
+        lost = stranded(rooms, set(items), reached)
+        for coord in sorted({c for c, _ in lost}):
+            tiles = [t for c, t in lost if c == coord]
+            problems.append("screen %s: Wren can reach %s but not get back (holding %s)"
+                            % (coord, " ".join("(%d,%d)" % t for t in tiles[:6]), ", ".join(items) or "nothing"))
     # Dungeons must open one at a time, in the plan's order.
     for i, (_, _, dungeons, _) in enumerate(stages[:-1]):
         if len(dungeons) != 1 or dungeons[0] != ORDER[i]:
@@ -324,6 +419,7 @@ def main():
         problems.append("screen %s (%s) is never reachable" % (coord, rooms[coord]["name"]))
     # Every open floor tile on a reachable screen should be reachable at the end.
     final_items = set(stages[-1][0])
+    without = {}
     reached = {(c, t) for c, t in seen}
     for coord in sorted(opened):
         rows = rows_for(rooms[coord], final_items)
@@ -343,7 +439,14 @@ def main():
                 print("Chest at %s %s (%s): stage %d" % (coord, spot, rooms[coord]["chest"], stage))
             need = SECRETS.get(coord)
             if need:
-                if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
+                # Wren comes in only by the ways open without those tools
+                # (a secret beyond another secret can't be entered from behind).
+                if need not in without:
+                    without[need] = explore(rooms, final_items - set(need))[0]
+                # When the room itself is out of reach without them, check the
+                # room on its own, as if Wren came in by any way they reach it.
+                ways_in = without[need] if any(c == coord for c, _ in without[need]) else seen
+                if opens(inside(rooms, coord, ways_in, final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
     # The HUD's corners (breath bubbles top left, item slots top right)
     # hide whatever lies under them: keep finds and stones out of there.

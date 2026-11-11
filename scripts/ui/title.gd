@@ -109,7 +109,11 @@ func _ready() -> void:
 			return
 		menu.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_INHERITED
 		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		first.grab_focus())
+		first.grab_focus()
+		# The browser check (tools/web_check.mjs) waits for this before it
+		# presses keys, so none land while the menu is still appearing.
+		if OS.has_feature("web"):
+			JavaScriptBridge.eval("window.__lvTitleReady = true;", true))
 
 
 func _show_page(page: MenuPage) -> void:

@@ -10,10 +10,10 @@ chest_item = "scaleweave"
 layout = "####..##################
 ####..........##########
 ##.....................#
-#...Z........Z.........#
+#...Z........Z.....b...#
 #......................#
-#rrrrrrrrrrrrrrrrrrrrrrr
-#rrrrrrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrrrrrr
 #rrrrrrrrrrrrrrrrrrrrrrr
 #~~~drrrrrrrrrrrrrrr~~~#
 #~~~~~rr.......rr~~~~~~#

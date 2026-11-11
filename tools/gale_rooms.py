@@ -12,13 +12,20 @@ North is up the tower. Holes in an upper floor drop Wren to the floor below
 The way through:
   Entry -> Fan Hall -> west to the Sail Loft (beat everything; the Kite
   Cloak) -> east to the Gust Gallery (glide the fan's wind over the drop;
-  small key) -> unlock the Fan Hall's hatch north into the Bell Shaft ->
+  glints) -> east to the Lantern Span (walk the planks by lantern light,
+  hook over the break to the post) -> north to the Weathercock Roost (hook
+  up to the island, ride its stream west, hammer the pegs down; small key;
+  the low streams blow home) -> unlock the Fan Hall's hatch north into the Bell Shaft ->
   east to the Weathervane Room (glide out to the island; small key) -> back
   through the Shaft, unlock its west hatch into the Rookery (two glides,
-  the pillar catching you on the way; big key) -> ride the Shaft's updraft
-  to its top landing and the great door -> the Stormheron.
+  the pillar catching you on the way; glints) -> north into the Bell Cage
+  (three rides: up, across and down the fans' streams to the big key, and
+  the long stream home) -> ride the Shaft's updraft to its top landing and
+  the great door -> the Stormheron.
   Off the main path: the Rope Store west of the Entry (walk into the wind;
-  compass). The Fan Hall's map is up a nook against the wind.
+  compass); the Bellrope Walk east of the Entry (the stream runs on over
+  the sky: fold the cloak over the island; glints). The Fan Hall's map is
+  up a nook against the wind.
 """
 
 import os
@@ -52,9 +59,9 @@ ROOMS = {
 #..u..............u....#
 #......................#
 #....##..........##....#
-.....##.....T....##....#
-.......................#
-.......................#
+.....##.....T....##.....
+........................
+........................
 #......................#
 #..c...............&...#
 #......................#
@@ -102,12 +109,12 @@ ROOMS = {
 #..u..............u....#
 #......................#
 ########################"""),
-    (29, 9): ("ROOM_GALE_GUSTS", {}, """
+    (29, 9): ("ROOM_GALE_GUSTS", {"chest_item": '"glint"', "chest_count": "50"}, """
 ########################
 #....______________....#
-#....______________....#
-#....______________....#
-#....______________..C.#
+#....______________.....
+#....______________.....
+#....______________..C..
 .....______________....#
 ....>______________....#
 .....______________....#
@@ -144,9 +151,9 @@ X...________________....
 #....__________________#
 #....__________________#
 ########################"""),
-    (27, 8): ("ROOM_GALE_ROOKERY", dict(drops_to((27, 9), (11, 9)), chest_item='"big_key"'), """
-########################
-#__________________....#
+    (27, 8): ("ROOM_GALE_ROOKERY", dict(drops_to((27, 9), (11, 9)), chest_item='"glint"', chest_count="50"), """
+###..###################
+#....______________....#
 #....______________.&..#
 #...._____...._____....#
 #.C.._____<..._____....#
@@ -158,6 +165,68 @@ X...________________....
 #....______________....#
 #__________________....#
 ########################"""),
+    (27, 7): ("ROOM_GALE_BELL_CAGE", dict(drops_to((27, 8), (2, 9)), chest_item='"big_key"'), """
+########################
+#...>______________....#
+#...>______________....#
+#__________________SSSS#
+#______________________#
+#______________________#
+#______________________#
+#______________________#
+#NN....________________#
+#......__________<.....#
+#......__________<....C#
+#......__________<.....#
+###..###################"""),
+    (29, 10): ("ROOM_GALE_BELLROPE_WALK", {"chest_item": '"glint"', "chest_count": "100"}, """
+########################
+#....__________________#
+#....__________________#
+#....______...C._______#
+#....______....._______#
+....>______....._______#
+....>______....._______#
+.....______....._______#
+#....______<...._______#
+#....______<..&._______#
+#....__________________#
+#....__________________#
+########################"""),
+    # East of the Gusts, the Lantern Span: a plank walk over the sky that
+    # only the raised lantern shows, broken where the hook has to carry
+    # Wren to a post; the low stream blows home. North to the Roost.
+    (30, 9): ("ROOM_GALE_LANTERN_SPAN", {}, """
+####################..##
+#...________________...#
+....________________...#
+....________________...#
+....________________...#
+#...___________...__...#
+#...vvvvvv_____.O.vv...#
+#...___________...__...#
+#...________________...#
+#...________________..<#
+#...________________..<#
+#...________________...#
+########################"""),
+    # Above it, the Weathercock Roost: hook up to the island, ride its fans'
+    # stream to the west ledge, hammer the pegs down to the key. The low
+    # stream blows home.
+    (30, 8): ("ROOM_GALE_ROOST", {"chest_item": '"small_key"'}, """
+########################
+#...._____...__________#
+#...._____.O<__________#
+#...._____..<__________#
+#....__________________#
+#....__________________#
+#....__________________#
+#iiii#_________________#
+#....__________________#
+#.C.._____.............#
+#>..._____....&........#
+#>..._____.............#
+####################..##"""),
     (28, 7): ("ROOM_GALE_BOSS", OUTSIDE, """
 ########################
 #________......________#

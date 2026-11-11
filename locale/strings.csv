@@ -75,6 +75,8 @@ HINT_SATCHEL_DRINK,%s: drink
 HINT_MAP,Move the cursor to look around
 HINT_MAP_FLY,%s: blow the Wayshell and fly here
 HINT_OPTIONS,Left / right: change
+HINT_OPEN,%s: open
+HINT_CHOOSE,%s: choose
 HINT_CONTROLS,%s: change    %s: back
 HINT_CONTROLS_WAIT,Press the new key or button. %s cancels.
 ITEM_TIDE_HOOK,Tide Hook
@@ -264,7 +266,7 @@ PAD_PS_BUTTON_0,Cross ✕
 PAD_PS_BUTTON_1,Circle ○
 PAD_PS_BUTTON_2,Square □
 PAD_PS_BUTTON_3,Triangle △
-PAD_PS_BUTTON_4,Share
+PAD_PS_BUTTON_4,Create
 PAD_PS_BUTTON_5,PS
 PAD_PS_BUTTON_6,Options
 PAD_PS_BUTTON_7,L3
@@ -277,7 +279,7 @@ PAD_PS_SHORT_0,✕
 PAD_PS_SHORT_1,○
 PAD_PS_SHORT_2,□
 PAD_PS_SHORT_3,△
-PAD_PS_SHORT_4,Share
+PAD_PS_SHORT_4,Create
 PAD_PS_SHORT_5,PS
 PAD_PS_SHORT_6,Options
 PAD_PS_SHORT_7,L3
@@ -442,6 +444,9 @@ ROOM_MIRE_DROWNED,Lantern Mire: Drowned Walk
 ROOM_MIRE_BRAZIERS,Lantern Mire: Hall of Braziers
 ROOM_MIRE_GRAVES,Lantern Mire: Grave Lamps
 ROOM_MIRE_OSSUARY,Lantern Mire: Ossuary
+ROOM_MIRE_LYCH_WALK,Lantern Mire: Lych Walk
+ROOM_MIRE_LANTERN_LOFT,Lantern Mire: Lantern Loft
+ROOM_MIRE_SUNKEN_CRYPT,Lantern Mire: Sunken Crypt
 ROOM_MIRE_BOSS,Lantern Mire: the Still Pool
 DUNGEON_MIRE,Lantern Mire
 TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!
@@ -462,6 +467,10 @@ ROOM_MIRELIGHT_EDGE,Mirelight Edge
 ROOM_GALE_ENTRY,Gale Spire
 ROOM_GALE_FANS,Gale Spire: Fan Hall
 ROOM_GALE_STORE,Gale Spire: Rope Store
+ROOM_GALE_LANTERN_SPAN,Gale Spire: Lantern Span
+ROOM_GALE_ROOST,Gale Spire: Weathercock Roost
+ROOM_GALE_BELL_CAGE,Gale Spire: Bell Cage
+ROOM_GALE_BELLROPE_WALK,Gale Spire: Bellrope Walk
 ROOM_GALE_SAIL_LOFT,Gale Spire: Sail Loft
 ROOM_GALE_GUSTS,Gale Spire: Gust Gallery
 ROOM_GALE_SHAFT,Gale Spire: Bell Shaft
@@ -480,11 +489,15 @@ CAPTION_STORM,Storm gathering
 CAPTION_HERON,Heron screeches
 ROOM_GLACIER_ENTRY,Hollow Glacier
 ROOM_GLACIER_POND,Hollow Glacier: Frozen Pond
+ROOM_GLACIER_RIME_VAULT,Hollow Glacier: Rime Vault
+ROOM_GLACIER_FROST_FORD,Hollow Glacier: Frost Ford
 ROOM_GLACIER_HALL,Hollow Glacier: Crevasse Hall
 ROOM_GLACIER_BOWYER,Hollow Glacier: Bowyer's Cave
 ROOM_GLACIER_POOL,Hollow Glacier: Black Pool
 ROOM_GLACIER_EYES,Hollow Glacier: Eye Gallery
 ROOM_GLACIER_SLIDE,Hollow Glacier: Slide Hall
+ROOM_GLACIER_SLUICE,Hollow Glacier: the Sluice
+ROOM_GLACIER_ICEFALL,Hollow Glacier: the Icefall
 ROOM_GLACIER_BOSS,Hollow Glacier: the Breathing Hall
 DUNGEON_GLACIER,Hollow Glacier
 TOAST_GOT_FROSTFANG_BOW,You found the Frostfang Bow!
@@ -504,6 +517,8 @@ ROOM_BELFRY_CISTERN,The Drowned Belfry: Cistern
 ROOM_BELFRY_VALVES,The Drowned Belfry: Valve Chamber
 ROOM_BELFRY_CHOIR,The Drowned Belfry: Sunken Choir
 ROOM_BELFRY_LOFT,The Drowned Belfry: Ringers' Loft
+ROOM_BELFRY_TOLLING_WELL,The Drowned Belfry: Tolling Well
+ROOM_BELFRY_DROWNED_NAVE,The Drowned Belfry: Drowned Nave
 ROOM_BELFRY_BOSS,The Drowned Belfry: the Great Bell
 DUNGEON_BELFRY,The Drowned Belfry
 TOAST_GOT_DIVERS_HELM,You found the Diver's Helm!
@@ -540,6 +555,21 @@ ROOM_EBB_GROTTO,Ebb Grotto
 ROOM_BONE_RING,The Bone Ring
 ROOM_GULLCRY_STACKS,Gullcry Stacks
 ROOM_LAMPLESS_SINK,The Lampless Sink
+ROOM_SMUGGLERS_CUT,Smugglers' Cut
+ROOM_RIMEFALL_STEPS,Rimefall Steps
+ROOM_ICEFALL_GROTTO,Icefall Grotto
+ROOM_WRECKERS_STAIR,Wreckers' Stair
+ROOM_WRECKERS_HOLD,Wreckers' Hold
+ROOM_SALTPAN_HOLLOW,Saltpan Hollow
+ROOM_CLINKER_VAULT,Clinker Vault
+ROOM_SAILWIND_GALLERY,Sailwind Gallery
+ROOM_ROOTBOUND_HOLLOW,Rootbound Hollow
+ROOM_SPORECAP_WARREN,Sporecap Warren
+ROOM_WHALEFALL_STEPS,Whalefall Steps
+ROOM_SINKWHORL_FLATS,Sinkwhorl Flats
+ROOM_KESTREL_REACH,Kestrel Reach
+ROOM_CREVASSE_SHELF,Crevasse Shelf
+ROOM_TIDEWRACK_STRAND,Tidewrack Strand
 ROOM_BLEACHED_STRAND,Bleached Strand
 ROOM_RIB_HOLLOW,Rib Hollow
 ROOM_SKULL_RISE,Skull Rise
@@ -685,6 +715,8 @@ ROOM_TOMB_CRYPT,The Marrow Tomb: Horn Crypt
 ROOM_TOMB_ECHO,The Marrow Tomb: Echo Chamber
 ROOM_TOMB_HIDDEN,The Marrow Tomb: Forgotten Ossuary
 ROOM_TOMB_PIT,The Marrow Tomb: Bone Pit
+ROOM_TOMB_SKULL_CHOIR,The Marrow Tomb: Skull Choir
+ROOM_TOMB_BONE_ORCHARD,The Marrow Tomb: Bone Orchard
 ROOM_TOMB_BOSS,The Marrow Tomb: the Regent's Barrow
 DUNGEON_TOMB,The Marrow Tomb
 TOAST_GOT_ECHO_HORN,You found the Echo Horn!
@@ -753,6 +785,7 @@ CAPTION_NOTE_REFLECT,Note rebounds
 CAPTION_SKITTER,Skittering
 CAPTION_BURROW,Something burrows
 CAPTION_BURR,Burr rolling
+CAPTION_HAWK,Hawk shrieks
 CAPTION_ENEMY_DIE,Enemy falls
 CAPTION_CHEST,Chest opens
 CAPTION_KEY,Key jingles
@@ -781,6 +814,8 @@ DACE_AGAIN,"Sit a while, if you like. The dead don't mind company."
 ROOM_BELFRY_UNDERCROFT,The Drowned Belfry: Undercroft
 ROOM_TOMB_OSSUARY,The Marrow Tomb: Ossuary
 ROOM_MAW_TIDEWELL,The Maw: Tidewell
+ROOM_MAW_LUNG,The Maw: the Lung
+ROOM_MAW_GULLET,The Maw: the Gullet
 TOAST_GOT_NACRE_BUCKLER,You found the Nacre Buckler!
 TOAST_GOT_ABYSSAL,You found the Abyssal Coat!
 TOAST_GOT_TIDECALLER_SWORD,You found the Tidecaller!

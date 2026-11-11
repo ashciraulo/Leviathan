@@ -9,7 +9,7 @@ signal quit_pressed
 const PANEL := Rect2(8, 22, 368, 128)
 const INFO_PANEL := Rect2(8, 152, 368, 44)
 const BUTTONS := ["MENU_RESUME", "MENU_QUIT_TO_TITLE"]
-const BUTTON_Y := 104
+const BUTTON_Y := 112
 
 var _cursor := 0
 var _confirm_quit := false
@@ -35,6 +35,10 @@ func handle_input(event: InputEvent) -> bool:
 			_confirm_quit = true
 		return true
 	return false
+
+
+func hint() -> String:
+	return tr("HINT_CHOOSE") % MenuKit.key_name("interact")
 
 
 func _draw() -> void:

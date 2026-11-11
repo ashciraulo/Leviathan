@@ -44,7 +44,11 @@ RATES = {
     "words_per_second": 3.0,  # reading dialogue
 }
 
-OVERWORLD_ENEMIES = set("csbmweqtgdA")
+OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
+# Puzzle pieces out in the overworld (side areas and challenges); letters
+# that mean a prop there (R, Z, L...) are left out. A run of veiled planks
+# counts as one piece.
+OVERWORLD_PUZZLE = set("=KOYjE|")
 DUNGEON_ENEMIES = set("csbmwekqxaMU@&+")
 DUNGEON_PUZZLE = set("=KOYizjvE<>RL|G%$Z")
 # Text that isn't dialogue (menus, names, captions, hints).
@@ -91,6 +95,9 @@ def estimate():
             cost += tiles.count("C") * RATES["chest"]
             cost += tiles.count("*") * RATES["sea_glass"]
             cost *= RATES["overworld_crossings"]
+            # Solved once, not on every crossing.
+            cost += sum(tiles.count(c) for c in OVERWORLD_PUZZLE) * RATES["puzzle_piece"]
+            cost += RATES["puzzle_piece"] if "v" in tiles else 0.0
         entry = areas.setdefault(area, {"time": 0.0, "rooms": 0})
         entry["time"] += cost * RATES["first_play"]
         entry["rooms"] += 1

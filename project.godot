@@ -7,11 +7,14 @@ config_version=5
 
 config/name="Leviathan"
 config/description="An original top-down action-adventure on the Shellcoast. Prototype build."
-config/version="0.1.0"
+config/version="0.2.0"
 run/main_scene="res://scenes/title.tscn"
 run/main_scene.perf="res://tests/web_perf.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.078, 0.063, 0.133, 1)
+boot_splash/image="res://assets/ui/boot_splash.png"
+boot_splash/use_filter=false
 
 [autoload]
 

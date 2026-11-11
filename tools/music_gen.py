@@ -313,6 +313,18 @@ TRACKS = {
     "miniboss": dict(root=62, mode="minor", tempo=140, prog="drive", lead="square", pad="organ", bars=8,
                      bass=True, bass_pattern=[0, 0, 4, 0], drums={"kick": [0, 2], "snare": [1, 3]},
                      lengths=[0.5, 1], rest=0.15),
+    # Cantor Vael sings against Wren: the Tomb's phrase over a slow, heavy
+    # waltz. The Dreaming Heart: the Hull's phrase (the lullaby's first
+    # line) half way through a driving last fight.
+    "boss_vael": dict(root=58, mode="phrygian", tempo=120, beats=3, prog="dark", lead="organ", pad="organ", bars=12,
+                      bass=True, bass_pattern=[0, 0, 4], drums={"kick": [0], "snare": [2]}, motif=6, rest=0.15),
+    "boss_heart": dict(root=62, mode="minor", tempo=138, prog="drive", lead="bell", pad="organ", bars=16,
+                       bass=True, bass_pattern=[0, 0, 0, 0, 4, 4, 0, 0],
+                       drums={"kick": [0, 2], "snare": [1, 3], "hat": [0.5, 1.5, 2.5, 3.5]},
+                       motif=0, motif_bar=8, lengths=[0.5, 0.5, 1], rest=0.1, drum_vol=0.5),
+    # The Wayshell's flight: light and lifting, the Hull's phrase high up.
+    "story_flight": dict(root=69, mode="lydian", tempo=104, beats=3, prog="wander", lead="flute", pad="pad",
+                         bass=True, bass_pattern=[0, None, 4], drums={"hat": [1, 2]}, motif=0, rest=0.3),
     "credits": dict(root=62, mode="major", tempo=84, beats=3, prog="calm", lead="flute", pad="pad", bars=24,
                     bass=True, bass_pattern=[0, None, 4], motif=6, motif_bar=12, rest=0.3),
 }

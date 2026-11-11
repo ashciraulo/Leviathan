@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Writes the web build's extra page code into export_presets.cfg.
 
-The browser page gets two things in its <head> (html/head_include of the
+The browser page gets three things in its <head> (html/head_include of the
 "Web" and "Web perf" presets), kept as plain files in web/ so they're easy to
 edit:
   web/file_notice.html  a notice when the page is opened from a folder
                         (file://), pointing at the hosted game
+  web/loading.html      the loading bar under the boot splash
   web/touch.html        on-screen controls for phones and tablets
 
     python3 tools/web_head.py           # update export_presets.cfg
@@ -16,7 +17,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PARTS = ["web/file_notice.html", "web/touch.html"]
+PARTS = ["web/file_notice.html", "web/loading.html", "web/touch.html"]
 PRESETS = ["Web", "Web perf"]
 
 

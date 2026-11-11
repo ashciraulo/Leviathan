@@ -12,6 +12,7 @@ extends Node2D
 ##          e  Slagbeetle (charger; flip it against a wall)   y  geyser
 ##          q  Sporecap (bursts spores when Wren is close)
 ##          t  Tumbleburr (rolls with the wind)   J  windmill
+##          0  Galehawk (circles high, stoops on Wren)
 ##          x  slick ice (Wren slides; regions with "ice" tiles)
 ##          g  Sledgeseal (rears, then slides at Wren)
 ##          r  tide flat (sand at low tide, water at high; see Tide)
@@ -204,6 +205,7 @@ const BIOMES := {
 		"water": "floe_sea_%d", "water_edge": "shelf_%s_%d", "damp": "drift_%s",
 		"wet_deco": "ice_shards_%d", "dry_deco": "frost_rock_%d",
 		"floor_overlay": ["snowfall_%d", 7], "ice": "slick_ice_%d", "door": "exit_glow",
+		"gap": "crevasse",
 	},
 	"sunken_verge": {
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
@@ -588,6 +590,8 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			node = Sporecap.new()
 		"t":
 			node = Tumbleburr.new()
+		"0":
+			node = Galehawk.new()
 		"g":
 			node = Sledgeseal.new()
 		"d":
@@ -895,6 +899,12 @@ func _draw_ground() -> void:
 				_draw_tile(tiles["boardwalk"] % ("v" if runs_vertical else "h"), x, y)
 			elif tile == "I" and _frozen.has(Vector2i(x, y)):
 				_draw_tile("floe_%d" % (h % 2), x, y)
+			elif tile == "v" and tiles.has("gap"):
+				# A veiled plank over a drop (the Spire's sky): the drop shows
+				# under it, and the plank only when the lantern finds it.
+				_draw_tile("%s_%d" % [tiles["gap"], 0], x, y)
+				if not _tile_at(x, y - 1) in ["_", "v"]:
+					_draw_tile(tiles["gap"] + "_lip", x, y)
 			elif tile == "~" or tile == "v" or tile == "Q":
 				# Deep water is the same deep green wherever it is (Wren's
 				# waterline is drawn to match it).

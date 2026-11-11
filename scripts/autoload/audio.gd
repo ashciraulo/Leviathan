@@ -125,6 +125,7 @@ const SFX := {
 	"skipper_burrow": {"wave": "noise", "f0": 1500.0, "f1": 300.0, "dur": 0.3, "vol": 0.25, "caption": "CAPTION_BURROW"},
 	"moth_flutter": {"wave": "noise", "f0": 1400.0, "f1": 900.0, "dur": 0.35, "vol": 0.2, "caption": "CAPTION_WINGS"},
 	"moth_flare": {"wave": "triangle", "f0": 600.0, "f1": 1500.0, "dur": 0.35, "vol": 0.3, "caption": "CAPTION_TELL"},
+	"hawk_shriek": {"wave": "saw", "f0": 2400.0, "f1": 1500.0, "dur": 0.35, "vol": 0.25, "caption": "CAPTION_HAWK"},
 	"burr_roll": {"wave": "noise", "f0": 1800.0, "f1": 1000.0, "dur": 0.4, "vol": 0.2, "caption": "CAPTION_BURR"},
 	"spitter_gulp": {"wave": "triangle", "f0": 200.0, "f1": 420.0, "dur": 0.3, "vol": 0.3, "caption": "CAPTION_GULP"},
 	# Bosses: a warning of their own before each big attack.

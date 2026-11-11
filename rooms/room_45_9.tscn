@@ -7,11 +7,12 @@ script = ExtResource("1_room")
 name_key = "ROOM_MAW_LANTERNS"
 biome = "maw"
 dungeon = "maw"
-chest_item = "big_key"
+chest_item = "glint"
+chest_count = 50
 gate = "braziers"
 chest_hidden = true
-layout = "########################
-#.............___......#
+layout = "#################..#####
+#.............___||....#
 #..j..........___...j..#
 #.............___......#
 #.............___......#

@@ -26,7 +26,10 @@ func _ready() -> void:
 
 
 func _think(delta: float) -> void:
-	if is_on_wall() or get_slide_collision_count() > 0:
+	# Overworld rooms have open edges with no wall to turn it: it turns at
+	# the screen's edge instead of skating off.
+	var ahead := position + _dir * 10.0
+	if is_on_wall() or get_slide_collision_count() > 0 or not Rect2(Vector2(8, 8), Room.SIZE - Vector2(16, 16)).has_point(ahead):
 		_turn()
 	_look -= delta
 	var wren := get_player()
@@ -46,7 +49,8 @@ func _turn() -> void:
 	# Off to one side, or back the way it came.
 	var options := [Vector2(_dir.y, _dir.x), Vector2(-_dir.y, -_dir.x), -_dir]
 	for d: Vector2 in options:
-		if not test_move(global_transform, d * 6.0):
+		var next := position + d * 10.0
+		if Rect2(Vector2(8, 8), Room.SIZE - Vector2(16, 16)).has_point(next) and not test_move(global_transform, d * 6.0):
 			_dir = d
 			return
 	_dir = -_dir

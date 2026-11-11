@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room.gd" id="1_room"]
+
+[node name="Room" type="Node2D"]
+script = ExtResource("1_room")
+name_key = "ROOM_SINKWHORL_FLATS"
+biome = "ossuary"
+chest_item = "glint"
+chest_count = 200
+layout = "###########..###########
+#########......#########
+#######.......##########
+#####....U....##########
+###...c.......##########
+##SSSSSSSSSSSSSSSSSSSS##
+#SSSSSSSSSSSSSSSSSSSSSS#
+#SS......SSSSS.......SS#
+#SS......SSSSS.O.C...SS#
+#SS....O.SSSSS.......SS#
+#SSSSSSSSSSSSSSSSSSSSSS#
+##SSSSSSSSSSSSSSSSSSSS##
+########################"

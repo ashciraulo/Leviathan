@@ -73,6 +73,67 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=thin_screens: the optional screens off the thinner regions.
+	if OS.get_environment("SHOTS_ONLY") == "thin_screens":
+		await _room_shots(game, {
+			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(20, 6)],
+			Vector2i(10, 0): ["thin_whalefall_steps", Vector2i(2, 6)],
+			Vector2i(10, 1): ["thin_sinkwhorl_flats", Vector2i(11, 2)],
+			Vector2i(7, -3): ["thin_kestrel_reach", Vector2i(2, 6)],
+			Vector2i(0, -3): ["thin_crevasse_way_in", Vector2i(16, 2)],
+			Vector2i(0, -4): ["thin_crevasse_shelf", Vector2i(17, 10)],
+			Vector2i(-1, 3): ["thin_tidewrack_strand", Vector2i(5, 4)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=regional_caves: the small caves off each region, and their ways in.
+	if OS.get_environment("SHOTS_ONLY") == "regional_caves":
+		GameState.give_item("frostfang_bow")
+		await _room_shots(game, {
+			Vector2i(0, 0): ["rcave_smugglers_way_in", Vector2i(4, 10)],
+			Vector2i(0, 1): ["rcave_smugglers_cut", Vector2i(4, 2)],
+			Vector2i(2, -3): ["rcave_rimefall_way_in", Vector2i(18, 3)],
+			Vector2i(2, -4): ["rcave_rimefall_steps", Vector2i(18, 10)],
+			Vector2i(1, -4): ["rcave_icefall_grotto", Vector2i(21, 6)],
+			Vector2i(2, 3): ["rcave_wreckers_way_in", Vector2i(18, 10)],
+			Vector2i(2, 4): ["rcave_wreckers_stair", Vector2i(17, 2)],
+			Vector2i(3, 4): ["rcave_wreckers_hold", Vector2i(1, 9)],
+			Vector2i(9, 1): ["rcave_saltpan_way_in", Vector2i(7, 9)],
+			Vector2i(9, 2): ["rcave_saltpan_hollow", Vector2i(7, 2)],
+			Vector2i(8, -3): ["rcave_clinker_way_in", Vector2i(11, 2)],
+			Vector2i(8, -4): ["rcave_clinker_vault", Vector2i(11, 10)],
+			Vector2i(6, -4): ["rcave_sailwind_way_in", Vector2i(12, 10)],
+			Vector2i(6, -3): ["rcave_sailwind_gallery", Vector2i(3, 7)],
+			Vector2i(3, -1): ["rcave_rootbound_way_in", Vector2i(2, 6)],
+			Vector2i(2, -1): ["rcave_rootbound_hollow", Vector2i(21, 6)],
+			Vector2i(6, 1): ["rcave_warren_way_in", Vector2i(8, 10)],
+			Vector2i(6, 2): ["rcave_sporecap_warren", Vector2i(8, 2)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=life: overworld critters, reeds, and the newer foes per region.
+	if OS.get_environment("SHOTS_ONLY") == "life":
+		await _room_shots(game, {
+			Vector2i(4, -3): ["life_windmere_galehawk", Vector2i(13, 4)],
+			Vector2i(5, -3): ["life_windmere_grass", Vector2i(6, 8)],
+			Vector2i(1, -2): ["life_frostspine_hares", Vector2i(12, 8)],
+			Vector2i(8, 1): ["life_ossuary_lizards", Vector2i(11, 10)],
+			Vector2i(8, -2): ["life_cinder_lizards", Vector2i(11, 11)],
+			Vector2i(3, 0): ["life_brinewood_reeds", Vector2i(7, 6)],
+			Vector2i(4, 1): ["life_gloamfen_reeds", Vector2i(11, 1)],
+			Vector2i(2, 2): ["life_verge_shellback", Vector2i(6, 6)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=challenges: the optional challenges, each with a Breath Pearl.
 	if OS.get_environment("SHOTS_ONLY") == "challenges":
 		for item in ["kite_cloak", "glowmoth_lantern", "frostfang_bow", "tide_hook"]:
@@ -823,6 +884,9 @@ func _mire_shots(game: Node) -> void:
 		[Vector2i(26, 8), "76_mire_brazier_hall", Vector2i(11, 10), true],
 		[Vector2i(26, 10), "77_mire_grave_lamps", Vector2i(11, 4), true],
 		[Vector2i(24, 8), "78_mire_ossuary", Vector2i(20, 7), true],
+		[Vector2i(24, 7), "78b_mire_lych_walk", Vector2i(11, 10), true],
+		[Vector2i(26, 7), "78c_mire_lantern_loft", Vector2i(19, 10), true],
+		[Vector2i(24, 10), "78d_mire_sunken_crypt", Vector2i(11, 2), true],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])
@@ -887,6 +951,10 @@ func _gale_shots(game: Node) -> void:
 		[Vector2i(28, 8), "95_gale_bell_shaft", Vector2i(11, 11)],
 		[Vector2i(29, 8), "96_gale_weathervane", Vector2i(2, 6)],
 		[Vector2i(27, 8), "97_gale_rookery", Vector2i(21, 6)],
+		[Vector2i(27, 7), "97b_gale_bell_cage", Vector2i(3, 10)],
+		[Vector2i(29, 10), "97c_gale_bellrope_walk", Vector2i(2, 6)],
+		[Vector2i(30, 9), "97d_gale_lantern_span", Vector2i(2, 3)],
+		[Vector2i(30, 8), "97e_gale_roost", Vector2i(20, 11)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])
@@ -967,6 +1035,8 @@ func _tomb_shots(game: Node) -> void:
 		[Vector2i(40, 8), "138_tomb_echo_chamber", Vector2i(11, 11)],
 		[Vector2i(39, 8), "139_tomb_forgotten_ossuary", Vector2i(21, 6)],
 		[Vector2i(41, 9), "140_tomb_bone_pit", Vector2i(3, 6)],
+		[Vector2i(41, 8), "140b_tomb_skull_choir", Vector2i(18, 11)],
+		[Vector2i(39, 10), "140c_tomb_bone_orchard", Vector2i(21, 6)],
 	]
 	for shot: Array in rooms:
 		var at := await _jump(game, shot[0], shot[2])
@@ -1059,6 +1129,8 @@ func _belfry_shots(game: Node) -> void:
 		[Vector2i(36, 8), "124_belfry_valve_chamber", Vector2i(11, 11)],
 		[Vector2i(35, 8), "125_belfry_choir", Vector2i(22, 6)],
 		[Vector2i(37, 8), "126_belfry_loft", Vector2i(1, 6)],
+		[Vector2i(38, 8), "126b_belfry_tolling_well", Vector2i(2, 6)],
+		[Vector2i(35, 10), "126c_belfry_drowned_nave", Vector2i(21, 6)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])
@@ -1141,6 +1213,10 @@ func _glacier_shots(game: Node) -> void:
 		[Vector2i(33, 9), "109_glacier_black_pool", Vector2i(1, 6)],
 		[Vector2i(32, 8), "110_glacier_eye_gallery", Vector2i(11, 11)],
 		[Vector2i(33, 8), "111_glacier_slide_hall", Vector2i(1, 7)],
+		[Vector2i(33, 7), "111b_glacier_rime_vault", Vector2i(18, 11)],
+		[Vector2i(33, 10), "111c_glacier_frost_ford", Vector2i(2, 6)],
+		[Vector2i(34, 9), "111d_glacier_sluice", Vector2i(2, 8)],
+		[Vector2i(31, 8), "111e_glacier_icefall", Vector2i(21, 6)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])
@@ -2451,6 +2527,8 @@ func _maw_shots(game: Node) -> void:
 		[Vector2i(43, 9), "150_maw_hollows", Vector2i(21, 6)],
 		[Vector2i(45, 9), "151_maw_dim_gallery", Vector2i(2, 6)],
 		[Vector2i(44, 8), "152_maw_veins", Vector2i(11, 11)],
+		[Vector2i(45, 8), "152b_maw_lung", Vector2i(17, 11)],
+		[Vector2i(43, 10), "152c_maw_gullet", Vector2i(21, 10)],
 	]
 	for shot: Array in rooms:
 		var at := await _jump(game, shot[0], shot[2])

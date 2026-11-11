@@ -31,7 +31,14 @@ func _ready() -> void:
 	# Title, then the file select with one new file, a copy, and an empty one.
 	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
 	add_child(title)
-	await _wait(1.6)
+	# Wait for the menu to finish surfacing: a button has focus then.
+	for i in 100:
+		if get_viewport().gui_get_focus_owner() != null:
+			break
+		await _wait(0.1)
+	if get_viewport().gui_get_focus_owner() == null:
+		push_warning("The title menu never took focus; shooting it anyway.")
+	await _wait(0.2)
 	await _capture("30_title_menu")
 	GameState.reset_new_game()
 	GameState.play_time = 760.0
@@ -114,8 +121,14 @@ func _ready() -> void:
 
 	# Out of breath: the game over screen.
 	await _wait(1.0)
+	# The jarred sea sprite would breathe Wren back to life, and the tunic
+	# soaks up a light hit: empty the jar and hit hard.
+	for i in GameState.jars.size():
+		if GameState.jars[i] == Items.JAR_SPRITE:
+			GameState.jars[i] = Items.JAR_EMPTY
 	GameState.bubbles = 1
-	game.player.take_damage(1, game.player.global_position + Vector2(10, 0))
+	game.player._invuln = 0.0
+	game.player.take_damage(4, game.player.global_position + Vector2(10, 0))
 	await _wait(3.0)
 	await _capture("43_game_over")
 	game.queue_free()
