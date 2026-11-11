@@ -1106,7 +1106,12 @@ func _test_play() -> void:
 	await _wait(Bogskipper.RISE_TIME * 0.5)
 	_check(bog.mode == Bogskipper.Mode.RISE, "Bogskipper rises when Wren comes close")
 	_check(bog.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a risen Bogskipper can be hit")
-	bog.queue_free()
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.HIT), "a blow that lands throws a spark")
+	bog.hp = 1
+	bog.take_hit(1, Vector2.RIGHT)
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
+	await _wait(0.5)
+	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
 	GameState.refill()
 
 	# Lanternmoth circles Wren, flares (its tell), then dives.
@@ -5251,6 +5256,86 @@ func _test_far_reaches() -> void:
 	await _wait(0.3)
 	_check(bars[0].is_open, "both braziers lit open the cache")
 	game.queue_free()
+	await _wait(0.1)
+	# Frostspine north: up from the Crevasse Shelf to Rimeglass Inlet, where
+	# hook posts span a crevasse both ways.
+	var shelf_rows := Room.parse_layout(((load("res://rooms/room_0_-4.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(shelf_rows[0].substr(4, 2) == "..", "the Crevasse Shelf opens north")
+	var hooks := {
+		Vector2i(0, -5): [[Vector2i(14, 6), Vector2.RIGHT, Vector2i(20, 6)], [Vector2i(20, 5), Vector2.LEFT, Vector2i(14, 5)]],
+		Vector2i(9, -3): [[Vector2i(15, 9), Vector2.UP, Vector2i(15, 3)], [Vector2i(14, 3), Vector2.DOWN, Vector2i(14, 9)]],
+	}
+	for coord: Vector2i in hooks:
+		GameState.reset_new_game()
+		GameState.give_item("tide_hook", 1, false)
+		var first: Vector2i = hooks[coord][0][0]
+		GameState.set_checkpoint(coord, Vector2(first.x * Room.TILE + 8, first.y * Room.TILE + 12))
+		game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.4)
+		player = game.player
+		player._invuln = 60.0
+		var room: Room = game.current_room
+		for foe in _child_of(room, Enemy):
+			foe.free()
+		before = GameState.bubbles
+		for throw: Array in hooks[coord]:
+			player.global_position = _tile_pos(room, throw[0])
+			player.facing = throw[1]
+			await _wait(0.1)
+			player.use_item("tide_hook")
+			await _wait(1.5)
+			at = player.global_position - room.global_position
+			var want: Vector2i = throw[2]
+			_check(int(at.x) / Room.TILE == want.x and int(at.y - 3) / Room.TILE == want.y and GameState.bubbles == before and game.current_room == room,
+				"%s: the hook carries Wren from %s to %s (at %s)" % [coord, throw[0], want, at])
+		game.queue_free()
+		await _wait(0.1)
+	# Hoarfrost Cairn: cracked boulders, then two ice eyes out in a lake. The
+	# first arrow freezes the water short of an eye, the next flies on to it.
+	GameState.reset_new_game()
+	GameState.give_item("frostfang_bow", 1, false)
+	GameState.set_checkpoint(Vector2i(1, -5), Vector2(9 * Room.TILE + 8, 2 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var cairn: Room = game.current_room
+	for foe in _child_of(cairn, Enemy):
+		foe.free()
+	eyes = _child_of(cairn, IceEye)
+	bars = _child_of(cairn, Bars)
+	_check(cairn.tile_at(6, 4) == "Y" and cairn.tile_at(6, 5) == "Y" and cairn.gate == "eyes" and eyes.size() == 2 and bars.size() == 2 and not bars[0].is_open, "Hoarfrost Cairn: boulders, two lake eyes and a barred cairn")
+	player.global_position = _tile_pos(cairn, Vector2i(9, 2))
+	player.facing = Vector2.DOWN
+	for i in 3:
+		await _wait(0.6)
+		player.use_item("frostfang_bow")
+	await _wait(1.0)
+	_check(eyes.any(func(e: IceEye) -> bool: return e.lit), "arrows freeze a way over the lake to the first eye")
+	for eye in eyes:
+		eye.arrow_hit(Vector2.UP)
+	await _wait(0.4)
+	_check(bars[0].is_open and bars[1].is_open and cairn.chest_item == "glint", "both eyes open the cairn")
+	game.queue_free()
+	await _wait(0.1)
+	# Cinder Crown: two crates onto two plates open the crown's cache.
+	_check(Room.parse_layout(((load("res://rooms/room_9_-2.tscn") as PackedScene).instantiate() as Room).layout)[0].substr(15, 2) == "..", "the Slag Fields open north to Brimstone Steps")
+	GameState.reset_new_game()
+	var crown: Room = (load("res://rooms/room_10_-3.tscn") as PackedScene).instantiate()
+	add_child(crown)
+	await _wait(0.2)
+	crates = _child_of(crown, Crate)
+	plates = _child_of(crown, PressurePlate)
+	bars = _child_of(crown, Bars)
+	rows = Room.parse_layout(crown.layout)
+	_check(crown.gate == "plates" and crates.size() == 2 and plates.size() == 2 and bars.size() == 2 and rows[6].substr(7, 10) == "=.K....K.=", "Cinder Crown: each crate two pushes from its plate")
+	for i in 2:
+		crates[i].position = Vector2(plates[i].tile.x * Room.TILE + 8, plates[i].tile.y * Room.TILE + 12)
+	await _wait(0.3)
+	_check(bars[0].is_open and bars[1].is_open, "both plates down open the crown's cache")
+	crown.queue_free()
 	await _wait(0.1)
 
 
