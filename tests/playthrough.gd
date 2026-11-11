@@ -254,7 +254,9 @@ func _interact_all(coord: Vector2i, stage := "after the ending") -> void:
 			_read_dialogue()
 			for shop in get_tree().get_nodes_in_group("shop_menu"):
 				shop.close()
-			if waited >= 0.15 and not DialogueBox.is_open and not Cutscene.active and not _game.busy \
+			# A chest tells of some items 0.6 s after it opens (Chest).
+			var settle := 0.8 if thing is Chest else 0.15
+			if waited >= settle and not DialogueBox.is_open and not Cutscene.active and not _game.busy \
 					and get_tree().get_nodes_in_group("shop_menu").is_empty():
 				break
 		_check(not DialogueBox.is_open, "%s: the conversation ends" % what)
