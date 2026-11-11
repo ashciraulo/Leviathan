@@ -100,6 +100,8 @@ SECRETS = {
     # Far reaches, past each region's edge (2026-11-11).
     (4, -5): ("glowmoth_lantern",),           # Edgewatch Bluff: bars until both braziers burn (one over a crevasse)
     (1, -5): ("stonebreaker", "frostfang_bow"),  # Hoarfrost Cairn: boulders, then bars until both lake eyes are shot
+    (7, 3): ("glowmoth_lantern", "kite_cloak", "frostfang_bow"),  # the Calf's Rest: glints on a fen islet
+    (0, 5): ("tide_hook", "kite_cloak", "frostfang_bow"),  # Lee of the Old One: glints on a reef islet with a hook post
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
