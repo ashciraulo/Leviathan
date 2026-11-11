@@ -4508,6 +4508,38 @@ func _test_thin_region_screens() -> void:
 	_check(GameState.bubbles == before, "all without a fall")
 	game.queue_free()
 	await _wait(0.1)
+	# Crevasse Shelf: from the ice the hook crosses a crevasse, too wide to
+	# glide, to a snowy shelf with a chest, and a post on the ice brings Wren back.
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(Vector2i(0, -4), Vector2(3 * Room.TILE + 8, 9 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var shelf: Room = game.current_room
+	for foe in _child_of(shelf, Enemy):
+		foe.free()
+	ends.clear()
+	for throw: Array in [[Vector2i(3, 9), Vector2.UP], [Vector2i(5, 3), Vector2.DOWN]]:
+		player.global_position = _tile_pos(shelf, throw[0])
+		player.facing = throw[1]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.3)
+		ends.append(player.global_position - shelf.global_position)
+	_check(shelf.coord == Vector2i(0, -4) and shelf.tile_at(3, 6) == "_" and Room.BIOMES["frostspine"].get("gap") == "crevasse", "the Crevasse Shelf is cut off by a crevasse")
+	_check(int(ends[0].y) / Room.TILE == 3 and int(ends[1].y) / Room.TILE == 9, "the hook pulls Wren up onto the shelf and back down to the ice (at %s, %s)" % ends)
+	game.queue_free()
+	await _wait(0.1)
+	# Tidewrack Strand: a long tide flat out west of the Verge to a wreck.
+	var strand: Room = (load("res://rooms/room_-1_3.tscn") as PackedScene).instantiate()
+	add_child(strand)
+	await _wait(0.1)
+	_check(strand.get_node_or_null("Tide") != null and strand.layout.count("r") > 40 and strand.chest_item == "glint", "Tidewrack Strand is a tide flat with a chest on the wreck's islet")
+	strand.queue_free()
+	await _wait(0.1)
 	# Whalefall Steps: cracked boulders shut the way down to the basin.
 	var steps: Room = (load("res://rooms/room_10_0.tscn") as PackedScene).instantiate()
 	var rows := Room.parse_layout(steps.layout)

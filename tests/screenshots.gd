@@ -80,6 +80,9 @@ func _ready() -> void:
 			Vector2i(10, 0): ["thin_whalefall_steps", Vector2i(2, 6)],
 			Vector2i(10, 1): ["thin_sinkwhorl_flats", Vector2i(11, 2)],
 			Vector2i(7, -3): ["thin_kestrel_reach", Vector2i(2, 6)],
+			Vector2i(0, -3): ["thin_crevasse_way_in", Vector2i(16, 2)],
+			Vector2i(0, -4): ["thin_crevasse_shelf", Vector2i(17, 10)],
+			Vector2i(-1, 3): ["thin_tidewrack_strand", Vector2i(21, 5)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")

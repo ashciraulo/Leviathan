@@ -205,6 +205,7 @@ const BIOMES := {
 		"water": "floe_sea_%d", "water_edge": "shelf_%s_%d", "damp": "drift_%s",
 		"wet_deco": "ice_shards_%d", "dry_deco": "frost_rock_%d",
 		"floor_overlay": ["snowfall_%d", 7], "ice": "slick_ice_%d", "door": "exit_glow",
+		"gap": "crevasse",
 	},
 	"sunken_verge": {
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
