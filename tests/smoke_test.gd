@@ -5552,6 +5552,8 @@ func _test_wick() -> void:
 	game.player.try_interact()
 	pages = await _play_scene(game, 10.0)
 	_check(GameState.has_flag("wick_gave_jar") and GameState.item_count("jar") == jars + 1, "Wick gives Wren a jar")
+	_check(Conversations.branch_for("wick").get("lines")[0] == "WICK_SINK_1", "then wonders about the Lampless Sink")
+	GameState.set_flag("wick_told_sink")
 	_check(Conversations.branch_for("wick").get("lines") == ["WICK_AFTER"], "and is glad of every light")
 	GameState.set_flag("seen_ending")
 	_check(Conversations.branch_for("wick").get("lines")[0] == "WICK_END", "after the ending they counted the strange lights leaving")
