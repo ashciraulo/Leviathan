@@ -284,7 +284,14 @@ const TALKS := {
 		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
 		# The last singers: four of the Choir who never went home.
 		{"if": ["lowe_singers_ask", "bram_home", "sela_home", "pim_home", "ansel_home"], "unless": ["lowe_singers_done"], "set": ["lowe_singers_done"], "give": {"glint": 300}, "lines": ["LOWE_SINGERS_DONE_1", "LOWE_SINGERS_DONE_2", ["", "NARRATE_LOWE_ROBE"], "LOWE_SINGERS_DONE_3", ["", "NARRATE_GOT_CHOIR_PURSE"]]},
-		{"if": ["lowe_singers_done"], "lines": ["LOWE_JUST_LOWE"]},
+		# A garden at Lullaby Point: three stubborn plants (QuestFind).
+		{"if": ["lowe_garden_ask", "found_seed_frost", "found_seed_ember", "found_seed_fen"], "unless": ["lowe_garden_done"], "set": ["lowe_garden_done"], "give": {"glint": 120}, "lines": [["", "NARRATE_HAND_SEEDS"], "LOWE_GARDEN_DONE_1", ["", "NARRATE_LOWE_PLANTS"], "LOWE_GARDEN_DONE_2", ["", "NARRATE_GOT_GARDEN_PURSE"]]},
+		# All three found before she asked.
+		{"if": ["lowe_singers_done", "found_seed_frost", "found_seed_ember", "found_seed_fen"], "unless": ["lowe_garden_ask"], "set": ["lowe_garden_ask", "lowe_garden_done"], "give": {"glint": 120}, "lines": [["", "NARRATE_HAND_SEEDS"], "LOWE_GARDEN_EARLY", "LOWE_GARDEN_1B", ["", "NARRATE_LOWE_PLANTS"], "LOWE_GARDEN_DONE_2", ["", "NARRATE_GOT_GARDEN_PURSE"]]},
+		{"if": ["lowe_singers_done", "lowe_just_said"], "unless": ["lowe_garden_ask"], "set": ["lowe_garden_ask"], "lines": ["LOWE_GARDEN_1", "LOWE_GARDEN_1B", "LOWE_GARDEN_2", "LOWE_GARDEN_2B"]},
+		{"if": ["lowe_garden_ask"], "unless": ["lowe_garden_done"], "lines": ["LOWE_GARDEN_WAITING"]},
+		{"if": ["lowe_garden_done"], "unless": ["lowe_garden_after"], "set": ["lowe_garden_after"], "lines": ["LOWE_GARDEN_AFTER"]},
+		{"if": ["lowe_singers_done"], "set": ["lowe_just_said"], "lines": ["LOWE_JUST_LOWE"]},
 		{"if": ["lowe_singers_ask"], "lines": ["LOWE_SINGERS_WAITING"]},
 		{"set": ["lowe_singers_ask"], "lines": ["LOWE_SINGERS_1", "LOWE_SINGERS_1B", "LOWE_SINGERS_2", "LOWE_SINGERS_2B"]},
 	],
@@ -372,6 +379,13 @@ const TALKS := {
 	# Gully on Wreck Strand, and his strongbox out in the pool (a Strongbox,
 	# hauled in with the Tide Hook).
 	"gully": [
+		# The Lantern Wake's three ship's lanterns (QuestFind), hung back on her.
+		{"if": ["gully_lanterns_ask", "found_lantern_tidewrack", "found_lantern_dunes", "found_lantern_cove"], "unless": ["gully_lanterns_done"], "set": ["gully_lanterns_done"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_LANTERNS"], "GULLY_LANTERNS_DONE_1", ["", "NARRATE_GULLY_HANGS"], "GULLY_LANTERNS_DONE_2", ["", "NARRATE_GOT_LANTERN_PURSE"]]},
+		# All three found before he asked.
+		{"if": ["gully_paid", "found_lantern_tidewrack", "found_lantern_dunes", "found_lantern_cove"], "unless": ["gully_lanterns_ask"], "set": ["gully_lanterns_ask", "gully_lanterns_done"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_LANTERNS"], "GULLY_LANTERNS_EARLY", "GULLY_LANTERNS_2", ["", "NARRATE_GULLY_HANGS"], "GULLY_LANTERNS_DONE_2", ["", "NARRATE_GOT_LANTERN_PURSE"]]},
+		{"if": ["gully_paid", "seen_wayshell"], "unless": ["gully_lanterns_ask"], "set": ["gully_lanterns_ask"], "lines": ["GULLY_LANTERNS_1", "GULLY_LANTERNS_1B", "GULLY_LANTERNS_2"]},
+		{"if": ["gully_lanterns_ask"], "unless": ["gully_lanterns_done"], "lines": ["GULLY_LANTERNS_WAITING"]},
+		{"if": ["gully_lanterns_done"], "unless": ["gully_lanterns_after"], "set": ["gully_lanterns_after"], "lines": ["GULLY_LANTERNS_AFTER"]},
 		{"if": ["gully_paid", "seen_ending"], "lines": ["GULLY_END"]},
 		{"if": ["gully_paid", "old_one_turned"], "lines": ["GULLY_TURNED"]},
 		{"if": ["gully_paid"], "lines": ["GULLY_AFTER", "GULLY_AFTER_2"]},
@@ -444,6 +458,12 @@ const TALKS := {
 	"find_pearl_verge": [{"set": ["found_pearl_verge"], "lines": ["NARRATE_FOUND_OYSTER"]}],
 	"find_pearl_tangle": [{"set": ["found_pearl_tangle"], "lines": ["NARRATE_FOUND_OYSTER"]}],
 	"find_pearl_deep": [{"set": ["found_pearl_deep"], "lines": ["NARRATE_FOUND_OYSTER"]}],
+	"find_lantern_tidewrack": [{"set": ["found_lantern_tidewrack"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
+	"find_lantern_dunes": [{"set": ["found_lantern_dunes"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
+	"find_lantern_cove": [{"set": ["found_lantern_cove"], "lines": ["NARRATE_FOUND_SHIP_LANTERN"]}],
+	"find_seed_frost": [{"set": ["found_seed_frost"], "lines": ["NARRATE_FOUND_SEED_FROST"]}],
+	"find_seed_ember": [{"set": ["found_seed_ember"], "lines": ["NARRATE_FOUND_SEED_EMBER"]}],
+	"find_seed_fen": [{"set": ["found_seed_fen"], "lines": ["NARRATE_FOUND_SEED_FEN"]}],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur

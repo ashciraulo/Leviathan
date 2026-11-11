@@ -7719,6 +7719,36 @@ func _test_small_finds() -> void:
 	_check(GameState.item_count("glint") == glints + 180 and first.call("marlo") == "MARLO_PEARLS_AFTER", "pearls for Marlo's mum")
 	Conversations.talk("marlo")
 	_check(first.call("marlo") == "MARLO_AGAIN", "once")
+	# Gully's lanterns, once his strongbox is home and Wren has the Wayshell.
+	for flag in ["gully_asked", "gully_box_hauled", "gully_paid", "seen_wayshell"]:
+		GameState.set_flag(flag)
+	_check(first.call("gully") == "GULLY_LANTERNS_1", "Gully asks after the Lantern Wake's lanterns")
+	Conversations.talk("gully")
+	for id in ["lantern_tidewrack", "lantern_dunes"]:
+		GameState.set_flag(QuestFind.flag_for(id))
+	_check(first.call("gully") == "GULLY_LANTERNS_WAITING", "two lanterns aren't three")
+	GameState.set_flag(QuestFind.flag_for("lantern_cove"))
+	glints = GameState.item_count("glint")
+	Conversations.talk("gully")
+	_check(GameState.item_count("glint") == glints + 150 and first.call("gully") == "GULLY_LANTERNS_AFTER", "the Lantern Wake is lit again")
+	Conversations.talk("gully")
+	_check(first.call("gully") == "GULLY_AFTER", "once")
+	# Lowe's garden, after the singers are home and she's just Lowe.
+	for flag in ["lowe_spoke", "lowe_singers_ask", "lowe_singers_done"]:
+		GameState.set_flag(flag)
+	_check(first.call("lowe") == "LOWE_JUST_LOWE", "Lowe is just Lowe first")
+	Conversations.talk("lowe")
+	_check(first.call("lowe") == "LOWE_GARDEN_1", "then wants a garden")
+	Conversations.talk("lowe")
+	for id in ["seed_frost", "seed_ember"]:
+		GameState.set_flag(QuestFind.flag_for(id))
+	_check(first.call("lowe") == "LOWE_GARDEN_WAITING", "two plants aren't three")
+	GameState.set_flag(QuestFind.flag_for("seed_fen"))
+	glints = GameState.item_count("glint")
+	Conversations.talk("lowe")
+	_check(GameState.item_count("glint") == glints + 120 and first.call("lowe") == "LOWE_GARDEN_AFTER", "Lowe plants her garden")
+	Conversations.talk("lowe")
+	_check(first.call("lowe") == "LOWE_JUST_LOWE", "once")
 	# Ide's nameboard: asked on the third talk, and every talk still rows.
 	for flag in ["tidebell_belfry", "met_ide_ferry"]:
 		GameState.set_flag(flag)
@@ -7740,11 +7770,11 @@ func _test_small_finds() -> void:
 	_check(first.call("ide") == "IDE_BOARD_1", "after the ending Ide still asks after her nameboard")
 	# Found before anyone asked: the hand-in comes straight away.
 	GameState.reset_new_game()
-	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "tidebell_belfry", "met_ide_ferry", "found_nameboard", "met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"]:
+	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "tidebell_belfry", "met_ide_ferry", "found_nameboard", "met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep", "gully_paid", "found_lantern_tidewrack", "found_lantern_dunes", "found_lantern_cove", "lowe_spoke", "lowe_singers_done", "found_seed_frost", "found_seed_ember", "found_seed_fen"]:
 		GameState.set_flag(flag)
-	for who in ["corrin", "dunstan", "bram", "ide", "marlo"]:
+	for who in ["corrin", "dunstan", "bram", "ide", "marlo", "gully", "lowe"]:
 		Conversations.talk(who)
-	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done") and GameState.has_flag("bram_pot_cast") and GameState.has_flag("ide_board_done") and GameState.has_flag("marlo_pearls_done"), "things found early are handed straight in")
+	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done") and GameState.has_flag("bram_pot_cast") and GameState.has_flag("ide_board_done") and GameState.has_flag("marlo_pearls_done") and GameState.has_flag("gully_lanterns_done") and GameState.has_flag("lowe_garden_done"), "things found early are handed straight in")
 	GameState.reset_new_game()
 
 

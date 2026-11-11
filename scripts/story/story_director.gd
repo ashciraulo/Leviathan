@@ -162,8 +162,8 @@ const SIGNAL_STONES := {
 }
 ## Small things for villagers' errands ({id: [room, tile]}, QuestFind):
 ## Corrin's grandad's bottles, Pell's lucky shell, Dunstan's driftwood,
-## the Choir's chimes for Bram, deep-bed pearls for Marlo and the nameboard
-## off Ide's boat.
+## the Choir's chimes for Bram, deep-bed pearls for Marlo, the nameboard
+## off Ide's boat, the Lantern Wake's lanterns for Gully and Lowe's plants.
 const FINDS := {
 	"bottle_shore": [Vector2i(0, 0), Vector2i(20, 2)],
 	"bottle_pools": [Vector2i(1, 0), Vector2i(10, 8)],
@@ -179,6 +179,14 @@ const FINDS := {
 	"pearl_tangle": [Vector2i(6, 0), Vector2i(20, 8)],
 	"pearl_verge": [Vector2i(1, 5), Vector2i(20, 5)],
 	"pearl_deep": [Vector2i(6, -5), Vector2i(10, 8)],
+	# Gully's errand: the Lantern Wake's three ship's lanterns.
+	"lantern_tidewrack": [Vector2i(-1, 3), Vector2i(3, 3)],
+	"lantern_dunes": [Vector2i(7, 0), Vector2i(3, 2)],
+	"lantern_cove": [Vector2i(0, -2), Vector2i(20, 7)],
+	# Lowe's errand: three stubborn plants for a garden at Lullaby Point.
+	"seed_frost": [Vector2i(2, -4), Vector2i(11, 2)],
+	"seed_ember": [Vector2i(10, -2), Vector2i(4, 2)],
+	"seed_fen": [Vector2i(4, 1), Vector2i(21, 2)],
 	# Ide's errand: her boat's nameboard, torn off by the bad water and
 	# carried right round to the far side of the dunes.
 	"nameboard": [Vector2i(7, 0), Vector2i(20, 6)],
