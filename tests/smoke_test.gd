@@ -7654,7 +7654,8 @@ func _test_puzzle_caves() -> void:
 	game.queue_free()
 	await _wait(0.1)
 	# Drybone Crypt, east of Whalefall Steps: a closed hall whose way on is a
-	# bone wall that looks like any other until the Echo Horn finds it.
+	# bone wall that looks like any other (bar a crack and a breath of dust)
+	# until the Echo Horn finds it.
 	var steps_rows := Room.parse_layout(((load("res://rooms/room_10_0.tscn") as PackedScene).instantiate() as Room).layout)
 	_check(steps_rows[6][23] == "." and steps_rows[7][23] == ".", "Whalefall Steps opens east to Drybone Crypt")
 	GameState.reset_new_game()
@@ -7668,12 +7669,12 @@ func _test_puzzle_caves() -> void:
 	var crypt: Room = game.current_room
 	for foe in _child_of(crypt, Enemy):
 		foe.free()
-	_check(crypt.cave and _child_of(crypt, BoneWall).size() == 4 and crypt.tile_at(10, 6) == "#" and _child_of(crypt, SinkField).size() == 1, "Drybone Crypt: a closed hall, four hidden bone walls")
-	player.global_position = _tile_pos(crypt, Vector2i(9, 6))
-	player.facing = Vector2.RIGHT
+	_check(crypt.cave and _child_of(crypt, BoneWall).size() == 1 and crypt.tile_at(7, 4) == "#" and _child_of(crypt, SinkField).size() == 1, "Drybone Crypt: a closed hall with one hidden bone wall")
+	player.global_position = _tile_pos(crypt, Vector2i(7, 6))
+	player.facing = Vector2.UP
 	await _wait(0.3)
 	player.use_item("echo_horn")
 	await _wait(0.8)
-	_check(crypt.tile_at(10, 6) == "." and crypt.tile_at(10, 7) == "." and crypt.tile_at(4, 4) == "#", "the horn opens the hidden way east, and only the walls near it")
+	_check(crypt.tile_at(7, 4) == "." and _child_of(crypt, BoneWall).is_empty(), "the horn opens the hidden way north")
 	game.queue_free()
 	await _wait(0.1)
