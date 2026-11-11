@@ -1,0 +1,44 @@
+{
+ "cue": "region_sunken_verge",
+ "qbpm": 88.0,
+ "bar_q": 5,
+ "bars": 32,
+ "intro_q": 0,
+ "end_q": 160,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 109.0909090909091,
+ "loop": true,
+ "parts": [
+  {
+   "name": "clarinet_low",
+   "notes": 56,
+   "low": 65,
+   "high": 78
+  },
+  {
+   "name": "harp",
+   "notes": 160,
+   "low": 39,
+   "high": 66
+  },
+  {
+   "name": "pluck_drop",
+   "notes": 24,
+   "low": 75,
+   "high": 85
+  },
+  {
+   "name": "bass_upright",
+   "notes": 64,
+   "low": 39,
+   "high": 51
+  },
+  {
+   "name": "pad_soft",
+   "notes": 24,
+   "low": 53,
+   "high": 63
+  }
+ ]
+}

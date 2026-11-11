@@ -1,0 +1,38 @@
+{
+ "cue": "place_shop",
+ "qbpm": 112.0,
+ "bar_q": 4,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 96,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 51.42857142857143,
+ "loop": true,
+ "parts": [
+  {
+   "name": "marimba",
+   "notes": 336,
+   "low": 53,
+   "high": 67
+  },
+  {
+   "name": "bass_upright",
+   "notes": 96,
+   "low": 34,
+   "high": 53
+  },
+  {
+   "name": "drum_brush",
+   "notes": 72,
+   "low": 38,
+   "high": 38
+  },
+  {
+   "name": "clarinet",
+   "notes": 72,
+   "low": 65,
+   "high": 82
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "cue": "miniboss",
+ "qbpm": 152.0,
+ "bar_q": 4,
+ "bars": 16,
+ "intro_q": 0,
+ "end_q": 64,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 25.263157894736842,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_staccato",
+   "notes": 128,
+   "low": 38,
+   "high": 60
+  },
+  {
+   "name": "drum_toms",
+   "notes": 96,
+   "low": 45,
+   "high": 50
+  },
+  {
+   "name": "brass_stab",
+   "notes": 48,
+   "low": 46,
+   "high": 67
+  }
+ ]
+}

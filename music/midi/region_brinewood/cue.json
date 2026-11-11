@@ -1,0 +1,50 @@
+{
+ "cue": "region_brinewood",
+ "qbpm": 100.0,
+ "bar_q": 4,
+ "bars": 56,
+ "intro_q": 0,
+ "end_q": 224,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 134.4,
+ "loop": true,
+ "parts": [
+  {
+   "name": "marimba",
+   "notes": 216,
+   "low": 57,
+   "high": 78
+  },
+  {
+   "name": "kalimba",
+   "notes": 40,
+   "low": 69,
+   "high": 84
+  },
+  {
+   "name": "flute_wood",
+   "notes": 36,
+   "low": 66,
+   "high": 83
+  },
+  {
+   "name": "drum_hand",
+   "notes": 228,
+   "low": 41,
+   "high": 52
+  },
+  {
+   "name": "bass_fretless",
+   "notes": 150,
+   "low": 33,
+   "high": 52
+  },
+  {
+   "name": "pad_warm",
+   "notes": 48,
+   "low": 52,
+   "high": 62
+  }
+ ]
+}

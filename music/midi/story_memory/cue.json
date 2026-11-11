@@ -1,0 +1,44 @@
+{
+ "cue": "story_memory",
+ "qbpm": 54.0,
+ "bar_q": 3,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 72,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 80.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "pad_warm",
+   "notes": 36,
+   "low": 51,
+   "high": 61
+  },
+  {
+   "name": "celesta",
+   "notes": 19,
+   "low": 77,
+   "high": 84
+  },
+  {
+   "name": "choir_soft",
+   "notes": 32,
+   "low": 56,
+   "high": 63
+  },
+  {
+   "name": "bell_distant",
+   "notes": 3,
+   "low": 73,
+   "high": 77
+  },
+  {
+   "name": "sub_swell",
+   "notes": 12,
+   "low": 25,
+   "high": 34
+  }
+ ]
+}

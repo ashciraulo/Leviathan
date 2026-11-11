@@ -1,0 +1,38 @@
+{
+ "cue": "region_frostspine",
+ "qbpm": 60.0,
+ "bar_q": 4,
+ "bars": 32,
+ "intro_q": 0,
+ "end_q": 128,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 128.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "epiano_glass",
+   "notes": 41,
+   "low": 66,
+   "high": 81
+  },
+  {
+   "name": "choir_pad",
+   "notes": 48,
+   "low": 50,
+   "high": 61
+  },
+  {
+   "name": "bass_bowed",
+   "notes": 16,
+   "low": 30,
+   "high": 40
+  },
+  {
+   "name": "bell_sparse",
+   "notes": 6,
+   "low": 78,
+   "high": 80
+  }
+ ]
+}

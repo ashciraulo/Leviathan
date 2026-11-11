@@ -1,0 +1,38 @@
+{
+ "cue": "dungeon_mire",
+ "qbpm": 76.0,
+ "bar_q": 3,
+ "bars": 40,
+ "intro_q": 0,
+ "end_q": 120,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 94.73684210526316,
+ "loop": true,
+ "parts": [
+  {
+   "name": "bell_glass",
+   "notes": 53,
+   "low": 68,
+   "high": 83
+  },
+  {
+   "name": "drone_low",
+   "notes": 20,
+   "low": 37,
+   "high": 47
+  },
+  {
+   "name": "choir_dark",
+   "notes": 72,
+   "low": 52,
+   "high": 63
+  },
+  {
+   "name": "harp",
+   "notes": 64,
+   "low": 49,
+   "high": 64
+  }
+ ]
+}

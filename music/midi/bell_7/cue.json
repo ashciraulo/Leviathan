@@ -1,0 +1,20 @@
+{
+ "cue": "bell_7",
+ "qbpm": 80.0,
+ "bar_q": 3,
+ "bars": 3,
+ "intro_q": 0,
+ "end_q": 9,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 6.75,
+ "loop": false,
+ "parts": [
+  {
+   "name": "bell_marrow",
+   "notes": 4,
+   "low": 62,
+   "high": 69
+  }
+ ]
+}

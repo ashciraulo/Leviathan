@@ -1,0 +1,50 @@
+{
+ "cue": "title",
+ "qbpm": 66.0,
+ "bar_q": 3,
+ "bars": 36,
+ "intro_q": 12,
+ "end_q": 108,
+ "ppq": 96,
+ "intro_s": 10.909090909090908,
+ "loop_end_s": 98.18181818181819,
+ "loop": true,
+ "parts": [
+  {
+   "name": "bell_tower",
+   "notes": 5,
+   "low": 50,
+   "high": 57
+  },
+  {
+   "name": "harp",
+   "notes": 144,
+   "low": 38,
+   "high": 65
+  },
+  {
+   "name": "strings_low",
+   "notes": 96,
+   "low": 38,
+   "high": 49
+  },
+  {
+   "name": "choir_pad",
+   "notes": 32,
+   "low": 55,
+   "high": 62
+  },
+  {
+   "name": "sub_breath",
+   "notes": 8,
+   "low": 26,
+   "high": 26
+  },
+  {
+   "name": "flute",
+   "notes": 28,
+   "low": 64,
+   "high": 81
+  }
+ ]
+}
