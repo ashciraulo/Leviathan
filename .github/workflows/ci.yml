@@ -62,9 +62,9 @@ jobs:
       - name: Run smoke test
         run: |
           set +e
-          # The whole suite runs 6-10 minutes and grows with every room and
-          # scene, so it gets 15.
-          timeout 900 "$RUNNER_TEMP/godot" --headless --path . res://tests/smoke_test.tscn 2>&1 | tee test.log
+          # The whole suite runs 8-13 minutes and grows with every room and
+          # scene, so it gets 20.
+          timeout 1200 "$RUNNER_TEMP/godot" --headless --path . res://tests/smoke_test.tscn 2>&1 | tee test.log
           status=${PIPESTATUS[0]}
           set -e
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" test.log; then

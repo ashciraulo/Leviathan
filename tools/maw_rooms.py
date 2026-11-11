@@ -16,9 +16,13 @@ The way through:
   glide across the gap; small key) -> east to the Dim Gallery (light the four
   braziers, crossing the veiled planks by lantern light) -> its bars open
   north onto the Lung (crate onto the plate between breaths, then a dive
-  under the grates; big key) -> the
-  Palate's north hatch into the Veins (compass) -> the great door -> the
-  Choir Loft, Cantor Vael -> the Dreaming Heart.
+  under the grates; small key) -> the Palate's north hatch into the Veins
+  (compass) -> its west hatch into the Sinus (an ice eye and two skulls
+  woken together: bow, then hook or glide to the island, then horn) ->
+  north to the Cochlea (crates dragged by hook across the pool between
+  breaths, pushed through a bone wall the horn finds onto two plates; big
+  key) -> back to the Veins' great door -> the Choir Loft, Cantor Vael ->
+  the Dreaming Heart.
 """
 
 import os
@@ -116,7 +120,7 @@ ROOMS = {
     # grates, past bars that open on a plate. The crate only crosses the
     # palate floor while the Old One breathes out (risen water stops it
     # dead), so Wren pushes between breaths; then a dive under the grates.
-    (45, 8): ("ROOM_MAW_LUNG", {"chest_item": '"big_key"', "gate": '"plates"'}, """
+    (45, 8): ("ROOM_MAW_LUNG", {"chest_item": '"small_key"', "gate": '"plates"'}, """
 ########################
 #.....,,,,,,,,,#,,,,,,,#
 #.....,,,,,,,,,#,LLLLL,#
@@ -147,6 +151,43 @@ ROOMS = {
 #,,,,,,,+,,,,Y..........
 #,,,,,,,,,,,,#..........
 ########################"""),
+    # West of the Veins, through their west hatch: the Sinus. An island
+    # in a drop between two shores; an ice eye on the east shore and two
+    # skulls in the drop must all wake at once. Only the east shore sees
+    # the eye and only the island hears both skulls, so Wren shoots, crosses
+    # (hook or glide) and blows the horn before the eye shuts.
+    (43, 8): ("ROOM_MAW_SINUS", {"chest_item": '"glint"', "chest_count": "50", "gate": '"eyes"'}, """
+##..####################
+#..._____________......#
+#...______Z______..E...#
+#|||_____________......#
+#...____.....____......#
+#...____.....____......#
+#.O.____...O.____......#
+#...____.....____.......
+#.x.____.....____.......
+#..._____________......#
+#.C.______Z______..x...#
+#..._____________......#
+########################"""),
+    # Above the Sinus, the Cochlea: two crates sit in nooks above a palate
+    # pool. Wren drags each across by hook while the Old One breathes out
+    # (risen water stops a drag), then pushes them east through a bone wall
+    # the horn finds, onto two plates; the big key lies behind the bars.
+    (43, 7): ("ROOM_MAW_COCHLEA", {"chest_item": '"big_key"', "gate": '"plates"'}, """
+########################
+############K#K#########
+###########,,,,,########
+###########+,,,,########
+###########,,,,,########
+###########,,,,,########
+#.......___......$==####
+#.......___......#######
+#.......___........#####
+#.......___........|C###
+#.......___........#####
+#.......___.....x..#####
+##..####################"""),
     (44, 8): ("ROOM_MAW_GALLERY", {"chest_item": '"compass"'}, """
 ###########GG###########
 #......................#
@@ -155,8 +196,8 @@ ROOMS = {
 #,,,,,,,,,,,,,,,,,,,,,,#
 #,,,,,,,,,,,,,,,,+,,,,,#
 #,,,,,,,,,,,,,,,,,,,,,,#
-#......M...............#
-#..............U.......#
+X......M...............#
+X..............U.......#
 #..##..............##..#
 #..##..............##..#
 #......................#

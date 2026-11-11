@@ -1029,6 +1029,8 @@ func _tomb_shots(game: Node) -> void:
 		[Vector2i(41, 9), "140_tomb_bone_pit", Vector2i(3, 6)],
 		[Vector2i(41, 8), "140b_tomb_skull_choir", Vector2i(18, 11)],
 		[Vector2i(39, 10), "140c_tomb_bone_orchard", Vector2i(21, 6)],
+		[Vector2i(42, 8), "140d_tomb_lightless_stair", Vector2i(2, 10)],
+		[Vector2i(42, 9), "140e_tomb_marrow_vault", Vector2i(18, 1)],
 	]
 	for shot: Array in rooms:
 		var at := await _jump(game, shot[0], shot[2])
@@ -1041,6 +1043,15 @@ func _tomb_shots(game: Node) -> void:
 		game.player._invuln = 0.0
 		await _wait(0.05)
 		await _capture(shot[1])
+	# The Lightless Stair by lantern light, the planks showing over the drop.
+	GameState.give_item("glowmoth_lantern")
+	await _jump(game, Vector2i(42, 8), Vector2i(4, 10))
+	game.player._invuln = 600.0
+	game.player.use_item("glowmoth_lantern")
+	await _wait(1.0)
+	await _capture("140f_tomb_stair_lit")
+	game.player.use_item("glowmoth_lantern")
+	game.player._invuln = 0.0
 	GameState.give_item("echo_horn")
 
 	# The horn's note, and the barricade coming down.
@@ -2442,6 +2453,8 @@ func _maw_shots(game: Node) -> void:
 		[Vector2i(44, 8), "152_maw_veins", Vector2i(11, 11)],
 		[Vector2i(45, 8), "152b_maw_lung", Vector2i(17, 11)],
 		[Vector2i(43, 10), "152c_maw_gullet", Vector2i(21, 10)],
+		[Vector2i(43, 8), "152d_maw_sinus", Vector2i(21, 7)],
+		[Vector2i(43, 7), "152e_maw_cochlea", Vector2i(3, 10)],
 	]
 	for shot: Array in rooms:
 		var at := await _jump(game, shot[0], shot[2])

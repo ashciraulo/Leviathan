@@ -198,13 +198,24 @@ func _draw() -> void:
 					variant = 1 if (x * 7 + y * 13 + x * y) % 6 == 0 else 0
 				_tile("%s_%d" % [gap, variant], x, y)
 				# 3/4 view: the far side of the hole shows its broken edge.
-				if _room.tile_at(x, y - 1) != "_":
+				# A hidden plank over the drop counts as drop (an edge would
+				# outline the path).
+				if not _drop(x, y - 1):
 					_tile(gap + "_lip", x, y)
-				if _room.tile_at(x - 1, y) != "_":
+				if not _drop(x - 1, y):
 					_tile(gap + "_left", x, y)
-				if _room.tile_at(x + 1, y) != "_":
+				if not _drop(x + 1, y):
 					_tile(gap + "_right", x, y)
-				if _room.tile_at(x, y + 1) != "_":
+				if not _drop(x, y + 1):
+					_tile(gap + "_bottom", x, y)
+			elif _room.is_drop_plank(x, y):
+				# The room draws the drop under a hidden plank; its sides
+				# carry on the hole's edges so the plank row leaves no notch.
+				if not _drop(x - 1, y):
+					_tile(gap + "_left", x, y)
+				if not _drop(x + 1, y):
+					_tile(gap + "_right", x, y)
+				if not _drop(x, y + 1):
 					_tile(gap + "_bottom", x, y)
 			elif letter == "^" or (letter != "#" and y >= first):
 				_tile("kiln_lava_%d" % ((_lava_frame + x + y) % 2), x, y)
@@ -250,6 +261,10 @@ func _is_safe(x: int, y: int, first: int) -> bool:
 	if letter in ["#", "_", "~", "Q", "v"]:
 		return false
 	return not (letter == "^" or y >= first)
+
+
+func _drop(x: int, y: int) -> bool:
+	return _room.tile_at(x, y) == "_" or _room.is_drop_plank(x, y)
 
 
 func _is_lava(x: int, y: int, first: int) -> bool:

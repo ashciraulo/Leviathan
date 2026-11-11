@@ -20,7 +20,11 @@ The way through:
   glints, and the bars north open) -> the Skull Choir (four skulls in two
   bays, too far apart to wake together: the horn brings down the bone
   barricades on the short way between them, then a blast in each bay
-  inside the skulls' song; big key) -> the Chamber's great door -> the
+  inside the skulls' song: the bars east open) -> the Lightless Stair (dark:
+  planks over the drop by lantern light, a Hush, bone the horn brings down)
+  -> the Marrow Vault (the horn opens a crate's nook and the hidden way to a
+  plate, the hook drags the other crate out of its pocket; big key, and the
+  bars west back to the Bone Pit) -> the Chamber's great door -> the
   Hollow Regent.
   Off the main path: the Bone Orchard west of the Entry (two hidden bone
   walls, one behind the other, to a sealed chamber; glints).
@@ -121,9 +125,9 @@ $......................#
 ##################..####
 #......##......##..C...#
 #......##......##......#
-.|.....................#
-.|.........M...U.......#
-.|.....................#
+.|......................
+.|.........M...U........
+.|......................
 #......##......##......#
 #......##......##......#
 #..........M...........#
@@ -145,7 +149,7 @@ $......................#
 #.......###%%###.......#
 #....M.................#
 ########################"""),
-    (41, 8): ("ROOM_TOMB_SKULL_CHOIR", {"chest_item": '"big_key"', "gate": '"skulls"', "chest_hidden": "true"}, """
+    (41, 8): ("ROOM_TOMB_SKULL_CHOIR", {"gate": '"skulls"'}, """
 ########################
 #....Z..########..Z....#
 #.......########.......#
@@ -155,9 +159,9 @@ $......................#
 #..Z....########....Z..#
 #.......########.......#
 #.####################.#
-#......................#
-#..........C...........#
-#.....U................#
+#.....................|.
+#.....................|.
+#.....U...............|.
 ##################..####"""),
     (39, 10): ("ROOM_TOMB_BONE_ORCHARD", {"chest_item": '"glint"', "chest_count": "100"}, """
 ########################
@@ -172,6 +176,42 @@ $......................#
 #....#.........M.......#
 ######.................#
 ######.................#
+########################"""),
+    # East of the Skull Choir, behind the bars its skulls open: the
+    # Lightless Stair. Dark; planks over the drop that only the lantern
+    # shows, a Hush on the far landing, and bone the horn brings down
+    # before the way south.
+    (42, 8): ("ROOM_TOMB_LIGHTLESS_STAIR", {"dark": "true"}, """
+########################
+#______________........#
+#______________........#
+#______________.....U..#
+#_______vvvvvvv........#
+#_______v______........#
+#_______v______........#
+#_______v______........#
+#....___v______###%%####
+.....___v______........#
+.....vvvv______........#
+.....__________........#
+##################..####"""),
+    # Below it, the Marrow Vault: the horn opens the crate's nook and the
+    # hidden way into the second plate's chamber, and the hook drags the
+    # other crate out of its pocket. Both plates open the big key's alcove
+    # and the bars west, a way back to the Bone Pit.
+    (42, 9): ("ROOM_TOMB_MARROW_VAULT", {"chest_item": '"big_key"', "gate": '"plates"'}, """
+##################..####
+#......%...............#
+#...K..%...=...........#
+#......#...............#
+########...............#
+.|........####.....M...#
+.|.........|C#.........#
+.|........####.........#
+#........######........#
+#........#....$......###
+#....M...#..=.$......K##
+#........#....#......###
 ########################"""),
     (40, 7): ("ROOM_TOMB_BOSS", OUTSIDE, """
 ########################

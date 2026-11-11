@@ -2268,8 +2268,8 @@ func _test_tomb_dungeon() -> void:
 	await _calm(room)
 	var choir_skulls := _child_of(room, SingingSkull)
 	_check(choir_skulls.size() == 4, "four skulls sit in the Skull Choir")
-	var choir_chest: Chest = _child_of(room, Chest)[0]
-	_check(_child_of(room, BoneWall).size() == 2 and not choir_chest.visible, "bone barricades shut the short way between the bays")
+	var choir_bars: Array = _child_of(room, Bars)
+	_check(_child_of(room, BoneWall).size() == 2 and choir_bars.size() == 3 and not (choir_bars[0] as Bars).is_open, "bone barricades shut the short way between the bays, and bars the way east")
 	for spot in [Vector2i(4, 4), Vector2i(19, 4)]:
 		player.global_position = _tile_pos(room, spot)
 		player.velocity = Vector2.ZERO
@@ -2277,7 +2277,7 @@ func _test_tomb_dungeon() -> void:
 		player.use_item("echo_horn")
 		await _wait(SingingSkull.SING_TIME + 0.5)
 	_check(_child_of(room, BoneWall).is_empty(), "a blast in each bay brings its barricade down")
-	_check(not choir_chest.visible, "one bay at a time, the skulls' song never meets")
+	_check(not (choir_bars[0] as Bars).is_open, "one bay at a time, the skulls' song never meets")
 	player.global_position = _tile_pos(room, Vector2i(4, 4))
 	player.velocity = Vector2.ZERO
 	await _wait(0.15)
@@ -2291,7 +2291,120 @@ func _test_tomb_dungeon() -> void:
 	player.velocity = Vector2.ZERO
 	player.use_item("echo_horn")
 	await _wait(0.8)
-	_check(choir_chest.visible and choir_chest.item == "big_key", "both bays singing at once, the big key appears")
+	_check((choir_bars[0] as Bars).is_open, "both bays singing at once, the bars east open")
+
+	# The Lightless Stair: dark; by lantern light Wren walks the planks over
+	# the drop, and the horn brings down the bone before the way south.
+	GameState.give_item("glowmoth_lantern")
+	room = await _goto(game, Vector2i(42, 8), Vector2i(1, 10))
+	await _calm(room)
+	_check(room.dark and _child_of(room, VeilPlank).size() == 16, "the Lightless Stair is dark, its planks hidden")
+	player.global_position = _tile_pos(room, Vector2i(3, 10))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	var stair_bubbles := GameState.bubbles
+	Input.action_press("move_right")
+	await _wait(1.0)
+	Input.action_release("move_right")
+	await _wait(1.2)
+	local = player.global_position - room.global_position
+	_check(GameState.bubbles == stair_bubbles and local.x < 5 * Room.TILE, "in the dark there are no planks to walk on (at %s)" % local)
+	GameState.refill()
+	player.global_position = _tile_pos(room, Vector2i(3, 10))
+	player.velocity = Vector2.ZERO
+	player.use_item("glowmoth_lantern")
+	for leg: Array in [["move_right", 5], ["move_up", 6], ["move_right", 7]]:
+		var target: Vector2i = Vector2i(8, 10) if leg[0] == "move_right" and leg[1] == 5 else (Vector2i(8, 4) if leg[0] == "move_up" else Vector2i(15, 4))
+		Input.action_press(leg[0])
+		var waited := 0.0
+		while waited < 4.0:
+			var here := player.global_position - room.global_position
+			if (leg[0] == "move_right" and here.x >= target.x * Room.TILE + 8) or (leg[0] == "move_up" and here.y <= target.y * Room.TILE + 12):
+				break
+			await get_tree().physics_frame
+			waited += 1.0 / 60.0
+		Input.action_release(leg[0])
+		player.velocity = Vector2.ZERO
+		player.global_position = _tile_pos(room, target)
+		await _wait(0.1)
+	local = player.global_position - room.global_position
+	_check(int(local.x) / Room.TILE == 15 and GameState.bubbles == GameState.max_bubbles, "by lantern light Wren walks the planks to the far landing (at %s)" % local)
+	player.use_item("glowmoth_lantern")
+	player.global_position = _tile_pos(room, Vector2i(18, 7))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("echo_horn")
+	await _wait(0.6)
+	_check(_child_of(room, BoneWall).is_empty(), "the horn brings the bone down before the way south")
+
+	# The Marrow Vault: the horn opens the crate's nook and the hidden way to
+	# the second plate; the hook drags the other crate out of its pocket.
+	GameState.give_item("tide_hook")
+	room = await _goto(game, Vector2i(42, 9), Vector2i(18, 1))
+	await _calm(room)
+	var vault_crates: Array = _child_of(room, Crate)
+	vault_crates.sort_custom(func(a: Crate, b: Crate) -> bool: return a.position.y < b.position.y)
+	var vault_bars: Array = _child_of(room, Bars)
+	_check(vault_crates.size() == 2 and vault_bars.size() == 4 and not (vault_bars[0] as Bars).is_open, "two crates, two plates, and bars on the key and the way west")
+	_check(_child_of(room, BoneWall).size() == 4, "bone shuts the crate's nook and hides the second plate")
+	player.global_position = _tile_pos(room, Vector2i(9, 2))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("echo_horn")
+	await _wait(0.6)
+	player.global_position = _tile_pos(room, Vector2i(16, 10))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("echo_horn")
+	await _wait(0.6)
+	_check(_child_of(room, BoneWall).is_empty(), "the horn brings both down")
+	var nook: Crate = vault_crates[0]
+	for i in 7:
+		nook._slide(Vector2.RIGHT)
+		await _wait(0.4)
+	_check(floori(nook.position.x / Room.TILE) == 11, "out of its nook, the crate goes onto the first plate (col %d)" % floori(nook.position.x / Room.TILE))
+	_check(not (vault_bars[0] as Bars).is_open, "one plate alone leaves the bars shut")
+	var pocket: Crate = vault_crates[1]
+	player.global_position = _tile_pos(room, Vector2i(15, 10))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	_check(floori(pocket.position.x / Room.TILE) == 16, "the hook drags the other crate out of its pocket (col %d)" % floori(pocket.position.x / Room.TILE))
+	player.global_position = _tile_pos(room, Vector2i(18, 8))
+	player.velocity = Vector2.ZERO
+	await _wait(0.2)
+	for i in 4:
+		pocket._slide(Vector2.LEFT)
+		await _wait(0.4)
+	await _wait(0.2)
+	_check(floori(pocket.position.x / Room.TILE) == 12 and (vault_bars[0] as Bars).is_open, "through the broken wall onto the second plate, and the bars open (col %d)" % floori(pocket.position.x / Room.TILE))
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Marrow Vault's chest holds the big key")
+	# Through the open bars Wren walks up to the chest.
+	player.global_position = _tile_pos(room, Vector2i(9, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	Input.action_press("move_right")
+	await _wait(0.6)
+	Input.action_release("move_right")
+	player.velocity = Vector2.ZERO
+	local = player.global_position - room.global_position
+	_check(floori(local.x / Room.TILE) == 11, "through the open bars Wren reaches the chest (at %s)" % local)
+	player.facing = Vector2.RIGHT
+	for vault_chest: Chest in _child_of(room, Chest):
+		vault_chest.interact()
+	await _wait(0.3)
+	await _close_dialogue(game)
+	_check(GameState.has_item(Items.dungeon_item("tomb", "big_key")), "Wren takes the big key")
+	player.global_position = _tile_pos(room, Vector2i(3, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	Input.action_press("move_left")
+	await _wait(1.0)
+	Input.action_release("move_left")
+	await _wait(0.6)
+	_check(game.current_room.coord == Vector2i(41, 9), "the bars west lead back into the Bone Pit (in %s)" % game.current_room.coord)
 
 	# The Bone Orchard: one hidden wall behind another.
 	room = await _goto(game, Vector2i(39, 10), Vector2i(22, 6))
@@ -2485,7 +2598,7 @@ func _test_maw_dungeon() -> void:
 	await _wait(DiversHelm.DIVE_TIME)
 	local = player.global_position - room.global_position
 	_check(local.x > 17.5 * Room.TILE and not player.diving, "under the grates Wren comes up beside the big key (at %s)" % local)
-	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Lung's chest holds the big key")
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "small_key"), "the Lung's chest holds the second small key")
 	MawBreath.elapsed = 0.0
 	await _wait(0.1)
 
@@ -2515,6 +2628,140 @@ func _test_maw_dungeon() -> void:
 	await _wait(1.2)
 	_check(game.current_room.coord == Vector2i(44, 10), "stepping off the ledge, the Gullet swallows Wren down to the Throat (in %s)" % game.current_room.coord)
 	GameState.refill()
+
+	# The Sinus: an ice eye on the east shore and two skulls in the drop must
+	# wake together. Only the island hears both skulls, only the shore sees
+	# the eye: Wren shoots, zips to the island and blows the horn.
+	GameState.give_item("frostfang_bow")
+	GameState.give_item("echo_horn")
+	GameState.give_item("kite_cloak")
+	room = await _goto(game, Vector2i(43, 8), Vector2i(22, 7))
+	await _calm(room)
+	var sinus_bars: Array = _child_of(room, Bars)
+	_check(_child_of(room, IceEye).size() == 1 and _child_of(room, SingingSkull).size() == 2 and sinus_bars.size() == 3 and not (sinus_bars[0] as Bars).is_open, "an eye, two skulls, and bars on the way north")
+	player.global_position = _tile_pos(room, Vector2i(17, 6))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(floori(local.x / Room.TILE) == 12 and floori(local.y / Room.TILE) == 6, "the hook carries Wren onto the island (at %s)" % local)
+	player.global_position = _tile_pos(room, Vector2i(10, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(_child_of(room, SingingSkull).all(func(z: SingingSkull) -> bool: return z.lit) and not (sinus_bars[0] as Bars).is_open, "from the island both skulls sing, but the eye sleeps and the bars hold")
+	await _wait(SingingSkull.SING_TIME + 0.5)
+	# Back on the east shore (a test shortcut for the glide back).
+	player.global_position = _tile_pos(room, Vector2i(18, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.global_position = _tile_pos(room, Vector2i(19, 6))
+	player.facing = Vector2.UP
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("frostfang_bow")
+	await _wait(0.5)
+	_check((_child_of(room, IceEye)[0] as IceEye).lit, "from the shore an arrow wakes the eye")
+	player.global_position = _tile_pos(room, Vector2i(17, 6))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	player.global_position = _tile_pos(room, Vector2i(10, 6))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(GameState.flags.get(RoomPuzzle.flag_for(room.coord), false) and sinus_bars.all(func(b: Bars) -> bool: return b.is_open), "eye and skulls awake together, the bars open")
+	player.global_position = _tile_pos(room, Vector2i(8, 6))
+	player.facing = Vector2.LEFT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	local = player.global_position - room.global_position
+	_check(floori(local.x / Room.TILE) == 3 and floori(local.y / Room.TILE) == 6, "the west post carries Wren off the island (at %s)" % local)
+	Input.action_press("move_up")
+	await _wait(2.5)
+	Input.action_release("move_up")
+	await _wait(0.6)
+	_check(game.current_room.coord == Vector2i(43, 7), "through the open bars Wren climbs into the Cochlea (in %s)" % game.current_room.coord)
+
+	# The Cochlea: the cloak crosses the drop; the hook drags each crate out
+	# of its nook across the pool, but only while the Old One breathes out;
+	# the horn finds the bone wall, and the crates go onto the plates.
+	room = await _goto(game, Vector2i(43, 7), Vector2i(2, 11))
+	await _calm(room)
+	var coch_crates: Array = _child_of(room, Crate)
+	coch_crates.sort_custom(func(a: Crate, b: Crate) -> bool: return a.position.x < b.position.x)
+	var coch_bars: Array = _child_of(room, Bars)
+	_check(coch_crates.size() == 2 and _child_of(room, PressurePlate).size() == 2 and coch_bars.size() == 1 and not (coch_bars[0] as Bars).is_open and _child_of(room, BoneWall).size() == 1, "two crates in their nooks, two plates, a hidden bone wall, bars on the big key")
+	player.global_position = _tile_pos(room, Vector2i(7, 8))
+	player.facing = Vector2.RIGHT
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("kite_cloak")
+	await _wait(2.6)
+	local = player.global_position - room.global_position
+	_check(local.x >= 11 * Room.TILE and GameState.bubbles == GameState.max_bubbles, "the cloak carries Wren over the drop (at %s)" % local)
+	MawBreath.elapsed = MawBreath.OUT_TIME + MawBreath.IN_TELL_TIME + 0.2
+	player.global_position = _tile_pos(room, Vector2i(12, 7))
+	player.facing = Vector2.UP
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	var left_crate: Crate = coch_crates[0]
+	var right_crate: Crate = coch_crates[1]
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	_check(floori(left_crate.position.y / Room.TILE) == 1, "while the pool is risen, the hook can't drag the crate (row %d)" % floori(left_crate.position.y / Room.TILE))
+	MawBreath.elapsed = 0.0
+	await _wait(0.2)
+	player.facing = Vector2.UP
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	_check(floori(left_crate.position.y / Room.TILE) == 6, "with the pool drained, the hook drags it across (row %d)" % floori(left_crate.position.y / Room.TILE))
+	player.global_position = _tile_pos(room, Vector2i(14, 7))
+	player.facing = Vector2.UP
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.3)
+	_check(floori(right_crate.position.y / Room.TILE) == 6, "and the other (row %d)" % floori(right_crate.position.y / Room.TILE))
+	player.global_position = _tile_pos(room, Vector2i(16, 8))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(_child_of(room, BoneWall).is_empty(), "the horn finds the bone wall and brings it down")
+	player.global_position = _tile_pos(room, Vector2i(13, 7))
+	player.velocity = Vector2.ZERO
+	await _wait(0.2)
+	for i in 6:
+		right_crate._slide(Vector2.RIGHT)
+		await _wait(0.4)
+	player.global_position = _tile_pos(room, Vector2i(11, 7))
+	player.velocity = Vector2.ZERO
+	await _wait(0.2)
+	for i in 7:
+		left_crate._slide(Vector2.RIGHT)
+		await _wait(0.4)
+	await _wait(0.2)
+	_check(floori(right_crate.position.x / Room.TILE) == 19 and floori(left_crate.position.x / Room.TILE) == 18 and (coch_bars[0] as Bars).is_open, "both crates on the plates, the bars open (cols %d, %d)" % [floori(left_crate.position.x / Room.TILE), floori(right_crate.position.x / Room.TILE)])
+	_check(_child_of(room, Chest).any(func(c: Chest) -> bool: return c.item == "big_key"), "the Cochlea's chest holds the big key")
+	player.global_position = _tile_pos(room, Vector2i(18, 9))
+	player.velocity = Vector2.ZERO
+	await _wait(0.1)
+	Input.action_press("move_right")
+	await _wait(0.5)
+	Input.action_release("move_right")
+	player.velocity = Vector2.ZERO
+	local = player.global_position - room.global_position
+	_check(floori(local.x / Room.TILE) == 19, "through the open bars Wren reaches the big key (at %s)" % local)
+	MawBreath.elapsed = 0.0
 
 	# The Choir Loft: Cantor Vael.
 	room = await _goto(game, Vector2i(44, 7), Vector2i(11, 11))

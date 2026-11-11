@@ -128,6 +128,8 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## this room. Zero means calm.
 @export var wind := Vector2.ZERO
 
+## Veiled planks that cross a drop, by tile (see _plank_over_drop).
+var _drop_planks = null
 ## Set by the game before the room enters the tree.
 var coord := Vector2i.ZERO
 var player_spawn := SIZE / 2.0
@@ -753,6 +755,42 @@ func _on_lines(start: int, size: int, lines: Dictionary) -> bool:
 	return false
 
 
+## True when a run of veiled planks crosses a drop (_) rather than water:
+## some plank in the run touches a gap tile. Worked out once per room (the
+## layout doesn't change), since the ground redraws every water frame.
+## True when the tile is a veiled plank over a drop (drawn as the drop, and
+## no water or damp edges round it, which would give the path away).
+func is_drop_plank(x: int, y: int) -> bool:
+	return _tile_at(x, y) == "v" and (BIOMES.get(biome, {}).has("gap") or _plank_over_drop(x, y))
+
+
+func _plank_over_drop(x: int, y: int) -> bool:
+	if _drop_planks == null:
+		_drop_planks = {}
+		for py in ROWS:
+			for px in COLS:
+				if _tile_at(px, py) == "v" and _plank_run_touches_drop(px, py):
+					_drop_planks[Vector2i(px, py)] = true
+	return _drop_planks.has(Vector2i(x, y))
+
+
+func _plank_run_touches_drop(x: int, y: int) -> bool:
+	var seen := {}
+	var todo: Array[Vector2i] = [Vector2i(x, y)]
+	while not todo.is_empty():
+		var at: Vector2i = todo.pop_back()
+		if seen.has(at):
+			continue
+		seen[at] = true
+		for d: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var t := _tile_at(at.x + d.x, at.y + d.y)
+			if t == "_":
+				return true
+			if t == "v":
+				todo.append(at + d)
+	return false
+
+
 ## True when every tile of the size x size block at x, y is plain floor.
 func _plain_block(x0: int, y0: int, size: int) -> bool:
 	for y in range(y0, y0 + size):
@@ -846,7 +884,7 @@ func _lit_face(x: int, y: int) -> bool:
 func _near_water(x: int, y: int) -> bool:
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
-			if _tile_at(x + dx, y + dy) in ["~", "v", "Q"]:
+			if _tile_at(x + dx, y + dy) in ["~", "v", "Q"] and not is_drop_plank(x + dx, y + dy):
 				return true
 	return false
 
@@ -899,12 +937,16 @@ func _draw_ground() -> void:
 				_draw_tile(tiles["boardwalk"] % ("v" if runs_vertical else "h"), x, y)
 			elif tile == "I" and _frozen.has(Vector2i(x, y)):
 				_draw_tile("floe_%d" % (h % 2), x, y)
-			elif tile == "v" and tiles.has("gap"):
-				# A veiled plank over a drop (the Spire's sky): the drop shows
-				# under it, and the plank only when the lantern finds it.
-				_draw_tile("%s_%d" % [tiles["gap"], 0], x, y)
+			elif tile == "v" and is_drop_plank(x, y):
+				# A veiled plank over a drop (the Spire's sky, a crypt's pit):
+				# the drop shows under it, and the plank only when the lantern
+				# finds it.
+				var gap: String = tiles.get("gap", "gap")
+				# The same pattern as the PitField's drop round it.
+				var variant := (x * 7 + y * 3) % 2 if gap == "gap" else 0
+				_draw_tile("%s_%d" % [gap, variant], x, y)
 				if not _tile_at(x, y - 1) in ["_", "v"]:
-					_draw_tile(tiles["gap"] + "_lip", x, y)
+					_draw_tile(gap + "_lip", x, y)
 			elif tile == "~" or tile == "v" or tile == "Q":
 				# Deep water is the same deep green wherever it is (Wren's
 				# waterline is drawn to match it).
@@ -933,7 +975,7 @@ func _draw_ground() -> void:
 					_draw_tile(tiles["floor"] % (h % 4), x, y)
 				# Damp ground fades out from any water alongside.
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
-					if _tile_at(x + side[1], y + side[2]) in ["~", "v", "Q"]:
+					if _tile_at(x + side[1], y + side[2]) in ["~", "v", "Q"] and not is_drop_plank(x + side[1], y + side[2]):
 						_draw_tile(tiles["damp"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
