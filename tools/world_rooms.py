@@ -110,6 +110,8 @@ SECRETS = {
     (6, 0): ("tide_hook", "kite_cloak", "divers_helm"),  # Tangle Shore: an islet out in deep water, with a hook post
     (4, 1): ("tide_hook",),                  # Fenmouth: hook a crate out of its slot onto the plate that unbars a shrine
     (3, 2): ("tidebell_tomb",),              # Witheroot Hollow: a hidden wall the Echo Horn brings down
+    (7, -2): ("glowmoth_lantern",),          # Ashfall Gate: a niche barred until a brazier burns on each bank
+    (10, -2): ("tidebell_tomb",),            # Kiln Mouth: a hidden chamber beside the Kiln's door
     # Puzzle caves: one short trial room per region.
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
