@@ -1,0 +1,38 @@
+{
+ "cue": "place_village",
+ "qbpm": 108.0,
+ "bar_q": 4,
+ "bars": 32,
+ "intro_q": 0,
+ "end_q": 128,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 71.11111111111111,
+ "loop": true,
+ "parts": [
+  {
+   "name": "mandolin",
+   "notes": 432,
+   "low": 55,
+   "high": 64
+  },
+  {
+   "name": "whistle",
+   "notes": 84,
+   "low": 66,
+   "high": 81
+  },
+  {
+   "name": "bass_upright",
+   "notes": 112,
+   "low": 31,
+   "high": 47
+  },
+  {
+   "name": "perc_hand",
+   "notes": 140,
+   "low": 60,
+   "high": 62
+  }
+ ]
+}

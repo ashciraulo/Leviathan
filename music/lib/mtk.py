@@ -118,12 +118,17 @@ class Part:
         """Notes sorted, with same-pitch overlaps cut (they cut each other in FL)."""
         notes = sorted(self.notes, key=lambda x: (x[0], x[2]))
         last: dict[int, list] = {}
+        out = []
         for nt in notes:
             prev = last.get(nt[2])
+            if prev and nt[0] - prev[0] < 0.03:  # the same note twice at once: keep one
+                prev[1], prev[3] = max(prev[1], nt[1]), max(prev[3], nt[3])
+                continue
             if prev and prev[0] + prev[1] > nt[0] - 0.01:
                 prev[1] = max(0.02, nt[0] - prev[0] - 0.01)
             last[nt[2]] = nt
-        return notes
+            out.append(nt)
+        return out
 
 
 class Song:
@@ -199,7 +204,7 @@ class Song:
                 "intro_q": self.intro_q, "end_q": self.end_q, "ppq": PPQ,
                 "intro_s": self.seconds(self.intro_q), "loop_end_s": self.seconds(self.end_q),
                 "loop": self.spec["loop"],
-                "parts": [{"name": p.name, "notes": len(p.notes), "low": min(x[2] for x in p.notes),
+                "parts": [{"name": p.name, "notes": len(p.trimmed()), "low": min(x[2] for x in p.notes),
                            "high": max(x[2] for x in p.notes)} for p in self.parts if p.notes]}
         with open(os.path.join(out, "cue.json"), "w") as f:
             json.dump(meta, f, indent=1)

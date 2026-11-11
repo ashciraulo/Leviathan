@@ -13,7 +13,8 @@ from mtk import chord
 
 RANGES = {"flute": (60, 96), "reed": (53, 89), "guitar": (40, 84), "bass": (28, 60), "pad": (36, 79),
           "harp": (24, 103), "bell": (48, 96), "cello": (36, 76), "piano": (21, 108),
-          "musicbox": (60, 100), "choir": (45, 81), "strings": (28, 96)}
+          "musicbox": (60, 100), "bassclarinet": (38, 77), "clarinet": (50, 91), "marimba": (45, 96),
+          "kalimba": (60, 88), "whistle": (62, 93), "mandolin": (55, 88), "celesta": (60, 108), "choir": (45, 81), "strings": (28, 96)}
 
 
 def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pad")) -> list[str]:

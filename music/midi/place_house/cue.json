@@ -1,0 +1,32 @@
+{
+ "cue": "place_house",
+ "qbpm": 74.0,
+ "bar_q": 3,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 72,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 58.37837837837838,
+ "loop": true,
+ "parts": [
+  {
+   "name": "musicbox",
+   "notes": 39,
+   "low": 75,
+   "high": 89
+  },
+  {
+   "name": "piano_felt",
+   "notes": 116,
+   "low": 39,
+   "high": 67
+  },
+  {
+   "name": "cello",
+   "notes": 12,
+   "low": 43,
+   "high": 53
+  }
+ ]
+}
