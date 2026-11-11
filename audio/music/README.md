@@ -4,7 +4,7 @@ Drop finished tracks here as `<cue>.ogg` (OGG Vorbis, 44.1 kHz stereo, about -18
 
 ## Placeholders
 
-The tracks here now are placeholders made in code by `tools/music_gen.py` (numpy and ffmpeg): `python3 tools/music_gen.py` rebuilds them all, `--only title,boss` just those. Each region and dungeon has its own key, mode, tempo and instruments, and each dungeon's track carries its Tidebell's phrase of the lullaby as a leitmotif. A finished track simply replaces its placeholder file.
+The tracks here now are placeholders made in code by `tools/music_gen.py` (numpy and ffmpeg): `python3 tools/music_gen.py` rebuilds them all, `--only title,boss` just those. Each track is seeded from its name, so adding a track leaves the others unchanged. Each region and dungeon has its own key, mode, tempo and instruments, and each dungeon's track carries its Tidebell's phrase of the lullaby as a leitmotif. A finished track simply replaces its placeholder file.
 
 ## The lullaby
 

@@ -23,6 +23,7 @@ import subprocess
 import sys
 import tempfile
 import wave
+import zlib
 
 import numpy as np
 
@@ -389,8 +390,9 @@ def main():
     only = None
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
-    jobs = [(name, lambda c=c, s=i: level(render_track(c, 1000 + s), MUSIC_LUFS))
-            for i, (name, c) in enumerate(TRACKS.items())]
+    # Each track's seed comes from its name, so adding a track never changes the others.
+    jobs = [(name, lambda c=c, s=zlib.crc32(name.encode()): level(render_track(c, s), MUSIC_LUFS))
+            for name, c in TRACKS.items()]
     jobs += [("bell_%d" % (i + 1), lambda i=i: level(render_phrase(i), PHRASE_LUFS))
              for i in range(len(LULLABY["phrases"]))]
     # The whole lullaby is levelled as one, so the phrases keep their balance.
