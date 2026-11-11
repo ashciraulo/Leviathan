@@ -108,6 +108,8 @@ SECRETS = {
     (2, 0): ("stonebreaker",),               # Barnacle Wall: a cove behind a cracked boulder
     (4, -2): ("glowmoth_lantern",),           # Mothlight Glade: bars until both braziers burn, one on a pond islet
     (6, 0): ("tide_hook", "kite_cloak", "divers_helm"),  # Tangle Shore: an islet out in deep water, with a hook post
+    (4, 1): ("tide_hook",),                  # Fenmouth: hook a crate out of its slot onto the plate that unbars a shrine
+    (3, 2): ("tidebell_tomb",),              # Witheroot Hollow: a hidden wall the Echo Horn brings down
     # Puzzle caves: one short trial room per region.
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
@@ -180,6 +182,8 @@ def load_rooms():
 # Gates that need a tool: braziers only catch from the raised Glowmoth
 # Lantern, ice eyes only open to a frost arrow.
 GATE_TOOLS = {"braziers": "glowmoth_lantern", "eyes": "frostfang_bow"}
+# Plate rooms whose crate only the Tide Hook can drag out of its slot.
+PLATE_HOOK_ROOMS = {"room_4_1.tscn"}
 
 
 # Regions whose "~" is lava: the Frostfang Bow can't freeze it, so it acts
@@ -189,7 +193,10 @@ LAVA_BIOMES = {"cinderreach"}
 
 def rows_for(room, items):
     rows = room["alt"] if room["alt"] and room["alt_flag"] in items else room["layout"]
-    if room["gate"] in GATE_TOOLS and GATE_TOOLS[room["gate"]] not in items:
+    needs = GATE_TOOLS.get(room["gate"], "")
+    if room["gate"] == "plates" and room["name"] in PLATE_HOOK_ROOMS:
+        needs = "tide_hook"
+    if needs and needs not in items:
         # A gate this room's puzzle can't be solved without keeps its bars shut.
         rows = [r.replace("|", "#") for r in rows]
     if room["biome"] in LAVA_BIOMES:
