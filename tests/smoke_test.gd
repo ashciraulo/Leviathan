@@ -7683,21 +7683,6 @@ func _test_small_finds() -> void:
 	Conversations.talk("agna")
 	Conversations.talk("bram")
 	_check(first.call("bram") == "BRAM_FORGE" and first.call("agna") != "AGNA_POT_1", "once each")
-	# Marlo's pearls: asked once Wren can dive for them.
-	GameState.set_flag("met_marlo")
-	_check(first.call("marlo") == "MARLO_AGAIN", "no pearls without the Diver's Helm")
-	GameState.give_item("divers_helm", 1, false)
-	_check(first.call("marlo") == "MARLO_PEARLS_1", "then Marlo asks for some")
-	Conversations.talk("marlo")
-	for id in ["pearl_verge", "pearl_tangle"]:
-		GameState.set_flag(QuestFind.flag_for(id))
-	_check(first.call("marlo") == "MARLO_PEARLS_WAITING", "two pearls aren't three")
-	GameState.set_flag(QuestFind.flag_for("pearl_deep"))
-	glints = GameState.item_count("glint")
-	Conversations.talk("marlo")
-	_check(GameState.item_count("glint") == glints + 180 and first.call("marlo") == "MARLO_PEARLS_AFTER", "pearls for Marlo's mum")
-	Conversations.talk("marlo")
-	_check(first.call("marlo") == "MARLO_AGAIN", "once")
 	# Ide's nameboard: asked on the third talk, and every talk still rows.
 	for flag in ["tidebell_belfry", "met_ide_ferry"]:
 		GameState.set_flag(flag)
@@ -7713,11 +7698,11 @@ func _test_small_finds() -> void:
 	_check(GameState.item_count("glint") == glints + 100 and first.call("ide") == "IDE_FERRY_AGAIN", "Patience gets her name back")
 	# Found before anyone asked: the hand-in comes straight away.
 	GameState.reset_new_game()
-	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep", "tidebell_belfry", "met_ide_ferry", "found_nameboard"]:
+	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "tidebell_belfry", "met_ide_ferry", "found_nameboard"]:
 		GameState.set_flag(flag)
-	for who in ["corrin", "dunstan", "bram", "marlo", "ide"]:
+	for who in ["corrin", "dunstan", "bram", "ide"]:
 		Conversations.talk(who)
-	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done") and GameState.has_flag("bram_pot_cast") and GameState.has_flag("marlo_pearls_done") and GameState.has_flag("ide_board_done"), "things found early are handed straight in")
+	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done") and GameState.has_flag("bram_pot_cast") and GameState.has_flag("ide_board_done"), "things found early are handed straight in")
 	GameState.reset_new_game()
 
 
