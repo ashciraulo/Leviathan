@@ -57,6 +57,12 @@ const KINDS := {
 	"dace": {"texture": Art.VILLAGER_DACE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Coralie the beachcomber on Saltmarrow Shore, by her chime (StoryDirector).
 	"coralie": {"texture": Art.VILLAGER_CORALIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	# The last singers of the Choir, alone in four regions after the ending,
+	# and Bram at Agna's forge once he's home (StoryDirector).
+	"bram": {"texture": Art.VILLAGER_BRAM, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"sela": {"texture": Art.VILLAGER_SELA, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"pim": {"texture": Art.VILLAGER_PIM, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
+	"ansel": {"texture": Art.VILLAGER_ANSEL, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 }
 ## Sheet columns shared by everyone: idle, breathe, then talk/listen, and
 ## for walkers two walk frames.

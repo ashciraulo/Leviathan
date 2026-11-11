@@ -113,6 +113,17 @@ const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
 ## Gully dozing beside the Lantern Wake's figurehead on Wreck Strand, and
 ## his strongbox out in the pool.
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
+## The last singers after the ending (Sister Lowe's errand): kind ->
+## [room, tile], each alone and a little out of the way. Bram goes to work
+## at Agna's forge once he's home.
+const SINGERS := {
+	"bram": [Vector2i(7, -1), Vector2i(18, 3)],
+	"sela": [Vector2i(0, -3), Vector2i(5, 3)],
+	"pim": [Vector2i(3, 2), Vector2i(19, 2)],
+	"ansel": [Vector2i(3, -4), Vector2i(21, 5)],
+}
+const KILN_MOUTH := Vector2i(10, -2)
+const BRAM_FORGE_AT := Vector2(16 * 16 + 8, 5 * 16 + 10)
 ## The Ebb Shelf, bared only while the tide is held out: Gully goes out to
 ## its one dry sandbar, by the lantern-boat the ebb uncovered.
 const EBB_SHELF := Vector2i(1, 4)
@@ -244,6 +255,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_gully()
 	if coord == EBB_SHELF:
 		_put_lantern_boat()
+	if GameState.has_flag(ENDING_FLAG):
+		_put_singers(coord)
 	if coord == STILL_COVE:
 		_put_ottilie()
 	# Coralie comes down to the shore once the opening's done with it.
@@ -997,6 +1010,16 @@ func _put_coralie() -> void:
 	var chime := GlassChime.new()
 	chime.position = CHIME_AT
 	room.add_child(chime)
+
+
+## The last singers, where Lowe's errand finds them; Bram at the forge.
+func _put_singers(coord: Vector2i) -> void:
+	for kind: String in SINGERS:
+		var spot: Array = SINGERS[kind]
+		if spot[0] == coord and not GameState.has_flag(kind + "_home"):
+			_put_npc(kind, Vector2(spot[1]) * 16.0 + Vector2(8, 10))
+	if coord == KILN_MOUTH and GameState.has_flag("bram_home"):
+		_put_npc("bram", BRAM_FORGE_AT)
 
 
 static func _gully_on_the_shelf() -> bool:

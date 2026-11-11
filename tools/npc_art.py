@@ -837,6 +837,98 @@ MURMUR = [
 ]
 
 
+# --------------------------------------------------------------------------
+# The last singers: four of the Choir who never went home after the ending
+# (StoryDirector, Sister Lowe's errand). Grey robes, hoods pushed down.
+# --------------------------------------------------------------------------
+def _straggler(head, robe_from=9):
+    """A Choir robe under a bare head: `head` gives rows 0..robe_from-1."""
+    body = [
+        "...SSSSSSSSSS...",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        ".VSSSSSSSSSSSSV.",
+        ".VSSSSSSSSSSSSV.",
+        "..SSSUUUUUUSSS..",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        "..SSSSSSSSSSSS..",
+        "...SSSSSSSSSS...",
+        "...SSSSSSSSSS...",
+        "....vv....vv....",
+        "................",
+    ]
+    return head + body[len(head) + len(body) - 24:]
+
+
+def _skin(rows, skin):
+    return [r.replace("V", skin) for r in rows]
+
+
+# Bram, a big Cinderreach lad who helped stoke the Kiln: cropped hair and
+# a short beard.
+BRAM = _skin(_straggler([
+    "................",
+    "......MMMM......",
+    ".....MMMMMM.....",
+    "....MMVVVVMM....",
+    "....MVeVVeVM....",
+    "....MVVVVVVM....",
+    "....MMVVVVMM....",
+    ".....MMMMMM.....",
+    "......MMMM......",
+]), "V")
+
+# Sela, from the Frostspine mills: a long dark braid over one shoulder.
+SELA = _skin(_straggler([
+    "................",
+    "......MMMM......",
+    ".....MMMMMM.....",
+    "....MMVVVVMM....",
+    "....MVeVVeVM....",
+    "....MVVVVVVM....",
+    ".....VVVVVVM....",
+    "......VVVV.MM...",
+    "...........MM...",
+]), "A")
+
+# Pim, the youngest: a fair, untidy mop, and a robe that's too long.
+PIM = _skin(_straggler([
+    "................",
+    "................",
+    "................",
+    ".....FFFFFF.....",
+    "....FFFFFFFF....",
+    "....FVeVVeVF....",
+    "....FVVVVVVF....",
+    ".....VVVVVV.....",
+    "......VVVV......",
+]), "A")
+
+# Ansel, the oldest: bald on top, a grey fringe and a long grey beard.
+ANSEL = _skin(_straggler([
+    "................",
+    "......VVVV......",
+    ".....VVVVVV.....",
+    "....ZVVVVVVZ....",
+    "....ZVeVVeVZ....",
+    "....ZVVVVVVZ....",
+    ".....ZZZZZZ.....",
+    ".....ZZZZZZ.....",
+    "......ZZZZ......",
+]), "A")
+
+
+def straggler_frames(rows):
+    idle = rows
+    breathe = settle(idle, 9)
+    # Talking: one hand comes up to the chest.
+    talk = paint(idle, [(12, 1, "."), (13, 1, "."), (11, 3, "SV")])
+    return [idle, breathe, talk]
+
+
 # After the ending Murmur sets the Choir's grey robe aside: a fen-green
 # knit and a plain brown skirt, the same pale hair, the same lantern.
 MURMUR_PLAIN = [
@@ -1223,6 +1315,10 @@ SPRITES = {
     "vael": vael_frames,
     "murmur": murmur_frames,
     "murmur_plain": murmur_plain_frames,
+    "bram": lambda: straggler_frames(BRAM),
+    "sela": lambda: straggler_frames(SELA),
+    "pim": lambda: straggler_frames(PIM),
+    "ansel": lambda: straggler_frames(ANSEL),
     "lowe": lowe_frames,
     "tobin": tobin_frames,
     "ide": ide_frames,
@@ -1550,6 +1646,49 @@ def portrait_murmur():
     return _rows(c)
 
 
+def _portrait_straggler(skin, hair):
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
+    _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, pushed down
+    hair(c)
+    _face(c, skin, eye_row=16, cy=17, rx=7, ry=8, mouth=False)
+    _box(c, 15, 22, 2, 1, "-")
+    return c
+
+
+def portrait_bram():
+    def hair(c):
+        _ellipse(c, 16, 11, 9, 5, "M")
+    c = _portrait_straggler("V", hair)
+    _ellipse(c, 16, 23, 6, 3, "M")                     # short beard
+    _box(c, 15, 22, 2, 1, "-")
+    return _rows(c)
+
+
+def portrait_sela():
+    def hair(c):
+        _ellipse(c, 16, 13, 10, 8, "M")
+        _box(c, 22, 18, 3, 12, "M")                    # the braid
+    return _rows(_portrait_straggler("A", hair))
+
+
+def portrait_pim():
+    def hair(c):
+        _ellipse(c, 16, 11, 10, 6, "F")
+        _dots(c, [(8, 13), (24, 13), (12, 5), (19, 5)], "F")
+    return _rows(_portrait_straggler("A", hair))
+
+
+def portrait_ansel():
+    def hair(c):
+        _box(c, 7, 12, 3, 6, "Z")
+        _box(c, 22, 12, 3, 6, "Z")
+    c = _portrait_straggler("A", hair)
+    _ellipse(c, 16, 24, 6, 5, "Z")                     # long grey beard
+    _box(c, 14, 21, 4, 1, "-")
+    return _rows(c)
+
+
 def portrait_murmur_plain():
     """Murmur after the ending: the robe set aside for a fen-green knit."""
     c = _canvas()
@@ -1665,6 +1804,10 @@ PORTRAITS = {
     "vael": portrait_vael(),
     "murmur": portrait_murmur(),
     "murmur_plain": portrait_murmur_plain(),
+    "bram": portrait_bram(),
+    "sela": portrait_sela(),
+    "pim": portrait_pim(),
+    "ansel": portrait_ansel(),
     "lowe": portrait_lowe(),
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),

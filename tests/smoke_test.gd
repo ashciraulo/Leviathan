@@ -88,6 +88,8 @@ func _ready() -> void:
 		_test_talk_order()
 		_test_errands()
 		_test_hessa_hints()
+		_test_keepers_round()
+		await _test_last_singers()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
 		_test_late_reactions()
@@ -6162,7 +6164,7 @@ func _test_lowe_after() -> void:
 	game.player.try_interact()
 	var pages := await _play_scene(game, 10.0)
 	_check(pages == 4 and GameState.has_flag("lowe_spoke"), "she talks about Vael and home (%d pages)" % pages)
-	_check(Conversations.branch_for("lowe").get("lines") == ["LOWE_END_AGAIN"], "then just watches the tide")
+	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_SINGERS_1", "then asks after her last singers")
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
@@ -6386,12 +6388,115 @@ func _test_challenge_talk() -> void:
 	GameState.reset_new_game()
 
 
+## Hessa sends Wren to read every Tidestone; when they have, she cuts
+## Wren's line under her own on the Saltmarrow stone.
+func _test_keepers_round() -> void:
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", "tidebell_kiln", "hessa_round_ask"]:
+		GameState.set_flag(flag)
+	var stone := Tidestone.new()
+	add_child(stone)
+	stone.awake = true
+	var coords: Array = Tidestone.CARVINGS.keys()
+	for coord: Vector2i in coords:
+		stone.room_coord = coord
+		if coord == coords[-1]:
+			_check(not GameState.has_flag(Tidestone.ALL_READ_FLAG), "one stone short, the round isn't done")
+		stone.interact()
+	_check(Tidestone.read_count() == coords.size() and GameState.has_flag(Tidestone.ALL_READ_FLAG), "every stone read")
+	_check(Conversations.branch_for("hessa").get("lines")[0] == "HESSA_ROUND_DONE_1", "Hessa sees Wren has walked the round")
+	_check(Tidestone.carving_for(Tidestone.SALTMARROW_STONE).size() == 2, "before she carves, the village stone holds only her line")
+	Conversations.talk("hessa")
+	_check(Tidestone.carving_for(Tidestone.SALTMARROW_STONE)[-1] == "STONE_SALTMARROW_WREN", "and now Wren's line is cut under hers")
+	_check(Conversations.branch_for("hessa").get("lines")[0] != "HESSA_ROUND_DONE_1", "once")
+	# After the turn, a read stone turns the tide, but Wren's new line is read first.
+	GameState.set_flag(Tide.TURNED_FLAG)
+	stone.room_coord = Tidestone.SALTMARROW_STONE
+	stone.interact()
+	_check(GameState.has_flag(Tidestone.WREN_LINE_READ_FLAG), "after the turn, Wren's new line is still read once")
+	stone.interact()
+	_check(Tide.held() != "", "and then the stone turns the tide as before")
+	stone.queue_free()
+	GameState.reset_new_game()
+
+
+## After the ending, Sister Lowe asks Wren to find four singers who never
+## went home; each needs a small push from someone Wren already knows.
+func _test_last_singers() -> void:
+	GameState.reset_new_game()
+	for flag in [StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG]:
+		GameState.set_flag(flag)
+	for kind: String in StoryDirector.SINGERS:
+		var spot: Array = StoryDirector.SINGERS[kind]
+		var at := Vector2(spot[1]) * 16.0 + Vector2(8, 10)
+		GameState.set_checkpoint(spot[0], at + Vector2(0, 20))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.4)
+		var room: Room = game.current_room
+		var tile: Vector2i = spot[1]
+		_check(_find_kind(room, kind) != null, "%s sits alone in room %s" % [kind, spot[0]])
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) != "#", "%s is on dry ground Wren can reach, above the box" % kind)
+		game.queue_free()
+		await _wait(0.1)
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var lines := func(who: String) -> Array: return Conversations.branch_for(who).get("lines", [])
+	for flag in ["lowe_spoke", "met_agna", "ottilie_asked", "sorrel_asked", "wick_asked"]:
+		GameState.set_flag(flag)
+	_check(first.call("lowe") == "LOWE_SINGERS_1", "Lowe asks after her last four singers")
+	Conversations.talk("lowe")
+	_check(first.call("lowe") == "LOWE_SINGERS_WAITING", "and counts them while Wren looks")
+	# Each one, then the friend who sends for them.
+	for pair in [["bram", "agna", "AGNA_BRAM_1"], ["sela", "ottilie", "OTTILIE_SELA_1"], ["ansel", "sorrel", "SORREL_ANSEL_1"]]:
+		_check(first.call(pair[1]) != pair[2], "%s has nothing to say of %s before Wren meets them" % [pair[1], pair[0]])
+		Conversations.talk(pair[0])
+		_check(first.call(pair[0]) == pair[0].to_upper() + "_WAITING", "%s won't go home alone" % pair[0])
+		_check(first.call(pair[1]) == pair[2], "%s sends word" % pair[1])
+		Conversations.talk(pair[1])
+		_check((lines.call(pair[0]) as Array).has(pair[0].to_upper() + "_HOME_1"), "and %s goes home" % pair[0])
+		Conversations.talk(pair[0])
+		_check(GameState.has_flag(pair[0] + "_home"), "%s is home" % pair[0])
+	Conversations.talk("pim")
+	_check(first.call("pim") == "PIM_WAITING", "Pim waits for a light")
+	GameState.give_item("glowmoth_lantern", 1, false)
+	Conversations.talk("pim")
+	_check(GameState.has_flag("pim_home") and first.call("wick") == "WICK_PIM", "Wren lights Pim home, and Wick has a new counter")
+	var glints := GameState.item_count("glint")
+	_check(first.call("lowe") == "LOWE_SINGERS_DONE_1", "all four home")
+	Conversations.talk("lowe")
+	_check(GameState.item_count("glint") == glints + 300 and first.call("lowe") == "LOWE_JUST_LOWE", "Lowe sets down her robe and the Choir's purse")
+	# They've gone home, and Bram is at the forge.
+	GameState.set_checkpoint(StoryDirector.KILN_MOUTH, StoryDirector.BRAM_FORGE_AT + Vector2(0, 20))
+	var forge: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(forge)
+	await _wait(0.4)
+	var tile := Vector2i(StoryDirector.BRAM_FORGE_AT / Room.TILE)
+	_check(_find_kind(forge.current_room, "bram") != null and forge.current_room.tile_at(tile.x, tile.y) == "." and forge.current_room.tile_at(tile.x, tile.y + 1) != "#", "Bram works Agna's bellows now")
+	_check(first.call("bram") == "BRAM_FORGE", "and is learning")
+	forge.queue_free()
+	await _wait(0.1)
+	var spot: Array = StoryDirector.SINGERS["sela"]
+	GameState.set_checkpoint(spot[0], Vector2(spot[1]) * 16.0 + Vector2(8, 30))
+	var cold: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(cold)
+	await _wait(0.4)
+	_check(_find_kind(cold.current_room, "sela") == null, "Sela's spot is empty once she's home")
+	cold.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
 ## Hessa always has a word on where the next bell is, if Wren asks.
 func _test_hessa_hints() -> void:
 	GameState.reset_new_game()
 	var first := func() -> String: return str(Conversations.branch_for("hessa").get("lines", [""])[0])
 	for flag in ["met_hessa", "entered_hull", "heard_hessa_hull", "tidebell_hull", "freed_mantle", "seen_wayshell"]:
 		GameState.set_flag(flag)
+	_check(first.call() == "HESSA_AFTER_BELL", "after the Wayshell, Hessa points Wren to the Kiln first")
+	GameState.set_flag("tidebell_kiln")
+	_check(first.call() == "HESSA_ROUND_1", "with the Kiln's bell rung, she sends Wren round the Tidestones")
+	Conversations.talk("hessa")
+	GameState.clear_flag("tidebell_kiln")
 	var expect := [
 		["", "HESSA_AFTER_BELL"], ["tidebell_kiln", "HESSA_HINT_MIRE_1"], ["tidebell_mire", "HESSA_HINT_GALE_1"],
 		["seen_hessa_confession", "HESSA_AFTER_TURN"], ["tidebell_glacier", "HESSA_HINT_BELFRY_1"],
