@@ -43,6 +43,10 @@ var _hurtbox: Area2D
 var _contact: DamageArea
 var _sprite: Sprite2D
 var _sprite_origin := Vector2.ZERO
+## The sprite's own scale, and the squash a landed blow gives it (see
+## SQUASH_TIME).
+var _sprite_base_scale := Vector2.ONE
+var _squash := 0.0
 var _roared := false
 
 
@@ -76,6 +80,7 @@ func _ready() -> void:
 	_sprite.set_meta("contrast", Palette.CONTRAST_ENEMY)
 	add_child(_sprite)
 	_sprite_origin = _sprite.position
+	_sprite_base_scale = _sprite.scale
 	if elite:
 		scale = Vector2.ONE * ELITE_SCALE
 		_sprite.self_modulate = ELITE_TINT
@@ -102,6 +107,11 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_sprite.position = _sprite_origin
 	_update_sprite()
+	if _squash > 0.0:
+		_squash = maxf(_squash - delta, 0.0)
+		var k := _squash / SQUASH_TIME
+		var amount := SQUASH_BOSS if is_in_group("boss") else SQUASH
+		_sprite.scale = _sprite_base_scale * Vector2(1.0 + amount * k, 1.0 - amount * 0.8 * k)
 	Art.set_flash(_sprite, 1.0 if _flash > 0.0 else 0.0)
 
 
@@ -119,6 +129,10 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 	if damage > 0:
 		HitSpark.spawn(get_parent(), global_position + _spark_offset() - direction * 7.0, HitSpark.Kind.HIT, direction)
 	_flash = 0.12
+	# Squashed flat for a moment by the blow (only foes that don't already
+	# animate their own scale).
+	if _squash > 0.0 or _sprite.scale.is_equal_approx(_sprite_base_scale):
+		_squash = SQUASH_TIME
 	_stun = HIT_STUN
 	_knockback = direction * KNOCKBACK_SPEED * knockback_scale
 	_on_hurt()
@@ -155,6 +169,12 @@ func _on_hurt() -> void:
 ## hurtbox, so big foes take the spark at the body, not the feet.
 func _spark_offset() -> Vector2:
 	return Vector2(0, -(body_size.y + 6.0) / 2.0 * scale.y)
+
+## How long, and how hard, a landed blow squashes a foe's sprite (bosses
+## less, being big).
+const SQUASH_TIME := 0.14
+const SQUASH := 0.25
+const SQUASH_BOSS := 0.08
 
 ## Chance that a fallen enemy leaves a glint or more.
 const GLINT_ODDS := 0.6
