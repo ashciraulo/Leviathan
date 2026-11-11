@@ -246,7 +246,8 @@ func _move_state() -> void:
 		return
 	if Input.is_action_just_pressed("interact") and try_interact():
 		velocity = Vector2.ZERO
-	elif Input.is_action_just_pressed("attack") or _attack_buffered <= ATTACK_BUFFER:
+		_attack_buffered = INF
+	elif Input.is_action_just_pressed("attack"):
 		start_attack()
 		velocity = Vector2.ZERO
 	elif Input.is_action_just_pressed("item_1") and use_item(GameState.item_slots[0]):
@@ -261,6 +262,10 @@ func _move_state() -> void:
 		else:
 			# Don't leave Hum toggled on; it would start by itself later.
 			_hum_latched = false
+	# A swing pressed late in the last one, if nothing fresher was pressed.
+	elif _attack_buffered <= ATTACK_BUFFER:
+		start_attack()
+		velocity = Vector2.ZERO
 
 
 ## The point just in front of Wren that Interact reaches.
@@ -589,6 +594,10 @@ func _charge_state() -> void:
 	_charge_chimed = false
 	if is_charged():
 		_start_spin()
+	elif _attack_buffered != INF:
+		# That was a fresh press late in the swing, held past its end, not
+		# a charge: it swings.
+		start_attack()
 	else:
 		_enter(State.MOVE)
 
@@ -720,9 +729,10 @@ func _deflect(hazard: DamageArea) -> void:
 
 func _enter(new_state: State) -> void:
 	state = new_state
-	# A held swing becomes a charge; anything but a fresh swing drops the
-	# waiting press.
-	if new_state != State.MOVE:
+	# A press late in a swing and still held at its end carries into the
+	# charge (let go early, it swings); anything else drops it.
+	if not new_state in [State.MOVE, State.CHARGE] \
+			or (new_state == State.CHARGE and _attack_buffered > ATTACK_BUFFER):
 		_attack_buffered = INF
 	_state_time = 0.0
 	hum_progress = 0.0

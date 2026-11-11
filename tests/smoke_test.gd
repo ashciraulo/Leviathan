@@ -1137,7 +1137,7 @@ func _test_play() -> void:
 	await _wait(0.1)
 
 	# A swing pressed near the end of the last one still comes out after it,
-	# and a press long before the end doesn't swing twice.
+	# and only once.
 	Input.action_press("attack")
 	await _wait(0.05)
 	Input.action_release("attack")
@@ -1150,8 +1150,23 @@ func _test_play() -> void:
 	await _wait(0.12)
 	_check(player.state == Player.State.ATTACK and player._state_time < Player.ATTACK_TIME - 0.02,
 		"a swing pressed late in the last one follows straight on (state %d)" % player.state)
-	await _wait(Player.ATTACK_TIME + Player.ATTACK_BUFFER + 0.1)
-	_check(player.state == Player.State.MOVE, "and then Wren stands ready, with no extra swing")
+	await _wait(Player.ATTACK_TIME - player._state_time + 0.06)
+	_check(player.state == Player.State.MOVE, "and then Wren stands ready, with no extra swing (state %d)" % player.state)
+	# Pressed late and still held as the swing ends, a short tap still swings
+	# rather than starting a charge that comes to nothing.
+	await _wait(0.2)
+	Input.action_press("attack")
+	await _wait(0.05)
+	Input.action_release("attack")
+	await _wait(Player.ATTACK_TIME - 0.12)
+	Input.action_press("attack")
+	await _wait(0.12)
+	_check(player.state == Player.State.CHARGE, "a late press held past the swing's end readies a charge (state %d)" % player.state)
+	Input.action_release("attack")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(player.state == Player.State.ATTACK, "let go early, that late press swings (state %d)" % player.state)
+	await _wait(Player.ATTACK_TIME + 0.1)
 
 	# Hum heals one bubble for a third of the meter.
 	GameState.bubbles = 2
