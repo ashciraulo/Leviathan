@@ -7775,7 +7775,6 @@ func _test_area_stats() -> void:
 	SaveManager.delete_save()
 
 
-## One short trial cave per region: a single puzzle and a glint cache.
 ## Exploration secrets in the older regions: each needs a tool found later,
 ## so the early screens pay out on the way back.
 func _test_older_secrets() -> void:
@@ -7789,7 +7788,7 @@ func _test_older_secrets() -> void:
 	var bed := Vector2i(7, 10)
 	_check(pools.chest_item == "glint" and pools.tile_at(6, 10) == "C" and tide != null and tide.is_flooded(bed),
 		"Tidepools: the rock pool's chest is under water even at low tide")
-	_check(pools.freeze(Vector2i(8, 10)).is_empty(), "frost can't lay a path over the sea bed")
+	_check(tide != null and tide._shapes.size() == tide._seabed.size(), "the rock pool is all sea bed, so the breathing tide never sounds its rush there")
 	GameState.set_flag(Tide.TURNED_FLAG)
 	GameState.set_flag(Tide.HELD_FLAG)
 	await _wait(0.1)
@@ -7810,6 +7809,7 @@ func _test_older_secrets() -> void:
 	wall.free()
 
 
+## One short trial cave per region: a single puzzle and a glint cache.
 func _test_puzzle_caves() -> void:
 	# Dragline Cellar, west of the Shore: cracked boulders, then a crate stuck
 	# at the end of a one-wide alcove. Only the hook drags it out.
