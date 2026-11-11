@@ -198,6 +198,7 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 ## without being hurt by the scenery or carried off it.
 func _sweep_overworld() -> void:
 	print("Playthrough: overworld after the ending")
+	var started := Time.get_ticks_msec()
 	var coords: Array[Vector2i] = []
 	for coord: Vector2i in _rooms:
 		if _rooms[coord][0] == "":
@@ -218,6 +219,49 @@ func _sweep_overworld() -> void:
 		_check(_game.current_room == room and _game.player.global_position.distance_to(start) < 24.0, "after the ending: nothing carries Wren off in %s" % coord)
 		_check(_can_step(), "after the ending: Wren can walk on from where they come into %s" % coord)
 		_keep_safe()
+		await _interact_all(coord)
+	# Everything the sweep set (side quests finished, things read) keeps.
+	await _save_and_reload("the overworld sweep")
+	print("Playthrough: overworld sweep took %.0f s" % ((Time.get_ticks_msec() - started) / 1000.0))
+
+
+## Talks to, reads or opens everything in the room and checks each leaves
+## the game playable: no conversation, scene, shop or pause left hanging
+## and Wren free to move. Anything that carries Wren off (a boat, the
+## ferry) is followed back.
+func _interact_all(coord: Vector2i) -> void:
+	var count := _interactables().size()
+	for i in count:
+		if _game.current_room == null or _game.current_room.coord != coord:
+			await _goto(coord)
+			await _play_scene(20.0)
+		var things := _interactables()
+		if i >= things.size() or things[i].get("opened") == true:
+			continue
+		var thing: Node2D = things[i]
+		var what := "after the ending: %s in %s" % [thing.name, coord]
+		_game.player.global_position = thing.global_position + Vector2(0, 14)
+		_game.player.facing = Vector2.UP
+		thing.interact()
+		var waited := 0.0
+		while waited < 30.0:
+			await _wait(0.05)
+			waited += 0.05
+			_read_dialogue()
+			for shop in get_tree().get_nodes_in_group("shop_menu"):
+				shop.close()
+			if waited >= 0.15 and not DialogueBox.is_open and not Cutscene.active and not _game.busy \
+					and get_tree().get_nodes_in_group("shop_menu").is_empty():
+				break
+		_check(not DialogueBox.is_open, "%s: the conversation ends" % what)
+		_check(not Cutscene.active, "%s: no scene is left running" % what)
+		_check(not get_tree().paused, "%s: the game isn't left paused" % what)
+		_check(not _game.busy and not _game.player.frozen, "%s: Wren can move again" % what)
+		_keep_safe()
+
+
+func _interactables() -> Array:
+	return _all(_game.current_room, Node2D).filter(func(n: Node) -> bool: return n.is_in_group("interactable"))
 
 
 ## The Dreaming Heart: every bell already rung, Wren hums it to sleep. The
