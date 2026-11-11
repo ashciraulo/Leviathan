@@ -1113,6 +1113,21 @@ func _test_play() -> void:
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
 	await _wait(0.5)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
+	# A boss's last blow: the great star, time held, then a breath of slow
+	# motion, and time back to normal after.
+	var stand_in := Scuttler.new()
+	stand_in.ai_enabled = false
+	stand_in.position = Vector2(150, row_y)
+	room.add_child(stand_in)
+	stand_in.add_to_group("boss")
+	await _wait(0.1)
+	stand_in.hp = 1
+	stand_in.take_hit(1, Vector2.RIGHT)
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FINAL) and Engine.time_scale == 0.0, "a boss's last blow throws the great star and holds time")
+	await get_tree().create_timer(0.35, true, false, true).timeout
+	_check(is_equal_approx(Engine.time_scale, Feel.SLOW_SCALE), "then time runs slow a moment (%s)" % Engine.time_scale)
+	await get_tree().create_timer(Feel.SLOW_TIME + 0.2, true, false, true).timeout
+	_check(Engine.time_scale == 1.0, "and comes back to normal")
 	GameState.refill()
 
 	# Lanternmoth circles Wren, flares (its tell), then dives.
@@ -2963,7 +2978,8 @@ func _test_maw_dungeon() -> void:
 		while vael.hp > 0:
 			vael.note_hit(null)
 		_check(GameState.has_flag(CantorVael.DEFEATED_FLAG), "his song broken, Vael stops and listens")
-		await _wait(1.5)
+		# The last blow holds time and slows it a moment before he speaks.
+		await _wait(2.2)
 		await _close_dialogue(game)
 		await _wait(0.3)
 		_check(is_instance_valid(vael), "he doesn't fall: he stays")
@@ -3507,7 +3523,8 @@ func _test_hull_dungeon() -> void:
 		_check(boss.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and boss.hp == BarnacleMatriarch.MAX_HP - 1, "her soft body takes the sword")
 		boss.mode = BarnacleMatriarch.Mode.EXPOSED
 		boss.take_hit(99, Vector2.UP)
-		await _wait(2.6)
+		# Her fall plus the last blow's held time and slow motion.
+		await _wait(3.1)
 		_check(GameState.flags.get(BarnacleMatriarch.DEFEATED_FLAG, false), "beating her is remembered")
 		var bell: Tidebell = null
 		for child in room.get_children():
@@ -3720,7 +3737,7 @@ func _test_kiln_dungeon() -> void:
 		while wyrm.segments.size() > 0:
 			wyrm.segment_smashed(wyrm.segments[0])
 		_check(GameState.flags.get(Slagwyrm.DEFEATED_FLAG, false), "breaking every plate beats the Slagwyrm")
-		await _wait(3.4)
+		await _wait(3.9)
 		player._invuln = 0.0
 		var bell: Tidebell = null
 		for child in room.get_children():
@@ -5069,7 +5086,7 @@ func _test_regional_caves() -> void:
 	add_child(warren)
 	await _wait(0.2)
 	var hidden: Chest = _child_of(warren, Chest)[0]
-	_check(warren.gate == "clear" and Room.parse_layout(warren.layout)[1].count("|") == 2 and not hidden.visible and _child_of(warren, Enemy).size() >= 5, "the Sporecap Warren hides its chest behind a fight")
+	_check(warren.gate == "clear" and Room.parse_layout(warren.layout)[1].count("|") == 2 and Room.parse_layout(warren.layout)[11].count("|") == 2 and not hidden.visible and _child_of(warren, Enemy).size() >= 5, "the Sporecap Warren hides its chest behind a fight")
 	for enemy in _child_of(warren, Enemy):
 		enemy.queue_free()
 	warren.get_node("Puzzle").set("_shut_in", true)
@@ -5265,6 +5282,10 @@ func _test_far_reaches() -> void:
 	var hooks := {
 		Vector2i(0, -5): [[Vector2i(14, 6), Vector2.RIGHT, Vector2i(20, 6)], [Vector2i(20, 5), Vector2.LEFT, Vector2i(14, 5)]],
 		Vector2i(9, -3): [[Vector2i(15, 9), Vector2.UP, Vector2i(15, 3)], [Vector2i(14, 3), Vector2.DOWN, Vector2i(14, 9)]],
+		# Gloamfen south: out over the dark fen to the far bank and home again.
+		Vector2i(6, 3): [[Vector2i(17, 8), Vector2.RIGHT, Vector2i(20, 8)], [Vector2i(20, 9), Vector2.LEFT, Vector2i(17, 9)]],
+		# The Verge's far south: a reef islet's cache, there and back.
+		Vector2i(0, 5): [[Vector2i(19, 8), Vector2.UP, Vector2i(19, 3)], [Vector2i(19, 4), Vector2.DOWN, Vector2i(19, 8)]],
 	}
 	for coord: Vector2i in hooks:
 		GameState.reset_new_game()
@@ -5321,6 +5342,22 @@ func _test_far_reaches() -> void:
 	_check(bars[0].is_open and bars[1].is_open and cairn.chest_item == "glint", "both eyes open the cairn")
 	game.queue_free()
 	await _wait(0.1)
+	# Gloamfen south: down from the Sporecap Warren into the dark Glowmire
+	# Deep (veiled planks: the lantern) to the Calf's Rest, whose middle is
+	# left clear for the calf's skull.
+	var warren := Room.parse_layout(((load("res://rooms/room_6_2.tscn") as PackedScene).instantiate() as Room).layout)
+	var deep: Room = (load("res://rooms/room_6_3.tscn") as PackedScene).instantiate()
+	var rest: Room = (load("res://rooms/room_7_3.tscn") as PackedScene).instantiate()
+	var rest_rows := Room.parse_layout(rest.layout)
+	_check(warren[12].substr(11, 2) == ".." and deep.dark and deep.layout.count("v") == 10, "the Warren opens south into the dark Glowmire Deep, crossed on veiled planks")
+	_check(rest_rows[4].substr(10, 5) == "....." and rest_rows[5].substr(10, 5) == "....." and rest_rows[6].substr(10, 5) == "....." and rest.chest_item == "glint", "the Calf's Rest keeps its middle clear")
+	deep.free()
+	rest.free()
+	# The Verge's far south: down the Ebb Shelf's sea bed (the held tide),
+	# then a deep trench only the Diver's Helm swims.
+	var ebb := Room.parse_layout(((load("res://rooms/room_1_4.tscn") as PackedScene).instantiate() as Room).layout)
+	var wrack := Room.parse_layout(((load("res://rooms/room_1_5.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 22 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench")
 	# Cinder Crown: two crates onto two plates open the crown's cache.
 	_check(Room.parse_layout(((load("res://rooms/room_9_-2.tscn") as PackedScene).instantiate() as Room).layout)[0].substr(15, 2) == "..", "the Slag Fields open north to Brimstone Steps")
 	GameState.reset_new_game()

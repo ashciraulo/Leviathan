@@ -335,10 +335,12 @@ func segment_smashed(segment: WyrmSegment) -> void:
 	Audio.play_sfx("pot_break", segment.global_position, 0.45)
 	hp -= 1
 	_flash = 0.2
-	Feel.hitstop(4)
-	Feel.shake(3.0)
 	if hp <= 0:
+		Feel.final_blow(get_parent(), segment.global_position + Vector2(0, -7))
 		_die()
+	else:
+		Feel.hitstop(4)
+		Feel.shake(3.0)
 
 
 func steam_at(at: Vector2) -> void:

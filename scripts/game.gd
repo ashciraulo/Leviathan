@@ -318,7 +318,7 @@ func _on_player_died() -> void:
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, FADE_TIME)
 	await tween.finished
-	Engine.time_scale = 1.0
+	Feel.reset()
 	Audio.stop_music(0.5)
 	Audio.play_ambience("", 0.5)
 	# The world holds still (and stays quiet) under the game over screen.

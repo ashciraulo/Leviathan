@@ -100,6 +100,10 @@ func _ready() -> void:
 			Vector2i(1, -5): ["reach_hoarfrost_cairn", Vector2i(10, 2)],
 			Vector2i(9, -3): ["reach_brimstone_steps", Vector2i(15, 10)],
 			Vector2i(10, -3): ["reach_cinder_crown", Vector2i(11, 5)],
+			Vector2i(6, 3): ["reach_glowmire_deep", Vector2i(12, 2)],
+			Vector2i(7, 3): ["reach_calfs_rest", Vector2i(8, 6)],
+			Vector2i(1, 5): ["reach_wrack_deeps", Vector2i(12, 10)],
+			Vector2i(0, 5): ["reach_lee_of_the_old_one", Vector2i(10, 8)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -793,6 +797,9 @@ func _hull_shots(game: Node) -> void:
 		await _capture("39_matriarch_exposed")
 		boss.mode = BarnacleMatriarch.Mode.EXPOSED
 		boss.take_hit(99, Vector2.UP)
+		# The last blow: the great star as time runs slow.
+		await get_tree().create_timer(0.5, true, false, true).timeout
+		await _capture("39b_matriarch_final_blow")
 		await _wait(3.2)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
 		await _wait(0.3)
@@ -905,9 +912,10 @@ func _kiln_shots(game: Node) -> void:
 		await _wait(1.0)
 		while boss and is_instance_valid(boss) and boss.segments.size() > 0:
 			boss.segment_smashed(boss.segments[0])
-		await _wait(1.6)
+		# The last blow holds time, then slows it, before the wyrm turns to stone.
+		await _wait(2.1)
 		await _capture("64_slagwyrm_stone")
-		await _wait(2.5)
+		await _wait(2.0)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE + 12)
 		await _wait(0.3)
 		await _capture("65_ember_bell")
