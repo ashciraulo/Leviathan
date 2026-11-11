@@ -111,8 +111,13 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 		return HitResult.IGNORED
 	if _blocks_hit(direction):
 		_on_blocked(direction)
+		if damage > 0:
+			HitSpark.spawn(get_parent(), global_position + _spark_offset() - direction * 6.0, HitSpark.Kind.BLOCK, direction)
 		return HitResult.BLOCKED
 	hp -= damage
+	# The hook's tug (no damage) is not a blow.
+	if damage > 0:
+		HitSpark.spawn(get_parent(), global_position + _spark_offset() - direction * 7.0, HitSpark.Kind.HIT, direction)
 	_flash = 0.12
 	_stun = HIT_STUN
 	_knockback = direction * KNOCKBACK_SPEED * knockback_scale
@@ -144,12 +149,19 @@ func _on_hurt() -> void:
 	pass
 
 
+## Where a blow's spark shows, from the enemy's feet: the middle of its
+## hurtbox, so big foes take the spark at the body, not the feet.
+func _spark_offset() -> Vector2:
+	return Vector2(0, -(body_size.y + 6.0) / 2.0 * scale.y)
+
 ## Chance that a fallen enemy leaves a glint or more.
 const GLINT_ODDS := 0.6
 
 
 func _die() -> void:
 	dying = true
+	if not is_in_group("boss"):
+		HitSpark.spawn(get_parent(), global_position, HitSpark.Kind.FALL)
 	Audio.play_sfx("enemy_die", global_position)
 	if elite:
 		Audio.play_sfx("boss_fall", global_position, 1.6)
