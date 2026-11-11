@@ -69,8 +69,16 @@ const SPEAKERS := {
 const TALKS := {
 	# Marlo Pike talks across his stall's counter; his wares come after.
 	"marlo": [
+		# Pearls for his mum's eightieth, from oyster beds only the Diver's
+		# Helm reaches (QuestFind).
+		{"if": ["marlo_pearls_ask", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"], "unless": ["marlo_pearls_done"], "set": ["marlo_pearls_done"], "give": {"glint": 180}, "lines": [["", "NARRATE_HAND_PEARLS"], "MARLO_PEARLS_DONE_1", "MARLO_PEARLS_DONE_2", "MARLO_PEARLS_DONE_3", ["", "NARRATE_GOT_PEARL_PURSE"]]},
+		# All three found before he asked.
+		{"if": ["met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"], "unless": ["marlo_pearls_ask"], "set": ["marlo_pearls_ask", "marlo_pearls_done"], "give": {"glint": 180}, "lines": [["", "NARRATE_HAND_PEARLS"], "MARLO_PEARLS_EARLY", "MARLO_PEARLS_1", "MARLO_PEARLS_EARLY_2", "MARLO_PEARLS_DONE_3", ["", "NARRATE_GOT_PEARL_PURSE"]]},
+		{"if": ["met_marlo"], "has": ["divers_helm"], "unless": ["marlo_pearls_ask"], "set": ["marlo_pearls_ask"], "lines": ["MARLO_PEARLS_1", "MARLO_PEARLS_1B", "MARLO_PEARLS_2", "MARLO_PEARLS_2B"]},
+		{"if": ["marlo_pearls_done"], "unless": ["marlo_pearls_after"], "set": ["marlo_pearls_after"], "lines": ["MARLO_PEARLS_AFTER"]},
+		{"if": ["met_marlo", "tidebell_hull"], "unless": ["marlo_puffers", "seen_ending"], "set": ["marlo_puffers"], "lines": ["MARLO_PUFFERS_1", "MARLO_PUFFERS_2"]},
+		{"if": ["marlo_pearls_ask"], "unless": ["marlo_pearls_done"], "lines": ["MARLO_PEARLS_WAITING"]},
 		{"if": ["seen_ending"], "lines": ["MARLO_END"]},
-		{"if": ["met_marlo", "tidebell_hull"], "unless": ["marlo_puffers"], "set": ["marlo_puffers"], "lines": ["MARLO_PUFFERS_1", "MARLO_PUFFERS_2"]},
 		{"if": ["met_marlo"], "lines": ["MARLO_AGAIN"]},
 		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
 	],
@@ -170,6 +178,7 @@ const TALKS := {
 		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["lighting_ask", "met_agna"], "unless": ["party_agna"], "set": ["party_agna"], "lines": ["AGNA_PARTY_1", "AGNA_PARTY_2"]},
+		{"if": ["bram_pot_cast", "met_agna"], "unless": ["agna_pot_told"], "set": ["agna_pot_told"], "lines": ["AGNA_POT_1", "AGNA_POT_2"]},
 		# The Old One's scales: six shed pieces from the puzzle caves (ShedScale)
 		# for a hand-bell, which goes to Nettle.
 		{"if": ["agna_scales_ask", "shed_scale_dragline", "shed_scale_rimelight", "shed_scale_emberwell", "shed_scale_drybone", "shed_scale_gustway", "shed_scale_lampless"], "unless": ["agna_bell_cast"], "set": ["agna_bell_cast"], "give": {"glint": 250}, "lines": ["AGNA_SCALES_DONE_1", ["", "NARRATE_AGNA_POURS"], "AGNA_SCALES_DONE_2", "AGNA_SCALES_DONE_3", "AGNA_SCALES_DONE_4", ["", "NARRATE_GOT_SCALE_PURSE"]]},
@@ -281,7 +290,14 @@ const TALKS := {
 	],
 	# The last singers, each alone somewhere after the ending.
 	"bram": [
-		{"if": ["bram_home"], "lines": ["BRAM_FORGE"]},
+		# The Choir's chimes (QuestFind), melted down into a pot for Agna.
+		{"if": ["bram_chimes_ask", "found_chime_pass", "found_chime_fen", "found_chime_wood"], "unless": ["bram_pot_cast"], "set": ["bram_pot_cast"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_CHIMES"], "BRAM_CHIMES_DONE_1", ["", "NARRATE_BRAM_POURS"], "BRAM_CHIMES_DONE_2", "BRAM_CHIMES_DONE_3", ["", "NARRATE_GOT_CHIME_PURSE"]]},
+		# All three found before he asked.
+		{"if": ["bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood"], "unless": ["bram_chimes_ask"], "set": ["bram_chimes_ask", "bram_pot_cast"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_CHIMES"], "BRAM_CHIMES_EARLY", "BRAM_CHIMES_EARLY_2", ["", "NARRATE_BRAM_POURS"], "BRAM_CHIMES_DONE_2", "BRAM_CHIMES_DONE_3", ["", "NARRATE_GOT_CHIME_PURSE"]]},
+		{"if": ["bram_forge_talked"], "unless": ["bram_chimes_ask"], "set": ["bram_chimes_ask"], "lines": ["BRAM_CHIMES_1", "BRAM_CHIMES_1B", "BRAM_CHIMES_2"]},
+		{"if": ["bram_chimes_ask"], "unless": ["bram_pot_cast"], "lines": ["BRAM_CHIMES_WAITING"]},
+		{"if": ["bram_pot_cast"], "unless": ["bram_pot_after"], "set": ["bram_pot_after"], "lines": ["BRAM_CHIMES_AFTER"]},
+		{"if": ["bram_home"], "set": ["bram_forge_talked"], "lines": ["BRAM_FORGE"]},
 		{"if": ["agna_bram"], "set": ["bram_home"], "lines": [["", "NARRATE_WREN_BELLOWS"], "BRAM_HOME_1", "BRAM_HOME_2"]},
 		{"if": ["bram_met"], "lines": ["BRAM_WAITING"]},
 		{"set": ["bram_met"], "lines": ["BRAM_1", "BRAM_1B", "BRAM_2"]},
@@ -397,6 +413,12 @@ const TALKS := {
 	"find_bottle_strand": [{"set": ["found_bottle_strand"], "lines": ["NARRATE_FOUND_BOTTLE", "NARRATE_BOTTLE_NOTE_STRAND", "NARRATE_KEEP_BOTTLE"]}],
 	"find_pell_shell": [{"set": ["found_pell_shell"], "lines": ["NARRATE_FOUND_SHELL"]}],
 	"find_driftwood": [{"set": ["found_driftwood"], "lines": ["NARRATE_FOUND_DRIFTWOOD"]}],
+	"find_chime_pass": [{"set": ["found_chime_pass"], "lines": ["NARRATE_FOUND_CHIME"]}],
+	"find_chime_fen": [{"set": ["found_chime_fen"], "lines": ["NARRATE_FOUND_CHIME"]}],
+	"find_chime_wood": [{"set": ["found_chime_wood"], "lines": ["NARRATE_FOUND_CHIME"]}],
+	"find_pearl_verge": [{"set": ["found_pearl_verge"], "lines": ["NARRATE_FOUND_PEARL"]}],
+	"find_pearl_tangle": [{"set": ["found_pearl_tangle"], "lines": ["NARRATE_FOUND_PEARL"]}],
+	"find_pearl_deep": [{"set": ["found_pearl_deep"], "lines": ["NARRATE_FOUND_PEARL"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.

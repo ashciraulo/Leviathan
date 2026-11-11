@@ -2055,11 +2055,11 @@ func _far_story_shots() -> void:
 		await _wait(0.2)
 
 
-## Agna's scales and Nettle's signal stones.
+## Agna's scales, Nettle's signal stones and the errand finds.
 func _quest_story_shots() -> void:
 	var scale: Array = StoryDirector.SHED_SCALES["dragline"]
 	var stone: Array = StoryDirector.SIGNAL_STONES["stacks"]
-	for shot in [["quest_8_bottle", StoryDirector.FINDS["bottle_shore"], [], true], ["quest_9_shell", StoryDirector.FINDS["pell_shell"], [], false], ["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
+	for shot in [["quest_8_bottle", StoryDirector.FINDS["bottle_shore"], [], true], ["quest_9_shell", StoryDirector.FINDS["pell_shell"], [], false], ["quest_10_chime", StoryDirector.FINDS["chime_pass"], [], false], ["quest_11_pearl", StoryDirector.FINDS["pearl_verge"], [], true], ["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
 		GameState.reset_new_game()
 		for flag: String in shot[2]:
 			GameState.set_flag(flag)
@@ -2078,7 +2078,7 @@ func _quest_story_shots() -> void:
 			game.player.try_interact()
 			var box := _dialogue_box(game)
 			await _wait(2.6)
-			if shot[0] != "quest_2_scale_found" and shot[0] != "quest_8_bottle":
+			if not shot[0] in ["quest_2_scale_found", "quest_8_bottle", "quest_11_pearl"]:
 				# Past the page, to the lamp on the stone, then the answer.
 				box.advance()
 				box.advance()

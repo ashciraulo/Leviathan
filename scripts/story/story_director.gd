@@ -152,13 +152,22 @@ const SIGNAL_STONES := {
 	"brink": [Vector2i(8, 3), Vector2i(5, 8)],
 }
 ## Small things for villagers' errands ({id: [room, tile]}, QuestFind):
-## Corrin's grandad's bottles, Pell's lucky shell, Dunstan's driftwood.
+## Corrin's grandad's bottles, Pell's lucky shell, Dunstan's driftwood,
+## the Choir's chimes for Bram and the deep-bed pearls for Marlo.
 const FINDS := {
 	"bottle_shore": [Vector2i(0, 0), Vector2i(20, 2)],
 	"bottle_pools": [Vector2i(1, 0), Vector2i(10, 8)],
 	"bottle_strand": [Vector2i(4, 0), Vector2i(20, 3)],
 	"pell_shell": [Vector2i(6, -2), Vector2i(20, 2)],
 	"driftwood": [Vector2i(2, 0), Vector2i(20, 2)],
+	# Bram's errand: the Choir's old chimes, on the roads it sang along.
+	"chime_pass": [Vector2i(8, -3), Vector2i(2, 1)],
+	"chime_fen": [Vector2i(6, 1), Vector2i(6, 1)],
+	"chime_wood": [Vector2i(5, -1), Vector2i(3, 1)],
+	# Marlo's errand: oysters on beds past where anyone can hold a breath.
+	"pearl_verge": [Vector2i(0, 2), Vector2i(2, 6)],
+	"pearl_tangle": [Vector2i(6, 0), Vector2i(21, 1)],
+	"pearl_deep": [Vector2i(2, 2), Vector2i(4, 1)],
 }
 ## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
 ## Asking for it sets PARTY_FLAG (the scene plays); the scene sets

@@ -7665,13 +7665,46 @@ func _test_small_finds() -> void:
 	GameState.set_flag(QuestFind.flag_for("driftwood"))
 	Conversations.talk("dunstan")
 	_check(GameState.has_flag("dunstan_boat_done") and first.call("tobin") == "TOBIN_BOAT", "two boats, one for Tobin")
+	# Bram's chimes: asked once he's settled in at the forge.
+	for flag in ["bram_met", "agna_bram", "met_agna", "agna_gave_sword", "bram_home"]:
+		GameState.set_flag(flag)
+	_check(first.call("bram") == "BRAM_FORGE", "Bram's first word at the forge is about the coal")
+	Conversations.talk("bram")
+	_check(first.call("bram") == "BRAM_CHIMES_1", "then he asks for the Choir's chimes")
+	Conversations.talk("bram")
+	for id in ["chime_pass", "chime_fen"]:
+		GameState.set_flag(QuestFind.flag_for(id))
+	_check(first.call("bram") == "BRAM_CHIMES_WAITING", "two chimes aren't three")
+	GameState.set_flag(QuestFind.flag_for("chime_wood"))
+	glints = GameState.item_count("glint")
+	Conversations.talk("bram")
+	_check(GameState.item_count("glint") == glints + 150 and first.call("bram") == "BRAM_CHIMES_AFTER", "Bram pours Agna a pot")
+	_check(first.call("agna") == "AGNA_POT_1", "and Agna has a word about it")
+	Conversations.talk("agna")
+	Conversations.talk("bram")
+	_check(first.call("bram") == "BRAM_FORGE" and first.call("agna") != "AGNA_POT_1", "once each")
+	# Marlo's pearls: asked once Wren can dive for them.
+	GameState.set_flag("met_marlo")
+	_check(first.call("marlo") == "MARLO_AGAIN", "no pearls without the Diver's Helm")
+	GameState.give_item("divers_helm", 1, false)
+	_check(first.call("marlo") == "MARLO_PEARLS_1", "then Marlo asks for some")
+	Conversations.talk("marlo")
+	for id in ["pearl_verge", "pearl_tangle"]:
+		GameState.set_flag(QuestFind.flag_for(id))
+	_check(first.call("marlo") == "MARLO_PEARLS_WAITING", "two pearls aren't three")
+	GameState.set_flag(QuestFind.flag_for("pearl_deep"))
+	glints = GameState.item_count("glint")
+	Conversations.talk("marlo")
+	_check(GameState.item_count("glint") == glints + 180 and first.call("marlo") == "MARLO_PEARLS_AFTER", "pearls for Marlo's mum")
+	Conversations.talk("marlo")
+	_check(first.call("marlo") == "MARLO_AGAIN", "once")
 	# Found before anyone asked: the hand-in comes straight away.
 	GameState.reset_new_game()
-	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood"]:
+	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood", "bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood", "met_marlo", "found_pearl_verge", "found_pearl_tangle", "found_pearl_deep"]:
 		GameState.set_flag(flag)
-	Conversations.talk("corrin")
-	Conversations.talk("dunstan")
-	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done"), "things found early are handed straight in")
+	for who in ["corrin", "dunstan", "bram", "marlo"]:
+		Conversations.talk(who)
+	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done") and GameState.has_flag("bram_pot_cast") and GameState.has_flag("marlo_pearls_done"), "things found early are handed straight in")
 	GameState.reset_new_game()
 
 
