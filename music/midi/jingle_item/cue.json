@@ -1,0 +1,26 @@
+{
+ "cue": "jingle_item",
+ "qbpm": 100.0,
+ "bar_q": 4,
+ "bars": 1,
+ "intro_q": 0,
+ "end_q": 4,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 2.4,
+ "loop": false,
+ "parts": [
+  {
+   "name": "harp",
+   "notes": 7,
+   "low": 50,
+   "high": 81
+  },
+  {
+   "name": "bell_point",
+   "notes": 1,
+   "low": 81,
+   "high": 81
+  }
+ ]
+}

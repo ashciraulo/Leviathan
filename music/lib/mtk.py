@@ -132,9 +132,10 @@ class Part:
 
 
 class Song:
-    def __init__(self, cue_id: str):
-        from track_sheet import CUES
-        spec = {c["id"]: c for c in CUES}[cue_id]
+    def __init__(self, cue_id: str, spec: dict | None = None):
+        if spec is None:
+            from track_sheet import CUES
+            spec = {c["id"]: c for c in CUES}[cue_id]
         self.id, self.spec = cue_id, spec
         meter = spec["meter"]
         # Quarters per bar, and the quarter-note tempo FL is set to.

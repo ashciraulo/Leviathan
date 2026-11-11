@@ -1,0 +1,26 @@
+{
+ "cue": "jingle_game_over",
+ "qbpm": 70.0,
+ "bar_q": 4,
+ "bars": 2,
+ "intro_q": 0,
+ "end_q": 8,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 6.857142857142857,
+ "loop": false,
+ "parts": [
+  {
+   "name": "strings_low",
+   "notes": 7,
+   "low": 38,
+   "high": 57
+  },
+  {
+   "name": "bell_point",
+   "notes": 1,
+   "low": 69,
+   "high": 69
+  }
+ ]
+}

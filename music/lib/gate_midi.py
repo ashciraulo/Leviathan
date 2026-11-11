@@ -43,7 +43,12 @@ def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pa
             pc, shape = chord(chords[b])
             tones = {(pc + s) % 12 for s in shape}
             on_beat = abs((start % bar_q) - round(start % bar_q / 1.5) * 1.5) < 0.05
-            if pitch % 12 not in tones and any((pitch - t) % 12 in (1, 11) for t in tones) and on_beat:
+            # A short non-chord note that steps (1-2 semitones) to a chord tone next is a
+            # passing note, neighbour or appoggiatura: that's writing, not a clash.
+            nxt = [q for q in tops.values() if abs(q[0] - (start + dur)) < 0.15 or 0 < q[0] - start <= 1.1]
+            resolves = dur <= 1.1 and any(abs(q[2] - pitch) in (1, 2) and q[2] % 12 in tones for q in nxt)
+            if pitch % 12 not in tones and any((pitch - t) % 12 in (1, 11) for t in tones) and on_beat \
+                    and not resolves:
                 problems.append(f"{p.name}: held {pitch} ({dur:.1f} q) at bar {b + 1} rubs against {chords[b]}")
     comp_top = {}
     for p in song.parts:

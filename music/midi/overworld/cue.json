@@ -1,0 +1,26 @@
+{
+ "cue": "overworld",
+ "qbpm": 110.0,
+ "bar_q": 4,
+ "bars": 16,
+ "intro_q": 0,
+ "end_q": 64,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 34.90909090909091,
+ "loop": true,
+ "parts": [
+  {
+   "name": "harp",
+   "notes": 64,
+   "low": 43,
+   "high": 60
+  },
+  {
+   "name": "flute",
+   "notes": 31,
+   "low": 65,
+   "high": 81
+  }
+ ]
+}
