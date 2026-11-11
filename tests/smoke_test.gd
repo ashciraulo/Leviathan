@@ -1136,6 +1136,23 @@ func _test_play() -> void:
 	ring_crab.queue_free()
 	await _wait(0.1)
 
+	# A swing pressed near the end of the last one still comes out after it,
+	# and a press long before the end doesn't swing twice.
+	Input.action_press("attack")
+	await _wait(0.05)
+	Input.action_release("attack")
+	await _wait(Player.ATTACK_TIME - 0.12)
+	_check(player.state == Player.State.ATTACK, "the first swing is still going")
+	Input.action_press("attack")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	Input.action_release("attack")
+	await _wait(0.12)
+	_check(player.state == Player.State.ATTACK and player._state_time < Player.ATTACK_TIME - 0.02,
+		"a swing pressed late in the last one follows straight on (state %d)" % player.state)
+	await _wait(Player.ATTACK_TIME + Player.ATTACK_BUFFER + 0.1)
+	_check(player.state == Player.State.MOVE, "and then Wren stands ready, with no extra swing")
+
 	# Hum heals one bubble for a third of the meter.
 	GameState.bubbles = 2
 	GameState.resonance = GameState.resonance_max
@@ -3655,6 +3672,18 @@ func _test_menus() -> void:
 		_check(pause.visible and pause.current == tab, "pause tab %d opens" % tab)
 	pause.close()
 	_check(not get_tree().paused, "closing the pause menu unpauses")
+	# Opening drops the menu in, and Tab Next slides the page; both settle.
+	pause.open(PauseMenu.Tab.SATCHEL)
+	_check(pause.offset.y < 0.0, "the pause menu drops in as it opens")
+	var tab_next := InputEventAction.new()
+	tab_next.action = "tab_next"
+	tab_next.pressed = true
+	pause._unhandled_input(tab_next)
+	_check(pause._pages[PauseMenu.Tab.MAP].position.x > 0.0, "Tab Next slides the next page in from the right")
+	await _wait(0.3)
+	_check(pause.offset == Vector2.ZERO and pause._pages[PauseMenu.Tab.MAP].position == Vector2.ZERO
+		and is_equal_approx(pause._pages[PauseMenu.Tab.MAP].modulate.a, 1.0), "the menu settles in place, fully shown")
+	pause.close()
 	pause.queue_free()
 	if had_settings:
 		var file := FileAccess.open(settings_path, FileAccess.WRITE)

@@ -9,6 +9,9 @@ enum State { MOVE, ATTACK, CHARGE, SPIN, HURT, HUM, DEAD, ITEM, FALL }
 
 const SPEED := 90.0
 const ATTACK_TIME := 0.24
+## A swing pressed this close to the end of the last one (or of a stagger)
+## still comes out once Wren can move, rather than being lost.
+const ATTACK_BUFFER := 0.15
 ## The sword only hurts during this window of the swing (seconds).
 const SWORD_ACTIVE_FROM := 0.03
 const SWORD_ACTIVE_TO := 0.15
@@ -52,6 +55,9 @@ const AIR_MASK := (1 << (Layers.WORLD - 1)) | (1 << (Layers.GRATE - 1))
 const SWIM_SPEED := 58.0
 
 var state := State.MOVE
+## Seconds since a swing was pressed while Wren couldn't swing yet; INF when
+## there's none waiting.
+var _attack_buffered := INF
 var facing := Vector2.DOWN
 ## Set while the camera slides between rooms; Wren ignores input.
 var frozen := false
@@ -137,6 +143,9 @@ func _physics_process(delta: float) -> void:
 	if lantern_raised and not GameState.item_slots.has("glowmoth_lantern"):
 		lantern_raised = false
 	_state_time += delta
+	_attack_buffered += delta
+	if state in [State.ATTACK, State.HURT] and Input.is_action_just_pressed("attack"):
+		_attack_buffered = 0.0
 	lantern_oil = maxf(lantern_oil - delta, 0.0)
 	_invuln = maxf(_invuln - delta, 0.0)
 	_flash = maxf(_flash - delta, 0.0)
@@ -237,7 +246,7 @@ func _move_state() -> void:
 		return
 	if Input.is_action_just_pressed("interact") and try_interact():
 		velocity = Vector2.ZERO
-	elif Input.is_action_just_pressed("attack"):
+	elif Input.is_action_just_pressed("attack") or _attack_buffered <= ATTACK_BUFFER:
 		start_attack()
 		velocity = Vector2.ZERO
 	elif Input.is_action_just_pressed("item_1") and use_item(GameState.item_slots[0]):
@@ -711,6 +720,10 @@ func _deflect(hazard: DamageArea) -> void:
 
 func _enter(new_state: State) -> void:
 	state = new_state
+	# A held swing becomes a charge; anything but a fresh swing drops the
+	# waiting press.
+	if new_state != State.MOVE:
+		_attack_buffered = INF
 	_state_time = 0.0
 	hum_progress = 0.0
 	if new_state == State.CHARGE:
