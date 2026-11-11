@@ -56,6 +56,10 @@ const SPEAKERS := {
 	"sorrel": ["NAME_SORREL", Art.PORTRAIT_SORREL],
 	"ottilie": ["NAME_OTTILIE", Art.PORTRAIT_OTTILIE],
 	"coralie": ["NAME_CORALIE", Art.PORTRAIT_CORALIE],
+	"bram": ["NAME_BRAM", Art.PORTRAIT_BRAM],
+	"sela": ["NAME_SELA", Art.PORTRAIT_SELA],
+	"pim": ["NAME_PIM", Art.PORTRAIT_PIM],
+	"ansel": ["NAME_ANSEL", Art.PORTRAIT_ANSEL],
 	# The frozen journal: pages in young Hessa's and young Vael's hands.
 	"young_hessa": ["NAME_YOUNG_HESSA", Art.PORTRAIT_YOUNG_HESSA],
 	"young_vael": ["NAME_YOUNG_VAEL", Art.PORTRAIT_YOUNG_VAEL],
@@ -70,13 +74,17 @@ const TALKS := {
 		{"set": ["met_marlo"], "lines": ["MARLO_1", "MARLO_2"]},
 	],
 	"hessa": [
+		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
+		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
 		# The little cap from the lantern-boat on the Ebb Shelf.
 		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
+		# The keepers' round: once the Kiln's bell is rung, she sends Wren
+		# round the Tidestones; when every one is read, a new line is cut.
+		{"if": ["read_every_stone"], "unless": ["hessa_carved_wren"], "set": ["hessa_carved_wren"], "lines": ["HESSA_ROUND_DONE_1", "HESSA_ROUND_DONE_2", ["", "NARRATE_HESSA_CARVES"], "HESSA_ROUND_DONE_3"]},
+		{"if": ["seen_wayshell", "tidebell_kiln"], "unless": ["hessa_round_ask", "read_every_stone"], "set": ["hessa_round_ask"], "lines": ["HESSA_ROUND_1", "HESSA_ROUND_1B"]},
 		# Ottilie's old cave sign, carried by Wren's lamp.
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "set": ["hessa_answered_ottilie"], "lines": [["", "NARRATE_WREN_OTTILIE_SIGNAL"], "HESSA_OTTILIE_1", "HESSA_OTTILIE_2"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
-		# The seventh bell rung: she rows Wren out to the Maw (StoryDirector).
-		{"if": ["tidebell_tomb"], "unless": ["hessa_rows", "hessa_rowed"], "set": ["hessa_rows"], "lines": ["HESSA_ROW_1", "HESSA_ROW_2"]},
 		# Once Wren has the Wayshell, Hessa always has a word on where the
 		# next bell is, for anyone who asks her.
 		{"if": ["tidebell_tomb"], "lines": ["HESSA_HINT_MAW"]},
@@ -130,6 +138,8 @@ const TALKS := {
 	# lights her forge again and gives Wren a Brinesteel sword. She always
 	# introduces herself first, even if Wren walked past her into the Kiln.
 	"agna": [
+		# The last singers: Bram, who stoked the Kiln for the Choir.
+		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["agna_gave_sword", "seen_ending"], "lines": ["AGNA_END"]},
 		{"if": ["agna_gave_sword", "old_one_turned"], "lines": ["AGNA_TURNED"]},
@@ -168,6 +178,9 @@ const TALKS := {
 	# Ottilie at Still Cove, who trained with Hessa and Vael, and three
 	# rimefin from her fishing hole (a FishingHole).
 	"ottilie": [
+		# The last singers: Sela, her sister's girl.
+		{"if": ["ottilie_asked", "sela_met", "letter_ottilie"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2"]},
+		{"if": ["ottilie_asked", "sela_met"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2B"]},
 		{"if": ["sorrel_letters", "ottilie_asked"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
 		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
 		# Her old cave sign for Hessa (Wren shows it with the lamp), and the answer.
@@ -184,6 +197,8 @@ const TALKS := {
 	# Captain Sorrel at Gullwatch Steps, and her kite race to the far post
 	# (StoryDirector.sorrel_race, started by the sorrel_race flag).
 	"sorrel": [
+		# The last singers: Ansel, her old sorter.
+		{"if": ["sorrel_asked", "ansel_met"], "unless": ["sorrel_ansel"], "set": ["sorrel_ansel"], "lines": ["SORREL_ANSEL_1", "SORREL_ANSEL_2"]},
 		# The post's last three letters, never sent when it shut.
 		{"if": ["letter_ottilie", "letter_liesl", "letter_agna"], "unless": ["sorrel_letters_paid"], "set": ["sorrel_letters_paid"], "give": {"glint": 150}, "lines": ["SORREL_LETTERS_DONE_1", "SORREL_LETTERS_DONE_2", ["", "NARRATE_GOT_POSTAGE"]]},
 		# Gullcry Stacks, the run no courier ever flew (its chest is the proof).
@@ -204,7 +219,11 @@ const TALKS := {
 	# Sister Lowe, alone on Lullaby Point after the ending.
 	"lowe": [
 		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
-		{"lines": ["LOWE_END_AGAIN"]},
+		# The last singers: four of the Choir who never went home.
+		{"if": ["lowe_singers_ask", "bram_home", "sela_home", "pim_home", "ansel_home"], "unless": ["lowe_singers_done"], "set": ["lowe_singers_done"], "give": {"glint": 300}, "lines": ["LOWE_SINGERS_DONE_1", "LOWE_SINGERS_DONE_2", ["", "NARRATE_LOWE_ROBE"], "LOWE_SINGERS_DONE_3", ["", "NARRATE_GOT_CHOIR_PURSE"]]},
+		{"if": ["lowe_singers_done"], "lines": ["LOWE_JUST_LOWE"]},
+		{"if": ["lowe_singers_ask"], "lines": ["LOWE_SINGERS_WAITING"]},
+		{"set": ["lowe_singers_ask"], "lines": ["LOWE_SINGERS_1", "LOWE_SINGERS_1B", "LOWE_SINGERS_2", "LOWE_SINGERS_2B"]},
 	],
 	# Murmur, who left the Choir at the calf, now helping Wick at Fenmouth.
 	"murmur": [
@@ -215,6 +234,31 @@ const TALKS := {
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
 		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
 		{"lines": ["MURMUR_AGAIN"]},
+	],
+	# The last singers, each alone somewhere after the ending.
+	"bram": [
+		{"if": ["bram_home"], "lines": ["BRAM_FORGE"]},
+		{"if": ["agna_bram"], "set": ["bram_home"], "lines": [["", "NARRATE_WREN_BELLOWS"], "BRAM_HOME_1", "BRAM_HOME_2"]},
+		{"if": ["bram_met"], "lines": ["BRAM_WAITING"]},
+		{"set": ["bram_met"], "lines": ["BRAM_1", "BRAM_1B", "BRAM_2"]},
+	],
+	"sela": [
+		{"if": ["sela_home"], "lines": ["SELA_BYE"]},
+		{"if": ["ottilie_sela"], "set": ["sela_home"], "lines": [["", "NARRATE_WREN_ROCKS_BABY"], "SELA_HOME_1", "SELA_HOME_2"]},
+		{"if": ["sela_met"], "lines": ["SELA_WAITING"]},
+		{"set": ["sela_met"], "lines": ["SELA_1", "SELA_1B", "SELA_2"]},
+	],
+	"pim": [
+		{"if": ["pim_home"], "lines": ["PIM_BYE"]},
+		{"if": ["pim_met"], "has": ["glowmoth_lantern"], "set": ["pim_home"], "lines": [["", "NARRATE_WREN_RAISES_LANTERN"], "PIM_HOME_1", "PIM_HOME_2"]},
+		{"if": ["pim_met"], "lines": ["PIM_WAITING"]},
+		{"set": ["pim_met"], "lines": ["PIM_1", "PIM_1B", "PIM_2"]},
+	],
+	"ansel": [
+		{"if": ["ansel_home"], "lines": ["ANSEL_BYE"]},
+		{"if": ["sorrel_ansel"], "set": ["ansel_home"], "lines": [["", "NARRATE_WREN_KITE"], "ANSEL_HOME_1", "ANSEL_HOME_2"]},
+		{"if": ["ansel_met"], "lines": ["ANSEL_WAITING"]},
+		{"set": ["ansel_met"], "lines": ["ANSEL_1", "ANSEL_1B", "ANSEL_2"]},
 	],
 	# Mother Dace by the last mural, after the ending.
 	"dace": [
@@ -268,6 +312,7 @@ const TALKS := {
 	# Wick at Fenmouth, who counts the fen's lanterns every night, and the
 	# five that have gone dark (FenLantern).
 	"wick": [
+		{"if": ["wick_asked", "pim_home"], "unless": ["wick_met_pim"], "set": ["wick_met_pim"], "lines": ["WICK_PIM"]},
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
 		# The Lampless Sink's four braziers, lit at last.

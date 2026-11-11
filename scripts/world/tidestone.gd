@@ -14,6 +14,13 @@ extends StaticBody2D
 
 ## Where Wren stands after loading, relative to the stone.
 const CHECKPOINT_OFFSET := Vector2(0, 28)
+## Set once Wren has read every stone (Hessa asks them to walk the round).
+const ALL_READ_FLAG := "read_every_stone"
+## Set once Hessa has cut Wren's line under hers on the Saltmarrow stone.
+const WREN_CARVED_FLAG := "hessa_carved_wren"
+const WREN_LINE_READ_FLAG := "read_wren_line"
+const SALTMARROW_STONE := Vector2i(1, 1)
+
 ## Room -> what is cut into its stone. Most are a line under a short
 ## narration; one stone holds only tally notches.
 const CARVINGS := {
@@ -58,6 +65,9 @@ func _ready() -> void:
 	area.body_entered.connect(_on_body_entered)
 	add_child(area)
 	awake = bool(GameState.flags.get(flag_key(), false))
+	# Saves that read every stone before the round was asked for still count.
+	if read_count() >= CARVINGS.size():
+		GameState.set_flag(ALL_READ_FLAG)
 	add_child(Art.shadow(true))
 	_sprite = Art.sprite(Art.TIDESTONE, 2, 1, 20)
 	add_child(_sprite)
@@ -66,6 +76,23 @@ func _ready() -> void:
 
 func flag_key() -> String:
 	return "tidestone_%d_%d" % [room_coord.x, room_coord.y]
+
+
+## What a stone says now: Hessa adds Wren's line to the Saltmarrow stone.
+static func carving_for(coord: Vector2i) -> Array:
+	var carving: Array = CARVINGS.get(coord, [])
+	if coord == SALTMARROW_STONE and GameState.has_flag(WREN_CARVED_FLAG):
+		return carving + ["STONE_SALTMARROW_WREN"]
+	return carving
+
+
+## How many stones' carvings Wren has read.
+static func read_count() -> int:
+	var count := 0
+	for coord: Vector2i in CARVINGS:
+		if GameState.has_flag("tidestone_read_%d_%d" % [coord.x, coord.y]):
+			count += 1
+	return count
 
 
 ## Set once Wren has read this stone's carving.
@@ -91,9 +118,16 @@ func _on_body_entered(body: Node2D) -> void:
 func interact() -> void:
 	if not awake or DialogueBox.is_open or Cutscene.active:
 		return
-	var carving: Array = CARVINGS.get(room_coord, [])
-	if not carving.is_empty() and not (Tide.can_turn() and GameState.has_flag(read_key())):
+	var carving := carving_for(room_coord)
+	# Wren's own new line is always read once, even after the turn.
+	var new_line := room_coord == SALTMARROW_STONE and GameState.has_flag(WREN_CARVED_FLAG) and not GameState.has_flag(WREN_LINE_READ_FLAG)
+	if not carving.is_empty() and (new_line or not (Tide.can_turn() and GameState.has_flag(read_key()))):
 		GameState.set_flag(read_key())
+		if new_line:
+			GameState.set_flag(WREN_LINE_READ_FLAG)
+		if read_count() >= CARVINGS.size() and not GameState.has_flag(ALL_READ_FLAG):
+			GameState.set_flag(ALL_READ_FLAG)
+			Audio.play_jingle("jingle_secret")
 		var pages: Array = []
 		for key: String in carving:
 			pages.append({"name": "", "portrait": null, "text": key})

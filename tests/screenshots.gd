@@ -160,7 +160,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -260,6 +260,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _ebb_story_shots()
+			"singers":
+				game.queue_free()
+				await _wait(0.2)
+				await _singer_shots()
 			"carvings":
 				game.queue_free()
 				await _wait(0.2)
@@ -1863,6 +1867,38 @@ func _ebb_story_shots() -> void:
 		await _wait(0.1)
 	game.queue_free()
 	await _wait(0.2)
+
+
+## The last singers, each alone in their own region after the ending.
+func _singer_shots() -> void:
+	var n := 1
+	for kind: String in StoryDirector.SINGERS:
+		var spot: Array = StoryDirector.SINGERS[kind]
+		GameState.reset_new_game()
+		for flag in [StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG, "lowe_singers_ask"]:
+			GameState.set_flag(flag)
+		GameState.set_checkpoint(spot[0], Vector2(spot[1]) * 16.0 + Vector2(8, 30))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.2)
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			enemy.queue_free()
+		await _wait(3.0)
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		game.player.try_interact()
+		var box := _dialogue_box(game)
+		await _wait(2.6)
+		box.advance()
+		await _wait(2.8)
+		await _capture("singers_%d_%s" % [n, kind])
+		n += 1
+		while box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+			await _wait(0.1)
+		game.queue_free()
+		await _wait(0.2)
 
 
 ## Wren reading what the keepers cut into two Tidestones.
