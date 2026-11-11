@@ -43,8 +43,8 @@ RATES = {
     "first_play": 1.25,      # deaths, wrong turns, menus
     "words_per_second": 3.0,  # reading dialogue
     # Each side-quest stop: a find, scale, stone or stake to reach (often a
-    # detour into a side area) or a trade hand-off to carry to the next
-    # villager. Crossing the region itself is already in overworld_crossings
+    # detour into a side area), a villager on a quest's round (a trade,
+    # a letter, an invitation) or a dungeon Tidestone to read again. Crossing the region itself is already in overworld_crossings
     # (and a puzzle cave's rooms in their own area), so this is only the
     # going back for it and the walk to hand it in. Kept low on purpose.
     "errand_stop": 60.0,
@@ -54,13 +54,14 @@ RATES = {
 # Wren ({id: [room, tile]}).
 ERRAND_TABLES = ("FINDS", "SHED_SCALES", "SIGNAL_STONES", "SURVEY_STAKES")
 
-# Flags set by a conversation when Wren hands something to a villager on a
-# side quest's round: the jam trade, Sorrel's three letters and the guests
-# for Hessa's lighting day. Each is one more villager to walk to.
+# Flags set by a conversation when a side quest's round brings Wren to a
+# villager: the jam trade's hand-offs, Sorrel's three letters and the
+# invitations for Hessa's lighting day. Each is one more villager to walk to.
 DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party)_[a-z0-9_]+)"')
-# Same prefixes, but not a hand-off: Marga's ask and the rimefin Ottilie
-# gives along with her own invitation.
-NOT_DELIVERIES = {"party_marga_ask", "party_rimefin"}
+# Same prefixes, but no extra walk: Marga starts the trade (trade_jam) and
+# asks for the pie (party_marga_ask) where Wren already stands, and Ottilie
+# gives the rimefin along with her own invitation.
+NOT_DELIVERIES = {"trade_jam", "party_marga_ask", "party_rimefin"}
 
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
 # Puzzle pieces out in the overworld (side areas and challenges); letters
@@ -133,8 +134,8 @@ def estimate():
 
 def errand_stops() -> int:
     """Places side quests send Wren: entries in StoryDirector's errand tables,
-    each delivery (a conversation that sets a DELIVERY_FLAG), and each
-    Tidestone, which Hessa's Keepers' Round sends Wren back to read."""
+    each villager on a quest's round (a conversation that sets a
+    DELIVERY_FLAG), and each dungeon Tidestone for Hessa's Keepers' Round."""
     with open(os.path.join(ROOT, "scripts", "story", "story_director.gd"), encoding="utf-8") as f:
         director = f.read()
     stops = 0
@@ -148,10 +149,17 @@ def errand_stops() -> int:
     for m in re.finditer(r'"set":\s*\[([^\]]*)\]', talks):
         deliveries.update(DELIVERY_FLAG.findall(m.group(1)))
     stops += len(deliveries - NOT_DELIVERIES)
+    # Hessa's Keepers' Round sends Wren back to every Tidestone. Out in the
+    # overworld that's a Wayshell flight to a stone already woken, so only
+    # the dungeon stones (no flying inside) count as a walk back.
     with open(os.path.join(ROOT, "scripts", "world", "tidestone.gd"), encoding="utf-8") as f:
         m = re.search(r"^const CARVINGS := \{(.*?)^\}", f.read(), re.M | re.S)
     assert m, "Tidestone.CARVINGS not found: update errand_stops"
-    stops += len(re.findall(r"^\s*Vector2i\(", m.group(1), re.M))
+    for x, y in re.findall(r"^\s*Vector2i\((-?\d+), (-?\d+)\)", m.group(1), re.M):
+        path = os.path.join(ROOT, "rooms", "room_%s_%s.tscn" % (x, y))
+        with open(path, encoding="utf-8") as f:
+            if re.search(r'^dungeon = "[^"]+"', f.read(), re.M):
+                stops += 1
     return stops
 
 
