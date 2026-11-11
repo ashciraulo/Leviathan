@@ -31,7 +31,8 @@ var _glow := 0.0
 func _ready() -> void:
 	add_to_group("interactable")
 	Layers.assign(self, Layers.WORLD, [])
-	add_child(Layers.rect_shape(Vector2(22, 8), Vector2(0, -4)))
+	var shape := Layers.rect_shape(Vector2(22, 8), Vector2(0, -4))
+	add_child(shape)
 	add_child(Art.shadow(true))
 	_sprite = Art.sprite(BELLS[bell][0], 2, 1, 37)
 	add_child(_sprite)
@@ -43,6 +44,19 @@ func _ready() -> void:
 		var tween := create_tween().set_parallel(true)
 		tween.tween_property(_sprite, "position:y", _sprite.position.y - 30, 1.6).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(_sprite, "modulate:a", 1.0, 1.0)
+		# Solid only once risen and clear of Wren, so it never rises on them.
+		shape.disabled = true
+		tween.chain().tween_callback(_settle.bind(shape))
+
+
+## Turn the bell solid once Wren isn't standing in it.
+func _settle(shape: CollisionShape2D) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player and absf(player.global_position.x - global_position.x) < 16.0 \
+			and absf(player.global_position.y - global_position.y + 4.0) < 10.0:
+		get_tree().create_timer(0.2).timeout.connect(_settle.bind(shape))
+		return
+	shape.disabled = false
 
 
 static func flag_for(bell_id: String) -> String:

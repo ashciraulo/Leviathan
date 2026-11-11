@@ -212,7 +212,13 @@ func _change_room(direction: Vector2i) -> void:
 	var hatch := _hatch_ahead(next, direction)
 	if hatch:
 		hatch._on_touch(player)
-		if not GameState.flags.get(LockedDoor.lock_flag(next.coord), false):
+	# Closed bars just inside the far edge (an unsolved gate) hold Wren back
+	# the same way: sliding in would land them inside the bars.
+	var barred := _bars_ahead(next, direction)
+	if barred or hatch:
+		if barred or not GameState.flags.get(LockedDoor.lock_flag(next.coord), false):
+			if barred:
+				Feel.shake(0.4)
 			next.queue_free()
 			var back := player.global_position - current_room.global_position
 			back = back.clamp(Vector2.ONE, Room.SIZE - Vector2.ONE) - Vector2(direction) * 2.0
@@ -243,18 +249,29 @@ func _change_room(direction: Vector2i) -> void:
 ## The closed hatch in `next` that Wren would slide into crossing the edge
 ## that way, or null.
 func _hatch_ahead(next: Room, direction: Vector2i) -> LockedDoor:
+	return _ahead(next, direction, "locked_doors", Room.TILE, func(n: Node) -> bool: return n is LockedDoor)
+
+
+## True when closed bars in `next` stand where Wren would slide in (the
+## slide carries them ENTRY_STEP in, so the first two rows or columns).
+func _bars_ahead(next: Room, direction: Vector2i) -> bool:
+	return _ahead(next, direction, "bars", Room.TILE * 2.0, func(n: Node) -> bool: return n is Bars and not n.is_open) != null
+
+
+## The first node of `group` in `next` that passes `keep` and stands less
+## than `reach` in from the edge, in line with Wren across it.
+func _ahead(next: Room, direction: Vector2i, group: String, reach: float, keep: Callable) -> Node:
 	var dir := Vector2(direction)
 	var across := Vector2(absf(dir.y), absf(dir.x))
 	# The edge Wren comes in by, as a distance into `next` (0 at the edge).
 	var edge := 0.0 if direction.x + direction.y > 0 else -Room.SIZE.dot(-dir)
-	for door in get_tree().get_nodes_in_group("locked_doors"):
-		if not (door is LockedDoor) or not next.is_ancestor_of(door):
+	for node in get_tree().get_nodes_in_group(group):
+		if not next.is_ancestor_of(node) or not keep.call(node):
 			continue
-		var centre: Vector2 = door.global_position + Vector2(0, -4)
+		var centre: Vector2 = node.global_position + Vector2(0, -4)
 		var depth := (centre - next.global_position).dot(dir) - edge
-		# The first row or column in, and in line with Wren across the edge.
-		if depth >= 0.0 and depth < Room.TILE and absf((centre - player.global_position).dot(across)) < 12.0:
-			return door
+		if depth >= 0.0 and depth < reach and absf((centre - player.global_position).dot(across)) < 12.0:
+			return node
 	return null
 
 

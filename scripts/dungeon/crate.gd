@@ -68,9 +68,12 @@ func _slide(dir: Vector2, gliding: bool = false) -> void:
 
 ## True when Wren or an enemy stands in the tile the crate would move into.
 func _someone_in(step: Vector2) -> bool:
+	# Leaving the scene (e.g. quit to title mid-drag): nothing to ask.
+	if not is_inside_tree():
+		return false
 	var query := PhysicsShapeQueryParameters2D.new()
 	var box := RectangleShape2D.new()
-	box.size = Vector2(12, 11)
+	box.size = Vector2(14, 11)
 	query.shape = box
 	query.transform = Transform2D(0.0, global_position + step + Vector2(0, -5.5))
 	query.collision_mask = (1 << (Layers.PLAYER - 1)) | (1 << (Layers.ENEMY - 1))
@@ -92,7 +95,11 @@ func stop_pull() -> void:
 	if _pull_to == Vector2.INF:
 		return
 	var from := _pull_to - (_pull_to - position).normalized() * Room.TILE
-	position = _pull_to if position.distance_to(_pull_to) < position.distance_to(from) else from
+	var to := _pull_to if position.distance_to(_pull_to) < position.distance_to(from) else from
+	# Never settle on top of Wren (or a foe): fall back to the tile it left.
+	if to == _pull_to and _someone_in(to - position):
+		to = from
+	position = to
 	_pull_to = Vector2.INF
 
 
@@ -102,7 +109,8 @@ func stop_pull() -> void:
 func pull_towards(target: Vector2, step: float) -> bool:
 	if _pull_to == Vector2.INF:
 		var dir := Enemy.cardinal(target - global_position)
-		if global_position.distance_to(target) < 22.0 or test_move(global_transform, dir * Room.TILE):
+		if global_position.distance_to(target) < 22.0 or test_move(global_transform, dir * Room.TILE) \
+				or _someone_in(dir * Room.TILE):
 			return true
 		_pull_to = position + dir * Room.TILE
 	var to := _pull_to - position
