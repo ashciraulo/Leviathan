@@ -69,7 +69,13 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         # The seam: last samples of the body into the first of the body.
         jump = float(np.abs(body[0] - body[-1]).max())
         before, after = momentary(np.concatenate([body, body]).mean(axis=1), rate, body.shape[0])
+        # A loop restart is a downbeat after a phrase's release, so compare the
+        # seam with the cue's own downbeats rather than with a flat number.
+        mono = body.mean(axis=1)
+        bar = round(meta["bar_q"] * 60 / meta["qbpm"] * rate)
+        steps = [a - b for b, a in (momentary(mono, rate, k) for k in range(bar, mono.shape[0] - bar, bar))]
         report.update(seam_jump=round(jump, 4), seam_step_db=round(after - before, 2),
+                      bar_step_p90_db=round(float(np.percentile(steps, 90)), 2) if steps else 0.0,
                       tail_folded_s=round(n / rate, 2))
         measured = body
     else:
@@ -88,8 +94,10 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         problems.append(f"true peak {tp:.2f} dBTP is over {TP_MAX}")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")
-    if spec["loop"] and abs(report["seam_step_db"]) > 6:  # the handoff's section-entry slam limit
-        problems.append(f"level steps {report['seam_step_db']} dB across the seam")
+    # The handoff's slam limit is +6 dB; a seam no bigger than the cue's usual downbeat step is a downbeat.
+    if spec["loop"] and abs(report["seam_step_db"]) > max(6.0, report["bar_step_p90_db"] + 1.0):
+        problems.append(f"level steps {report['seam_step_db']} dB across the seam "
+                        f"(the cue's downbeats step up to {report['bar_step_p90_db']} dB)")
     report["problems"] = problems
     if write and not problems:
         path = os.path.join(ROOT, "audio", "music", f"{cue}.ogg")

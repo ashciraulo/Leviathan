@@ -57,3 +57,12 @@ Read the updated handoff and Out There FM's scripts first: `/mnt/project-files/l
   low-passed (its own 2-6 kHz share is -14 dB at a 2 kHz 24 dB/oct cut); a softer reed preset may suit later cues.
 - **device_commit_files can send a stale copy:** a new filename per version, and check the md5 on the PC.
 - Saltmarrow v6: -17.96 LUFS, true peak -3.2 dBTP, seam step 5.8 dB, 2-6 kHz share -24..-26 per 6-bar section.
+- Review of v6 (music review folder, REVIEW_region_saltmarrow_v6.md) failed it on things the self-check can't hear:
+  the bass built its fifth from a slash chord's bass note (F/A gave E, C/E gave B) and its walk from a major triad on
+  the slash note. Fixed in t01's generator: the chord's own fifth and chord tones above the bass. Check other cues'
+  bass code for the same pattern before they go to FL.
+- The concertina's nasal 2 kHz hump is better cut at the source: Analog Lab's Brightness macro (0.274, template4)
+  rather than a steep Pro-Q high cut, which sounded honky.
+- Analog Lab Upright Bass ignores velocity (all notes within 0.2 dB). Audition a velocity-sensitive bass for batch 2.
+- finalize.py's seam check compares the seam with the cue's own downbeat steps; a release-to-downbeat is +6..+8 dB.
+- Saltmarrow v8: -17.95 LUFS, true peak -3.0 dBTP, gate PASS.

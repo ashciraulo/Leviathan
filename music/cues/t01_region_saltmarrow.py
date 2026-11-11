@@ -11,7 +11,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
-from mtk import Song, seq, voicing, bass_of, n, phrase_items  # noqa: E402
+from mtk import Song, seq, voicing, bass_of, chord, n, phrase_items  # noqa: E402
 
 E = 0.5  # an eighth note, in quarters
 song = Song("region_saltmarrow")
@@ -112,7 +112,13 @@ for b, sym in enumerate(CHORDS):
         continue
     t, sec = song.bar(b), section(b)
     root = 29 + (bass_of(sym) - 5) % 12 + 12  # F2..E3
-    fifth = root + 7 if root + 7 <= 55 else root - 5
+    # The chord's own fifth, nearest the bass note: on a slash chord (F/A) the
+    # slash note's fifth (E) is not a chord tone.
+    cpc, _ = chord(sym)
+    # (F/C has the fifth in the bass already, so it moves to the chord's root.)
+    want = (cpc + 7) % 12 if (cpc + 7) % 12 != root % 12 else cpc
+    fifth = min((m for m in range(root - 9, 56) if m % 12 == want), key=lambda m: abs(m - root - 4))
+    above = [m for m in voicing(sym, root + 1, root + 12)][:2]  # the next chord tones up from the bass
     nxt = CHORDS[(b + 1) if b + 1 < len(CHORDS) else SEC["A"]]
     nroot = 41 + (bass_of(nxt) - 5) % 12
     if sec in ("A", "A3"):
@@ -124,7 +130,7 @@ for b, sym in enumerate(CHORDS):
         bass.note(t, 5 * E * 0.92, root, 84)
         bass.note(t + 5 * E, E * 0.8, fifth if b % 2 else root, 66)
     else:
-        for i, p in enumerate((root, root + 4 if "m" not in sym else root + 3, fifth)):
+        for i, p in enumerate([root] + above):
             bass.note(t + i * 2 * E, 2 * E * 0.9, p, 80 - 6 * i)
 
 # --- string pad: B and A'' only, low and soft, under everything ---
