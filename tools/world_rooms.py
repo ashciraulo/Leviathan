@@ -103,6 +103,9 @@ SECRETS = {
     (7, 3): ("glowmoth_lantern", "kite_cloak", "frostfang_bow"),  # the Calf's Rest: glints on a fen islet
     (0, 5): ("tide_hook", "kite_cloak", "frostfang_bow"),  # Lee of the Old One: glints on a reef islet with a hook post
     (8, 3): ("kite_cloak", "frostfang_bow"),  # Saltgrave Brink: glints on a bitter-sea islet
+    # Exploration secrets in the older regions (2026-11-11).
+    (1, 0): ("old_one_turned",),             # Tidepools: a chest on the sea bed, bared while the tide is held out
+    (2, 0): ("stonebreaker",),               # Barnacle Wall: a cove behind a cracked boulder
     # Puzzle caves: one short trial room per region.
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
