@@ -52,6 +52,10 @@ var _roared := false
 ## then (see WEAR_EVERY), and the blow that wears it shakes the room.
 const WEAR_EVERY := 0.85
 var _wear_timer := 0.0
+## Stars over a boss's head while the sword can hurt it (see is_boss_open).
+var _daze_stars: DazeStars
+## Cache for _art_top, by frame.
+var _art_tops := {}
 
 
 func _ready() -> void:
@@ -93,6 +97,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_flash = maxf(_flash - delta, 0.0)
 	if dying:
+		if _daze_stars:
+			_daze_stars.visible = false
 		return
 	if elite and not _roared and ai_enabled:
 		var wren := get_player()
@@ -117,6 +123,7 @@ func _physics_process(delta: float) -> void:
 		var amount := SQUASH_BOSS if is_in_group("boss") else SQUASH
 		_sprite.scale = _sprite_base_scale * Vector2(1.0 + amount * k, 1.0 - amount * 0.8 * k)
 	Art.set_flash(_sprite, 1.0 if _flash > 0.0 else 0.0)
+	_update_daze_stars()
 	if is_worn():
 		_wear_timer -= delta
 		if _wear_timer <= 0.0:
@@ -169,6 +176,42 @@ func _check_worn() -> void:
 		_wear_timer = WEAR_EVERY
 		_puff_wear()
 		_puff_wear()
+
+
+## True while a boss can be hurt by the sword: its weak moment.
+func is_boss_open() -> bool:
+	return is_in_group("boss") and not dying and hp > 0 and not _blocks_hit(Vector2.ZERO)
+
+
+func _update_daze_stars() -> void:
+	var show := is_boss_open() and _sprite.visible and _sprite.modulate.a >= 0.5
+	if show and _daze_stars == null:
+		_daze_stars = DazeStars.new()
+		_daze_stars.name = "DazeStars"
+		add_child(_daze_stars)
+	if _daze_stars == null:
+		return
+	_daze_stars.visible = show
+	if show:
+		var rect := _sprite.get_rect()
+		var head := Vector2(rect.get_center().x, rect.position.y + _art_top() + 1.0)
+		_daze_stars.global_position = (_sprite.get_global_transform() * head).round()
+
+
+## How far down the sprite's current frame its first drawn row is (frames
+## often leave empty room above, for a raised head or a leap).
+func _art_top() -> float:
+	var key := _sprite.frame
+	if _art_tops.has(key):
+		return _art_tops[key]
+	var top := 0.0
+	var image := _sprite.texture.get_image() if _sprite.texture else null
+	if image:
+		var size := Vector2i(image.get_width() / _sprite.hframes, image.get_height() / _sprite.vframes)
+		var at := Vector2i(key % _sprite.hframes, key / _sprite.hframes) * size
+		top = float(image.get_region(Rect2i(at, size)).get_used_rect().position.y)
+	_art_tops[key] = top
+	return top
 
 
 ## Override to false for a boss whose wear already shows another way.
