@@ -3,7 +3,9 @@
 python3 music/lib/gate_midi.py <cue> --chords-from <script>  (called by cue scripts via check())
 
 Checks: held melody notes that clash with the chord (a semitone above or below
-a chord tone, held a quarter or longer on a strong beat), melody under the
+a chord tone, held a quarter or longer on a strong beat), bass notes of a
+quarter or longer that are not in the chord (a slash chord's fifth is the
+chord's, not the slash note's: review of Saltmarrow v6), melody under the
 comping's top voice, notes outside each part's playable range, same-pitch
 overlaps, and that nothing sounds before 0 or after the cue's end.
 """
@@ -17,6 +19,9 @@ RANGES = {"flute": (60, 96), "reed": (53, 89), "guitar": (40, 84), "bass": (28, 
           "kalimba": (60, 88), "epiano": (40, 96), "metal": (48, 90), "whistle": (62, 93), "mandolin": (55, 88), "celesta": (60, 108), "choir": (45, 81), "strings": (28, 96)}
 
 
+UNPITCHED = ("drum", "perc", "shaker", "taiko", "anvil", "tom", "timpani", "timp", "creak")
+
+
 def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pad")) -> list[str]:
     problems = []
     bar_q = song.bar_q
@@ -28,6 +33,21 @@ def check(song, chords: list[str], melody=("flute", "reed"), comp=("guitar", "pa
                 problems.append(f"{p.name}: note {pitch} at bar {int(start // bar_q) + 1} is outside {lo}-{hi}")
             if start < 0 or start > song.end_q - 0.01:
                 problems.append(f"{p.name}: note at {start:.2f} runs outside the cue")
+        if kind == "bass":
+            for start, dur, pitch, vel in p.notes:
+                if dur < 0.9:
+                    continue
+                b = int((start + 0.05) // bar_q)
+                sym = chords[min(b, len(chords) - 1)]
+                pc, shape = chord(sym)
+                tones = {(pc + s) % 12 for s in shape}
+                if "/" in sym:
+                    tones.add(chord(sym.split("/")[1])[0])
+                # A bass alone (no other pitched part sounding) is a line, not a clash.
+                others = any(o is not p and o.name.split("_")[0] not in UNPITCHED and
+                             any(s0 < start + dur and s0 + d0 > start for s0, d0, _, _ in o.notes) for o in song.parts)
+                if pitch % 12 not in tones and others:
+                    problems.append(f"{p.name}: {pitch} ({dur:.1f} q) at bar {b + 1} is not in {sym}")
         if kind not in melody:
             continue
         # Only the top voice of a melody part is the tune (doublings below are colour).

@@ -110,7 +110,8 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str]) -> list[str]:
             c, o = note_pitch(seg[int(0.03 * rate):], rate, midi)
             cents.append(c)
             octs.append(o)
-        if octs:
+        # A part that is mostly chords leaves few solo notes; one note can't judge a part.
+        if len(octs) >= 5:
             octave = max(set(octs), key=octs.count)
             if octave:
                 problems.append(f"{name}: sounds {octave:+d} octave(s) from the written notes "

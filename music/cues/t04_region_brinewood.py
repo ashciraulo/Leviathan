@@ -13,7 +13,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
-from mtk import Song, seq, voicing, bass_of  # noqa: E402
+from mtk import Song, seq, voicing, bass_of, chord  # noqa: E402
 
 S = 0.25  # a sixteenth
 song = Song("region_brinewood")
@@ -106,7 +106,9 @@ for b, sym in enumerate(CHORDS):
     root = 28 + (bass_of(sym) - 4) % 12  # E1..D#2
     if root < 33:
         root += 12
-    fifth = root + 7
+    # The chord's own fifth (on D/F# that is A, not the slash note's C#).
+    cpc = chord(sym)[0]
+    fifth = min((m for m in range(root - 7, root + 10) if m % 12 == (cpc + 7) % 12), key=lambda m: abs(m - root - 5))
     if sec == "C":
         bass.note(t, 3.9, root, 74)
     elif sec == "B":

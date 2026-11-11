@@ -69,13 +69,21 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
     for part_name, name in targets:
         if name not in names:
             raise SystemExit(f"template has no channel named {name!r} (has {sorted(names)})")
-        shift = (transpose or {}).get(part_name, 0) + (transpose or {}).get(name, 0)
+        # Keyed by part or by channel name; when they are the same name, count it once.
+        t = transpose or {}
+        shift = t.get(part_name, t.get(name, 0)) if part_name == name else t.get(part_name, 0) + t.get(name, 0)
         part_notes = midi_notes(os.path.join(MUSIC, "midi", cue, part_name + ".mid"), scale)
         for start, length, key, vel in part_notes:
             # FL velocity runs 0-128 with 100 as default; MIDI 127 maps to 128.
             notes.append((start, names[name], length, key + shift, min(128, round(vel * 128 / 127)), 64))
         counts[names[name]] = counts.get(names[name], 0) + len(part_notes)
     flp.set_notes(pattern, notes)
+    if not audition:  # mapped channels take the part's name, so the .flp reads plainly in FL
+        for part_name, name in targets:
+            if name != part_name:
+                flp.rename_channel(names[name], part_name)
+    if not flp.find(flp_raw.TEMPO):
+        raise SystemExit("template has no tempo event")
     flp.set_tempo(meta["qbpm"])
     end = round(meta["end_q"] * flp.ppq)
     clips = flp.set_pattern_clips(pattern, end)
