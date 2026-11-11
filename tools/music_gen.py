@@ -325,6 +325,16 @@ TRACKS = {
     # The Wayshell's flight: light and lifting, the Hull's phrase high up.
     "story_flight": dict(root=69, mode="lydian", tempo=104, beats=3, prog="wander", lead="flute", pad="pad",
                          bass=True, bass_pattern=[0, None, 4], drums={"hat": [1, 2]}, motif=0, rest=0.3),
+    # Places. Saltmarrow's square: a homely waltz with the Hull's phrase
+    # (the village's own song). Brine Spring: slow and still, bells over a
+    # held pad. Marlo Pike's stall while the shop is open: a jaunty walk.
+    "place_village": dict(root=65, mode="major", tempo=104, beats=3, prog="calm", lead="pluck", pad="pad",
+                          bass=True, bass_pattern=[0, 4, 4], drums={"hat": [1, 2]}, motif=0, rest=0.25, drum_vol=0.35),
+    "place_spring": dict(root=67, mode="lydian", tempo=60, beats=3, prog="still", lead="bell", pad="pad", bars=12,
+                         bass=True, bass_pattern=[0], rest=0.5),
+    "place_shop": dict(root=67, mode="mixolydian", tempo=116, prog="calm", lead="pluck", pad="pad", bars=8,
+                       bass=True, bass_pattern=[0, 2, 4, 2], drums={"kick": [0, 2], "hat": [1, 3]},
+                       lengths=[0.5, 0.5, 1], rest=0.2, drum_vol=0.35),
     "credits": dict(root=62, mode="major", tempo=84, beats=3, prog="calm", lead="flute", pad="pad", bars=24,
                     bass=True, bass_pattern=[0, None, 4], motif=6, motif_bar=12, rest=0.3),
 }

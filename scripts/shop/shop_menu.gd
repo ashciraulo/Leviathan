@@ -20,6 +20,9 @@ const FIRST_ROW := Vector2(80, 58)
 const ROW_STEP := 22
 ## The press that closed Marlo's dialogue mustn't also buy something.
 const INPUT_DELAY := 0.2
+## Marlo's browsing tune, and how long it takes to come in and go.
+const MUSIC := "place_shop"
+const MUSIC_FADE := 0.6
 const SHAKE_TIME := 0.3
 const FLASH_TIME := 0.35
 
@@ -28,6 +31,8 @@ const FLASH_TIME := 0.35
 static var _closed_at := -100000
 
 var _rows: Array = []
+## The track playing when the stall opened, to go back to.
+var _music_before := ""
 var _cursor := 0
 var _time := 0.0
 var _bought := false
@@ -52,6 +57,9 @@ func _ready() -> void:
 	_canvas.draw.connect(_draw_menu)
 	add_child(_canvas)
 	Audio.play_sfx("ui_open")
+	# Browsing has its own tune; the room's comes back on leaving.
+	_music_before = Audio.music_cue
+	Audio.play_music(MUSIC, MUSIC_FADE)
 
 
 static func recently_closed() -> bool:
@@ -113,6 +121,8 @@ func close() -> void:
 	_done = true
 	_closed_at = Time.get_ticks_msec()
 	Audio.play_sfx("ui_back")
+	if Audio.music_cue == MUSIC:
+		Audio.play_music(_music_before, MUSIC_FADE)
 	get_tree().paused = false
 	queue_free()
 	closed.emit(_bought)

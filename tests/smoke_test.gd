@@ -5746,6 +5746,7 @@ func _test_shop() -> void:
 	await _wait(0.3)
 	var menu := get_tree().get_first_node_in_group("shop_menu") as ShopMenu
 	_check(menu != null and get_tree().paused, "then his wares come up, with the game paused")
+	_check(Audio.music_cue == ShopMenu.MUSIC and menu._music_before == "place_village", "the stall plays its browsing tune over the square's (%s)" % Audio.music_cue)
 	if menu == null:
 		game.queue_free()
 		return
@@ -5769,6 +5770,7 @@ func _test_shop() -> void:
 	_check(GameState.item_count("lamp_oil") == 8 and ShopMenu.blocked(rows[oil]) == "SHOP_FULL", "no paying for three when only two more fit")
 	menu.close()
 	_check(ShopMenu.recently_closed(), "the press that closes the shop doesn't reach Wren")
+	_check(Audio.music_cue == "place_village", "and the square's music comes back (%s)" % Audio.music_cue)
 	await _wait(0.1)
 	_check(DialogueBox.is_open, "Marlo thanks Wren for the trade")
 	_finish_talk(game)

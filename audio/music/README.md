@@ -17,6 +17,8 @@ The tracks here now are placeholders made in code by `tools/music_gen.py` (numpy
 - A room's own `Room.music` overrides its track; `"none"` leaves only the ambience (the Ebb Shelf and Grotto).
 - In a hollow (`Room.cave`) the music is muffled: 5 dB down through a low-pass filter.
 - The Wayshell's flight plays `story_flight`.
+- Saltmarrow's square (0,-1) plays `place_village` and Brine Spring (6,-2) `place_spring` (their `Room.music`).
+- Marlo Pike's stall plays `place_shop` while the shop is open, then the room's track again.
 
 Cues the game asks for:
 

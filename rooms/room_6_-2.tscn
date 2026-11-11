@@ -7,6 +7,7 @@ script = ExtResource("1_room")
 name_key = "ROOM_BRINE_SPRING"
 biome = "brinewood"
 sign_key = "SIGN_BRINE_SPRING"
+music = "place_spring"
 layout = "########################
 ####...........M....####
 ###......~~~~.........##
