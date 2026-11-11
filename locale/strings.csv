@@ -1358,3 +1358,33 @@ MARLO_PEARLS_AFTER,"Mum wore the pearls to market. Told everyone they're from he
 NARRATE_FOUND_OYSTER,"An old oyster, big as a hand. Inside sits a plain pearl, pale as moonlight."
 NARRATE_HAND_PEARLS,"Wren sets three pearls on Marlo's counter, one by one."
 NARRATE_GOT_PEARL_PURSE,Wren got 180 Glints.
+MARGA_TRADE_1,"Keeper, before you go. Every winter Wick sends me fen candles."
+MARGA_TRADE_1B,"And every winter I owe him. This year he's getting my bramble jam."
+MARGA_TRADE_2,"Fenmouth, out past the wood. Mind you don't eat it on the way."
+NARRATE_GOT_TRADE_JAM,"Wren got a jar of Marga's bramble jam. It's for Wick, at Fenmouth."
+MARGA_TRADE_WAITING,"The jam's for Wick, out at Fenmouth. He'll know what it's for."
+MARGA_TRADE_DONE_1,"Wick wrote to thank me for the jam. Then Sorrel did. Then Ferrin!"
+MARGA_TRADE_DONE_2,"One jar of jam, all the way round the coast. I'd best make more."
+NARRATE_HAND_JAM,Wren hands Wick the jar of bramble jam.
+WICK_TRADE_1,"Marga's bramble? She remembered. I'll make this last till spring."
+WICK_TRADE_2,"These are for Sorrel, up at Gullwatch. She writes by candle all night."
+WICK_TRADE_2B,"Fen wax burns slow and sweet. Tell her the lamp-counter says hello."
+NARRATE_GOT_TRADE_CANDLES,"Wren got a bundle of fen-wax candles. They're for Sorrel, at Gullwatch."
+WICK_TRADE_WAITING,"Those candles are for Sorrel, up the Gullwatch Steps."
+NARRATE_HAND_CANDLES,Wren hands Sorrel the bundle of candles.
+SORREL_TRADE_1,"Fen wax! Now there's a smell I've missed. Wick's a dear."
+SORREL_TRADE_2,"Fair's fair. There's a surveyor camped up on Edgewatch Bluff. Ferrin."
+SORREL_TRADE_2B,"He's after good line, and kite cord's the best there is. Take him a spool."
+NARRATE_GOT_TRADE_LINE,"Wren got a spool of kite cord. It's for Ferrin, on Edgewatch Bluff."
+SORREL_TRADE_WAITING,"The kite cord's for Ferrin, up on Edgewatch Bluff, north of the heights."
+NARRATE_HAND_LINE,Wren hands Ferrin the spool of kite cord.
+FERRIN_TRADE_1,"Courier's cord! I'd know it anywhere. That'll hold a stake through a gale."
+FERRIN_TRADE_2,"Here. A chart of the far shores, drawn while my knees still worked."
+FERRIN_TRADE_2B,"Ide at Causeway End rows further every week. She'll want it more than me."
+NARRATE_GOT_TRADE_CHART,"Wren got Ferrin's chart of the far shores. It's for Ide, at Causeway End."
+FERRIN_TRADE_WAITING,"That chart's for Ide, the ferrywoman down at Causeway End."
+NARRATE_HAND_CHART,Wren hands Ide the rolled-up chart.
+IDE_TRADE_1,"A chart of the far shores? Every cove, every rock. Who drew this?"
+IDE_TRADE_2,"Ferrin? Then it's true to the inch. I'll row places Gran never dared."
+IDE_TRADE_3,"Here, fares from a good week. Now sit low, and we'll try the new chart."
+NARRATE_GOT_TRADE_PURSE,Wren got 200 Glints.
