@@ -106,6 +106,8 @@ SECRETS = {
     # Exploration secrets in the older regions (2026-11-11).
     (1, 0): ("old_one_turned",),             # Tidepools: a chest on the sea bed, bared while the tide is held out
     (2, 0): ("stonebreaker",),               # Barnacle Wall: a cove behind a cracked boulder
+    (4, -2): ("glowmoth_lantern",),           # Mothlight Glade: bars until both braziers burn, one on a pond islet
+    (6, 0): ("tide_hook", "kite_cloak", "divers_helm"),  # Tangle Shore: an islet out in deep water, with a hook post
     # Puzzle caves: one short trial room per region.
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
