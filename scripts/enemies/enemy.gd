@@ -52,7 +52,7 @@ var _roared := false
 ## then (see WEAR_EVERY), and the blow that wears it shakes the room.
 const WEAR_EVERY := 0.85
 var _wear_timer := 0.0
-## Stars over a boss's head while the sword can hurt it (see is_open).
+## Stars over a boss's head while the sword can hurt it (see is_boss_open).
 var _daze_stars: DazeStars
 ## Cache for _art_top, by frame.
 var _art_tops := {}
@@ -179,12 +179,12 @@ func _check_worn() -> void:
 
 
 ## True while a boss can be hurt by the sword: its weak moment.
-func is_open() -> bool:
+func is_boss_open() -> bool:
 	return is_in_group("boss") and not dying and hp > 0 and not _blocks_hit(Vector2.ZERO)
 
 
 func _update_daze_stars() -> void:
-	var show := is_open() and _sprite.visible and _sprite.modulate.a >= 0.5
+	var show := is_boss_open() and _sprite.visible and _sprite.modulate.a >= 0.5
 	if show and _daze_stars == null:
 		_daze_stars = DazeStars.new()
 		_daze_stars.name = "DazeStars"

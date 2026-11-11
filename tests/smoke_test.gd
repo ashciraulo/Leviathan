@@ -1145,7 +1145,7 @@ func _test_play() -> void:
 	stand_in._sprite.visible = false
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	_check(not stars.visible, "but not while the boss is out of sight")
+	_check(stars != null and not stars.visible, "but not while the boss is out of sight")
 	stand_in._sprite.visible = true
 	# Worn down to half, a boss gives off puffs of strain.
 	stand_in.max_hp = 4
@@ -1158,12 +1158,14 @@ func _test_play() -> void:
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.WEAR), "and the puffs keep coming")
 	stand_in.hp = 1
 	stand_in.take_hit(1, Vector2.RIGHT)
+	# Time is held now, so tick it by hand: the fallen boss loses its stars.
+	stand_in._physics_process(0.0)
+	_check(stars != null and not stars.visible, "a fallen boss has no stars")
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FINAL) and Engine.time_scale == 0.0, "a boss's last blow throws the great star and holds time")
 	await get_tree().create_timer(0.35, true, false, true).timeout
 	_check(is_equal_approx(Engine.time_scale, Feel.SLOW_SCALE), "then time runs slow a moment (%s)" % Engine.time_scale)
 	await get_tree().create_timer(Feel.SLOW_TIME + 0.2, true, false, true).timeout
 	_check(Engine.time_scale == 1.0, "and comes back to normal")
-	_check(not is_instance_valid(stand_in) or not stand_in.get_node("DazeStars").visible, "a fallen boss has no stars")
 	GameState.refill()
 
 	# Lanternmoth circles Wren, flares (its tell), then dives.
