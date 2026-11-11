@@ -33,6 +33,8 @@ var equipped: Dictionary = {}
 var item_slots: Array = ["", ""]
 ## One entry per jar Wren owns: Items.JAR_EMPTY, JAR_POTION or JAR_SPRITE.
 var jars: Array = []
+## The jumper Wren wears: "" for the classic navy, else a Jumpers id.
+var jumper := ""
 ## Woken Tidestones for fast travel: "x_y" -> [checkpoint x, checkpoint y].
 var tidestones: Dictionary = {}
 ## Seconds played on this file (counted by the game scene while unpaused).
@@ -87,6 +89,7 @@ func reset_new_game() -> void:
 	_hurt_owed = 0.0
 	item_slots = ["", ""]
 	jars = []
+	jumper = ""
 	tidestones = {}
 	play_time = 0.0
 	area_stats = {}
@@ -370,6 +373,7 @@ func to_dict() -> Dictionary:
 		"equipped": equipped.duplicate(),
 		"item_slots": item_slots.duplicate(),
 		"jars": jars.duplicate(),
+		"jumper": jumper,
 		"tidestones": tidestones.duplicate(true),
 		"play_time": play_time,
 		"area_stats": area_stats.duplicate(true),
@@ -422,6 +426,10 @@ func from_dict(data: Dictionary) -> void:
 		for contents in saved_jars:
 			if str(contents) in Items.JAR_ICONS:
 				jars.append(str(contents))
+	# Only a jumper this file has bought (flags are loaded above).
+	jumper = str(data.get("jumper", ""))
+	if not Jumpers.owns(jumper):
+		jumper = ""
 	var saved_stones = data.get("tidestones", {})
 	tidestones = saved_stones if saved_stones is Dictionary else {}
 	play_time = maxf(float(data.get("play_time", 0.0)), 0.0)

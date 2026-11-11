@@ -93,6 +93,8 @@ var _sword: Area2D
 var _sword_shape: CollisionShape2D
 var _hurtbox: Area2D
 var _body: Sprite2D
+## The jumper the sprite was last dressed in (GameState.jumper follows).
+var _wearing := ""
 var _front: Node2D
 var _anim_time := 0.0
 var _swim_depth := 0.0
@@ -131,6 +133,8 @@ func _ready() -> void:
 	_body = Art.sprite(Art.WREN, 6, 3, 22)
 	_body.set_meta("contrast", Palette.CONTRAST_WREN)
 	add_child(_body)
+	_wearing = GameState.jumper
+	Jumpers.dress(_body, _wearing)
 	# Sword and Hum effects draw on this layer, in front of Wren (or behind
 	# when swinging upwards).
 	_front = Node2D.new()
@@ -791,6 +795,9 @@ func _place_sword() -> void:
 
 
 func _update_sprite(delta: float) -> void:
+	if _wearing != GameState.jumper:
+		_wearing = GameState.jumper
+		Jumpers.dress(_body, _wearing)
 	var row := 0
 	if facing.y < 0.0:
 		row = 1

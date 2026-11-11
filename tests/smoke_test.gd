@@ -75,6 +75,7 @@ func _ready() -> void:
 		await _test_equipment()
 		await _test_side_quests()
 		await _test_shop()
+		await _test_jumpers()
 		_test_satchel_sea_glass()
 		await _test_save_transfer()
 		await _test_area_stats()
@@ -6208,6 +6209,67 @@ func _test_satchel_sea_glass() -> void:
 
 ## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
 ## bought with glints.
+## Ottilie's Knits: bought once from her stock, worn by Wren, changed in
+## the Satchel, kept in the save.
+func _test_jumpers() -> void:
+	GameState.reset_new_game()
+	_check(Jumpers.owned() == [""] and GameState.jumper == "", "a new file has only the keeper's navy")
+	var stock := Jumpers.stock()
+	_check(stock.size() == Jumpers.ORDER.size() and stock.all(func(r: Dictionary) -> bool: return tr(r["name"]) != r["name"] and tr(r["info"]) != r["info"]),
+		"every knit is for sale, named and described")
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	GameState.give_item("glint", 200, false)
+	var menu := ShopMenu.new()
+	menu.stock = stock
+	menu.keeper = {"portrait": Art.PORTRAIT_OTTILIE, "name": "NAME_OTTILIE", "title": "SHOP_TITLE_OTTILIE"}
+	game.add_child(menu)
+	await _wait(0.3)
+	_check(menu.buy(0) and GameState.has_flag("jumper_kelp") and GameState.jumper == "kelp" and GameState.item_count("glint") == 50,
+		"buying a knit costs its price and Wren puts it on")
+	_check(not menu.buy(0) and ShopMenu.blocked(stock[0]) == "SHOP_OWNED", "a knit is bought once")
+	_check(not menu.buy(1) and GameState.item_count("glint") == 50, "a knit beyond the purse stays on the shelf")
+	# Five knits and Leave: the list scrolls to keep the cursor in view.
+	for i in stock.size():
+		var down := InputEventAction.new()
+		down.action = "move_down"
+		down.pressed = true
+		menu._input(down)
+	_check(menu._cursor == stock.size() and menu._top == stock.size() + 1 - ShopMenu.VISIBLE, "the knits scroll down to Leave")
+	menu.close()
+	await _wait(0.2)
+	var material := game.player._body.material as ShaderMaterial
+	_check(int(material.get_shader_parameter("swap_count")) == 5, "Wren's stripes take the knit's colours")
+	_check(Jumpers.owned() == ["", "kelp"] and Jumpers.next("kelp") == "" and Jumpers.next("") == "kelp", "the Satchel cycles the jumpers Wren owns")
+	var page := SatchelPage.new()
+	add_child(page)
+	page.on_open()
+	var cell := page._cells.find_custom(func(c: Dictionary) -> bool: return c["role"] == "jumper")
+	_check(cell >= 0 and SatchelPage.GEAR_PANEL.encloses(page._cells[cell]["rect"]), "the Satchel shows the jumper once there's a choice")
+	if cell >= 0:
+		page._cursor = cell
+		var press := InputEventAction.new()
+		press.action = "interact"
+		press.pressed = true
+		page.handle_input(press)
+		_check(GameState.jumper == "", "the Satchel changes the jumper")
+	page.queue_free()
+	await _wait(0.1)
+	_check(int(material.get_shader_parameter("swap_count")) == 0, "back in the keeper's navy")
+	GameState.jumper = "kelp"
+	var saved := GameState.to_dict()
+	GameState.from_dict(saved)
+	_check(GameState.jumper == "kelp", "the jumper is saved")
+	saved["jumper"] = "storm"
+	GameState.from_dict(saved)
+	_check(GameState.jumper == "", "a save can't wear a jumper it never bought")
+	game.queue_free()
+	await get_tree().process_frame
+	GameState.reset_new_game()
+
+
 func _test_shop() -> void:
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
@@ -6939,6 +7001,15 @@ func _test_ottilie() -> void:
 	game.player.try_interact()
 	await _play_scene(game, 10.0)
 	_check(GameState.has_flag("ottilie_paid") and GameState.item_count("glint") == glints + 200, "Ottilie pays in old keepers' coin")
+	var knits: ShopMenu = null
+	for node in get_tree().current_scene.get_children():
+		if node is ShopMenu:
+			knits = node
+	_check(GameState.has_flag(Jumpers.SELLER_FLAG) and knits != null and knits.stock.size() == Jumpers.ORDER.size(),
+		"then she offers her knits, and her shelf opens")
+	if knits:
+		knits.close()
+		await _wait(0.2)
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
 	GameState.set_flag("seen_ending")
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_TURNED", "after the turn she remembers training with Hessa and Vael, even after the ending")
@@ -7152,6 +7223,7 @@ func _test_errands() -> void:
 	GameState.set_flag("ottilie_paid")
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
 	GameState.set_flag("ottilie_told_vael")
+	GameState.set_flag("ottilie_knits_told")
 	_check(first.call("ottilie") == "OTTILIE_AFTER", "before Hessa's confession, Ottilie keeps her quarrel to herself")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(first.call("ottilie") == "OTTILIE_SIGNAL_1", "after it, she sends Hessa her old cave sign")

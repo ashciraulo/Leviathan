@@ -73,6 +73,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=jumpers: Ottilie's Knits on her shelf and on Wren.
+	if OS.get_environment("SHOTS_ONLY") == "jumpers":
+		game.queue_free()
+		await _jumper_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=hud_fade: Wren and chests under the HUD's corner panels.
 	if OS.get_environment("SHOTS_ONLY") == "hud_fade":
 		await _room_shots(game, {
@@ -1806,6 +1815,79 @@ func _wick_shots() -> void:
 	reach.player._invuln = 0.0
 	await _capture("86_it_catches")
 	reach.queue_free()
+	await _wait(0.2)
+
+
+## Ottilie's Knits: her shelf, then Wren close up in each jumper (facing
+## down, sideways and away), stitched into one sheet.
+func _jumper_shots() -> void:
+	GameState.reset_new_game()
+	for flag in ["ottilie_asked", "ottilie_fish_done", "ottilie_paid", Jumpers.SELLER_FLAG]:
+		GameState.set_flag(flag)
+	GameState.give_item("glint", 1500, false)
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, StoryDirector.OTTILIE_AT + Vector2(0, -18))
+	var cove: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(cove)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.6)
+	cove.player.facing = Vector2.DOWN
+	cove.player._invuln = 600.0
+	await _wait(0.05)
+	cove.player.try_interact()
+	await _finish_talk(cove)
+	await _wait(0.3)
+	var menu: ShopMenu = null
+	for node in get_tree().current_scene.get_children():
+		if node is ShopMenu:
+			menu = node
+	if menu == null:
+		push_error("Ottilie's shelf didn't open")
+		cove.queue_free()
+		return
+	menu.buy(0)
+	menu._cursor = 2
+	menu._canvas.queue_redraw()
+	await _wait(0.3)
+	await _capture("jumpers_ottilie_shelf")
+	for i in Jumpers.ORDER.size():
+		GameState.give_item("glint", 500, false)
+		menu.buy(i)
+	menu.close()
+	await _wait(0.2)
+	while DialogueBox.is_open:
+		await _finish_talk(cove)
+	await _wait(0.3)
+	# Out in the open, clear of Ottilie and her talk mark.
+	cove.player.global_position = cove.current_room.global_position + StoryDirector.OTTILIE_AT + Vector2(-64, 24)
+	var crop := Vector2i(28, 36)
+	var zoom := 6
+	var sheet := Image.create(crop.x * zoom * Jumpers.owned().size(), crop.y * zoom * 3, false, Image.FORMAT_RGBA8)
+	var col := 0
+	for id in Jumpers.owned():
+		GameState.jumper = id
+		var row := 0
+		for face in [Vector2.DOWN, Vector2.LEFT, Vector2.UP]:
+			cove.player.facing = face
+			cove.player._invuln = 0.0
+			await _wait(0.15)
+			await RenderingServer.frame_post_draw
+			var shot := get_viewport().get_texture().get_image()
+			shot.convert(Image.FORMAT_RGBA8)
+			var at := Vector2i(cove.player.get_global_transform_with_canvas().origin) - Vector2i(crop.x / 2, crop.y - 6)
+			var part := shot.get_region(Rect2i(at, crop))
+			part.resize(crop.x * zoom, crop.y * zoom, Image.INTERPOLATE_NEAREST)
+			sheet.blit_rect(part, Rect2i(Vector2i.ZERO, part.get_size()), Vector2i(col * crop.x * zoom, row * crop.y * zoom))
+			row += 1
+		col += 1
+	var path := _out_dir.path_join("jumpers_on_wren.png")
+	print("Saved %s (%s)" % [path, error_string(sheet.save_png(path))])
+	GameState.jumper = "storm"
+	cove.player.facing = Vector2.DOWN
+	await _wait(0.2)
+	await _capture("jumpers_storm_at_still_cove")
+	cove.queue_free()
 	await _wait(0.2)
 
 

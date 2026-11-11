@@ -34,6 +34,10 @@ func _build_cells() -> void:
 		for col in 3:
 			_add(Vector2(152 + col * STEP, 40 + row * STEP), "gear", gear[row][col], col)
 	_add(Vector2(152, 124), "lamp", "keeper_lamp", 0)
+	# The jumper Wren wears, once Ottilie has knitted one: until then the
+	# keeper's navy is all there is.
+	if Jumpers.owned().size() > 1:
+		_add(Vector2(176, 124), "jumper", "", 0)
 	for i in 2:
 		_add(Vector2(256 + i * 40, 40), "slot", "", i)
 	# 15 apart, so all eight Breath Pearls fit across the shelf.
@@ -77,6 +81,9 @@ func handle_input(event: InputEvent) -> bool:
 			"gear":
 				if id != "":
 					GameState.equip(id)
+			"jumper":
+				GameState.jumper = Jumpers.next(GameState.jumper)
+				Audio.play_sfx("ui_select")
 			"slot":
 				GameState.item_slots[cell["index"]] = ""
 			"jar":
@@ -95,6 +102,8 @@ func hint() -> String:
 		return tr("HINT_SATCHEL_TOOL") % [MenuKit.key_name("item_1"), MenuKit.key_name("item_2")]
 	if cell["role"] == "gear" and id != "":
 		return tr("HINT_SATCHEL_GEAR") % MenuKit.key_name("interact")
+	if cell["role"] == "jumper":
+		return tr("HINT_SATCHEL_JUMPER") % MenuKit.key_name("interact")
 	if cell["role"] == "jar" and _jar(cell) == Items.JAR_POTION:
 		return tr("HINT_SATCHEL_DRINK") % MenuKit.key_name("interact")
 	if cell["role"] == "slot" and GameState.item_slots[cell["index"]] != "":
@@ -121,6 +130,8 @@ func _owned_id(cell: Dictionary) -> String:
 			return "glint"
 		"count":
 			return cell["id"] if GameState.item_count(cell["id"]) > 0 else ""
+		"jumper":
+			return "jumper"
 		_:
 			var id: String = cell["id"]
 			return id if id != "" and GameState.has_item(id) else ""
@@ -181,6 +192,9 @@ func _draw_cell(cell: Dictionary) -> void:
 				MenuKit.draw_icon(self, cell["id"], rect.position)
 			else:
 				MenuKit.draw_icon(self, cell["id"], rect.position, Color(0.2, 0.25, 0.4, 0.7))
+		"jumper":
+			MenuKit.draw_slot(self, rect.position, true)
+			ShopMenu.draw_knit(self, rect.position + Vector2(2, 2), Jumpers.ramp(GameState.jumper))
 		"glint", "count":
 			MenuKit.draw_icon(self, cell["id"], rect.position)
 			MenuKit.draw_text(self, "x %d" % GameState.item_count(cell["id"]), rect.position + Vector2(19, 4))
@@ -204,6 +218,10 @@ func _draw_info() -> void:
 	if id == "":
 		var empty_key := "SATCHEL_EMPTY_SLOT" if cell["role"] == "slot" else "SATCHEL_EMPTY"
 		MenuKit.draw_text(self, empty_key, at, MenuKit.TEXT_DIM)
+		return
+	if cell["role"] == "jumper":
+		MenuKit.draw_text(self, Jumpers.name_key(GameState.jumper), at, MenuKit.TEXT_GOLD)
+		MenuKit.draw_wrapped(self, Jumpers.name_key(GameState.jumper) + "_INFO", at + Vector2(0, 12), width, MenuKit.TEXT, 2)
 		return
 	var title := tr(Items.name_key(id))
 	match cell["role"]:
