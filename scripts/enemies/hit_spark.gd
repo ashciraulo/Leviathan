@@ -4,12 +4,13 @@ extends Node2D
 ## the web build). HIT is a white star that snaps open and is gone; BLOCK is a
 ## spray of cold sparks thrown back the way the sword came; FALL is a ring of
 ## dust puffs where a foe drops; FINAL is the great star and ring of a
-## boss's last blow. With flashes turned off the bright core is
+## boss's last blow; WEAR is a few puffs of strain rising off a worn boss.
+## With flashes turned off the bright core is
 ## left out and everything is dimmer.
 
-enum Kind { HIT, BLOCK, FALL, FINAL }
+enum Kind { HIT, BLOCK, FALL, FINAL, WEAR }
 
-const LIFE := {Kind.HIT: 0.14, Kind.BLOCK: 0.22, Kind.FALL: 0.38, Kind.FINAL: 0.7}
+const LIFE := {Kind.HIT: 0.14, Kind.BLOCK: 0.22, Kind.FALL: 0.38, Kind.FINAL: 0.7, Kind.WEAR: 0.9}
 const HIT_CORE := Color("#fff6d8")
 const HIT_EDGE := Color("#ffd27a")
 const BLOCK_SPARK := Color("#cfe8ff")
@@ -63,6 +64,8 @@ func _draw() -> void:
 			_draw_fall(t, dim)
 		Kind.FINAL:
 			_draw_final(t, dim)
+		Kind.WEAR:
+			_draw_wear(t, dim)
 
 
 func _draw_hit(t: float, dim: float) -> void:
@@ -155,3 +158,21 @@ func _draw_final(t: float, dim: float) -> void:
 		var angle := TAU * float(i) / 28.0
 		var at := (Vector2(cos(angle), sin(angle) * 0.8) * radius).round()
 		draw_rect(Rect2(at, Vector2(2, 2)), ring)
+
+
+func _draw_wear(t: float, dim: float) -> void:
+	# Four puffs that lift off, drift a little to one side and thin away: a
+	# foe straining, its breath ragged.
+	var fade := (1.0 - t * t) * dim
+	var lean := 1.0 if _seed % 2 == 0 else -1.0
+	for i in 4:
+		var lag := float(i) * 0.14
+		var u := clampf((t - lag) / (1.0 - lag), 0.0, 1.0)
+		if u <= 0.0:
+			continue
+		var size := 4.0 if u < 0.35 else (3.0 if u < 0.7 else 2.0)
+		var at := Vector2(lean * (float(i) * 2.5 + sin(u * 5.0 + float(i)) * 2.0), -u * 20.0 - float(i) * 2.0)
+		at = (at - Vector2.ONE * size * 0.5).round()
+		draw_rect(Rect2(at, Vector2.ONE * size).grow(1.0), Color(RIM, fade * 0.6))
+		draw_rect(Rect2(at + Vector2(0, 1), Vector2.ONE * size), Color(DUST_SHADE, fade * 0.9))
+		draw_rect(Rect2(at, Vector2(size, size - 1.0)), Color(DUST, fade))

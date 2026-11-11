@@ -48,6 +48,10 @@ var _sprite_origin := Vector2.ZERO
 var _sprite_base_scale := Vector2.ONE
 var _squash := 0.0
 var _roared := false
+## A boss at half health or less is worn: puffs of strain rise off it now and
+## then (see WEAR_EVERY), and the blow that wears it shakes the room.
+const WEAR_EVERY := 0.85
+var _wear_timer := 0.0
 
 
 func _ready() -> void:
@@ -113,6 +117,11 @@ func _physics_process(delta: float) -> void:
 		var amount := SQUASH_BOSS if is_in_group("boss") else SQUASH
 		_sprite.scale = _sprite_base_scale * Vector2(1.0 + amount * k, 1.0 - amount * 0.8 * k)
 	Art.set_flash(_sprite, 1.0 if _flash > 0.0 else 0.0)
+	if is_worn():
+		_wear_timer -= delta
+		if _wear_timer <= 0.0:
+			_wear_timer = WEAR_EVERY + randf() * 0.3
+			_puff_wear()
 
 
 ## Called by Wren's sword. `direction` is the way the swing travels.
@@ -124,6 +133,7 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 		if damage > 0:
 			HitSpark.spawn(get_parent(), global_position + _spark_offset() - direction * 6.0, HitSpark.Kind.BLOCK, direction)
 		return HitResult.BLOCKED
+	var was_worn := is_worn()
 	hp -= damage
 	# The hook's tug (no damage) is not a blow.
 	if damage > 0:
@@ -136,11 +146,43 @@ func take_hit(damage: int, direction: Vector2) -> HitResult:
 	_stun = HIT_STUN
 	_knockback = direction * KNOCKBACK_SPEED * knockback_scale
 	_on_hurt()
+	if not was_worn:
+		_check_worn()
 	if hp <= 0:
 		if is_in_group("boss"):
 			Feel.final_blow(get_parent(), global_position + _spark_offset())
 		_die()
 	return HitResult.HIT
+
+
+## True for a living boss at half health or less that shows it (see
+## _shows_wear).
+func is_worn() -> bool:
+	return is_in_group("boss") and not dying and hp > 0 and hp * 2 <= max_hp and _shows_wear()
+
+
+## Call after taking health off a boss outside take_hit: the blow that first
+## wears it down shakes the room and sends up the first puffs at once.
+func _check_worn() -> void:
+	if is_worn():
+		Feel.shake(3.0)
+		_wear_timer = WEAR_EVERY
+		_puff_wear()
+		_puff_wear()
+
+
+## Override to false for a boss whose wear already shows another way.
+func _shows_wear() -> bool:
+	return true
+
+
+func _puff_wear() -> void:
+	if not is_visible_in_tree() or not _sprite.visible or _sprite.modulate.a < 0.5:
+		return
+	# Off the top of the sprite, where they read against the floor.
+	var box := _sprite.get_global_transform() * _sprite.get_rect()
+	var at := Vector2(randf_range(box.position.x + box.size.x * 0.3, box.end.x - box.size.x * 0.3), box.position.y + 6.0)
+	HitSpark.spawn(get_parent(), at, HitSpark.Kind.WEAR)
 
 
 func get_player() -> Player:
