@@ -218,7 +218,9 @@ func _change_room(direction: Vector2i) -> void:
 	if barred or hatch:
 		if barred or not GameState.flags.get(LockedDoor.lock_flag(next.coord), false):
 			if barred:
-				Feel.shake(0.4)
+				# The bars are just out of sight: let them be heard.
+				Feel.shake(1.0)
+				Audio.play_sfx("door_locked", player.global_position)
 			next.queue_free()
 			var back := player.global_position - current_room.global_position
 			back = back.clamp(Vector2.ONE, Room.SIZE - Vector2.ONE) - Vector2(direction) * 2.0
