@@ -1,0 +1,44 @@
+{
+ "cue": "dungeon_belfry",
+ "qbpm": 104.0,
+ "bar_q": 3,
+ "bars": 64,
+ "intro_q": 0,
+ "end_q": 192,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 110.76923076923077,
+ "loop": true,
+ "parts": [
+  {
+   "name": "organ_soft",
+   "notes": 352,
+   "low": 43,
+   "high": 78
+  },
+  {
+   "name": "choir",
+   "notes": 29,
+   "low": 66,
+   "high": 79
+  },
+  {
+   "name": "bell_church",
+   "notes": 10,
+   "low": 70,
+   "high": 77
+  },
+  {
+   "name": "harp",
+   "notes": 24,
+   "low": 74,
+   "high": 84
+  },
+  {
+   "name": "bass_arco",
+   "notes": 56,
+   "low": 31,
+   "high": 41
+  }
+ ]
+}
