@@ -186,8 +186,11 @@ const TALKS := {
 	"sorrel": [
 		# The post's last three letters, never sent when it shut.
 		{"if": ["letter_ottilie", "letter_liesl", "letter_agna"], "unless": ["sorrel_letters_paid"], "set": ["sorrel_letters_paid"], "give": {"glint": 150}, "lines": ["SORREL_LETTERS_DONE_1", "SORREL_LETTERS_DONE_2", ["", "NARRATE_GOT_POSTAGE"]]},
+		# Gullcry Stacks, the run no courier ever flew (its chest is the proof).
+		{"if": ["sorrel_paid", "chest_7_-4_20_2"], "unless": ["sorrel_saw_stacks"], "set": ["sorrel_saw_stacks"], "lines": ["SORREL_STACKS_DONE_1", "SORREL_STACKS_DONE_2"]},
 		{"if": ["sorrel_letters"], "unless": ["sorrel_letters_paid"], "lines": ["SORREL_LETTERS_WAITING"]},
 		{"if": ["sorrel_paid"], "unless": ["sorrel_letters"], "set": ["sorrel_letters"], "lines": ["SORREL_LETTERS_1", "SORREL_LETTERS_1B", "SORREL_LETTERS_2", "SORREL_LETTERS_2B", ["", "NARRATE_TAKE_LETTERS"]]},
+		{"if": ["sorrel_paid"], "unless": ["sorrel_dared_stacks", "sorrel_saw_stacks"], "set": ["sorrel_dared_stacks"], "lines": ["SORREL_STACKS_1", "SORREL_STACKS_1B"]},
 		{"if": ["sorrel_paid", "seen_ending"], "lines": ["SORREL_END"]},
 		{"if": ["sorrel_paid", "old_one_turned"], "lines": ["SORREL_AFTER", "SORREL_TURNED"]},
 		{"if": ["sorrel_paid"], "lines": ["SORREL_AFTER", "SORREL_AFTER_2"]},
@@ -216,6 +219,9 @@ const TALKS := {
 	# Mother Dace by the last mural, after the ending.
 	"dace": [
 		{"unless": ["dace_sat"], "set": ["dace_sat"], "lines": ["DACE_END_1", "DACE_END_2"]},
+		# The Bone Ring, where the bone-readers' young proved their nerve.
+		{"if": ["gate_8_2"], "unless": ["dace_saw_ring"], "set": ["dace_saw_ring"], "lines": ["DACE_RING_DONE_1", "DACE_RING_DONE_2"]},
+		{"unless": ["dace_told_ring", "dace_saw_ring"], "set": ["dace_told_ring"], "lines": ["DACE_RING_1", "DACE_RING_1B"]},
 		{"lines": ["DACE_AGAIN"]},
 	],
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
@@ -264,8 +270,11 @@ const TALKS := {
 	"wick": [
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
+		# The Lampless Sink's four braziers, lit at last.
+		{"if": ["wick_gave_jar", "gate_5_3"], "unless": ["wick_saw_sink"], "set": ["wick_saw_sink"], "lines": ["WICK_SINK_DONE_1", "WICK_SINK_DONE_2"]},
 		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
 		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
+		{"if": ["wick_gave_jar"], "unless": ["wick_told_sink", "wick_saw_sink"], "set": ["wick_told_sink"], "lines": ["WICK_SINK_1", "WICK_SINK_1B"]},
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
 		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},
 		{"if": ["wick_gave_jar"], "lines": ["WICK_AFTER"]},

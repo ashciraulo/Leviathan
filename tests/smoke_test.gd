@@ -83,6 +83,7 @@ func _ready() -> void:
 		_test_talk_order()
 		_test_errands()
 		_test_hessa_hints()
+		_test_challenge_talk()
 		await _test_ebb_shelf()
 		_test_late_reactions()
 	SaveManager.delete_save()
@@ -5050,6 +5051,8 @@ func _test_sorrel() -> void:
 	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_LETTERS_1", "after the race, Sorrel's last letters come first")
 	GameState.set_flag("sorrel_letters")
 	GameState.set_flag("sorrel_letters_paid")
+	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_STACKS_1", "then she dares Wren to fly Gullcry Stacks")
+	GameState.set_flag("sorrel_dared_stacks")
 	_check(Conversations.branch_for("sorrel").get("lines")[0] == "SORREL_END", "after the ending she flies letters again")
 
 
@@ -5320,6 +5323,7 @@ func _test_errands() -> void:
 		talk.call(who)
 	_check(first.call("sorrel") == "SORREL_LETTERS_DONE_1", "all three delivered")
 	talk.call("sorrel")
+	GameState.set_flag("sorrel_dared_stacks")
 	_check(GameState.item_count("glint") == glints + 150 and first.call("sorrel") == "SORREL_AFTER", "courier's pay, then back to her usual")
 	# Ottilie's sign for Hessa.
 	GameState.set_flag("ottilie_paid")
@@ -5418,6 +5422,35 @@ func _test_ebb_shelf() -> void:
 	GameState.reset_new_game()
 
 
+## Sorrel, Wick and Dace each point Wren at one of the overworld trials,
+## and notice when it's done.
+func _test_challenge_talk() -> void:
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var steps := [
+		["sorrel", ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid"], "SORREL_STACKS_1", "chest_7_-4_20_2", "SORREL_STACKS_DONE_1", "SORREL_AFTER"],
+		["wick", ["wick_asked", "fen_lanterns_lit", "wick_gave_jar"], "WICK_SINK_1", "gate_5_3", "WICK_SINK_DONE_1", "WICK_AFTER"],
+		["dace", ["dace_sat"], "DACE_RING_1", "gate_8_2", "DACE_RING_DONE_1", "DACE_AGAIN"],
+	]
+	for step: Array in steps:
+		GameState.reset_new_game()
+		for flag: String in step[1]:
+			GameState.set_flag(flag)
+		_check(first.call(step[0]) == step[2], "%s points Wren at the trial" % step[0])
+		Conversations.talk(step[0])
+		_check(first.call(step[0]) == step[5], "%s says it once" % step[0])
+		GameState.set_flag(step[3])
+		_check(first.call(step[0]) == step[4], "%s notices it's done" % step[0])
+		Conversations.talk(step[0])
+		_check(first.call(step[0]) == step[5], "and then back to the usual")
+	# Done before being asked: straight to the praise, never the dare.
+	GameState.reset_new_game()
+	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "gate_5_3"]:
+		GameState.set_flag(flag)
+	Conversations.talk("wick")
+	_check(first.call("wick") == "WICK_AFTER", "a trial done unasked is praised, not dared")
+	GameState.reset_new_game()
+
+
 ## Hessa always has a word on where the next bell is, if Wren asks.
 func _test_hessa_hints() -> void:
 	GameState.reset_new_game()
@@ -5465,7 +5498,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
