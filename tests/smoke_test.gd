@@ -1137,6 +1137,16 @@ func _test_play() -> void:
 	room.add_child(stand_in)
 	stand_in.add_to_group("boss")
 	await _wait(0.1)
+	# Stars circle a boss's head only while the sword can hurt it.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var stars := stand_in.get_node_or_null("DazeStars")
+	_check(stars != null and stars.visible, "stars circle a boss open to the sword")
+	stand_in._sprite.visible = false
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(not stars.visible, "but not while the boss is out of sight")
+	stand_in._sprite.visible = true
 	# Worn down to half, a boss gives off puffs of strain.
 	stand_in.max_hp = 4
 	stand_in.hp = 4
@@ -1153,6 +1163,7 @@ func _test_play() -> void:
 	_check(is_equal_approx(Engine.time_scale, Feel.SLOW_SCALE), "then time runs slow a moment (%s)" % Engine.time_scale)
 	await get_tree().create_timer(Feel.SLOW_TIME + 0.2, true, false, true).timeout
 	_check(Engine.time_scale == 1.0, "and comes back to normal")
+	_check(not is_instance_valid(stand_in) or not stand_in.get_node("DazeStars").visible, "a fallen boss has no stars")
 	GameState.refill()
 
 	# Lanternmoth circles Wren, flares (its tell), then dives.
