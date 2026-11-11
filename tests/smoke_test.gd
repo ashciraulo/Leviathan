@@ -7366,7 +7366,7 @@ func _test_old_ones_scales() -> void:
 		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "the %s scale is on dry floor with dry floor below" % id)
 		_check(game.player.try_interact(), "Wren can pick up the %s scale" % id)
 		await _play_scene(game, 10.0)
-		_check(GameState.has_flag(ShedScale.flag_for(id)), "and does")
+		_check(GameState.has_flag(ShedScale.flag_for(id)) and not room.get_children().any(func(c: Node) -> bool: return c is ShedScale and c.visible and c.is_in_group("interactable")), "and does, and it's gone from the floor")
 		game.queue_free()
 		await _wait(0.1)
 		# Once picked up, it's gone.

@@ -37,7 +37,11 @@ func interact() -> void:
 	GameState.set_flag(flag_for(id))
 	Audio.play_jingle("jingle_item")
 	Events.conversation_requested.emit(Conversations.pages("", {"lines": ["NARRATE_FOUND_SCALE", "NARRATE_SCALES_%d" % found()]}))
-	queue_free()
+	# Gone from the floor. The node stays until the room unloads (and isn't
+	# placed again), so whoever is holding it doesn't hold a freed object.
+	remove_from_group("interactable")
+	set_process(false)
+	hide()
 
 
 func _process(delta: float) -> void:
