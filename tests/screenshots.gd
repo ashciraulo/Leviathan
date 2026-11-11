@@ -929,6 +929,8 @@ func _gale_shots(game: Node) -> void:
 		[Vector2i(27, 8), "97_gale_rookery", Vector2i(21, 6)],
 		[Vector2i(27, 7), "97b_gale_bell_cage", Vector2i(3, 10)],
 		[Vector2i(29, 10), "97c_gale_bellrope_walk", Vector2i(2, 6)],
+		[Vector2i(30, 9), "97d_gale_lantern_span", Vector2i(2, 3)],
+		[Vector2i(30, 8), "97e_gale_roost", Vector2i(20, 11)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])
@@ -1189,6 +1191,8 @@ func _glacier_shots(game: Node) -> void:
 		[Vector2i(33, 8), "111_glacier_slide_hall", Vector2i(1, 7)],
 		[Vector2i(33, 7), "111b_glacier_rime_vault", Vector2i(18, 11)],
 		[Vector2i(33, 10), "111c_glacier_frost_ford", Vector2i(2, 6)],
+		[Vector2i(34, 9), "111d_glacier_sluice", Vector2i(2, 8)],
+		[Vector2i(31, 8), "111e_glacier_icefall", Vector2i(21, 6)],
 	]
 	for shot: Array in rooms:
 		await _jump(game, shot[0], shot[2])

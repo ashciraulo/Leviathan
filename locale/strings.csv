@@ -467,6 +467,8 @@ ROOM_MIRELIGHT_EDGE,Mirelight Edge
 ROOM_GALE_ENTRY,Gale Spire
 ROOM_GALE_FANS,Gale Spire: Fan Hall
 ROOM_GALE_STORE,Gale Spire: Rope Store
+ROOM_GALE_LANTERN_SPAN,Gale Spire: Lantern Span
+ROOM_GALE_ROOST,Gale Spire: Weathercock Roost
 ROOM_GALE_BELL_CAGE,Gale Spire: Bell Cage
 ROOM_GALE_BELLROPE_WALK,Gale Spire: Bellrope Walk
 ROOM_GALE_SAIL_LOFT,Gale Spire: Sail Loft
@@ -494,6 +496,8 @@ ROOM_GLACIER_BOWYER,Hollow Glacier: Bowyer's Cave
 ROOM_GLACIER_POOL,Hollow Glacier: Black Pool
 ROOM_GLACIER_EYES,Hollow Glacier: Eye Gallery
 ROOM_GLACIER_SLIDE,Hollow Glacier: Slide Hall
+ROOM_GLACIER_SLUICE,Hollow Glacier: the Sluice
+ROOM_GLACIER_ICEFALL,Hollow Glacier: the Icefall
 ROOM_GLACIER_BOSS,Hollow Glacier: the Breathing Hall
 DUNGEON_GLACIER,Hollow Glacier
 TOAST_GOT_FROSTFANG_BOW,You found the Frostfang Bow!
