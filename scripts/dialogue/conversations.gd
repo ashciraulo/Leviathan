@@ -170,6 +170,7 @@ const TALKS := {
 		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["lighting_ask", "met_agna"], "unless": ["party_agna"], "set": ["party_agna"], "lines": ["AGNA_PARTY_1", "AGNA_PARTY_2"]},
+		{"if": ["bram_pot_cast", "met_agna"], "unless": ["agna_pot_told"], "set": ["agna_pot_told"], "lines": ["AGNA_POT_1", "AGNA_POT_2"]},
 		# The Old One's scales: six shed pieces from the puzzle caves (ShedScale)
 		# for a hand-bell, which goes to Nettle.
 		{"if": ["agna_scales_ask", "shed_scale_dragline", "shed_scale_rimelight", "shed_scale_emberwell", "shed_scale_drybone", "shed_scale_gustway", "shed_scale_lampless"], "unless": ["agna_bell_cast"], "set": ["agna_bell_cast"], "give": {"glint": 250}, "lines": ["AGNA_SCALES_DONE_1", ["", "NARRATE_AGNA_POURS"], "AGNA_SCALES_DONE_2", "AGNA_SCALES_DONE_3", "AGNA_SCALES_DONE_4", ["", "NARRATE_GOT_SCALE_PURSE"]]},
@@ -197,8 +198,14 @@ const TALKS := {
 	"ide": [
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
-		{"if": ["seen_ending"], "set": ["ide_ferry"], "lines": ["IDE_END"]},
-		{"set": ["ide_ferry"], "lines": ["IDE_FERRY_AGAIN"]},
+		# Her boat's lost nameboard (QuestFind). Every branch still rows Wren over.
+		{"if": ["ide_board_ask", "found_nameboard"], "unless": ["ide_board_done"], "set": ["ide_board_done", "ide_ferry"], "give": {"glint": 100}, "lines": [["", "NARRATE_HAND_NAMEBOARD"], "IDE_BOARD_DONE_1", "IDE_BOARD_DONE_2", ["", "NARRATE_GOT_NAMEBOARD_PURSE"], "IDE_BOARD_DONE_3"]},
+		{"if": ["met_ide_ferry", "found_nameboard"], "unless": ["ide_board_ask"], "set": ["ide_board_ask", "ide_board_done", "ide_ferry"], "give": {"glint": 100}, "lines": [["", "NARRATE_HAND_NAMEBOARD"], "IDE_BOARD_EARLY", "IDE_BOARD_1B", "IDE_BOARD_1C", "IDE_BOARD_DONE_2", ["", "NARRATE_GOT_NAMEBOARD_PURSE"], "IDE_BOARD_DONE_3"]},
+		{"if": ["ide_rowed_again"], "unless": ["ide_board_ask"], "set": ["ide_board_ask", "ide_ferry"], "lines": ["IDE_BOARD_1", "IDE_BOARD_1B", "IDE_BOARD_1C", "IDE_BOARD_2", "IDE_BOARD_2B"]},
+		{"if": ["ide_board_ask"], "unless": ["ide_board_done"], "set": ["ide_ferry"], "lines": ["IDE_BOARD_WAITING"]},
+		# (Mid-errand after the ending, the waiting line wins over IDE_END.)
+		{"if": ["seen_ending"], "set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_END"]},
+		{"set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_FERRY_AGAIN"]},
 	],
 	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
@@ -281,7 +288,14 @@ const TALKS := {
 	],
 	# The last singers, each alone somewhere after the ending.
 	"bram": [
-		{"if": ["bram_home"], "lines": ["BRAM_FORGE"]},
+		# The Choir's chimes (QuestFind), melted down into a pot for Agna.
+		{"if": ["bram_chimes_ask", "found_chime_pass", "found_chime_fen", "found_chime_wood"], "unless": ["bram_pot_cast"], "set": ["bram_pot_cast"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_CHIMES"], "BRAM_CHIMES_DONE_1", ["", "NARRATE_BRAM_POURS"], "BRAM_CHIMES_DONE_2", "BRAM_CHIMES_DONE_2B", "BRAM_CHIMES_DONE_3", ["", "NARRATE_GOT_CHIME_PURSE"]]},
+		# All three found before he asked.
+		{"if": ["bram_home", "found_chime_pass", "found_chime_fen", "found_chime_wood"], "unless": ["bram_chimes_ask"], "set": ["bram_chimes_ask", "bram_pot_cast"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_CHIMES"], "BRAM_CHIMES_EARLY", "BRAM_CHIMES_EARLY_2", ["", "NARRATE_BRAM_POURS"], "BRAM_CHIMES_DONE_2", "BRAM_CHIMES_DONE_2B", "BRAM_CHIMES_DONE_3", ["", "NARRATE_GOT_CHIME_PURSE"]]},
+		{"if": ["bram_forge_talked"], "unless": ["bram_chimes_ask"], "set": ["bram_chimes_ask"], "lines": ["BRAM_CHIMES_1", "BRAM_CHIMES_1B", "BRAM_CHIMES_1C", "BRAM_CHIMES_2", "BRAM_CHIMES_2B"]},
+		{"if": ["bram_chimes_ask"], "unless": ["bram_pot_cast"], "lines": ["BRAM_CHIMES_WAITING"]},
+		{"if": ["bram_pot_cast"], "unless": ["bram_pot_after"], "set": ["bram_pot_after"], "lines": ["BRAM_CHIMES_AFTER"]},
+		{"if": ["bram_home"], "set": ["bram_forge_talked"], "lines": ["BRAM_FORGE"]},
 		{"if": ["agna_bram"], "set": ["bram_home"], "lines": [["", "NARRATE_WREN_BELLOWS"], "BRAM_HOME_1", "BRAM_HOME_2"]},
 		{"if": ["bram_met"], "lines": ["BRAM_WAITING"]},
 		{"set": ["bram_met"], "lines": ["BRAM_1", "BRAM_1B", "BRAM_2"]},
@@ -397,6 +411,10 @@ const TALKS := {
 	"find_bottle_strand": [{"set": ["found_bottle_strand"], "lines": ["NARRATE_FOUND_BOTTLE", "NARRATE_BOTTLE_NOTE_STRAND", "NARRATE_KEEP_BOTTLE"]}],
 	"find_pell_shell": [{"set": ["found_pell_shell"], "lines": ["NARRATE_FOUND_SHELL"]}],
 	"find_driftwood": [{"set": ["found_driftwood"], "lines": ["NARRATE_FOUND_DRIFTWOOD"]}],
+	"find_chime_pass": [{"set": ["found_chime_pass"], "lines": ["NARRATE_FOUND_CHIME"]}],
+	"find_chime_fen": [{"set": ["found_chime_fen"], "lines": ["NARRATE_FOUND_CHIME"]}],
+	"find_chime_wood": [{"set": ["found_chime_wood"], "lines": ["NARRATE_FOUND_CHIME"]}],
+	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.

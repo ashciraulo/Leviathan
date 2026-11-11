@@ -1,8 +1,9 @@
 class_name QuestFind
 extends StaticBody2D
 ## A small thing lying about for a villager's errand (StoryDirector.FINDS):
-## one of Corrin's grandad's message bottles, Pell's lucky shell, or a piece
-## of pale driftwood for Dunstan. Picking it up is a conversation with no
+## one of Corrin's grandad's message bottles, Pell's lucky shell, a piece
+## of pale driftwood for Dunstan, one of the Choir's chimes for Bram, or the
+## nameboard off Ide's boat. Picking it up is a conversation with no
 ## speaker (Conversations "find_<id>"), which sets found_<id>; then it's
 ## gone for good.
 
@@ -14,8 +15,14 @@ const SHELL := Color("#f4e2c6")
 const SPOTS := Color("#9a6440")
 const WOOD := Color("#e6dccb")
 const WOOD_DARK := Color("#b4a690")
+const BRONZE := Color("#5f9e86")
+const BRONZE_DARK := Color("#3f6f5e")
+const CORD := Color("#a08a64")
+const BOARD := Color("#4a78a8")
+const BOARD_DARK := Color("#34587e")
 
-## "bottle_shore", "bottle_pools", "bottle_strand", "pell_shell" or "driftwood".
+## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
+## "chime_*" or "nameboard".
 var id := ""
 var _time := 0.0
 
@@ -66,6 +73,20 @@ func _draw() -> void:
 		for p in [Vector2(-2, -4), Vector2(1, -2), Vector2(2, -4), Vector2(-1, -2)]:
 			draw_rect(Rect2(p, Vector2(1, 1)), SPOTS)
 		draw_line(Vector2(-3, -3), Vector2(3, -3), SPOTS)
+	elif id.begins_with("chime"):
+		# A salt-green bronze tube lying on its frayed cord.
+		draw_line(Vector2(-9, -2), Vector2(-4, -3), CORD)
+		draw_rect(Rect2(-4, -6, 12, 5), Palette.OUTLINE)
+		draw_rect(Rect2(-3, -5, 10, 3), BRONZE)
+		draw_rect(Rect2(-3, -3, 10, 1), BRONZE_DARK)
+		draw_rect(Rect2(-1, -5, 1, 3), BRONZE_DARK)
+	elif id == "nameboard":
+		# A long blue board with a few salt-eaten white letters.
+		draw_rect(Rect2(-11, -7, 22, 7), Palette.OUTLINE)
+		draw_rect(Rect2(-10, -6, 20, 5), BOARD)
+		draw_rect(Rect2(-10, -2, 20, 1), BOARD_DARK)
+		for x in [-8, -4, -1, 3, 7]:
+			draw_rect(Rect2(x, -5, 2, 2), PAPER)
 	else:
 		# A long bleached branch.
 		draw_rect(Rect2(-10, -5, 20, 5), Palette.OUTLINE)
