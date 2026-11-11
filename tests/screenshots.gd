@@ -322,6 +322,7 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _quest_story_shots()
+				await _party_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2079,6 +2080,43 @@ func _quest_story_shots() -> void:
 			await _wait(0.1)
 		game.queue_free()
 		await _wait(0.2)
+
+
+## Hessa's lighting day: every lantern in the square at once.
+func _party_shot() -> void:
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "nettle_learned", "heard_nettle_bell", StoryDirector.CONFESSION_FLAG, "lighting_ask", "party_ottilie", "party_agna", "party_wick", "party_sorrel", "party_marga"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(10 * 16 + 8, 5 * 16 + 8))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(3.0)
+	Conversations.talk("nettle")
+	var box := _dialogue_box(game)
+	for i in 300:
+		if game.world.get_children().any(func(c: Node) -> bool: return c is LampGlow):
+			break
+		if DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+	await _wait(0.6)
+	await _capture("quest_6_lighting_day")
+	for i in 200:
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+		if box and DialogueBox.is_open and i > 40:
+			await _capture("quest_7_hessa")
+			break
+	while Cutscene.active or DialogueBox.is_open:
+		if DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+	game.queue_free()
+	await _wait(0.2)
 
 
 ## The last singers, each alone in their own region after the ending.
