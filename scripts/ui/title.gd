@@ -139,6 +139,12 @@ func _hide_page() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _page == null:
+		# Buttons only take Enter and Space (ui_accept); the talk key confirms
+		# everywhere else, and it's the phone's on-screen confirm button.
+		var focus := get_viewport().gui_get_focus_owner() as BaseButton
+		if event.is_action_pressed("interact") and focus and _menu.is_ancestor_of(focus) and not focus.disabled:
+			get_viewport().set_input_as_handled()
+			focus.pressed.emit()
 		return
 	get_viewport().set_input_as_handled()
 	if MenuKit.direction(event) != Vector2i.ZERO:

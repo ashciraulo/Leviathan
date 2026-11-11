@@ -1,9 +1,8 @@
 extends Node
 ## Web performance survey. A separate web export ("Web perf", feature tag
 ## "perf") starts here instead of the title screen; tools/web_check.mjs
-## --perf runs it in headless Chromium. It starts the game in every
-## dungeon room and a few of the busiest overworld screens, lets each
-## settle, then measures real frames in the browser (drawing included).
+## --perf runs it in headless Chromium. It starts the game in every room,
+## overworld screens first, then each dungeon's, lets each settle, then measures real frames in the browser (drawing included).
 ## Each room prints one line:
 ##     WEB PERF ROW <x,y> <area> <avg ms> <worst ms> <draw calls> <lights> <nodes>
 ## and WEB PERF SHOT <name> asks the page for a screenshot meanwhile.
@@ -22,8 +21,6 @@ const FRAMES := 90
 ## A boss room is measured mid-fight: Wren can't be hurt, and the boss gets
 ## this long to get going (its entrance over, its attacks flying) first.
 const BOSS_FIGHT_SECONDS := 6.0
-## Busiest overworld screens in tests/perf_rooms (a baseline to compare).
-const OVERWORLD := [Vector2i(12, 9), Vector2i(3, -3), Vector2i(22, 8), Vector2i(2, 3)]
 ## Rooms worth a picture, to see they draw right in a browser (not boss
 ## rooms, whose fights can still be veiled for a cutscene).
 const SHOTS := {
@@ -34,8 +31,9 @@ const SHOTS := {
 func _ready() -> void:
 	Engine.max_fps = 0
 	SaveManager.current_slot = 2
-	var rooms: Array[Vector2i] = []
-	rooms.assign(OVERWORLD)
+	# Every overworld screen (also the baseline the dungeons are compared with).
+	var rooms: Array[Vector2i] = RoomInfo.in_area("")
+	rooms.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y if a.y != b.y else a.x < b.x)
 	var dungeon_rooms: Array = RoomInfo.all().keys().filter(
 		func(c: Vector2i) -> bool: return str(RoomInfo.all()[c]["dungeon"]) != "")
 	dungeon_rooms.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:

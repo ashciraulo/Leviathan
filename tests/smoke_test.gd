@@ -70,6 +70,7 @@ func _ready() -> void:
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
+		await _test_title_talk_key()
 		await _test_equipment()
 		await _test_side_quests()
 		await _test_shop()
@@ -3981,6 +3982,18 @@ func _test_items() -> void:
 	Settings.rebind("attack", take_k)
 	_check(Settings.main_key("attack") == KEY_K and Settings.main_key("interact") == KEY_J,
 		"rebinding to a used key swaps the two actions")
+	# The web page's touch buttons press the default keys: they're told
+	# where each action went, with the label to show.
+	var touch := Settings.touch_bindings()
+	_check(touch.get("KeyJ") == ["KeyK", "K"] and touch.get("KeyK") == ["KeyJ", "J"] and touch.size() == 2,
+		"touch buttons follow a swap (%s)" % str(touch))
+	var take_semicolon := InputEventKey.new()
+	take_semicolon.physical_keycode = KEY_SEMICOLON
+	Settings.rebind("hum", take_semicolon)
+	touch = Settings.touch_bindings()
+	_check(touch.get("KeyH", [""])[0] == "Semicolon", "touch buttons follow a remap off the letters (%s)" % str(touch))
+	_check(Settings.web_code(KEY_L) == "KeyL" and Settings.web_code(KEY_7) == "Digit7" and Settings.web_code(KEY_F2) == "F2"
+		and Settings.web_code(KEY_ESCAPE) == "Escape", "keys have their web codes")
 	Settings.rebind("item_1", _pad_event(JOY_BUTTON_Y))
 	_check(Settings.main_button("item_1") == JOY_BUTTON_Y and Settings.main_button("item_2") == JOY_BUTTON_X,
 		"rebinding to a used button swaps the two actions")
@@ -4495,6 +4508,27 @@ func _test_fast_travel() -> void:
 	Engine.time_scale = 1.0
 	game.queue_free()
 	await _wait(0.1)
+
+
+## The talk key (the phone's on-screen confirm button) picks a title item,
+## like Enter does.
+func _test_title_talk_key() -> void:
+	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
+	add_child(title)
+	var until := Time.get_ticks_msec() + 8000
+	while get_viewport().gui_get_focus_owner() == null and Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+	# Journeys, whether or not Continue is showing.
+	(title._menu.get_child(1) as Button).grab_focus()
+	var press := InputEventAction.new()
+	press.action = "interact"
+	press.pressed = true
+	Input.parse_input_event(press)
+	await _wait(0.2)
+	_check(title._page == title._files, "the talk key opens Journeys on the title")
+	title._leaving = true
+	title.queue_free()
+	await get_tree().process_frame
 
 
 func _test_credits() -> void:
