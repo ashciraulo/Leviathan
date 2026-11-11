@@ -92,6 +92,7 @@ func _ready() -> void:
 		await _test_gully()
 		await _test_sorrel()
 		await _test_ottilie()
+		await _test_fishing_book()
 		await _test_coralie()
 		await _test_lowe_after()
 		await _test_murmur_and_dace()
@@ -7115,6 +7116,9 @@ func _test_ottilie() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_TURNED", "after the turn she remembers training with Hessa and Vael, even after the ending")
 	Conversations.talk("ottilie")
 	await _play_scene(game, 10.0)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_BOOK_1", "then she opens her fishing book")
+	Conversations.talk("ottilie")
+	await _play_scene(game, 10.0)
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_END", "and then the ice hums")
 	game.queue_free()
 	await _wait(0.1)
@@ -7123,6 +7127,103 @@ func _test_ottilie() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_1", "met after the turn but before Hessa's word, she's a stranger")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_HESSA", "once Hessa's sent Wren, she knows")
+
+
+## After the rimefin, Ottilie's fishing book keeps the hole open: perch,
+## glass eels that nibble first, the Old Grey once those are in, and prizes
+## for runs without a loss.
+func _test_fishing_book() -> void:
+	GameState.reset_new_game()
+	for f in ["ottilie_asked", FishingHole.DONE_FLAG, "ottilie_paid", "ottilie_knits_told"]:
+		GameState.set_flag(f)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_BOOK_1", "once paid and the knits are told, she opens her fishing book")
+	_check(FishingHole.biting() == ["rimefin"], "before the book, only rimefin bite")
+	Conversations.talk("ottilie")
+	_check(GameState.has_flag(FishingHole.BOOK_FLAG), "the book is open")
+	var talk_at := StoryDirector.OTTILIE_AT + Vector2(0, -18)
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	var hole := room.get_children().filter(func(c: Node) -> bool: return c is FishingHole)[0] as FishingHole
+	game.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	_check(FishingHole.biting() == ["rimefin", "perch", "eel"], "with the book open, perch and eels bite too, but not the Old Grey yet")
+	# A cast: what's on the line is set when the float goes in; tests pick it.
+	var cast := func(kind: String, nibbles: int) -> void:
+		game.player.try_interact()
+		hole.species = kind
+		hole.nibbles = nibbles
+		hole.bite_in = 0.1
+	# An eel nibbles: pulling on the dip loses it, and the run.
+	GameState.set_flag(FishingHole.STREAK_FLAG, 3)
+	cast.call("eel", 1)
+	await _wait(0.2)
+	_check(hole.state == FishingHole.State.NIBBLE, "the float dips on a nibble")
+	game.player.try_interact()
+	_check(hole.state == FishingHole.State.IDLE and not GameState.has_flag("caught_eel") and int(GameState.flags.get(FishingHole.STREAK_FLAG, 0)) == 0, "pulling on a nibble loses the fish and the run")
+	# Waiting out the nibble lands it.
+	cast.call("eel", 1)
+	await _wait(FishingHole.NIBBLE_TIME + 0.2)
+	_check(hole.state == FishingHole.State.WAITING, "the float comes back up after a nibble")
+	hole.bite_in = 0.05
+	await _wait(0.15)
+	_check(hole.state == FishingHole.State.BITE, "after the nibble, the real bite")
+	game.player.try_interact()
+	_check(GameState.has_flag("caught_eel"), "a glass eel landed")
+	# Frostperch don't stay under long.
+	cast.call("perch", 0)
+	await _wait(0.2)
+	await _wait(FishingHole.SPECIES["perch"][1] + 0.05)
+	_check(hole.state == FishingHole.State.IDLE and not GameState.has_flag("caught_perch"), "a frostperch is gone in a blink")
+	cast.call("perch", 0)
+	await _wait(0.2)
+	game.player.try_interact()
+	_check(GameState.has_flag("caught_perch"), "a frostperch landed")
+	_check(FishingHole.biting().has(FishingHole.GREY), "with perch and eel in, the Old Grey can bite")
+	# The Old Grey takes three pulls, one per dive.
+	cast.call(FishingHole.GREY, 0)
+	for i in FishingHole.GREY_PULLS:
+		hole.bite_in = minf(hole.bite_in, 0.1)
+		await _wait(0.2)
+		_check(hole.state == FishingHole.State.BITE, "the Old Grey pulls under (%d)" % (i + 1))
+		game.player.try_interact()
+		if i < FishingHole.GREY_PULLS - 1:
+			_check(hole.state == FishingHole.State.WAITING and not GameState.has_flag("caught_grey"), "and dives again")
+	_check(GameState.has_flag("caught_grey"), "the Old Grey landed in three pulls")
+	# Runs: five, then ten, without a loss.
+	GameState.set_flag(FishingHole.STREAK_FLAG, 0)
+	for i in 10:
+		cast.call("rimefin", 0)
+		await _wait(0.2)
+		game.player.try_interact()
+		if i == 4:
+			_check(GameState.has_flag("fish_streak_5") and not GameState.has_flag("fish_streak_10"), "five in a row")
+	_check(GameState.has_flag("fish_streak_10"), "ten in a row")
+	await _wait(1.0)
+	game.queue_free()
+	await _wait(0.1)
+	# Ottilie books each one, then the prizes, one talk at a time.
+	var glints := GameState.item_count("glint")
+	var expect := [["OTTILIE_GREY_1", 250], ["OTTILIE_PERCH_1", 40], ["OTTILIE_EEL_1", 40], ["OTTILIE_STREAK_10_1", 200]]
+	for e: Array in expect:
+		_check(Conversations.branch_for("ottilie").get("lines")[0] == e[0], "Ottilie: %s" % e[0])
+		Conversations.talk("ottilie")
+		glints += int(e[1])
+	_check(GameState.item_count("glint") == glints, "she pays for each (%d)" % GameState.item_count("glint"))
+	_check(GameState.has_flag("ottilie_streak_5"), "ten in a row covers the five-in-a-row prize too")
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_AFTER", "then she's back to her usual")
+	GameState.set_flag("seen_ending")
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_END", "and after the ending, the ice hums")
+	GameState.reset_new_game()
+	for f in ["ottilie_paid", "ottilie_knits_told", FishingHole.BOOK_FLAG]:
+		GameState.set_flag(f)
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_BOOK_WAITING", "until the Old Grey's in, she's watching the float")
+	GameState.set_flag("fish_streak_5")
+	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_STREAK_5_1", "five in a row has its own prize")
 
 
 ## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a
