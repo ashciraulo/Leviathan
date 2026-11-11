@@ -8135,6 +8135,33 @@ func _test_older_secrets() -> void:
 	_check(tangle.chest_item == "glint" and sea[10][12] == "C" and sea[10][14] == "O" and sea[5][14] == "O"
 		and sea[8][14] == "Q" and sea[8][13] == "Q", "Tangle Shore: a chest on a deep-water islet, with hook posts out and back")
 	tangle.free()
+	# Fenmouth: a crate wedged in a slot only the Tide Hook drags it out
+	# of; on the plate it unbars a shrine.
+	GameState.reset_new_game()  # The glade's solved gate is saved under this test room's coord too.
+	var fen: Room = (load("res://rooms/room_4_1.tscn") as PackedScene).instantiate()
+	add_child(fen)
+	await _wait(0.1)
+	var fen_rows := Room.parse_layout(fen.layout)
+	var fen_bars := _child_of(fen, Bars)
+	var fen_crates := _child_of(fen, Crate)
+	var fen_plates := _child_of(fen, PressurePlate)
+	_check(fen.gate == "plates" and fen_bars.size() == 1 and not fen_bars[0].is_open and fen_crates.size() == 1 and fen_plates.size() == 1 and fen_rows[2][20] == "C",
+		"Fenmouth: a crate, a plate and a barred shrine")
+	var slot := _walkable_from(fen_rows, Vector2i(12, 6))
+	_check(slot.has(Vector2i(4, 10)) and fen_rows[10][2] == "#", "Wren reaches the crate's slot only from the open side")
+	_check(fen_rows[9].substr(0, 6) == "######" and fen_rows[11].substr(0, 6) == "######" and fen_rows[10][3] == "K", "the slot is one tile wide, walled above and below")
+	(fen_crates[0] as Crate).global_position = (fen_plates[0] as Node2D).global_position
+	await _wait(0.2)
+	_check(fen_bars[0].is_open, "the crate on the plate unbars the shrine")
+	fen.queue_free()
+	# Witheroot Hollow: a hidden wall, drawn as rock, in the north crag.
+	var root: Room = (load("res://rooms/room_3_2.tscn") as PackedScene).instantiate()
+	add_child(root)
+	await _wait(0.1)
+	var hidden := _child_of(root, BoneWall)
+	_check(hidden.size() == 1 and (hidden[0] as BoneWall).concealed and (hidden[0] as BoneWall).tile == Vector2i(12, 2) and (hidden[0] as BoneWall)._into_room() == Vector2.DOWN
+		and Room.parse_layout(root.layout)[1][11] == "C", "Witheroot Hollow: a concealed wall in the crag, its draft blowing out to the hollow, a chest behind")
+	root.queue_free()
 	# Three shoals out in deep water, walled by rocks so that no glide, even
 	# a steered one, can curve in: the Diver's Helm alone reaches them (the
 	# story thread leaves pearls on them).

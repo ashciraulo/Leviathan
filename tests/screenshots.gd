@@ -109,6 +109,8 @@ func _ready() -> void:
 			Vector2i(4, -2): ["secret_mothlight_glade", Vector2i(7, 6)],
 			Vector2i(6, 0): ["secret_tangle_shore", Vector2i(14, 6)],
 			Vector2i(1, 5): ["secret_wrack_deeps_shoal", Vector2i(18, 10)],
+			Vector2i(4, 1): ["secret_fenmouth", Vector2i(7, 10)],
+			Vector2i(3, 2): ["secret_witheroot_hollow", Vector2i(12, 3)],
 			Vector2i(6, -5): ["secret_skerry_sound_shoal", Vector2i(10, 5)],
 		})
 		GameState.set_flag(Tide.TURNED_FLAG)
