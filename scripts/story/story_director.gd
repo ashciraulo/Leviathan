@@ -745,18 +745,21 @@ func hessas_lighting_day() -> void:
 		return
 	GameState.set_flag(PARTY_DONE_FLAG)
 	var scene := _scene()
+	# Nettle's "go and fetch her" opens just after the flag is set: let it
+	# open, and be read, before the evening falls.
+	await get_tree().process_frame
 	if DialogueBox.is_open:
 		await Events.dialogue_finished
 	await scene.darken(1.0)
 	var room: Node2D = game.current_room
 	var hessa := _find_npc("hessa")
 	var guests: Array[Npc] = []
-	var nettle_was := Vector2.ZERO
+	var home := {}
 	for kind: String in PARTY_GUESTS:
 		var at := Vector2(PARTY_GUESTS[kind]) * 16.0 + Vector2(8, 10)
 		var guest := _find_npc(kind)
 		if guest:
-			nettle_was = guest.position
+			home[guest] = guest.position
 		else:
 			guest = Npc.new(kind)
 			guest.add_to_group("party_guest")
@@ -790,7 +793,7 @@ func hessas_lighting_day() -> void:
 			if guest.is_in_group("party_guest"):
 				guest.queue_free()
 			else:
-				guest.position = nettle_was
+				guest.position = home[guest]
 				guest.add_to_group("interactable")
 	await scene.lift_veil(1.0)
 	scene.finish()

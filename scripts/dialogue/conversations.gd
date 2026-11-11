@@ -139,10 +139,10 @@ const TALKS := {
 		# lighting_party plays StoryDirector.hessas_lighting_day.
 		{"if": ["lighting_ask", "party_ottilie", "party_agna", "party_wick", "party_sorrel", "party_marga"], "unless": ["lighting_party"], "set": ["lighting_party"], "lines": ["NETTLE_PARTY_READY"]},
 		{"if": ["nettle_learned", "seen_hessa_confession"], "unless": ["lighting_ask"], "set": ["lighting_ask"], "lines": ["NETTLE_PARTY_1", "NETTLE_PARTY_1B", "NETTLE_PARTY_2", "NETTLE_PARTY_2B"]},
-		{"if": ["lighting_ask"], "unless": ["lighting_party"], "lines": ["NETTLE_PARTY_WAITING"]},
 		{"if": ["lighting_day"], "unless": ["nettle_party_after"], "set": ["nettle_party_after"], "lines": ["NETTLE_PARTY_AFTER"]},
 		{"if": ["nettle_learned", "seen_wayshell"], "unless": ["nettle_signals_ask"], "set": ["nettle_signals_ask"], "lines": ["NETTLE_SIGNALS_1", "NETTLE_SIGNALS_1B", "NETTLE_SIGNALS_2", "NETTLE_SIGNALS_2B", "NETTLE_SIGNALS_3"]},
 		{"if": ["nettle_signals_ask"], "unless": ["nettle_signals_done"], "lines": ["NETTLE_SIGNALS_WAITING"]},
+		{"if": ["lighting_ask"], "unless": ["lighting_party"], "lines": ["NETTLE_PARTY_WAITING"]},
 		# Bell and signals both done: once, ahead of the late lines.
 		{"if": ["nettle_got_bell", "nettle_signals_done"], "unless": ["nettle_nearly_told"], "set": ["nettle_nearly_told"], "lines": ["NETTLE_NEARLY"]},
 		{"if": ["nettle_learned", "seen_ending"], "lines": ["NETTLE_END"]},
@@ -208,7 +208,7 @@ const TALKS := {
 		{"if": ["ottilie_asked", "sela_met", "letter_ottilie"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2"]},
 		{"if": ["ottilie_asked", "sela_met"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2B"]},
 		{"if": ["sorrel_letters", "ottilie_asked"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
-		{"if": ["lighting_ask", "ottilie_asked"], "unless": ["party_ottilie"], "set": ["party_ottilie", "party_rimefin"], "lines": ["OTTILIE_PARTY_1", "OTTILIE_PARTY_2", "OTTILIE_PARTY_3", ["", "NARRATE_GOT_PARTY_RIMEFIN"]]},
+		{"if": ["lighting_ask", "ottilie_reunion"], "unless": ["party_ottilie"], "set": ["party_ottilie", "party_rimefin"], "lines": ["OTTILIE_PARTY_1", "OTTILIE_PARTY_2", "OTTILIE_PARTY_3", ["", "NARRATE_GOT_PARTY_RIMEFIN"]]},
 		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
 		# Her old cave sign for Hessa (Wren shows it with the lamp), and the answer.
 		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
@@ -419,11 +419,13 @@ const TALKS := {
 		# Rimefin pie for Hessa's lighting day (Ottilie sends the fish).
 		{"if": ["lighting_ask", "party_rimefin"], "unless": ["party_marga"], "set": ["party_marga"], "lines": [["", "NARRATE_HAND_RIMEFIN"], "MARGA_PARTY_PIE_1", "MARGA_PARTY_PIE_2"]},
 		{"if": ["lighting_ask", "asked_for_rope"], "unless": ["party_marga", "party_marga_ask"], "set": ["party_marga_ask"], "lines": ["MARGA_PARTY_1", "MARGA_PARTY_2"]},
-		{"if": ["party_marga_ask"], "unless": ["party_marga"], "lines": ["MARGA_PARTY_WAITING"]},
+		# Waiting on the fish, but never ahead of the rope errand and the jar.
+		{"if": ["party_marga_ask", "marga_gave_jar"], "unless": ["party_marga"], "lines": ["MARGA_PARTY_WAITING"]},
 		{"if": ["marga_gave_jar", "seen_ending"], "lines": ["MARGA_END"]},
 		{"if": ["marga_gave_jar", "old_one_turned"], "lines": ["MARGA_TURNED"]},
 		{"if": ["marga_gave_jar"], "lines": ["MARGA_AFTER"]},
 		{"if": ["marga_thanked", "tidebell_hull"], "set": ["marga_gave_jar"], "give": {"jar": 1}, "lines": ["MARGA_EEL_1", "MARGA_EEL_2", ["", "NARRATE_GOT_JAR"]]},
+		{"if": ["party_marga_ask", "marga_thanked"], "unless": ["party_marga"], "lines": ["MARGA_PARTY_WAITING"]},
 		{"if": ["marga_thanked"], "lines": ["MARGA_AGAIN"]},
 		{"if": ["rope_promised"], "set": ["marga_thanked"], "lines": ["MARGA_THANKS_1", "MARGA_THANKS_2"]},
 		{"if": ["asked_for_rope"], "lines": ["MARGA_WAITING"]},

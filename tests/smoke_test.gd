@@ -7541,17 +7541,30 @@ func _test_nettle_signals() -> void:
 func _test_lighting_day() -> void:
 	GameState.reset_new_game()
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
-	for flag in ["met_hessa", "nettle_learned", "heard_nettle_bell", "seen_wayshell", "nettle_signals_ask", "ottilie_asked", "met_agna", "wick_asked", "sorrel_asked", "asked_for_rope"]:
+	for flag in ["met_hessa", "nettle_learned", "heard_nettle_bell", "seen_wayshell", "nettle_signals_ask", "nettle_signals_done", "ottilie_asked", "ottilie_reunion", "met_agna", "wick_asked", "sorrel_asked", "asked_for_rope"]:
 		GameState.set_flag(flag)
-	_check(first.call("nettle") == "NETTLE_SIGNALS_WAITING", "no party before Hessa's confession")
+	_check(first.call("nettle") != "NETTLE_PARTY_1", "no party before Hessa's confession")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(first.call("nettle") == "NETTLE_PARTY_1", "then Nettle plans one")
 	Conversations.talk("nettle")
 	_check(first.call("nettle") == "NETTLE_PARTY_WAITING", "and waits on the guests")
+	GameState.clear_flag("nettle_signals_done")
+	_check(first.call("nettle") == "NETTLE_SIGNALS_WAITING", "without holding up the signal stones")
+	GameState.set_flag("nettle_signals_done")
+	GameState.clear_flag("ottilie_reunion")
+	_check(first.call("ottilie") != "OTTILIE_PARTY_1", "Ottilie comes only once she and Hessa have made up")
+	GameState.set_flag("ottilie_reunion")
 	# Marga needs Ottilie's rimefin for the pie.
 	_check(first.call("marga") == "MARGA_PARTY_1", "Marga wants a rimefin")
 	Conversations.talk("marga")
-	_check(first.call("marga") == "MARGA_PARTY_WAITING", "and waits for it")
+	# Her rope errand still comes first.
+	_check(first.call("marga") == "MARGA_WAITING", "the rope errand comes first")
+	GameState.set_flag("rope_promised")
+	_check(first.call("marga") == "MARGA_THANKS_1", "and its thanks")
+	GameState.set_flag("marga_thanked")
+	_check(first.call("marga") == "MARGA_PARTY_WAITING", "then she waits for the fish")
+	GameState.set_flag("marga_gave_jar")
+	_check(first.call("marga") == "MARGA_PARTY_WAITING", "even after the jar")
 	for who in ["ottilie", "agna", "wick", "sorrel"]:
 		_check(first.call(who) == who.to_upper() + "_PARTY_1", "%s hears about the party" % who)
 		Conversations.talk(who)
