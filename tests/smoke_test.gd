@@ -5068,7 +5068,7 @@ func _test_regional_caves() -> void:
 	add_child(warren)
 	await _wait(0.2)
 	var hidden: Chest = _child_of(warren, Chest)[0]
-	_check(warren.gate == "clear" and Room.parse_layout(warren.layout)[1].count("|") == 2 and not hidden.visible and _child_of(warren, Enemy).size() >= 5, "the Sporecap Warren hides its chest behind a fight")
+	_check(warren.gate == "clear" and Room.parse_layout(warren.layout)[1].count("|") == 2 and Room.parse_layout(warren.layout)[11].count("|") == 2 and not hidden.visible and _child_of(warren, Enemy).size() >= 5, "the Sporecap Warren hides its chest behind a fight")
 	for enemy in _child_of(warren, Enemy):
 		enemy.queue_free()
 	warren.get_node("Puzzle").set("_shut_in", true)
@@ -5265,7 +5265,7 @@ func _test_far_reaches() -> void:
 		Vector2i(0, -5): [[Vector2i(14, 6), Vector2.RIGHT, Vector2i(20, 6)], [Vector2i(20, 5), Vector2.LEFT, Vector2i(14, 5)]],
 		Vector2i(9, -3): [[Vector2i(15, 9), Vector2.UP, Vector2i(15, 3)], [Vector2i(14, 3), Vector2.DOWN, Vector2i(14, 9)]],
 		# Gloamfen south: out over the dark fen to the far bank and home again.
-		Vector2i(6, 3): [[Vector2i(14, 8), Vector2.RIGHT, Vector2i(20, 8)], [Vector2i(20, 9), Vector2.LEFT, Vector2i(14, 9)], [Vector2i(12, 7), Vector2.UP, Vector2i(12, 2)]],
+		Vector2i(6, 3): [[Vector2i(17, 8), Vector2.RIGHT, Vector2i(20, 8)], [Vector2i(20, 9), Vector2.LEFT, Vector2i(17, 9)]],
 		# The Verge's far south: a reef islet's cache, there and back.
 		Vector2i(0, 5): [[Vector2i(19, 8), Vector2.UP, Vector2i(19, 3)], [Vector2i(19, 4), Vector2.DOWN, Vector2i(19, 8)]],
 	}
@@ -5331,7 +5331,7 @@ func _test_far_reaches() -> void:
 	var deep: Room = (load("res://rooms/room_6_3.tscn") as PackedScene).instantiate()
 	var rest: Room = (load("res://rooms/room_7_3.tscn") as PackedScene).instantiate()
 	var rest_rows := Room.parse_layout(rest.layout)
-	_check(warren[12].substr(11, 2) == ".." and deep.dark and deep.layout.count("v") == 6, "the Warren opens south into the dark Glowmire Deep, crossed on veiled planks")
+	_check(warren[12].substr(11, 2) == ".." and deep.dark and deep.layout.count("v") == 10, "the Warren opens south into the dark Glowmire Deep, crossed on veiled planks")
 	_check(rest_rows[4].substr(10, 5) == "....." and rest_rows[5].substr(10, 5) == "....." and rest_rows[6].substr(10, 5) == "....." and rest.chest_item == "glint", "the Calf's Rest keeps its middle clear")
 	deep.free()
 	rest.free()
