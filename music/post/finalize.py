@@ -9,8 +9,10 @@ For a looping cue this script:
   2. adds the tail past the loop end onto the body's start, so the reverb
      rings over the seam as it would in a real repeat,
   3. checks the seam (sample jump, level step) and the loudness target,
-  4. with --write: encodes audio/music/<cue>.ogg and sets loop=true and
-     loop_offset=<intro seconds> in its .import file.
+  4. with --write: encodes audio/music/<cue>.ogg and sets loop_offset=<intro
+     seconds> in its .import file. The import keeps loop=false: the game turns
+     looping on for its own copy (Audio._looping), and the shared track stays
+     unlooped so one-shot uses of it still end.
 One-shot cues (bells, lullaby, credits) keep their natural tail, with a
 short fade over the last 50 ms so they never end on a cut.
 Nothing here changes the music's level: loudness is set inside FL (Pro-L 2),
@@ -105,17 +107,17 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         pcm = np.clip(out, -1, 1).astype("<f4").tobytes()
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "f32le", "-ar", str(rate), "-ac", "2", "-i", "-",
                         "-c:a", "libvorbis", "-q:a", "5", path], input=pcm, check=True)
-        set_import(path, spec["loop"], meta["intro_s"] if spec["loop"] else 0.0)
+        set_import(path, meta["intro_s"] if spec["loop"] else 0.0)
         report["wrote"] = os.path.relpath(path, ROOT)
     return report
 
 
-def set_import(ogg: str, loop: bool, offset: float) -> None:
+def set_import(ogg: str, offset: float) -> None:
     imp = ogg + ".import"
     if not os.path.exists(imp):
         return  # Godot writes it on first import; run again after that.
     text = open(imp).read()
-    text = re.sub(r"(?m)^loop=.*$", f"loop={'true' if loop else 'false'}", text)
+    text = re.sub(r"(?m)^loop=.*$", "loop=false", text)
     text = re.sub(r"(?m)^loop_offset=.*$", f"loop_offset={offset:.6f}", text)
     open(imp, "w").write(text)
 

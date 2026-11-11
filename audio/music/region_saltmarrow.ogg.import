@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/region_saltmarrow.ogg-7b2e8b13a493f7bce27c537
 
 [params]
 
-loop=true
+loop=false
 loop_offset=3.582090
 bpm=0
 beat_count=0
