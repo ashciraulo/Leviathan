@@ -10,11 +10,18 @@ const TABS := ["TAB_SATCHEL", "TAB_MAP", "TAB_OPTIONS", "TAB_JOURNEY"]
 enum Tab { SATCHEL, MAP, OPTIONS, JOURNEY }
 const TAB_Y := 5
 const TAB_H := 14
+## The menu drops in this far as it opens, and a page slides this far in from
+## the side it was switched from (pixels, over the times below).
+const OPEN_DROP := 8.0
+const OPEN_TIME := 0.12
+const TAB_SLIDE := 6.0
+const TAB_TIME := 0.08
 
 var current := Tab.SATCHEL
 var _pages: Array[MenuPage] = []
 var _chrome: Control
 var _opened_at := 0
+var _juice: Tween
 
 
 func _ready() -> void:
@@ -68,9 +75,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _pages[current].handle_input(event):
 		return
 	if event.is_action_pressed("tab_prev"):
-		show_tab(posmod(current - 1, TABS.size()))
+		show_tab(posmod(current - 1, TABS.size()), -1)
 	elif event.is_action_pressed("tab_next"):
-		show_tab(posmod(current + 1, TABS.size()))
+		show_tab(posmod(current + 1, TABS.size()), 1)
 	elif event.is_action_pressed("map"):
 		show_tab(Tab.MAP)
 	elif MenuKit.cancel(event):
@@ -95,16 +102,50 @@ func open(tab: Tab = Tab.SATCHEL) -> void:
 	get_tree().paused = true
 	_opened_at = Time.get_ticks_msec()
 	show_tab(tab)
+	# It drops in and brightens rather than popping up.
+	_restart_juice()
+	offset = Vector2(0, -OPEN_DROP)
+	_set_alpha(0.0)
+	_juice.tween_property(self, "offset", Vector2.ZERO, OPEN_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_juice.parallel().tween_method(_set_alpha, 0.0, 1.0, OPEN_TIME)
 
 
-func show_tab(tab: int) -> void:
+## `from` is -1 or 1 when Tab Prev or Tab Next switched to it: the page
+## slides in from that side.
+func show_tab(tab: int, from: int = 0) -> void:
 	current = tab as Tab
 	for i in _pages.size():
 		_pages[i].visible = i == tab
+		_pages[i].position = Vector2.ZERO
 	_pages[tab].on_open()
+	if from != 0:
+		_restart_juice()
+		_pages[tab].position = Vector2(TAB_SLIDE * from, 0)
+		_juice.tween_property(_pages[tab], "position", Vector2.ZERO, TAB_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+## Stops any half-played open or slide, landing it where it was going.
+func _restart_juice() -> void:
+	if _juice and _juice.is_valid():
+		_juice.kill()
+	offset = Vector2.ZERO
+	_set_alpha(1.0)
+	for page in _pages:
+		page.position = Vector2.ZERO
+	_juice = create_tween()
+
+
+func _set_alpha(alpha: float) -> void:
+	for child in get_children():
+		if child is CanvasItem:
+			(child as CanvasItem).modulate.a = alpha
 
 
 func close() -> void:
+	if _juice and _juice.is_valid():
+		_juice.kill()
+	offset = Vector2.ZERO
+	_set_alpha(1.0)
 	visible = false
 	get_tree().paused = false
 
