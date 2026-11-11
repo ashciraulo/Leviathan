@@ -5644,7 +5644,7 @@ func _test_far_reaches() -> void:
 	# then a deep trench only the Diver's Helm swims.
 	var ebb := Room.parse_layout(((load("res://rooms/room_1_4.tscn") as PackedScene).instantiate() as Room).layout)
 	var wrack := Room.parse_layout(((load("res://rooms/room_1_5.tscn") as PackedScene).instantiate() as Room).layout)
-	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 22 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench")
+	_check(ebb[12].substr(11, 2) == ";;" and wrack[0].substr(11, 2) == ";;" and wrack[4].count("Q") == 17 and wrack[8].count("Q") == 22, "Wrack Deeps: sea bed from the Ebb Shelf, then five rows of deep trench (a rock-capped shoal in it)")
 	# The Ossuary's far south: Saltpan Hollow opens onto Ribfall Sands, shut
 	# behind a bone barricade only the Echo Horn brings down.
 	_check(Room.parse_layout(((load("res://rooms/room_9_2.tscn") as PackedScene).instantiate() as Room).layout)[12].substr(8, 2) == "..", "Saltpan Hollow opens south to Ribfall Sands")
@@ -8053,6 +8053,50 @@ func _test_older_secrets() -> void:
 	broken[3] = broken[3].replace("Y", ".")
 	_check(_walkable_from(broken, Vector2i(5, 6)).has(Vector2i(21, 3)), "broken, it lets Wren in")
 	wall.free()
+	# Mothlight Glade: a barred hollow that opens once both braziers burn,
+	# one of them on a pond islet that no bank comes near.
+	var glade: Room = (load("res://rooms/room_4_-2.tscn") as PackedScene).instantiate()
+	add_child(glade)
+	await _wait(0.1)
+	var braziers := _child_of(glade, Brazier)
+	var bars := _child_of(glade, Bars)
+	_check(glade.gate == "braziers" and braziers.size() == 2 and bars.size() == 1 and not bars[0].is_open and glade.tile_at(19, 2) == "C",
+		"Mothlight Glade: two braziers and a barred hollow")
+	var islet: Brazier = braziers[0] if (braziers[0] as Brazier).position.x > (braziers[1] as Brazier).position.x else braziers[1]
+	var nearest := INF
+	for y in Room.ROWS:
+		for x in Room.COLS:
+			if glade.tile_at(x, y) == "." and Vector2i(x, y) != Vector2i(10, 6):
+				nearest = minf(nearest, _tile_pos(glade, Vector2i(x, y)).distance_to(islet.global_position))
+	_check(nearest > Brazier.REACH + 8.0, "no bank comes within the islet brazier's reach (nearest %.0f px)" % nearest)
+	islet.light(true)
+	await _wait(0.1)
+	_check(not bars[0].is_open, "one brazier isn't enough")
+	for b: Brazier in braziers:
+		b.light(true)
+	await _wait(0.1)
+	_check(bars[0].is_open, "both burning, the hollow opens")
+	glade.queue_free()
+	# Tangle Shore: an islet out in deep water, hooked to and back.
+	var tangle: Room = (load("res://rooms/room_6_0.tscn") as PackedScene).instantiate()
+	var sea := Room.parse_layout(tangle.layout)
+	_check(tangle.chest_item == "glint" and sea[10][12] == "C" and sea[10][14] == "O" and sea[5][14] == "O"
+		and sea[8][14] == "Q" and sea[8][13] == "Q", "Tangle Shore: a chest on a deep-water islet, with hook posts out and back")
+	tangle.free()
+	# Three shoals out in deep water, walled by rocks so that no glide, even
+	# a steered one, can curve in: the Diver's Helm alone reaches them (the
+	# story thread leaves pearls on them).
+	for shoal: Array in [[Vector2i(6, 0), Vector2i(20, 8)], [Vector2i(1, 5), Vector2i(20, 5)], [Vector2i(6, -5), Vector2i(10, 8)]]:
+		var probe: Room = (load("res://rooms/room_%d_%d.tscn" % [shoal[0].x, shoal[0].y]) as PackedScene).instantiate()
+		var swim_rows := Room.parse_layout(probe.layout)
+		var at: Vector2i = shoal[1]
+		var ways := 0
+		for side: Vector2i in [at + Vector2i.LEFT, at + Vector2i.RIGHT, at + Vector2i(-1, 1), at + Vector2i(1, 1), at + Vector2i(0, 2)]:
+			if swim_rows[side.y][side.x] == "Q":
+				ways += 1
+		_check(swim_rows[at.y][at.x] == "." and swim_rows[at.y + 1][at.x] == "." and swim_rows[at.y - 1][at.x] == "#" and ways >= 1,
+			"room %s has a rock-sheltered shoal at %s, open to deep water" % [shoal[0], at])
+		probe.free()
 
 
 ## One short trial cave per region: a single puzzle and a glint cache.

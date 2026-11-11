@@ -634,6 +634,15 @@ func _open_tile(coord: Vector2i) -> Vector2i:
 		for x in rows[y].length():
 			if rows[y][x] != ".":
 				continue
+			# Not a lone islet tile (a brazier's perch in a pond): Wren is set
+			# down where they can walk on.
+			var lone := true
+			for step: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+				var n := Vector2i(x, y) + step
+				if n.y >= 0 and n.y < rows.size() and n.x >= 0 and n.x < rows[n.y].length() and rows[n.y][n.x] == ".":
+					lone = false
+			if lone:
+				continue
 			var d := Vector2(x - Room.COLS / 2.0, y - Room.ROWS / 2.0).length()
 			if d < best_d:
 				best_d = d
