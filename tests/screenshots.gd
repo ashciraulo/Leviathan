@@ -73,6 +73,19 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=thin_screens: the optional screens off the thinner regions.
+	if OS.get_environment("SHOTS_ONLY") == "thin_screens":
+		await _room_shots(game, {
+			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(20, 6)],
+			Vector2i(10, 0): ["thin_whalefall_steps", Vector2i(2, 6)],
+			Vector2i(10, 1): ["thin_brineglass_basin", Vector2i(11, 2)],
+			Vector2i(7, -3): ["thin_kestrel_reach", Vector2i(2, 6)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=regional_caves: the small caves off each region, and their ways in.
 	if OS.get_environment("SHOTS_ONLY") == "regional_caves":
 		GameState.give_item("frostfang_bow")

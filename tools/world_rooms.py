@@ -94,6 +94,9 @@ SECRETS = {
     (8, -4): ("glowmoth_lantern",),           # Clinker Vault: bars until both islet braziers burn
     (6, -3): ("kite_cloak",),                 # Sailwind Gallery: ride a fan's stream over the sky gap
     (2, -1): ("stonebreaker",),               # Rootbound Hollow: cracked boulders wall off the chest
+    # Optional screens off the thinner regions (2026-11-11).
+    (10, 1): ("tide_hook", "divers_helm"),    # Brineglass Basin: hook out over deep water to a reef, and back
+    (7, -3): ("tide_hook",),                  # Kestrel Reach: ride a stream to the stack, then hook down to the chest ledge
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
 # glide one tile of water), Glowworm Hollow below the Gloamfen (3,2) (veiled
@@ -416,6 +419,7 @@ def main():
         problems.append("screen %s (%s) is never reachable" % (coord, rooms[coord]["name"]))
     # Every open floor tile on a reachable screen should be reachable at the end.
     final_items = set(stages[-1][0])
+    without = {}
     reached = {(c, t) for c, t in seen}
     for coord in sorted(opened):
         rows = rows_for(rooms[coord], final_items)
@@ -435,7 +439,11 @@ def main():
                 print("Chest at %s %s (%s): stage %d" % (coord, spot, rooms[coord]["chest"], stage))
             need = SECRETS.get(coord)
             if need:
-                if opens(inside(rooms, coord, seen, final_items - set(need)), coord, spot):
+                # Wren comes in only by the ways open without those tools
+                # (a secret beyond another secret can't be entered from behind).
+                if need not in without:
+                    without[need] = explore(rooms, final_items - set(need))[0]
+                if opens(inside(rooms, coord, without[need], final_items - set(need)), coord, spot):
                     problems.append("secret chest %s %s opens without %s" % (coord, spot, " or ".join(need)))
     # The HUD's corners (breath bubbles top left, item slots top right)
     # hide whatever lies under them: keep finds and stones out of there.
