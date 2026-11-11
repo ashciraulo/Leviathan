@@ -108,6 +108,8 @@ func _ready() -> void:
 			Vector2i(8, 3): ["reach_saltgrave_brink", Vector2i(10, 8)],
 			Vector2i(-1, 0): ["cave_dragline_cellar", Vector2i(21, 6)],
 			Vector2i(-1, -3): ["cave_rimelight_hollow", Vector2i(21, 6)],
+			Vector2i(10, -1): ["cave_emberwell_vault", Vector2i(3, 5)],
+			Vector2i(11, 0): ["cave_drybone_crypt", Vector2i(4, 6)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
