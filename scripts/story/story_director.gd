@@ -151,6 +151,15 @@ const SIGNAL_STONES := {
 	"skerry": [Vector2i(6, -5), Vector2i(18, 7)],
 	"brink": [Vector2i(8, 3), Vector2i(5, 8)],
 }
+## Small things for villagers' errands ({id: [room, tile]}, QuestFind):
+## Corrin's grandad's bottles, Pell's lucky shell, Dunstan's driftwood.
+const FINDS := {
+	"bottle_shore": [Vector2i(0, 0), Vector2i(20, 2)],
+	"bottle_pools": [Vector2i(1, 0), Vector2i(10, 8)],
+	"bottle_strand": [Vector2i(4, 0), Vector2i(20, 3)],
+	"pell_shell": [Vector2i(6, -2), Vector2i(20, 2)],
+	"driftwood": [Vector2i(2, 0), Vector2i(20, 2)],
+}
 ## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
 ## Asking for it sets PARTY_FLAG (the scene plays); the scene sets
 ## PARTY_DONE_FLAG. Guests stand around Hessa at these tiles.
@@ -310,6 +319,7 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_npc("ferrin", FERRIN_AT)
 	_put_survey_stake(coord)
 	_put_shed_scale(coord)
+	_put_find(coord)
 	_put_signal_stone(coord)
 	if CALF_REST.has(coord):
 		_put_calf_skull(CALF_REST[coord])
@@ -1148,6 +1158,21 @@ func _put_shed_scale(coord: Vector2i) -> void:
 		piece.id = id
 		piece.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
 		room.add_child(piece)
+
+
+## A villager's lost thing, until Wren picks it up.
+func _put_find(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	for id: String in FINDS:
+		var spot: Array = FINDS[id]
+		if spot[0] != coord or room == null or GameState.has_flag(QuestFind.flag_for(id)):
+			continue
+		if room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id):
+			continue
+		var find := QuestFind.new()
+		find.id = id
+		find.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
+		room.add_child(find)
 
 
 ## An old signal stone on a far headland.

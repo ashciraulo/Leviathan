@@ -1275,3 +1275,39 @@ NARRATE_PARTY_HAT,"At the end of the night, the guests pass a hat round for the 
 NARRATE_GOT_PARTY_PURSE,Wren got 300 Glints.
 HESSA_PARTY_AFTER,"A new scarf, a bronze hook, and Marga's pie still in me. I'm a lucky old keeper."
 NETTLE_PARTY_AFTER,"Did you see her face? I'm doing it again in fifty years. You have to help."
+CORRIN_BOTTLES_1,"The currents have gone strange lately. All sorts of old things keep washing in."
+CORRIN_BOTTLES_1B,"My grandad threw a bottle out every spring, with a note in. Never heard of one coming back."
+CORRIN_BOTTLES_2,"If you see green glass with a wax stopper along the beaches, bring it here, would you?"
+CORRIN_BOTTLES_WAITING,"Green glass, wax stopper. Grandad's bottles. Keep an eye on the beaches for me."
+CORRIN_BOTTLES_DONE_1,"Three of them. That's his hand, that's his wax. All those years at sea, and they came home."
+CORRIN_BOTTLES_DONE_2,"'Keep a light on for my grandchild.' ...Hessa did, you know. She always did."
+CORRIN_BOTTLES_DONE_3,"Here. For bringing him home. Don't argue."
+NARRATE_GOT_BOTTLE_PURSE,Wren got 120 Glints.
+CORRIN_BOTTLES_AFTER,"I've put his bottles on the sill. The light comes through them green in the mornings."
+NARRATE_FOUND_BOTTLE,"A green bottle, stoppered with wax, with a note rolled up inside."
+NARRATE_BOTTLE_NOTE_SHORE,"'Spring. Nets full. Wife well. Whoever you are, I hope your nets are full too.'"
+NARRATE_BOTTLE_NOTE_POOLS,"'Spring. The boy's walking now. Fell off the dock twice. Strong swimmer, like his mum.'"
+NARRATE_BOTTLE_NOTE_STRAND,"'Last spring for me, I think. Keep a light on for my grandchild. Little Corrin.'"
+NARRATE_KEEP_BOTTLE,Wren tucks the bottle carefully into the satchel.
+PELL_SHELL_1,"Wren! Me and Mum went mushrooming in Brinewood, and a heron came at us."
+PELL_SHELL_1B,"We ran, and I dropped my lucky shell. The spotty one. By the spring, I think."
+PELL_SHELL_2,"Mum says it's too far to go back. Could you look? It's the luckiest thing I've got."
+PELL_SHELL_WAITING,"Brinewood, by the spring. A spotty shell. Mum says thank you in advance."
+NARRATE_FOUND_SHELL,"A small spotted cowrie, tucked in the moss. Somebody's lucky shell, surely."
+PELL_SHELL_DONE_1,"My shell! You found it! I'm never going anywhere without it ever again."
+PELL_SHELL_DONE_2,"Here. My second-luckiest shell. It's for you, so you're lucky too."
+DUNSTAN_BOAT_1,"Hm. Keeper. I carved Tobin a little boat once. He lost it the year he went."
+DUNSTAN_BOAT_1B,"I'd carve him another. Needs pale driftwood, sea-cured. None on our beach."
+DUNSTAN_BOAT_2,"...There's a cove behind Barnacle Wall. Rocks in the way, mind."
+DUNSTAN_BOAT_WAITING,"Pale driftwood. The cove behind Barnacle Wall. Hm."
+NARRATE_FOUND_DRIFTWOOD,"A long piece of driftwood, bleached pale as bone. Just right for carving."
+NARRATE_HAND_DRIFTWOOD,Wren hands Dunstan the driftwood.
+DUNSTAN_BOAT_DONE_1,Hm. That's good wood.
+NARRATE_DUNSTAN_CARVES,"Dunstan whittles all afternoon without a word. By evening there are two little boats."
+DUNSTAN_BOAT_DONE_2,"One for Tobin. One for you. Hm. Don't sail it far."
+NARRATE_GOT_TOY_BOAT,Wren got a little carved boat. It floats perfectly.
+TOBIN_BOAT,"Dad carved me a boat again. I'm far too old for it. It's on my windowsill."
+NARRATE_GOT_PELL_SHELL,Wren got a tiny pink shell. It does feel a little bit lucky.
+CORRIN_BOTTLES_EARLY,"Where did you find these? That's... that's my grandad's wax. His bottles."
+DUNSTAN_BOAT_EARLY,"Hm. Pale driftwood, sea-cured. ...I carved Tobin a boat from wood like that, once."
+NARRATE_HAND_BOTTLES,Wren sets three green bottles down in front of Corrin.

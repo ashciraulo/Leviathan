@@ -105,6 +105,7 @@ func _ready() -> void:
 		await _test_old_ones_scales()
 		await _test_nettle_signals()
 		await _test_lighting_day()
+		await _test_small_finds()
 		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
@@ -7614,6 +7615,66 @@ func _test_nettle_signals() -> void:
 	GameState.reset_new_game()
 
 
+## Small errands: Corrin's bottles, Pell's shell, Dunstan's driftwood.
+func _test_small_finds() -> void:
+	GameState.reset_new_game()
+	for id: String in StoryDirector.FINDS:
+		var spot: Array = StoryDirector.FINDS[id]
+		var tile: Vector2i = spot[1]
+		var game: Node = await _stand_below(spot[0], tile)
+		var room: Room = game.current_room
+		_check(room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id), "%s lies in room %s" % [id, spot[0]])
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "%s is on dry floor with dry floor below" % id)
+		_check(game.player.try_interact(), "Wren can pick up %s" % id)
+		await _play_scene(game, 10.0)
+		_check(GameState.has_flag(QuestFind.flag_for(id)), "and does")
+		game.queue_free()
+		await _wait(0.1)
+		game = await _stand_below(spot[0], tile)
+		_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id), "%s stays picked up" % id)
+		game.queue_free()
+		await _wait(0.1)
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in ["met_hessa", "talked_corrin_quest", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "heard_corrin_hull"]:
+		GameState.set_flag(flag)
+	_check(first.call("corrin") == "CORRIN_AGAIN" and first.call("pell") == "PELL_AGAIN", "no errands before the Wayshell")
+	GameState.set_flag("seen_wayshell")
+	_check(first.call("corrin") == "CORRIN_BOTTLES_1" and first.call("pell") == "PELL_SHELL_1", "then Corrin and Pell ask")
+	Conversations.talk("corrin")
+	Conversations.talk("pell")
+	for id in ["bottle_shore", "bottle_pools"]:
+		GameState.set_flag(QuestFind.flag_for(id))
+	_check(first.call("corrin") == "CORRIN_BOTTLES_WAITING", "two bottles aren't three")
+	GameState.set_flag(QuestFind.flag_for("bottle_strand"))
+	var glints := GameState.item_count("glint")
+	Conversations.talk("corrin")
+	_check(GameState.item_count("glint") == glints + 120 and first.call("corrin") == "CORRIN_BOTTLES_AFTER", "Corrin's grandad comes home")
+	Conversations.talk("corrin")
+	_check(first.call("corrin") == "CORRIN_AGAIN", "once")
+	_check(first.call("pell") == "PELL_SHELL_WAITING", "Pell waits for the shell")
+	GameState.set_flag(QuestFind.flag_for("pell_shell"))
+	Conversations.talk("pell")
+	_check(GameState.has_flag("pell_shell_done") and first.call("pell") == "PELL_AGAIN", "and gets it back")
+	GameState.set_flag("tobin_home")
+	_check(not Conversations.branch_for("dunstan").get("set", []).has("dunstan_boat_ask"), "Dunstan's first word is about Tobin")
+	Conversations.talk("tobin")
+	_check(Conversations.branch_for("dunstan").get("set", []).has("dunstan_boat_ask"), "then, once Wren's said hello to Tobin, about driftwood")
+	Conversations.talk("dunstan")
+	_check(first.call("dunstan") == "DUNSTAN_BOAT_WAITING", "and waits for it")
+	GameState.set_flag(QuestFind.flag_for("driftwood"))
+	Conversations.talk("dunstan")
+	_check(GameState.has_flag("dunstan_boat_done") and first.call("tobin") == "TOBIN_BOAT", "two boats, one for Tobin")
+	# Found before anyone asked: the hand-in comes straight away.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "talked_corrin_quest", "heard_corrin_hull", "tobin_home", "talked_tobin_home", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand", "found_driftwood"]:
+		GameState.set_flag(flag)
+	Conversations.talk("corrin")
+	Conversations.talk("dunstan")
+	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done"), "things found early are handed straight in")
+	GameState.reset_new_game()
+
+
 ## Hessa's lighting day: Nettle's surprise party, five guests, one scene.
 func _test_lighting_day() -> void:
 	GameState.reset_new_game()
@@ -7791,7 +7852,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
