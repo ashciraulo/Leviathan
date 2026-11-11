@@ -103,23 +103,31 @@ def floor_tile(seed):
 
 
 def wall_top(seed):
-    """Kiln brick seen from above: courses of dark bricks, sooted."""
+    """The kiln wall's top, seen from above: a cap of soot-black firestone
+    slabs, darker than the red brick face below so the wall reads as solid
+    (a top and a face), with now and then an ember caught in a joint."""
     rnd = random.Random(1300 + seed)
-    px = blank(MORTAR)
-    for course in range(4):
-        y0 = course * 4
-        shift = 4 if course % 2 else 0
-        for y in range(y0, y0 + 3):
+    px = blank(STONE[5])
+    for row in range(2):
+        y0 = row * 8
+        shift = 4 if (row + seed) % 2 else 0
+        for y in range(y0, y0 + 8):
             for x in range(T):
-                if (x + shift) % 8 == 7:
-                    continue
-                px[y][x] = BRICK[4] if y == y0 + 2 else BRICK[3]
-        for x in range(T):
-            if (x + shift) % 8 != 7:
-                px[y0][x] = BRICK[2]
-    for _ in range(6):
+                if (x + shift) % 8 == 7 or y == y0 + 7:
+                    continue  # the joint
+                if y == y0:
+                    px[y][x] = STONE[3]
+                elif (x + shift) % 8 == 0:
+                    px[y][x] = STONE[3] if y < y0 + 3 else STONE[4]
+                else:
+                    px[y][x] = STONE[4]
+    for _ in range(5):
         x, y = rnd.randrange(T), rnd.randrange(T)
-        px[y][x] = SOOT
+        if px[y][x] == STONE[4]:
+            px[y][x] = SOOT
+    if rnd.random() < 0.5:
+        x = rnd.choice((7, 15)) - (4 if seed % 2 else 0)
+        px[rnd.choice((3, 11))][x % T] = EMBER_DIM
     return px
 
 
