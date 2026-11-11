@@ -64,7 +64,10 @@ func _physics_process(delta: float) -> void:
 	var shove := push()
 	if shove != Vector2.ZERO:
 		var player := get_tree().get_first_node_in_group("player") as Player
-		if player != null and not player.frozen and not player.airborne and not player.in_cutscene \
+		# Not while Wren is still blinking from a fall or a hit: a gust that
+		# shoves them straight back off the edge they were set down by would
+		# cost breath after breath.
+		if player != null and not player.frozen and not player.airborne and not player.in_cutscene and player._invuln <= 0.0 \
 				and player.state in [Player.State.MOVE, Player.State.ATTACK, Player.State.CHARGE, Player.State.HUM, Player.State.HURT]:
 			if Rect2(Vector2.ZERO, Room.SIZE).has_point(player.global_position - _room.global_position):
 				player.move_and_collide(shove * delta)
