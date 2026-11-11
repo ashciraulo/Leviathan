@@ -65,4 +65,5 @@ Read the updated handoff and Out There FM's scripts first: `/mnt/project-files/l
   rather than a steep Pro-Q high cut, which sounded honky.
 - Analog Lab Upright Bass ignores velocity (all notes within 0.2 dB). Audition a velocity-sensitive bass for batch 2.
 - finalize.py's seam check compares the seam with the cue's own downbeat steps; a release-to-downbeat is +6..+8 dB.
-- Saltmarrow v8: -17.95 LUFS, true peak -3.0 dBTP, gate PASS.
+- Saltmarrow v8: -17.95 LUFS, true peak -3.0 dBTP, gate PASS. Re-review: the guitar pickup now rubbed a semitone
+  against the new bass walk in four bridge bars; v9 picks a chord tone there. -18.01 LUFS, gate PASS.

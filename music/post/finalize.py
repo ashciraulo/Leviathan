@@ -94,8 +94,9 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         problems.append(f"true peak {tp:.2f} dBTP is over {TP_MAX}")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")
-    # The handoff's slam limit is +6 dB; a seam no bigger than the cue's usual downbeat step is a downbeat.
-    if spec["loop"] and abs(report["seam_step_db"]) > max(6.0, report["bar_step_p90_db"] + 1.0):
+    # The handoff's slam limit is +6 dB; a seam no bigger than the cue's usual downbeat step is a downbeat,
+    # but never more than +8 dB (review of v8: a busy cue's downbeats would otherwise excuse a slam).
+    if spec["loop"] and abs(report["seam_step_db"]) > min(8.0, max(6.0, report["bar_step_p90_db"] + 1.0)):
         problems.append(f"level steps {report['seam_step_db']} dB across the seam "
                         f"(the cue's downbeats step up to {report['bar_step_p90_db']} dB)")
     report["problems"] = problems

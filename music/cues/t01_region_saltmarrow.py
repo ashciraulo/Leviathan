@@ -69,7 +69,16 @@ for b, sym in enumerate(CHORDS):
     else:  # C: rolled full chord on 1 and 4, then a passing note
         guitar.chord(t, 3 * E, [root] + tones[:3], 64, roll=0.04)
         guitar.chord(t + 3 * E, 2 * E, tones[:3], 56, roll=0.04)
-        guitar.note(t + 5 * E, E, tones[0] - (1 if tones[0] % 12 in (0, 5) else 2), 52)
+        # The pickup steps down to the next bar, unless it would rub a semitone
+        # against the bass walk's last note (review of v8): then a chord tone.
+        broot = 29 + (bass_of(sym) - 5) % 12 + 12
+        bass_last = voicing(sym, broot + 1, broot + 12)[1]
+        pick = tones[0] - (1 if tones[0] % 12 in (0, 5) else 2)
+        if abs(pick - bass_last) % 12 in (1, 11):
+            pick = min((m for m in voicing(sym, 45, 64) if abs(m - bass_last) % 12 not in (1, 11) and m != bass_last
+                        and m not in tones[:3]),
+                       key=lambda m: abs(m - pick))
+        guitar.note(t + 5 * E, E, pick, 52)
 
 # --- flute: the A tune, its answers in B, and the varied A'' ---
 A_TUNE = """
