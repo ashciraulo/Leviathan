@@ -1,0 +1,32 @@
+{
+ "cue": "place_spring",
+ "qbpm": 68.0,
+ "bar_q": 4,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 96,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 84.70588235294117,
+ "loop": true,
+ "parts": [
+  {
+   "name": "harp",
+   "notes": 150,
+   "low": 40,
+   "high": 75
+  },
+  {
+   "name": "pad_glass",
+   "notes": 54,
+   "low": 56,
+   "high": 66
+  },
+  {
+   "name": "flute_soft",
+   "notes": 33,
+   "low": 66,
+   "high": 81
+  }
+ ]
+}
