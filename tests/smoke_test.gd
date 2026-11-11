@@ -58,6 +58,8 @@ func _ready() -> void:
 		await _test_challenges()
 		await _test_overworld_life()
 		await _test_regional_caves()
+		await _test_every_checkpoint()
+		await _test_overworld_entrances()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -255,6 +257,93 @@ func _test_save_load() -> void:
 	_check(SaveManager.is_newer(JSON.parse_string(FileAccess.get_file_as_string(path))),
 		"the newer save is still there")
 	SaveManager.delete_save()
+
+
+## Every Tidestone, saved and loaded: the file wakes in the stone's room with
+## Wren standing clear (not in a wall, water or a pit) and free to walk off.
+func _test_every_checkpoint() -> void:
+	var rooms := RoomInfo.all()
+	var stones := 0
+	for coord: Vector2i in rooms:
+		for at: Vector2i in rooms[coord]["stones"]:
+			stones += 1
+			var spot := Vector2(at.x * Room.TILE + Room.TILE / 2.0, at.y * Room.TILE + Room.TILE - 4) + Tidestone.CHECKPOINT_OFFSET
+			var label := "the Tidestone at %s in room %s" % [at, coord]
+			if OS.get_environment("CHECKPOINT_TRACE") != "":
+				print("checkpoint ", label)
+			GameState.reset_new_game()
+			GameState.set_checkpoint(coord, spot)
+			SaveManager.save_game()
+			GameState.reset_new_game()
+			if not SaveManager.load_game():
+				_check(false, "%s: the save loads" % label)
+				continue
+			var bubbles := GameState.bubbles
+			var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+			add_child(game)
+			await _wait(0.1)
+			# A room's first visit may open a dialogue, which pauses the game.
+			if DialogueBox.is_open:
+				for node in get_tree().root.find_children("*", "DialogueBox", true, false):
+					(node as DialogueBox).close()
+			get_tree().paused = false
+			await _wait(0.5)
+			var player: Player = game.player
+			_check(game.current_room != null and game.current_room.coord == coord, "%s: the file wakes in the stone's room" % label)
+			var room_pos: Vector2 = game.current_room.global_position if game.current_room else Vector2.ZERO
+			var drift := player.global_position.distance_to(room_pos + spot)
+			_check(player.state != Player.State.FALL and player.state != Player.State.DEAD and GameState.bubbles == bubbles,
+				"%s: Wren wakes on solid ground (state %d, bubbles %d of %d)" % [label, player.state, GameState.bubbles, bubbles])
+			_check(drift < 6.0, "%s: Wren wakes where the stone put them, not pushed out of a wall (%.1f px off)" % [label, drift])
+			var free := 0
+			for step: Vector2 in [Vector2(4, 0), Vector2(-4, 0), Vector2(0, 4), Vector2(0, -4)]:
+				if not player.test_move(player.global_transform, step):
+					free += 1
+			_check(free >= 2, "%s: Wren can walk off from where they wake (%d of 4 ways open)" % [label, free])
+			game.queue_free()
+			await _wait(0.05)
+	_check(stones >= 20, "the world has its Tidestones (%d)" % stones)
+	SaveManager.delete_save()
+	GameState.reset_new_game()
+
+
+## Fair entrances on the overworld (tests/walker.gd checks the dungeons): no
+## foe waits within three tiles of a way in from the next room.
+func _test_overworld_entrances() -> void:
+	var rooms := RoomInfo.all()
+	var checked := 0
+	for coord: Vector2i in rooms:
+		if rooms[coord]["dungeon"] != "":
+			continue
+		var room := (load("res://rooms/room_%d_%d.tscn" % [coord.x, coord.y]) as PackedScene).instantiate() as Room
+		room.coord = coord
+		add_child(room)
+		var foes: Array[Vector2] = []
+		for node in room.find_children("*", "Enemy", true, false):
+			if not node.is_in_group("boss"):
+				foes.append((node as Node2D).position)
+		var ways := {Vector2i.UP: [], Vector2i.DOWN: [], Vector2i.LEFT: [], Vector2i.RIGHT: []}
+		for x in Room.COLS:
+			ways[Vector2i.UP].append(Vector2i(x, 0))
+			ways[Vector2i.DOWN].append(Vector2i(x, Room.ROWS - 1))
+		for y in Room.ROWS:
+			ways[Vector2i.LEFT].append(Vector2i(0, y))
+			ways[Vector2i.RIGHT].append(Vector2i(Room.COLS - 1, y))
+		for side: Vector2i in ways:
+			if not rooms.has(coord + side):
+				continue
+			for edge: Vector2i in ways[side]:
+				if not room.raw_tile(edge.x, edge.y) in [".", ":", ","]:
+					continue
+				checked += 1
+				var at := Vector2(edge.x * Room.TILE + Room.TILE / 2.0, edge.y * Room.TILE + Room.TILE / 2.0) - Vector2(side) * Room.TILE
+				for foe in foes:
+					if foe.distance_to(at) < Room.TILE * 3.0:
+						_check(false, "room %s: a foe at tile %s waits %d px from the way in at %s" % [coord, Vector2i(foe / Room.TILE), int(foe.distance_to(at)), edge])
+						break
+		room.queue_free()
+		await _wait(0.02)
+	_check(checked > 100, "the overworld's ways in were checked (%d edge tiles)" % checked)
 
 
 func _write_json(path: String, data: Dictionary) -> void:
