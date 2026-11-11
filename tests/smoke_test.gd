@@ -1113,6 +1113,22 @@ func _test_play() -> void:
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
 	await _wait(0.5)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
+	# A landed blow squashes a foe flat for a moment, then it springs back.
+	var squashee := Scuttler.new()
+	squashee.ai_enabled = false
+	squashee.position = Vector2(150, row_y)
+	room.add_child(squashee)
+	await _wait(0.1)
+	squashee.take_hit(1, Vector2.RIGHT)
+	# physics_frame fires before nodes' _physics_process, so wait two.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(squashee._sprite.scale.x > squashee._sprite_base_scale.x and squashee._sprite.scale.y < squashee._sprite_base_scale.y, "a blow squashes the foe")
+	await _wait(0.3)
+	_check(squashee._sprite.scale.is_equal_approx(squashee._sprite_base_scale), "and it springs back")
+	squashee.queue_free()
+	await _wait(0.1)
+
 	# A boss's last blow: the great star, time held, then a breath of slow
 	# motion, and time back to normal after.
 	var stand_in := Scuttler.new()
