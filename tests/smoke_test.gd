@@ -3522,7 +3522,8 @@ func _test_hull_dungeon() -> void:
 		_check(boss.take_hit(1, Vector2.UP) == Enemy.HitResult.HIT and boss.hp == BarnacleMatriarch.MAX_HP - 1, "her soft body takes the sword")
 		boss.mode = BarnacleMatriarch.Mode.EXPOSED
 		boss.take_hit(99, Vector2.UP)
-		await _wait(2.6)
+		# Her fall plus the last blow's held time and slow motion.
+		await _wait(3.1)
 		_check(GameState.flags.get(BarnacleMatriarch.DEFEATED_FLAG, false), "beating her is remembered")
 		var bell: Tidebell = null
 		for child in room.get_children():
@@ -3735,7 +3736,7 @@ func _test_kiln_dungeon() -> void:
 		while wyrm.segments.size() > 0:
 			wyrm.segment_smashed(wyrm.segments[0])
 		_check(GameState.flags.get(Slagwyrm.DEFEATED_FLAG, false), "breaking every plate beats the Slagwyrm")
-		await _wait(3.4)
+		await _wait(3.9)
 		player._invuln = 0.0
 		var bell: Tidebell = null
 		for child in room.get_children():
