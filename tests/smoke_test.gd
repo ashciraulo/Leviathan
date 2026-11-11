@@ -7620,3 +7620,60 @@ func _test_puzzle_caves() -> void:
 	_check(bars[0].is_open, "all three eyes open the cache")
 	game.queue_free()
 	await _wait(0.1)
+	# Emberwell Vault, east of Scorched Pass: two braziers on lava islets.
+	# The hook crosses to the first; a cracked boulder sits in the line to
+	# the second until the Stonebreaker clears it.
+	var pass_rows := Room.parse_layout(((load("res://rooms/room_9_-1.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(pass_rows[5][23] == "." and pass_rows[6][23] == ".", "Scorched Pass opens east to Emberwell Vault")
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(Vector2i(10, -1), Vector2(2 * Room.TILE + 8, 5 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var vault: Room = game.current_room
+	var braziers := _child_of(vault, Brazier)
+	bars = _child_of(vault, Bars)
+	_check(vault.cave and vault.gate == "braziers" and braziers.size() == 2 and bars.size() == 1 and not bars[0].is_open and vault.tile_at(13, 4) == "Y", "Emberwell Vault: two braziers over lava, and a boulder in the way")
+	for throw: Array in [[Vector2i(5, 5), Vector2.RIGHT, Vector2i(10, 5)], [Vector2i(12, 4), Vector2.RIGHT, Vector2i(12, 4)]]:
+		player.global_position = _tile_pos(vault, throw[0])
+		player.facing = throw[1]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.5)
+		var at := player.global_position - vault.global_position
+		var want: Vector2i = throw[2]
+		_check(int(at.x) / Room.TILE == want.x and int(at.y - 3) / Room.TILE == want.y and game.current_room == vault,
+			"Emberwell: hooking from %s ends at %s (at %s)" % [throw[0], want, at])
+	for brazier in braziers:
+		brazier.light(true)
+	await _wait(0.4)
+	_check(bars[0].is_open, "both braziers lit open the vault's cache")
+	game.queue_free()
+	await _wait(0.1)
+	# Drybone Crypt, east of Whalefall Steps: a closed hall whose way on is a
+	# bone wall that looks like any other until the Echo Horn finds it.
+	var steps_rows := Room.parse_layout(((load("res://rooms/room_10_0.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(steps_rows[6][23] == "." and steps_rows[7][23] == ".", "Whalefall Steps opens east to Drybone Crypt")
+	GameState.reset_new_game()
+	GameState.give_item("echo_horn", 1, false)
+	GameState.set_checkpoint(Vector2i(11, 0), Vector2(3 * Room.TILE + 8, 6 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var crypt: Room = game.current_room
+	for foe in _child_of(crypt, Enemy):
+		foe.free()
+	_check(crypt.cave and _child_of(crypt, BoneWall).size() == 4 and crypt.tile_at(10, 6) == "#" and _child_of(crypt, SinkField).size() == 1, "Drybone Crypt: a closed hall, four hidden bone walls")
+	player.global_position = _tile_pos(crypt, Vector2i(9, 6))
+	player.facing = Vector2.RIGHT
+	await _wait(0.3)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(crypt.tile_at(10, 6) == "." and crypt.tile_at(10, 7) == "." and crypt.tile_at(4, 4) == "#", "the horn opens the hidden way east, and only the walls near it")
+	game.queue_free()
+	await _wait(0.1)
