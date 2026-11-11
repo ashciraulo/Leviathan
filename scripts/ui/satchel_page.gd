@@ -58,8 +58,12 @@ func _add(pos: Vector2, role: String, id: String, index: int, size: int = MenuKi
 
 
 func on_open() -> void:
+	# Cells come and go (the jumper, sea-glass), so keep the cursor on the
+	# same cell rather than the same place in the list.
+	var was: Dictionary = _cells[_cursor] if _cursor < _cells.size() else {}
 	_build_cells()
-	_cursor = clampi(_cursor, 0, _cells.size() - 1)
+	var same := _cells.find_custom(func(c: Dictionary) -> bool: return c["role"] == was.get("role") and c["index"] == was.get("index"))
+	_cursor = same if same >= 0 else clampi(_cursor, 0, _cells.size() - 1)
 
 
 func handle_input(event: InputEvent) -> bool:

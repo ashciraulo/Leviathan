@@ -194,7 +194,7 @@ func _draw_menu() -> void:
 	if _top > 0:
 		c.draw_colored_polygon(PackedVector2Array([Vector2(arrow_x, FIRST_ROW.y - 4), Vector2(arrow_x + 6, FIRST_ROW.y - 4), Vector2(arrow_x + 3, FIRST_ROW.y - 8)]), MenuKit.TEXT_GOLD)
 	if _top + VISIBLE < _rows.size() + 1:
-		var y := FIRST_ROW.y + VISIBLE * ROW_STEP - 1
+		var y := FIRST_ROW.y + VISIBLE * ROW_STEP - 3
 		c.draw_colored_polygon(PackedVector2Array([Vector2(arrow_x, y), Vector2(arrow_x + 6, y), Vector2(arrow_x + 3, y + 4)]), MenuKit.TEXT_GOLD)
 	var cursor_rect := _row_rect(_cursor)
 	if _cursor == _rows.size():

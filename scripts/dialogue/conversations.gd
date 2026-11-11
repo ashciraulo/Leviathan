@@ -200,11 +200,11 @@ const TALKS := {
 		{"if": ["ottilie_asked", "sela_met"], "unless": ["ottilie_sela"], "set": ["ottilie_sela"], "lines": ["OTTILIE_SELA_1", "OTTILIE_SELA_2B"]},
 		{"if": ["sorrel_letters", "ottilie_asked"], "unless": ["letter_ottilie"], "set": ["letter_ottilie"], "lines": [["", "NARRATE_HAND_LETTER"], "OTTILIE_LETTER_1", "OTTILIE_LETTER_2"]},
 		{"if": ["ottilie_paid", "old_one_turned"], "unless": ["ottilie_told_vael"], "set": ["ottilie_told_vael"], "lines": ["OTTILIE_TURNED", "OTTILIE_TURNED_2", "OTTILIE_TURNED_3"]},
+		{"if": ["ottilie_paid"], "unless": ["ottilie_knits_told"], "set": ["ottilie_knits_told"], "lines": ["OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},
 		# Her old cave sign for Hessa (Wren shows it with the lamp), and the answer.
 		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "lines": ["OTTILIE_SIGNAL_WAITING"]},
 		{"if": ["ottilie_paid", "seen_hessa_confession"], "unless": ["ottilie_signal"], "set": ["ottilie_signal"], "lines": ["OTTILIE_SIGNAL_1", "OTTILIE_SIGNAL_1B", "OTTILIE_SIGNAL_2", "OTTILIE_SIGNAL_2B"]},
-		{"if": ["ottilie_paid"], "unless": ["ottilie_knits_told"], "set": ["ottilie_knits_told"], "lines": ["OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},
 		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
 		{"if": ["ottilie_paid"], "lines": ["OTTILIE_AFTER"]},
 		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid", "ottilie_knits_told"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"], "OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},

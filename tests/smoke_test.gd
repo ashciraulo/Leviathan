@@ -6207,8 +6207,6 @@ func _test_satchel_sea_glass() -> void:
 	GameState.reset_new_game()
 
 
-## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
-## bought with glints.
 ## Ottilie's Knits: bought once from her stock, worn by Wren, changed in
 ## the Satchel, kept in the save.
 func _test_jumpers() -> void:
@@ -6270,6 +6268,8 @@ func _test_jumpers() -> void:
 	GameState.reset_new_game()
 
 
+## Marlo Pike's stall in Saltmarrow: a word across the counter, then wares
+## bought with glints.
 func _test_shop() -> void:
 	GameState.reset_new_game()
 	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
