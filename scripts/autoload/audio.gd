@@ -38,8 +38,10 @@ const MUSIC_CUES := [
 	"place_village", "place_shop", "place_house", "place_cave", "place_spring", "place_choir",
 	"story_danger", "story_sorrow", "story_choir", "story_flight", "story_memory",
 ]
-## Music cues that play once (the lullaby phrases); every other cue loops.
-const ONE_SHOT_MUSIC := ["lullaby", "bell_1", "bell_2", "bell_3", "bell_4", "bell_5", "bell_6", "bell_7"]
+## Music cues that play once (the lullaby, its phrases and the credits);
+## every other cue loops, from its loop offset. Matches the cues
+## music/track_sheet.json plays once (tools/check_music.py).
+const ONE_SHOT_MUSIC := ["lullaby", "bell_1", "bell_2", "bell_3", "bell_4", "bell_5", "bell_6", "bell_7", "credits"]
 ## The seven Tidebells in lullaby order: bell_1.ogg is the Hull's phrase.
 ## tools/music_gen.py weaves the same phrase into each dungeon's track.
 const BELL_ORDER := ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb"]
