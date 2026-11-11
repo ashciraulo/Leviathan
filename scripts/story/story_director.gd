@@ -134,6 +134,23 @@ const SURVEY_STAKES := {
 	"cinder": [Vector2i(10, -3), Vector2i(19, 2)],
 	"verge": [Vector2i(0, 5), Vector2i(9, 4)],
 }
+## The Old One's scales, for Agna's hand-bell: one in each puzzle cave
+## ({id: [room, tile]}, ShedScale.IDS).
+const SHED_SCALES := {
+	"dragline": [Vector2i(-1, 0), Vector2i(3, 7)],
+	"rimelight": [Vector2i(-1, -3), Vector2i(2, 7)],
+	"emberwell": [Vector2i(10, -1), Vector2i(22, 3)],
+	"drybone": [Vector2i(11, 0), Vector2i(20, 6)],
+	"gustway": [Vector2i(3, -5), Vector2i(1, 4)],
+	"lampless": [Vector2i(5, 3), Vector2i(3, 2)],
+}
+## Nettle's signals: the old keepers' signal stones on three high far
+## headlands ({id: [room, tile]}).
+const SIGNAL_STONES := {
+	"stacks": [Vector2i(5, -5), Vector2i(8, 3)],
+	"skerry": [Vector2i(6, -5), Vector2i(18, 7)],
+	"brink": [Vector2i(8, 3), Vector2i(5, 8)],
+}
 ## The Ebb Grotto, by the Sunken Verge: the flood marks on its wall.
 const EBB_GROTTO := Vector2i(0, 4)
 const GROTTO_MARKS_AT := Vector2(6 * 16 + 8, 3 * 16 + 8)
@@ -277,6 +294,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 	if coord == FERRIN_ROOM:
 		_put_npc("ferrin", FERRIN_AT)
 	_put_survey_stake(coord)
+	_put_shed_scale(coord)
+	_put_signal_stone(coord)
 	if CALF_REST.has(coord):
 		_put_calf_skull(CALF_REST[coord])
 	if coord == STILL_COVE:
@@ -1034,6 +1053,63 @@ func _put_survey_stake(coord: Vector2i) -> void:
 		stake.id = id
 		stake.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
 		room.add_child(stake)
+
+
+## A shed scale in a puzzle cave, until Wren picks it up.
+func _put_shed_scale(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	for id: String in SHED_SCALES:
+		var spot: Array = SHED_SCALES[id]
+		if spot[0] != coord or room == null or GameState.has_flag(ShedScale.flag_for(id)):
+			continue
+		if room.get_children().any(func(c: Node) -> bool: return c is ShedScale):
+			return
+		var piece := ShedScale.new()
+		piece.id = id
+		piece.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
+		room.add_child(piece)
+
+
+## An old signal stone on a far headland.
+func _put_signal_stone(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	for id: String in SIGNAL_STONES:
+		var spot: Array = SIGNAL_STONES[id]
+		if spot[0] != coord or room == null:
+			continue
+		if room.get_children().any(func(c: Node) -> bool: return c is SignalStone):
+			return
+		var stone := SignalStone.new()
+		stone.id = id
+		stone.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
+		room.add_child(stone)
+
+
+## Wren's lamp on a signal stone says "I'm here" down the coast, and far
+## off, from Saltmarrow's lighthouse, a small light answers.
+func signal_from_stone(stone: SignalStone) -> void:
+	if Cutscene.active or game.current_room == null:
+		return
+	var room: Room = game.current_room
+	var scene := _scene()
+	await scene.lamp(stone.global_position + Vector2(0, -SignalStone.HEIGHT - 2), Cutscene.LAMP_HERE)
+	await scene.wait(0.9)
+	if not is_instance_valid(room) or not room.is_inside_tree():
+		scene.finish()
+		return
+	# The answer comes from the direction of home, at the very edge of
+	# sight, small with distance.
+	var home := Vector2(SALTMARROW - room.coord).normalized()
+	var reach := Room.SIZE / 2.0 - Vector2(10, 10)
+	var t := minf(reach.x / maxf(absf(home.x), 0.001), reach.y / maxf(absf(home.y), 0.001))
+	var far := room.global_position + Room.SIZE / 2.0 + home * t
+	var glow := LampGlow.new(Cutscene.LAMP_HERE)
+	glow.position = far
+	glow.scale = Vector2(0.4, 0.4)
+	game.world.add_child(glow)
+	await glow.done
+	await scene.narrate(["NARRATE_SIGNAL_ANSWER"])
+	scene.finish()
 
 
 ## The flood marks on the Ebb Grotto's wall.

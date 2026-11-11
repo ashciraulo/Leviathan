@@ -204,7 +204,7 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers", "far_story", "feel"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers", "far_story", "quest_story", "feel"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
@@ -306,6 +306,10 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _ebb_story_shots()
+			"quest_story":
+				game.queue_free()
+				await _wait(0.2)
+				await _quest_story_shots()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2019,6 +2023,47 @@ func _far_story_shots() -> void:
 		while box and DialogueBox.is_open:
 			box.advance()
 			box.advance()
+			await _wait(0.1)
+		game.queue_free()
+		await _wait(0.2)
+
+
+## Agna's scales and Nettle's signal stones.
+func _quest_story_shots() -> void:
+	var scale: Array = StoryDirector.SHED_SCALES["dragline"]
+	var stone: Array = StoryDirector.SIGNAL_STONES["stacks"]
+	for shot in [["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
+		GameState.reset_new_game()
+		for flag: String in shot[2]:
+			GameState.set_flag(flag)
+		var spot: Array = shot[1]
+		GameState.set_checkpoint(spot[0], Vector2(spot[1]) * 16.0 + Vector2(8, 46))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.2)
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			enemy.queue_free()
+		await _wait(2.8)
+		game.player.facing = Vector2.UP
+		if shot[3]:
+			game.player.global_position -= Vector2(0, 12)
+			await _wait(0.05)
+			game.player.try_interact()
+			var box := _dialogue_box(game)
+			await _wait(2.6)
+			if shot[0] != "quest_2_scale_found":
+				# Past the page, to the lamp on the stone, then the answer.
+				box.advance()
+				box.advance()
+				await _wait(1.0 if shot[0] == "quest_4_signal" else 4.0)
+		await _capture(shot[0])
+		var box := _dialogue_box(game)
+		for i in 200:
+			if not Cutscene.active and not DialogueBox.is_open:
+				break
+			if box and DialogueBox.is_open:
+				box.advance()
+				box.advance()
 			await _wait(0.1)
 		game.queue_free()
 		await _wait(0.2)
