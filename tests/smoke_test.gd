@@ -7781,6 +7781,14 @@ func _test_jam_trade() -> void:
 	Conversations.talk("marga")
 	_check(first.call("marga") == "MARGA_AFTER", "once")
 	GameState.reset_new_game()
+	# Mid-trade, the waiting lines never hold up Wick's jar or Sorrel's race.
+	for flag in ["wick_asked", "fen_lanterns_lit", "sorrel_asked", "trade_jam", "trade_candles", "trade_line"]:
+		GameState.set_flag(flag)
+	_check(first.call("wick") == "WICK_DONE_1", "Wick still hands over the jar")
+	_check(first.call("sorrel") == "SORREL_TRADE_WAITING", "Sorrel reminds Wren about the cord before the race")
+	GameState.give_item("kite_cloak", 1, false)
+	_check(first.call("sorrel") == "SORREL_CLOAK_1", "but the race still comes first once Wren can glide")
+	GameState.reset_new_game()
 
 
 ## Hessa's lighting day: Nettle's surprise party, five guests, one scene.
