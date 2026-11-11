@@ -3,7 +3,8 @@ extends StaticBody2D
 ## A small thing lying about for a villager's errand (StoryDirector.FINDS):
 ## one of Corrin's grandad's message bottles, Pell's lucky shell, a piece
 ## of pale driftwood for Dunstan, one of the Choir's chimes for Bram, an
-## oyster with a pearl in it for Marlo, or the nameboard off Ide's boat. Picking it up is a conversation with no
+## oyster with a pearl in it for Marlo, the nameboard off Ide's boat, a
+## ship's lantern for Gully, or a hardy plant for Lowe's garden. Picking it up is a conversation with no
 ## speaker (Conversations "find_<id>"), which sets found_<id>; then it's
 ## gone for good.
 
@@ -21,11 +22,18 @@ const CORD := Color("#a08a64")
 const OYSTER := Color("#8a8478")
 const OYSTER_LIGHT := Color("#b8b0a0")
 const PEARL := Color("#f4f0ea")
+const BRASS := Color("#b08a3c")
+const LANTERN_GLASS := Color("#7fd0a0")
+const THISTLE := Color("#7ea4e0")
+const MOSS := Color("#d0603a")
+const MOSS_GLOW := Color("#f0a050")
+const LEAF := Color("#4f8a4a")
+const BULB := Color("#e8dcc0")
 const BOARD := Color("#4a78a8")
 const BOARD_DARK := Color("#34587e")
 
 ## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
-## "chime_*", "pearl_*" or "nameboard".
+## "chime_*", "pearl_*", "nameboard", "lantern_*" or "seed_*".
 var id := ""
 var _time := 0.0
 
@@ -92,6 +100,32 @@ func _draw() -> void:
 		draw_line(Vector2(-4, -4), Vector2(4, -4), OYSTER_LIGHT)
 		draw_line(Vector2(-3, -2), Vector2(3, -2), Palette.OUTLINE)
 		draw_rect(Rect2(-1, -4, 2, 2), PEARL)
+	elif id.begins_with("lantern"):
+		# A ship's lantern on its side: brass cage, green glass.
+		draw_rect(Rect2(-5, -10, 10, 10), Palette.OUTLINE)
+		draw_rect(Rect2(-4, -9, 8, 8), BRASS)
+		draw_rect(Rect2(-3, -8, 6, 6), LANTERN_GLASS)
+		draw_rect(Rect2(-1, -8, 1, 6), BRASS)
+		draw_rect(Rect2(-2, -12, 4, 2), Palette.OUTLINE)
+	elif id == "seed_frost":
+		# A blue frost thistle.
+		draw_line(Vector2(0, 0), Vector2(0, -6), LEAF)
+		draw_circle(Vector2(0, -8), 3.0, Palette.OUTLINE)
+		draw_circle(Vector2(0, -8), 2.0, THISTLE)
+		for d in [Vector2(-3, -10), Vector2(3, -10), Vector2(0, -12)]:
+			draw_line(Vector2(0, -8), d, THISTLE)
+	elif id == "seed_ember":
+		# A tuft of ember moss, faintly glowing.
+		draw_rect(Rect2(-6, -5, 12, 5), Palette.OUTLINE)
+		draw_rect(Rect2(-5, -4, 10, 3), MOSS)
+		if fmod(_time, 1.2) < 0.6:
+			draw_rect(Rect2(-2, -4, 3, 1), MOSS_GLOW)
+	elif id == "seed_fen":
+		# A pale lily bulb with two green shoots.
+		draw_circle(Vector2(0, -3), 4.0, Palette.OUTLINE)
+		draw_circle(Vector2(0, -3), 3.0, BULB)
+		draw_line(Vector2(-1, -6), Vector2(-3, -11), LEAF)
+		draw_line(Vector2(1, -6), Vector2(2, -10), LEAF)
 	elif id == "nameboard":
 		# A long blue board with a few salt-eaten white letters.
 		draw_rect(Rect2(-11, -7, 22, 7), Palette.OUTLINE)
