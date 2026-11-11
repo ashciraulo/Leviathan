@@ -38,7 +38,8 @@ static func spawn(parent: Node, at: Vector2, what: Kind, dir: Vector2 = Vector2.
 
 func _ready() -> void:
 	z_index = 20
-	_seed = int(global_position.x * 7.0 + global_position.y * 13.0)
+	# Rooms north of the shore sit at negative y; keep the seed positive.
+	_seed = absi(int(global_position.x * 7.0 + global_position.y * 13.0))
 
 
 func _process(delta: float) -> void:

@@ -1042,9 +1042,9 @@ func _feel_shots(game: Node) -> void:
 	await _wait(0.1)
 	var crab := Scuttler.new()
 	crab.ai_enabled = false
-	crab.hp = 99
 	crab.position = Vector2(150, 7 * Room.TILE + 12)
 	room.add_child(crab)
+	crab.hp = 99
 	player.global_position = room.global_position + Vector2(130, 7 * Room.TILE + 12)
 	player.facing = Vector2.RIGHT
 	await _wait(0.3)
@@ -1056,7 +1056,7 @@ func _feel_shots(game: Node) -> void:
 	await _wait(0.03)
 	await _capture("05b_hit_spark")
 	await _wait(0.5)
-	HitSpark.spawn(room, crab.global_position + Enemy.SPARK_OFFSET - Vector2.RIGHT * 6.0, HitSpark.Kind.BLOCK, Vector2.RIGHT)
+	HitSpark.spawn(room, crab.global_position + crab._spark_offset() - Vector2.RIGHT * 6.0, HitSpark.Kind.BLOCK, Vector2.RIGHT)
 	await _wait(0.06)
 	await _capture("05c_block_spark")
 	await _wait(0.4)
