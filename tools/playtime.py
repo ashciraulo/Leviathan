@@ -42,7 +42,17 @@ RATES = {
     "overworld_crossings": 2.0,  # each region is crossed again later (travel, side quests)
     "first_play": 1.25,      # deaths, wrong turns, menus
     "words_per_second": 3.0,  # reading dialogue
+    # Each side-quest stop: a find, scale, stone or stake to reach (often a
+    # detour into a side area) or a trade hand-off to carry to the next
+    # villager. Crossing the region itself is already in overworld_crossings
+    # (and a puzzle cave's rooms in their own area), so this is only the
+    # going back for it and the walk to hand it in. Kept low on purpose.
+    "errand_stop": 60.0,
 }
+
+# StoryDirector tables whose every entry is one place a side quest sends
+# Wren ({id: [room, tile]}).
+ERRAND_TABLES = ("FINDS", "SHED_SCALES", "SIGNAL_STONES", "SURVEY_STAKES")
 
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
 # Puzzle pieces out in the overworld (side areas and challenges); letters
@@ -108,7 +118,28 @@ def estimate():
             if key and not key.startswith(NOT_DIALOGUE):
                 words += len(row.get("en", "").split())
     areas["story (reading dialogue)"] = {"time": words / RATES["words_per_second"], "rooms": 0, "words": words}
+    stops = errand_stops()
+    areas["side quests (legwork)"] = {"time": stops * RATES["errand_stop"] * RATES["first_play"], "rooms": 0}
     return areas
+
+
+def errand_stops() -> int:
+    """Places side quests send Wren: entries in StoryDirector's errand tables,
+    plus each trade hand-off (a conversation that sets a trade_ flag)."""
+    with open(os.path.join(ROOT, "scripts", "story", "story_director.gd"), encoding="utf-8") as f:
+        director = f.read()
+    stops = 0
+    for table in ERRAND_TABLES:
+        m = re.search(r"^const %s := \{(.*?)^\}" % table, director, re.M | re.S)
+        assert m, "StoryDirector.%s not found: update ERRAND_TABLES" % table
+        stops += len(re.findall(r'^\s*"[a-z0-9_]+":\s*\[', m.group(1), re.M))
+    with open(os.path.join(ROOT, "scripts", "dialogue", "conversations.gd"), encoding="utf-8") as f:
+        talks = f.read()
+    trades = set()
+    for m in re.finditer(r'"set":\s*\[([^\]]*)\]', talks):
+        trades.update(re.findall(r'"(trade_[a-z0-9_]+)"', m.group(1)))
+    stops += len(trades)
+    return stops
 
 
 def measured(paths):
