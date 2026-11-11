@@ -160,10 +160,12 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=kiln captures just the Kiln (for quick local runs).
-	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers"]:
+	if OS.get_environment("SHOTS_ONLY") in ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb", "maw", "extras", "goods", "echoes", "mantle", "lowe", "crucible", "turn", "mural", "ending", "shop", "dream", "ambience", "journal", "belfry_lowe", "tobin", "rowing", "choir", "ide", "liesl", "wick", "gully", "sorrel", "ottilie", "coralie", "lowe_after", "epilogue", "murmur_dace", "contrast", "carvings", "ebb_story", "singers", "feel"]:
 		match OS.get_environment("SHOTS_ONLY"):
 			"ambience":
 				await _ambience_shots(game)
+			"feel":
+				await _feel_shots(game)
 			"hull":
 				await _hull_shots(game)
 			"kiln":
@@ -1028,6 +1030,40 @@ func _gale_shots(game: Node) -> void:
 	await _wait(0.3)
 	await _capture("104_storm_bell")
 	game.player._invuln = 0.0
+
+
+## Hit feel: the spark where the sword lands, the cold sparks off a block,
+## and the dust where a foe falls.
+func _feel_shots(game: Node) -> void:
+	var player: Player = game.player
+	var room: Room = game.current_room
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(0.1)
+	var crab := Scuttler.new()
+	crab.ai_enabled = false
+	crab.hp = 99
+	crab.position = Vector2(150, 7 * Room.TILE + 12)
+	room.add_child(crab)
+	player.global_position = room.global_position + Vector2(130, 7 * Room.TILE + 12)
+	player.facing = Vector2.RIGHT
+	await _wait(0.3)
+	player.start_attack()
+	for i in 30:
+		await get_tree().process_frame
+		if room.get_children().any(func(n: Node) -> bool: return n is HitSpark):
+			break
+	await _wait(0.03)
+	await _capture("05b_hit_spark")
+	await _wait(0.5)
+	HitSpark.spawn(room, crab.global_position + Enemy.SPARK_OFFSET - Vector2.RIGHT * 6.0, HitSpark.Kind.BLOCK, Vector2.RIGHT)
+	await _wait(0.06)
+	await _capture("05c_block_spark")
+	await _wait(0.4)
+	crab.hp = 1
+	crab.take_hit(1, Vector2.RIGHT)
+	await _wait(0.12)
+	await _capture("05d_fall_dust")
 
 
 func _tomb_shots(game: Node) -> void:

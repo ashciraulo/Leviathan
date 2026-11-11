@@ -1102,7 +1102,12 @@ func _test_play() -> void:
 	await _wait(Bogskipper.RISE_TIME * 0.5)
 	_check(bog.mode == Bogskipper.Mode.RISE, "Bogskipper rises when Wren comes close")
 	_check(bog.take_hit(1, Vector2.RIGHT) == Enemy.HitResult.HIT, "a risen Bogskipper can be hit")
-	bog.queue_free()
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.HIT), "a blow that lands throws a spark")
+	bog.hp = 1
+	bog.take_hit(1, Vector2.RIGHT)
+	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
+	await _wait(0.5)
+	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
 	GameState.refill()
 
 	# Lanternmoth circles Wren, flares (its tell), then dives.
