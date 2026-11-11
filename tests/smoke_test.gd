@@ -1156,6 +1156,28 @@ func _test_play() -> void:
 	squashee.queue_free()
 	await _wait(0.1)
 
+	# Boss shots that override _init still join enemy_shots (cleared when a
+	# boss falls).
+	for shot: Projectile in [IceChunk.new(), InkBlob.new(), SlagGlob.new(), BoneShard.new()]:
+		_check(shot.is_in_group("enemy_shots") and shot.shield_tier >= 2, "%s is cleared with the boss's other shots" % shot.get_script().get_global_name())
+		shot.free()
+	# Knocked into a pit by a blow: the blow costs a bubble, the fall doesn't.
+	GameState.refill()
+	await _wait(Player.INVULN_TIME + 0.1)
+	player.take_damage(1, player.global_position + Vector2(-10, 0))
+	var after_blow := GameState.bubbles
+	player.fall(player.global_position)
+	await _wait(0.6)
+	_check(GameState.bubbles == after_blow, "a fall right after a blow takes no second bubble (%d of %d)" % [GameState.bubbles, after_blow])
+	GameState.refill()
+	await _wait(Player.INVULN_TIME + 0.1)
+	var before := GameState.bubbles
+	player.fall(player.global_position)
+	await _wait(0.6)
+	_check(GameState.bubbles == before - 1, "a fall on its own still takes a bubble")
+	GameState.refill()
+	await _wait(Player.INVULN_TIME + 0.1)
+
 	# A boss's last blow: the great star, time held, then a breath of slow
 	# motion, and time back to normal after.
 	var stand_in := Scuttler.new()
