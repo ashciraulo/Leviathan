@@ -129,7 +129,10 @@ const BRAM_FORGE_AT := Vector2(16 * 16 + 8, 5 * 16 + 10)
 ## ({id: [room, tile]}, filled in as each reach is built).
 const FERRIN_ROOM := Vector2i(4, -5)
 const FERRIN_AT := Vector2(12 * 16 + 8, 7 * 16 + 10)
-const SURVEY_STAKES := {}
+const SURVEY_STAKES := {
+	"frost": [Vector2i(1, -5), Vector2i(19, 5)],
+	"cinder": [Vector2i(10, -3), Vector2i(19, 2)],
+}
 ## The Ebb Grotto, by the Sunken Verge: the flood marks on its wall.
 const EBB_GROTTO := Vector2i(0, 4)
 const GROTTO_MARKS_AT := Vector2(6 * 16 + 8, 3 * 16 + 8)
@@ -483,6 +486,7 @@ func lowe_at_the_hull() -> void:
 	lowe.position = at + LOWE_FROM_BOSS
 	room.add_child(lowe)
 	var scene := _scene()
+	scene.music("story_choir")
 	await scene.wait(0.6)
 	await scene.walk_route(room.global_position + WATCH_FROM)
 	scene.face(Vector2.UP)
@@ -533,6 +537,7 @@ func the_crucible() -> void:
 	lowe.position = at + LOWE_FROM_BOSS
 	room.add_child(lowe)
 	var scene := _scene()
+	scene.music("story_choir")
 	await scene.wait(0.6)
 	await scene.walk_route(room.global_position + WATCH_FROM)
 	scene.face(Vector2.UP)
@@ -577,6 +582,7 @@ func the_calf() -> void:
 	GameState.set_flag(CALF_FLAG)
 	var room: Node2D = game.current_room
 	var scene := _scene()
+	scene.music("story_memory")
 	# Let the heart beat out and the bell rise first.
 	await scene.wait(3.6)
 	await scene.walk_route(room.global_position + WATCH_FROM)
@@ -612,6 +618,7 @@ func vael_at_the_spire() -> void:
 	GameState.set_flag(VAEL_FLAG)
 	var room: Node2D = game.current_room
 	var scene := _scene()
+	scene.music("story_choir")
 	# The heron lifts away on the wind and the Storm Bell rises first.
 	await scene.wait(3.0)
 	# The Crown is ringed with open sky: if Wren is out on a side ledge
@@ -648,6 +655,7 @@ func the_old_one_turns(carried: Cutscene = null) -> void:
 		if DialogueBox.is_open:
 			await Events.dialogue_finished
 	var scene := carried if carried else _scene()
+	scene.music("story_danger")
 	await scene.wait(1.2)
 	Audio.play_sfx("choir_waking")
 	await scene.wait(2.6)
@@ -677,6 +685,7 @@ func hessas_confession() -> void:
 	GameState.set_flag(CONFESSION_FLAG)
 	var hessa := _find_npc("hessa")
 	var scene := _scene()
+	scene.music("story_sorrow")
 	await scene.wait(0.3)
 	if hessa:
 		await scene.walk_around_to(hessa.global_position + Vector2(0, 22))
@@ -781,6 +790,7 @@ func tobins_warning() -> void:
 	GameState.set_flag(TOBIN_WARNED_FLAG)
 	var room: Node2D = game.current_room
 	var scene := _scene()
+	scene.music("story_sorrow")
 	await scene.wait(0.6)
 	var tobin := ChoirFigure.new("tobin")
 	tobin.position = TOBIN_RUNS_IN[0]
@@ -821,6 +831,7 @@ func _put_tobin_home() -> void:
 func tobin_comes_home() -> void:
 	var room: Node2D = game.current_room
 	var scene := _scene()
+	scene.music("story_sorrow")
 	var tobin := ChoirFigure.new("tobin")
 	tobin.position = TOBIN_HOME_AT
 	tobin.face(true)
@@ -869,6 +880,7 @@ func hessa_at_the_maw(rowed: bool, carried: Cutscene = null) -> void:
 	GameState.set_flag(ROWED_FLAG)
 	var room: Node2D = game.current_room
 	var scene := carried if carried else _scene()
+	scene.music("story_sorrow")
 	var boat := Rowboat.new()
 	boat.position = BOAT_AT
 	room.add_child(boat)
@@ -1274,6 +1286,7 @@ func vaels_choir() -> void:
 	GameState.set_flag(CHOIR_FLAG)
 	var room: Node2D = game.current_room
 	var scene := _scene()
+	scene.music("story_choir")
 	var vael: CantorVael = null
 	for child in room.get_children():
 		if child is CantorVael:
@@ -1349,6 +1362,7 @@ func the_last_mural() -> void:
 	GameState.set_flag(MURAL_FLAG)
 	var room: Node2D = game.current_room
 	var scene := _scene()
+	scene.music("story_memory")
 	# The Regent crumbles and the Marrow Bell rises first.
 	await scene.wait(3.4)
 	Audio.play_sfx("old_one_rumble", null, 1.4)
@@ -1486,6 +1500,7 @@ func the_old_one_dreams() -> void:
 	GameState.set_flag(DREAM_FLAG)
 	var room: Node = game.current_room
 	var scene := _scene()
+	scene.music("story_memory")
 	await scene.wait(1.2)
 	Audio.play_sfx("old_one_hum", null, 0.9)
 	Feel.shake(2.0)
@@ -1552,6 +1567,7 @@ func the_frozen_journal(page: JournalPage) -> void:
 	GameState.set_flag(JOURNAL_FLAG)
 	var room: Node = game.current_room
 	var scene := _scene()
+	scene.music("story_memory")
 	await scene.wait(0.2)
 	Events.conversation_requested.emit(JournalPage.pages_for(JournalPage.LAST))
 	await Events.dialogue_finished

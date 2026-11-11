@@ -92,7 +92,8 @@ func _ready() -> void:
 		_test_hessa_hints()
 		_test_keepers_round()
 		await _test_last_singers()
-		_test_edge_survey()
+		await _test_edge_survey()
+		await _test_scene_music()
 		_test_calf_rest()
 		await _test_grotto_marks()
 		_test_challenge_talk()
@@ -745,7 +746,7 @@ func _test_story() -> void:
 	add_child(hold)
 	await _wait(0.2)
 	_check(Cutscene.active, "the Matriarch's chamber starts Lowe's scene")
-	_check(Audio.music_cue == "dungeon_hull", "no boss theme while she sleeps through Lowe's scene (%s)" % Audio.music_cue)
+	_check(Audio.music_cue == "story_choir", "the Choir's theme, not the boss's, while she sleeps through Lowe's scene (%s)" % Audio.music_cue)
 	var choir: Array = hold.current_room.get_children().filter(func(c: Node) -> bool: return c is ChoirFigure)
 	_check(choir.size() == 3, "Lowe and two singers are in the chamber (%d)" % choir.size())
 	var sleeper: BarnacleMatriarch = null
@@ -7116,9 +7117,47 @@ func _test_last_singers() -> void:
 	GameState.reset_new_game()
 
 
+## A cutscene scored with a story cue hands the room its own music back.
+func _test_scene_music() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(12 * 16 + 8, 8 * 16 + 10))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room_cue := Audio.music_cue
+	var scene := Cutscene.new(game)
+	add_child(scene)
+	scene.begin()
+	scene.music("story_sorrow")
+	_check(Audio.music_cue == "story_sorrow", "a scene can score itself")
+	scene.finish()
+	_check(Audio.music_cue == room_cue and room_cue != "", "and the room's music comes back after")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
 ## Ferrin the mapmaker gives Wren three survey stakes for the far reaches,
 ## and finishes his map when all three are driven in.
 func _test_edge_survey() -> void:
+	GameState.reset_new_game()
+	# Ferrin and each stake stand where Wren can reach them from below.
+	var spots := {"ferrin": [StoryDirector.FERRIN_ROOM, Vector2i(StoryDirector.FERRIN_AT / Room.TILE)]}
+	for id: String in StoryDirector.SURVEY_STAKES:
+		spots["stake_" + id] = StoryDirector.SURVEY_STAKES[id]
+	for what: String in spots:
+		var spot: Array = spots[what]
+		var tile: Vector2i = spot[1]
+		GameState.set_checkpoint(spot[0], Vector2(tile) * 16.0 + Vector2(8, 30))
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.4)
+		var room: Room = game.current_room
+		var found := room.get_children().any(func(c: Node) -> bool: return (c is Npc and what == "ferrin") or (c is SurveyStake and "stake_" + (c as SurveyStake).id == what))
+		_check(found, "%s is placed in room %s" % [what, spot[0]])
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "%s stands on dry floor with dry floor below" % what)
+		game.queue_free()
+		await _wait(0.1)
 	GameState.reset_new_game()
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
 	_check(first.call("survey_stake_frost") == "NARRATE_STAKE_CAIRN", "before Ferrin asks, a stake spot is only a cairn")
