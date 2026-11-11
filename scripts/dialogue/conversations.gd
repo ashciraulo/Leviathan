@@ -185,8 +185,9 @@ const TALKS := {
 	# Tobin, home from the Choir, hauling rope with his dad.
 	"tobin": [
 		{"if": ["dunstan_boat_done"], "unless": ["tobin_boat"], "set": ["tobin_boat"], "lines": ["TOBIN_BOAT"]},
-		{"if": ["seen_ending"], "lines": ["TOBIN_END"]},
-		{"lines": ["TOBIN_AFTER"]},
+		# Once Wren has talked to him, Dunstan asks about the boat.
+		{"if": ["seen_ending"], "set": ["talked_tobin_home"], "lines": ["TOBIN_END"]},
+		{"set": ["talked_tobin_home"], "lines": ["TOBIN_AFTER"]},
 	],
 	# Ide, the Causeway End ferrywoman: her boat stays tied up while the
 	# Belfry's bell rings wrong under the channel. Asking sets ide_ferry,
@@ -456,9 +457,10 @@ const TALKS := {
 			"set": ["rope_promised"],
 			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
 		},
-		# A boat for Tobin, from the driftwood behind Barnacle Wall (QuestFind).
+		# A boat for Tobin, from the driftwood behind Barnacle Wall (QuestFind),
+		# once Wren has said hello to Tobin.
 		{"if": ["dunstan_boat_ask", "found_driftwood"], "unless": ["dunstan_boat_done"], "set": ["dunstan_boat_done"], "lines": [["", "NARRATE_HAND_DRIFTWOOD"], "DUNSTAN_BOAT_DONE_1", ["", "NARRATE_DUNSTAN_CARVES"], "DUNSTAN_BOAT_DONE_2", ["", "NARRATE_GOT_TOY_BOAT"]]},
-		{"if": ["tobin_home"], "unless": ["dunstan_boat_ask"], "set": ["dunstan_boat_ask"], "lines": ["DUNSTAN_BOAT_1", "DUNSTAN_BOAT_1B", "DUNSTAN_BOAT_2"]},
+		{"if": ["tobin_home", "talked_tobin_home"], "unless": ["dunstan_boat_ask"], "set": ["dunstan_boat_ask"], "lines": ["DUNSTAN_BOAT_1", "DUNSTAN_BOAT_1B", "DUNSTAN_BOAT_2"]},
 		{"if": ["dunstan_boat_ask"], "unless": ["dunstan_boat_done"], "lines": ["DUNSTAN_BOAT_WAITING"]},
 		{"if": ["seen_ending"], "lines": ["DUNSTAN_END"]},
 		{"if": ["tobin_home"], "lines": ["DUNSTAN_TOBIN_AFTER"]},
