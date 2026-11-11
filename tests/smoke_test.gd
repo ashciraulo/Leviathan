@@ -8235,6 +8235,39 @@ func _test_older_secrets() -> void:
 	_check(hidden.size() == 1 and (hidden[0] as BoneWall).concealed and (hidden[0] as BoneWall).tile == Vector2i(12, 2) and (hidden[0] as BoneWall)._into_room() == Vector2.DOWN
 		and Room.parse_layout(root.layout)[1][11] == "C", "Witheroot Hollow: a concealed wall in the crag, its draft blowing out to the hollow, a chest behind")
 	root.queue_free()
+	# Ashfall Gate: a barred niche in the east crag that opens once a
+	# brazier burns on each bank of the lava river.
+	GameState.reset_new_game()  # Fenmouth's solved gate is saved under this test room's coord too.
+	var ash: Room = (load("res://rooms/room_7_-2.tscn") as PackedScene).instantiate()
+	add_child(ash)
+	await _wait(0.1)
+	var ash_rows := Room.parse_layout(ash.layout)
+	var ash_fires := _child_of(ash, Brazier)
+	var ash_bars := _child_of(ash, Bars)
+	_check(ash.gate == "braziers" and ash_fires.size() == 2 and ash_bars.size() == 1 and not ash_bars[0].is_open and ash_rows[2][20] == "C",
+		"Ashfall Gate: two braziers and a barred niche")
+	var banks := 0
+	for b: Brazier in ash_fires:
+		var bx := int(b.position.x) / Room.TILE
+		banks += 1 if bx < 10 else (2 if bx > 12 else 0)
+	_check(banks == 3, "one brazier on each bank of the lava river")
+	var shut := ash_rows.duplicate()
+	shut[2] = shut[2].replace("|", "#")
+	_check(not _walkable_from(shut, Vector2i(16, 6)).has(Vector2i(19, 2)), "the bars are the niche's only way in")
+	for b: Brazier in ash_fires:
+		b.light(true)
+	await _wait(0.1)
+	_check(ash_bars[0].is_open, "both burning, the niche opens")
+	ash.queue_free()
+	GameState.reset_new_game()
+	# Kiln Mouth: a hidden wall west of the Kiln's door, a chamber behind.
+	var kiln: Room = (load("res://rooms/room_10_-2.tscn") as PackedScene).instantiate()
+	add_child(kiln)
+	await _wait(0.1)
+	var kiln_wall := _child_of(kiln, BoneWall)
+	_check(kiln_wall.size() == 1 and (kiln_wall[0] as BoneWall).concealed and (kiln_wall[0] as BoneWall).tile == Vector2i(4, 4) and (kiln_wall[0] as BoneWall)._into_room() == Vector2.DOWN
+		and Room.parse_layout(kiln.layout)[2][5] == "C", "Kiln Mouth: a concealed wall beside the Kiln's door, a chamber and chest behind")
+	kiln.queue_free()
 	# Three shoals out in deep water, walled by rocks so that no glide, even
 	# a steered one, can curve in: the Diver's Helm alone reaches them (the
 	# story thread leaves pearls on them).
