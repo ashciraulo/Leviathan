@@ -58,6 +58,7 @@ func _ready() -> void:
 		await _test_challenges()
 		await _test_overworld_life()
 		await _test_regional_caves()
+		await _test_thin_region_screens()
 		await _test_ambience()
 		await _test_fast_travel()
 		await _test_credits()
@@ -4456,6 +4457,62 @@ func _test_regional_caves() -> void:
 	warren.queue_free()
 	await _wait(0.1)
 
+
+
+## The optional screens off the thinner regions: each wants two tools together.
+func _test_thin_region_screens() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.give_item("kite_cloak", 1, false)
+	GameState.set_checkpoint(Vector2i(10, 1), Vector2(5 * Room.TILE + 8, 8 * Room.TILE + 12))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var player: Player = game.player
+	player._invuln = 60.0
+	# Sinkwhorl Flats: one great whorl of sinking sand between the reefs;
+	# the hook posts are the safe way over and back.
+	var basin: Room = game.current_room
+	for foe in _child_of(basin, Enemy):
+		foe.free()
+	var ends: Array[Vector2] = []
+	for throw: Array in [[Vector2i(8, 8), Vector2.RIGHT], [Vector2i(14, 9), Vector2.LEFT]]:
+		player.global_position = _tile_pos(basin, throw[0])
+		player.facing = throw[1]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.3)
+		ends.append(player.global_position - basin.global_position)
+	_check(basin.coord == Vector2i(10, 1) and basin.tile_at(11, 8) == "S" and basin.has_node("SinkField"), "Sinkwhorl Flats' reefs are split by sinking sand")
+	_check(int(ends[0].x) / Room.TILE == 14 and int(ends[1].x) / Room.TILE == 8, "the hook pulls Wren out to the chest reef and back (at %s, %s)" % ends)
+	var before := GameState.bubbles
+	# Kestrel Reach: a stream to the stack, the hook down to the chest
+	# ledge, and the low stream home.
+	var reach: Room = await _goto(game, Vector2i(7, -3), Vector2i(1, 6))
+	for foe in _child_of(reach, Enemy):
+		foe.free()
+	before = GameState.bubbles
+	ends.clear()
+	# (The stream ends at a rock on the stack's lip, so the hook is thrown from still ground.)
+	for move: Array in [[Vector2i(3, 3), Vector2.RIGHT, "kite_cloak", 3.0], [Vector2i(14, 3), Vector2.DOWN, "tide_hook", 1.3], [Vector2i(20, 9), Vector2.LEFT, "kite_cloak", 3.0]]:
+		player.global_position = _tile_pos(reach, move[0])
+		player.facing = move[1]
+		await _wait(0.1)
+		player.use_item(move[2])
+		await _wait(move[3])
+		ends.append(player.global_position - reach.global_position)
+	_check(reach.coord == Vector2i(7, -3), "the gallery leads on to Kestrel Reach")
+	_check(ends[0].x > 11 * Room.TILE and ends[0].y < 4 * Room.TILE, "the stream sets Wren on the stack (at %s)" % ends[0])
+	_check(int(ends[1].y) / Room.TILE == 9, "the hook drops Wren to the chest ledge (at %s)" % ends[1])
+	_check(ends[2].x < 6 * Room.TILE, "the low stream blows them home (at %s)" % ends[2])
+	_check(GameState.bubbles == before, "all without a fall")
+	game.queue_free()
+	await _wait(0.1)
+	# Whalefall Steps: cracked boulders shut the way down to the basin.
+	var steps: Room = (load("res://rooms/room_10_0.tscn") as PackedScene).instantiate()
+	var rows := Room.parse_layout(steps.layout)
+	_check(rows[11].substr(11, 2) == "YY" and rows[12].substr(11, 2) == "..", "Whalefall Steps' way down is blocked by cracked boulders")
+	steps.free()
 
 ## Overworld life: the Galehawk over Windmere, the newer foes elsewhere, and
 ## the hares, lizards and reeds.
