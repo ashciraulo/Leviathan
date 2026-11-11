@@ -121,9 +121,10 @@ SEA_GLASS = {
 # tide (0,2), and in the middle of Rimewatch Pass's ice (2,-3).
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
 PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
-# Solid things that aren't scenery: stones, chests, hook posts, NPCs, and
-# boulders, crates and hatches, which also stop the chain and the cloak.
-BLOCKERS = set("TCOKXh123456k")
+# Solid things that aren't scenery: stones, chests, hook posts, NPCs, ice
+# eyes, and boulders, crates and hatches, which also stop the chain and the
+# cloak.
+BLOCKERS = set("TCOKXEh123456k")
 
 
 def stops_flight(tile):

@@ -5211,6 +5211,14 @@ func _test_far_reaches() -> void:
 		eye.arrow_hit(Vector2.UP)
 	await _wait(0.4)
 	_check(bars[0].is_open and bars[1].is_open, "both eyes shot open the way")
+	# And a post on the east stack hooks Wren home again.
+	player.global_position = _tile_pos(stacks, Vector2i(11, 7))
+	player.facing = Vector2.RIGHT
+	await _wait(0.1)
+	player.use_item("tide_hook")
+	await _wait(1.5)
+	at = player.global_position - stacks.global_position
+	_check(int(at.x) / Room.TILE == 17 and int(at.y - 3) / Room.TILE == 7 and GameState.bubbles == before, "a post on the east stack hooks Wren back (at %s)" % at)
 	game.queue_free()
 	await _wait(0.1)
 	# Edgewatch Bluff: a glide over a crevasse to the far brazier; both lit
