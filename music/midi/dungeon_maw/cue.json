@@ -1,0 +1,38 @@
+{
+ "cue": "dungeon_maw",
+ "qbpm": 64.0,
+ "bar_q": 4,
+ "bars": 40,
+ "intro_q": 0,
+ "end_q": 160,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 150.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "drum_heart",
+   "notes": 288,
+   "low": 36,
+   "high": 36
+  },
+  {
+   "name": "sub_swell",
+   "notes": 10,
+   "low": 26,
+   "high": 34
+  },
+  {
+   "name": "choir_dark",
+   "notes": 72,
+   "low": 50,
+   "high": 60
+  },
+  {
+   "name": "metal_bowed",
+   "notes": 24,
+   "low": 62,
+   "high": 74
+  }
+ ]
+}

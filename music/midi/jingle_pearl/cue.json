@@ -1,0 +1,26 @@
+{
+ "cue": "jingle_pearl",
+ "qbpm": 96.0,
+ "bar_q": 4,
+ "bars": 1,
+ "intro_q": 0,
+ "end_q": 4,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 2.5,
+ "loop": false,
+ "parts": [
+  {
+   "name": "celesta",
+   "notes": 9,
+   "low": 74,
+   "high": 93
+  },
+  {
+   "name": "choir_ah",
+   "notes": 3,
+   "low": 62,
+   "high": 69
+  }
+ ]
+}

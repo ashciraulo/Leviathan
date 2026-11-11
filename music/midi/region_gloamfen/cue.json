@@ -1,0 +1,38 @@
+{
+ "cue": "region_gloamfen",
+ "qbpm": 72.0,
+ "bar_q": 3,
+ "bars": 40,
+ "intro_q": 0,
+ "end_q": 120,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 100.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "celesta",
+   "notes": 32,
+   "low": 77,
+   "high": 92
+  },
+  {
+   "name": "vibes_bowed",
+   "notes": 40,
+   "low": 58,
+   "high": 69
+  },
+  {
+   "name": "bass_fretless",
+   "notes": 18,
+   "low": 34,
+   "high": 42
+  },
+  {
+   "name": "choir_soft",
+   "notes": 60,
+   "low": 53,
+   "high": 63
+  }
+ ]
+}

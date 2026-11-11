@@ -1,0 +1,44 @@
+{
+ "cue": "dungeon_kiln",
+ "qbpm": 132.0,
+ "bar_q": 4,
+ "bars": 64,
+ "intro_q": 0,
+ "end_q": 256,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 116.36363636363636,
+ "loop": true,
+ "parts": [
+  {
+   "name": "perc_anvil",
+   "notes": 184,
+   "low": 76,
+   "high": 76
+  },
+  {
+   "name": "drum_taiko",
+   "notes": 120,
+   "low": 36,
+   "high": 36
+  },
+  {
+   "name": "bass_synth",
+   "notes": 456,
+   "low": 28,
+   "high": 50
+  },
+  {
+   "name": "horns_brass",
+   "notes": 52,
+   "low": 65,
+   "high": 76
+  },
+  {
+   "name": "organ_dark",
+   "notes": 147,
+   "low": 52,
+   "high": 64
+  }
+ ]
+}

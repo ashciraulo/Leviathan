@@ -1,0 +1,80 @@
+{
+ "cue": "boss_heart",
+ "qbpm": 144.0,
+ "bar_q": 4,
+ "bars": 48,
+ "intro_q": 8,
+ "end_q": 192,
+ "ppq": 96,
+ "intro_s": 3.3333333333333335,
+ "loop_end_s": 80.0,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_full",
+   "notes": 368,
+   "low": 50,
+   "high": 72
+  },
+  {
+   "name": "choir",
+   "notes": 138,
+   "low": 55,
+   "high": 65
+  },
+  {
+   "name": "brass",
+   "notes": 46,
+   "low": 69,
+   "high": 86
+  },
+  {
+   "name": "timpani",
+   "notes": 98,
+   "low": 38,
+   "high": 52
+  },
+  {
+   "name": "bell_point",
+   "notes": 4,
+   "low": 77,
+   "high": 81
+  },
+  {
+   "name": "bell_ember",
+   "notes": 4,
+   "low": 79,
+   "high": 86
+  },
+  {
+   "name": "bell_moth",
+   "notes": 5,
+   "low": 77,
+   "high": 84
+  },
+  {
+   "name": "bell_gale",
+   "notes": 4,
+   "low": 74,
+   "high": 81
+  },
+  {
+   "name": "bell_rime",
+   "notes": 4,
+   "low": 74,
+   "high": 86
+  },
+  {
+   "name": "bell_verge",
+   "notes": 5,
+   "low": 77,
+   "high": 84
+  },
+  {
+   "name": "bell_marrow",
+   "notes": 4,
+   "low": 74,
+   "high": 81
+  }
+ ]
+}

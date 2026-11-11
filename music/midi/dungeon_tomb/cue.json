@@ -1,0 +1,38 @@
+{
+ "cue": "dungeon_tomb",
+ "qbpm": 90.0,
+ "bar_q": 4,
+ "bars": 40,
+ "intro_q": 0,
+ "end_q": 160,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 106.66666666666667,
+ "loop": true,
+ "parts": [
+  {
+   "name": "marimba_bone",
+   "notes": 62,
+   "low": 63,
+   "high": 76
+  },
+  {
+   "name": "drone_low",
+   "notes": 20,
+   "low": 32,
+   "high": 40
+  },
+  {
+   "name": "drum_frame",
+   "notes": 59,
+   "low": 41,
+   "high": 41
+  },
+  {
+   "name": "choir_dark",
+   "notes": 72,
+   "low": 51,
+   "high": 61
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "cue": "dungeon_glacier",
+ "qbpm": 70.0,
+ "bar_q": 4,
+ "bars": 40,
+ "intro_q": 0,
+ "end_q": 160,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 137.14285714285714,
+ "loop": true,
+ "parts": [
+  {
+   "name": "bell_fm",
+   "notes": 62,
+   "low": 72,
+   "high": 89
+  },
+  {
+   "name": "glass_bowed",
+   "notes": 80,
+   "low": 56,
+   "high": 64
+  },
+  {
+   "name": "sub_drone",
+   "notes": 10,
+   "low": 29,
+   "high": 37
+  },
+  {
+   "name": "perc_tick",
+   "notes": 144,
+   "low": 75,
+   "high": 75
+  }
+ ]
+}

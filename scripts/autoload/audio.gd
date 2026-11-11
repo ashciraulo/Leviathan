@@ -36,7 +36,7 @@ const MUSIC_CUES := [
 	"dungeon_glacier", "dungeon_belfry", "dungeon_tomb", "dungeon_maw",
 	"boss", "miniboss", "boss_vael", "boss_heart",
 	"place_village", "place_shop", "place_house", "place_cave", "place_spring", "place_choir",
-	"story_danger", "story_sorrow", "story_choir", "story_flight",
+	"story_danger", "story_sorrow", "story_choir", "story_flight", "story_memory",
 ]
 ## Music cues that play once (the lullaby phrases); every other cue loops.
 const ONE_SHOT_MUSIC := ["lullaby", "bell_1", "bell_2", "bell_3", "bell_4", "bell_5", "bell_6", "bell_7"]

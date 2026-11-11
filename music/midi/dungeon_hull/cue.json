@@ -1,0 +1,56 @@
+{
+ "cue": "dungeon_hull",
+ "qbpm": 78.0,
+ "bar_q": 3,
+ "bars": 48,
+ "intro_q": 0,
+ "end_q": 144,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 110.76923076923077,
+ "loop": true,
+ "parts": [
+  {
+   "name": "cello",
+   "notes": 50,
+   "low": 48,
+   "high": 69
+  },
+  {
+   "name": "bassclarinet",
+   "notes": 24,
+   "low": 50,
+   "high": 65
+  },
+  {
+   "name": "strings_low",
+   "notes": 240,
+   "low": 41,
+   "high": 52
+  },
+  {
+   "name": "harp",
+   "notes": 13,
+   "low": 74,
+   "high": 86
+  },
+  {
+   "name": "perc_woodblock",
+   "notes": 64,
+   "low": 76,
+   "high": 76
+  },
+  {
+   "name": "drum_deep",
+   "notes": 68,
+   "low": 36,
+   "high": 36
+  },
+  {
+   "name": "bass_arco",
+   "notes": 46,
+   "low": 31,
+   "high": 43
+  }
+ ]
+}

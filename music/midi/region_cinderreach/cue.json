@@ -1,0 +1,50 @@
+{
+ "cue": "region_cinderreach",
+ "qbpm": 116.0,
+ "bar_q": 4,
+ "bars": 48,
+ "intro_q": 8,
+ "end_q": 192,
+ "ppq": 96,
+ "intro_s": 4.137931034482759,
+ "loop_end_s": 99.3103448275862,
+ "loop": true,
+ "parts": [
+  {
+   "name": "strings_ostinato",
+   "notes": 336,
+   "low": 37,
+   "high": 59
+  },
+  {
+   "name": "drum_frame",
+   "notes": 206,
+   "low": 41,
+   "high": 45
+  },
+  {
+   "name": "brass_low",
+   "notes": 11,
+   "low": 42,
+   "high": 49
+  },
+  {
+   "name": "perc_anvil",
+   "notes": 40,
+   "low": 84,
+   "high": 84
+  },
+  {
+   "name": "pad_dark",
+   "notes": 78,
+   "low": 49,
+   "high": 59
+  },
+  {
+   "name": "reed_low",
+   "notes": 19,
+   "low": 61,
+   "high": 71
+  }
+ ]
+}

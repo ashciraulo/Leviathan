@@ -1,0 +1,38 @@
+{
+ "cue": "region_maw",
+ "qbpm": 58.0,
+ "bar_q": 3,
+ "bars": 32,
+ "intro_q": 0,
+ "end_q": 96,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 99.3103448275862,
+ "loop": true,
+ "parts": [
+  {
+   "name": "brass_low",
+   "notes": 30,
+   "low": 43,
+   "high": 55
+  },
+  {
+   "name": "strings_low",
+   "notes": 48,
+   "low": 43,
+   "high": 54
+  },
+  {
+   "name": "choir",
+   "notes": 24,
+   "low": 58,
+   "high": 69
+  },
+  {
+   "name": "sub_breath",
+   "notes": 8,
+   "low": 31,
+   "high": 39
+  }
+ ]
+}

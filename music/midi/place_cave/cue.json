@@ -1,0 +1,32 @@
+{
+ "cue": "place_cave",
+ "qbpm": 62.0,
+ "bar_q": 4,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 96,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 92.90322580645162,
+ "loop": true,
+ "parts": [
+  {
+   "name": "harp_harmonics",
+   "notes": 16,
+   "low": 84,
+   "high": 91
+  },
+  {
+   "name": "drone",
+   "notes": 14,
+   "low": 45,
+   "high": 57
+  },
+  {
+   "name": "pluck_drip",
+   "notes": 16,
+   "low": 72,
+   "high": 79
+  }
+ ]
+}

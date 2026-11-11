@@ -1,0 +1,38 @@
+{
+ "cue": "region_ossuary",
+ "qbpm": 78.0,
+ "bar_q": 4,
+ "bars": 40,
+ "intro_q": 8,
+ "end_q": 160,
+ "ppq": 96,
+ "intro_s": 6.153846153846154,
+ "loop_end_s": 123.07692307692308,
+ "loop": true,
+ "parts": [
+  {
+   "name": "reed_duduk",
+   "notes": 42,
+   "low": 58,
+   "high": 68
+  },
+  {
+   "name": "drum_hand",
+   "notes": 166,
+   "low": 41,
+   "high": 52
+  },
+  {
+   "name": "drone",
+   "notes": 40,
+   "low": 36,
+   "high": 43
+  },
+  {
+   "name": "marimba_bone",
+   "notes": 47,
+   "low": 48,
+   "high": 79
+  }
+ ]
+}

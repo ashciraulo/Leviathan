@@ -1,0 +1,32 @@
+{
+ "cue": "jingle_clear",
+ "qbpm": 90.0,
+ "bar_q": 4,
+ "bars": 2,
+ "intro_q": 0,
+ "end_q": 8,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 5.333333333333333,
+ "loop": false,
+ "parts": [
+  {
+   "name": "horns_brass",
+   "notes": 7,
+   "low": 62,
+   "high": 74
+  },
+  {
+   "name": "timpani",
+   "notes": 3,
+   "low": 38,
+   "high": 38
+  },
+  {
+   "name": "bell_marrow",
+   "notes": 1,
+   "low": 86,
+   "high": 86
+  }
+ ]
+}

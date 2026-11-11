@@ -1,0 +1,56 @@
+{
+ "cue": "credits",
+ "qbpm": 84.0,
+ "bar_q": 3,
+ "bars": 96,
+ "intro_q": 0,
+ "end_q": 288,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 205.71428571428572,
+ "loop": false,
+ "parts": [
+  {
+   "name": "flute",
+   "notes": 130,
+   "low": 62,
+   "high": 83
+  },
+  {
+   "name": "harp",
+   "notes": 168,
+   "low": 50,
+   "high": 59
+  },
+  {
+   "name": "strings",
+   "notes": 216,
+   "low": 50,
+   "high": 61
+  },
+  {
+   "name": "choir",
+   "notes": 96,
+   "low": 55,
+   "high": 66
+  },
+  {
+   "name": "bell_point",
+   "notes": 30,
+   "low": 74,
+   "high": 86
+  },
+  {
+   "name": "bass_arco",
+   "notes": 88,
+   "low": 38,
+   "high": 47
+  },
+  {
+   "name": "cello",
+   "notes": 14,
+   "low": 66,
+   "high": 74
+  }
+ ]
+}

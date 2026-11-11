@@ -1,0 +1,26 @@
+{
+ "cue": "place_choir",
+ "qbpm": 63.0,
+ "bar_q": 3,
+ "bars": 24,
+ "intro_q": 0,
+ "end_q": 72,
+ "ppq": 96,
+ "intro_s": 0.0,
+ "loop_end_s": 68.57142857142857,
+ "loop": true,
+ "parts": [
+  {
+   "name": "choir",
+   "notes": 82,
+   "low": 59,
+   "high": 80
+  },
+  {
+   "name": "organ_pedal",
+   "notes": 12,
+   "low": 25,
+   "high": 35
+  }
+ ]
+}

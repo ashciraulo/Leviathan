@@ -63,5 +63,6 @@ Cues the game asks for:
 - `story_sorrow.ogg`
 - `story_choir.ogg`
 - `story_flight.ogg`
+- `story_memory.ogg` (memories and visions; ambient)
 
 Jingles (no loop) go in `audio/sfx/` with the `jingle_` names below; they dip the music while they play.
