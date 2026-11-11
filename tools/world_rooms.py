@@ -105,6 +105,8 @@ SECRETS = {
     (8, 3): ("kite_cloak", "frostfang_bow"),  # Saltgrave Brink: glints on a bitter-sea islet
     # Puzzle caves: one short trial room per region.
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
+    (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
+    (11, 0): ("tidebell_tomb",),               # Drybone Crypt: the way on is a hidden bone wall in the hall
     (-1, -3): ("frostfang_bow",),             # Rimelight Hollow: three ice eyes round a slick floor
 }
 # Side areas' ways in: Rime Hollow under Frostspine's sea (1,-2) (freeze or
@@ -135,7 +137,7 @@ BLOCKERS = set("TCOKXEh123456k")
 
 
 def stops_flight(tile):
-    return tile == "#" or tile in PROPS or tile in BLOCKERS or tile in "Y%"
+    return tile == "#" or tile in PROPS or tile in BLOCKERS or tile in "Y%$"
 
 
 def load_rooms():
@@ -202,7 +204,7 @@ def walkable(tile, items):
         return "stonebreaker" in items
     if tile == ";":
         return "old_one_turned" in items
-    if tile == "%":
+    if tile in "%$":
         # A bone barricade: the Echo Horn, found in the Marrow Tomb, brings it down.
         return "tidebell_tomb" in items
     if tile in "^_":

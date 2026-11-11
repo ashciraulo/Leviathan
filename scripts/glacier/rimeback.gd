@@ -423,3 +423,8 @@ func _draw_cracks() -> void:
 		_cracks.draw_line(center, mid, crack, 1.0)
 		_cracks.draw_line(mid, mid + bend * 16.0 * k, crack, 1.0)
 	_cracks.draw_arc(center, 30.0 * k, 0.0, TAU, 24, Color(crack, 0.4 * k), 1.0)
+
+
+## No puffs while it sinks or surfaces: only when it is up out of the ice.
+func _shows_wear() -> bool:
+	return mode in [Mode.UP, Mode.SPIT, Mode.DAZED]

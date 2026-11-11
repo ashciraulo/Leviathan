@@ -591,7 +591,9 @@ func _test_villagers() -> void:
 		var row := csv.get_csv_line()
 		if row.size() < 2 or row[0] == "" or _menu_text(row[0]):
 			continue
-		if fit_box.lines_for(row[0], false) > DialogueBox.MAX_LINES:
+		# Key names filled in: "{key}" as both default item keys (a longer
+		# remapped name may run over onto another page, which the box allows).
+		if fit_box.lines_for(MenuKit.fill_keys(tr(row[0])), false) > DialogueBox.MAX_LINES:
 			too_long.append(row[0])
 	_check(too_long.is_empty(), "every line the box can show fits it (too long: %s)" % ", ".join(too_long))
 	# Large text: the same box, one big line per page, long pages split.
@@ -1162,6 +1164,16 @@ func _test_play() -> void:
 	room.add_child(stand_in)
 	stand_in.add_to_group("boss")
 	await _wait(0.1)
+	# Stars circle a boss's head only while the sword can hurt it.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var stars := stand_in.get_node_or_null("DazeStars")
+	_check(stars != null and stars.visible, "stars circle a boss open to the sword")
+	stand_in._sprite.visible = false
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(stars != null and not stars.visible, "but not while the boss is out of sight")
+	stand_in._sprite.visible = true
 	# Worn down to half, a boss gives off puffs of strain.
 	stand_in.max_hp = 4
 	stand_in.hp = 4
@@ -1173,6 +1185,9 @@ func _test_play() -> void:
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.WEAR), "and the puffs keep coming")
 	stand_in.hp = 1
 	stand_in.take_hit(1, Vector2.RIGHT)
+	# Time is held now, so tick it by hand: the fallen boss loses its stars.
+	stand_in._physics_process(0.0)
+	_check(stars != null and not stars.visible, "a fallen boss has no stars")
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FINAL) and Engine.time_scale == 0.0, "a boss's last blow throws the great star and holds time")
 	await get_tree().create_timer(0.35, true, false, true).timeout
 	_check(is_equal_approx(Engine.time_scale, Feel.SLOW_SCALE), "then time runs slow a moment (%s)" % Engine.time_scale)
@@ -3886,6 +3901,28 @@ func _test_kiln_dungeon() -> void:
 
 ## The item model: giving, slots, equipment, jars, pearls, saving.
 func _test_items() -> void:
+	# Finding a tool names the key it's on, as bound now (remaps included).
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	var talk := Chest.item_talk("tide_hook")
+	_check(talk.size() == 2 and talk[0] == "GOT_TIDE_HOOK_1" and MenuKit.key_name("item_1") in talk[1] and not "{" in talk[1],
+		"the Tide Hook's words name its item key (%s)" % talk[1])
+	GameState.assign_slot(1, "tide_hook")
+	var bound := InputMap.action_get_events("item_2")
+	InputMap.action_erase_events("item_2")
+	var remapped := InputEventKey.new()
+	remapped.physical_keycode = KEY_P
+	InputMap.action_add_event("item_2", remapped)
+	talk = Chest.item_talk("tide_hook")
+	_check(talk[1].begins_with("Press P "), "a remapped item key is the one named (%s)" % talk[1])
+	InputMap.action_erase_events("item_2")
+	for event in bound:
+		InputMap.action_add_event("item_2", event)
+	GameState.give_item("divers_helm", 1, false)
+	GameState.assign_slot(0, "")
+	talk = Chest.item_talk("divers_helm")
+	_check(MenuKit.key_name("attack") in talk[1] and (tr("ITEM_KEYS_EITHER") % [MenuKit.key_name("item_1"), MenuKit.key_name("item_2")]) in talk[1],
+		"a tool on neither key names both, and the attack key too (%s)" % talk[1])
 	GameState.reset_new_game()
 	_check(GameState.has_item("driftwood_sword") and GameState.equipped_item(Items.SWORD) == "driftwood_sword",
 		"a new file starts with the driftwood sword equipped")
@@ -7618,5 +7655,63 @@ func _test_puzzle_caves() -> void:
 		eye.arrow_hit(Vector2.UP)
 	await _wait(0.4)
 	_check(bars[0].is_open, "all three eyes open the cache")
+	game.queue_free()
+	await _wait(0.1)
+	# Emberwell Vault, east of Scorched Pass: two braziers on lava islets.
+	# The hook crosses to the first; a cracked boulder sits in the line to
+	# the second until the Stonebreaker clears it.
+	var pass_rows := Room.parse_layout(((load("res://rooms/room_9_-1.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(pass_rows[5][23] == "." and pass_rows[6][23] == ".", "Scorched Pass opens east to Emberwell Vault")
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook", 1, false)
+	GameState.set_checkpoint(Vector2i(10, -1), Vector2(2 * Room.TILE + 8, 5 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var vault: Room = game.current_room
+	var braziers := _child_of(vault, Brazier)
+	bars = _child_of(vault, Bars)
+	_check(vault.cave and vault.gate == "braziers" and braziers.size() == 2 and bars.size() == 1 and not bars[0].is_open and vault.tile_at(13, 4) == "Y", "Emberwell Vault: two braziers over lava, and a boulder in the way")
+	for throw: Array in [[Vector2i(5, 5), Vector2.RIGHT, Vector2i(10, 5)], [Vector2i(12, 4), Vector2.RIGHT, Vector2i(12, 4)]]:
+		player.global_position = _tile_pos(vault, throw[0])
+		player.facing = throw[1]
+		await _wait(0.1)
+		player.use_item("tide_hook")
+		await _wait(1.5)
+		var at := player.global_position - vault.global_position
+		var want: Vector2i = throw[2]
+		_check(int(at.x) / Room.TILE == want.x and int(at.y - 3) / Room.TILE == want.y and game.current_room == vault,
+			"Emberwell: hooking from %s ends at %s (at %s)" % [throw[0], want, at])
+	for brazier in braziers:
+		brazier.light(true)
+	await _wait(0.4)
+	_check(bars[0].is_open, "both braziers lit open the vault's cache")
+	game.queue_free()
+	await _wait(0.1)
+	# Drybone Crypt, east of Whalefall Steps: a closed hall whose way on is a
+	# bone wall that looks like any other (bar a crack and a breath of dust)
+	# until the Echo Horn finds it.
+	var steps_rows := Room.parse_layout(((load("res://rooms/room_10_0.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(steps_rows[6][23] == "." and steps_rows[7][23] == ".", "Whalefall Steps opens east to Drybone Crypt")
+	GameState.reset_new_game()
+	GameState.give_item("echo_horn", 1, false)
+	GameState.set_checkpoint(Vector2i(11, 0), Vector2(3 * Room.TILE + 8, 6 * Room.TILE + 12))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	player = game.player
+	player._invuln = 60.0
+	var crypt: Room = game.current_room
+	for foe in _child_of(crypt, Enemy):
+		foe.free()
+	_check(crypt.cave and _child_of(crypt, BoneWall).size() == 1 and crypt.tile_at(7, 4) == "#" and _child_of(crypt, SinkField).size() == 1, "Drybone Crypt: a closed hall with one hidden bone wall")
+	player.global_position = _tile_pos(crypt, Vector2i(7, 6))
+	player.facing = Vector2.UP
+	await _wait(0.3)
+	player.use_item("echo_horn")
+	await _wait(0.8)
+	_check(crypt.tile_at(7, 4) == "." and _child_of(crypt, BoneWall).is_empty(), "the horn opens the hidden way north")
 	game.queue_free()
 	await _wait(0.1)

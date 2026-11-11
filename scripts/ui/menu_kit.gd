@@ -202,6 +202,23 @@ static func key_name(action: String) -> String:
 	return pad_name(action) if Settings.using_pad else keyboard_name(action)
 
 
+## Fills a line's control names in from the bindings in use now (remaps and
+## pad included): "{attack}" and any other action in Settings.REMAPPABLE
+## becomes what to press for it, and "{key}" the item key the tool `item` is
+## on (both item keys when it's on neither). Translators keep the braces.
+static func fill_keys(text: String, item := "") -> String:
+	if not "{" in text:
+		return text
+	if "{key}" in text:
+		var slot := GameState.item_slots.find(item) if item != "" else -1
+		var key := key_name("item_%d" % (slot + 1)) if slot >= 0 \
+			else TranslationServer.translate("ITEM_KEYS_EITHER") % [key_name("item_1"), key_name("item_2")]
+		text = text.replace("{key}", key)
+	for action: String in Settings.REMAPPABLE:
+		text = text.replace("{%s}" % action, key_name(action))
+	return text
+
+
 ## The first keyboard key bound to an action.
 static func keyboard_name(action: String) -> String:
 	for event in InputMap.action_get_events(action):
