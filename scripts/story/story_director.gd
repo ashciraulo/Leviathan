@@ -153,7 +153,8 @@ const SIGNAL_STONES := {
 }
 ## Small things for villagers' errands ({id: [room, tile]}, QuestFind):
 ## Corrin's grandad's bottles, Pell's lucky shell, Dunstan's driftwood,
-## the Choir's chimes for Bram and the nameboard off Ide's boat.
+## the Choir's chimes for Bram, deep-bed pearls for Marlo and the nameboard
+## off Ide's boat.
 const FINDS := {
 	"bottle_shore": [Vector2i(0, 0), Vector2i(20, 2)],
 	"bottle_pools": [Vector2i(1, 0), Vector2i(10, 8)],
@@ -164,6 +165,11 @@ const FINDS := {
 	"chime_pass": [Vector2i(9, -1), Vector2i(7, 2)],
 	"chime_fen": [Vector2i(5, 2), Vector2i(3, 7)],
 	"chime_wood": [Vector2i(3, -1), Vector2i(18, 2)],
+	# Marlo's errand: oysters on shoals out in deep water, past where anyone
+	# can hold a breath (only the Diver's Helm reaches them).
+	"pearl_tangle": [Vector2i(6, 0), Vector2i(20, 8)],
+	"pearl_verge": [Vector2i(1, 5), Vector2i(20, 5)],
+	"pearl_deep": [Vector2i(6, -5), Vector2i(10, 8)],
 	# Ide's errand: her boat's nameboard, torn off by the bad water and
 	# carried right round to the far side of the dunes.
 	"nameboard": [Vector2i(7, 0), Vector2i(20, 6)],
