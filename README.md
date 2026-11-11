@@ -173,6 +173,15 @@ flashes, Hum on toggle, large instant text, slow text with captions, high
 contrast and each colour filter), walks every pause menu page, takes a hit
 and hums it back, reads a conversation and checks the captions.
 
+After the ending the playthrough also talks to, reads and opens everything in
+every overworld room (`_interact_all`): each must end its conversation or
+scene, leave nothing paused and let Wren move again. A third CI job runs the
+same sweep on a new file and again after four dungeons:
+
+```
+godot --headless --path . res://tests/sweep.tscn
+```
+
 `tools/check_flags.py` (part of `tools/check.sh`) fails if a story flag is
 checked anywhere but never set, which is usually a typo.
 

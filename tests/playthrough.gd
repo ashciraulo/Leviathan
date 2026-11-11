@@ -229,7 +229,7 @@ func _sweep_overworld() -> void:
 ## the game playable: no conversation, scene, shop or pause left hanging
 ## and Wren free to move. Anything that carries Wren off (a boat, the
 ## ferry) is followed back.
-func _interact_all(coord: Vector2i) -> void:
+func _interact_all(coord: Vector2i, stage := "after the ending") -> void:
 	var count := _interactables().size()
 	for i in count:
 		if _game.current_room == null or _game.current_room.coord != coord:
@@ -239,7 +239,7 @@ func _interact_all(coord: Vector2i) -> void:
 		if i >= things.size() or things[i].get("opened") == true:
 			continue
 		var thing: Node2D = things[i]
-		var what := "after the ending: %s in %s" % [thing.name, coord]
+		var what := "%s: %s in %s" % [stage, thing.name, coord]
 		_game.player.global_position = thing.global_position + Vector2(0, 14)
 		_game.player.facing = Vector2.UP
 		# Let Wren's body land first: a Tidestone wakes at a touch, and only
@@ -254,7 +254,9 @@ func _interact_all(coord: Vector2i) -> void:
 			_read_dialogue()
 			for shop in get_tree().get_nodes_in_group("shop_menu"):
 				shop.close()
-			if waited >= 0.15 and not DialogueBox.is_open and not Cutscene.active and not _game.busy \
+			# A chest tells of some items 0.6 s after it opens (Chest).
+			var settle := 0.8 if thing is Chest else 0.15
+			if waited >= settle and not DialogueBox.is_open and not Cutscene.active and not _game.busy \
 					and get_tree().get_nodes_in_group("shop_menu").is_empty():
 				break
 		_check(not DialogueBox.is_open, "%s: the conversation ends" % what)

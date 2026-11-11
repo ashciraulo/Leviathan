@@ -175,3 +175,59 @@ jobs:
             exit 1
           fi
           grep -q "WALKER PASSED" walk.log || { echo "::error::Dungeon walk did not pass (exit $status)"; exit 1; }
+
+  sweep:
+    # Talks to, reads and opens everything in every overworld room on a new
+    # file and again after four dungeons (tests/sweep.gd; the playthrough
+    # does it after the ending). Runs beside the others: no added time.
+    name: Overworld sweep
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GODOT_VERSION: 4.7.2
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
+
+      - name: Import project
+        id: import
+        run: |
+          timeout 300 "$RUNNER_TEMP/godot" --headless --path . --import 2>&1 | tee import.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" import.log; then
+            echo "::error::Script errors during import"
+            exit 1
+          fi
+
+      - name: Sweep
+        run: |
+          set +e
+          # About 8 minutes.
+          timeout 1200 "$RUNNER_TEMP/godot" --headless --path . res://tests/sweep.tscn 2>&1 | tee sweep.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" sweep.log; then
+            echo "::error::Script errors during the sweep"
+            exit 1
+          fi
+          grep -q "SWEEP PASSED" sweep.log || { echo "::error::Sweep did not pass (exit $status)"; exit 1; }
