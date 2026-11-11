@@ -316,18 +316,27 @@ const TALKS := {
 		{"set": ["bram_met"], "lines": ["BRAM_1", "BRAM_1B", "BRAM_2"]},
 	],
 	"sela": [
+		# Home at the mills, with the baby brother she'd never held.
+		{"if": ["settled_sela"], "unless": ["sela_mills_told"], "set": ["sela_mills_told"], "lines": ["SELA_MILLS_1", "SELA_MILLS_2"]},
+		{"if": ["settled_sela"], "lines": ["SELA_MILLS_AGAIN"]},
 		{"if": ["sela_home"], "lines": ["SELA_BYE"]},
 		{"if": ["ottilie_sela"], "set": ["sela_home"], "lines": [["", "NARRATE_WREN_ROCKS_BABY"], "SELA_HOME_1", "SELA_HOME_2"]},
 		{"if": ["sela_met"], "lines": ["SELA_WAITING"]},
 		{"set": ["sela_met"], "lines": ["SELA_1", "SELA_1B", "SELA_2"]},
 	],
 	"pim": [
+		# Home, and counting Wick's lanterns with him.
+		{"if": ["settled_pim"], "unless": ["pim_fen_told"], "set": ["pim_fen_told"], "lines": ["PIM_FEN_1", "PIM_FEN_2"]},
+		{"if": ["settled_pim"], "lines": ["PIM_FEN_AGAIN"]},
 		{"if": ["pim_home"], "lines": ["PIM_BYE"]},
 		{"if": ["pim_met"], "has": ["glowmoth_lantern"], "set": ["pim_home"], "lines": [["", "NARRATE_WREN_RAISES_LANTERN"], "PIM_HOME_1", "PIM_HOME_2"]},
 		{"if": ["pim_met"], "lines": ["PIM_WAITING"]},
 		{"set": ["pim_met"], "lines": ["PIM_1", "PIM_1B", "PIM_2"]},
 	],
 	"ansel": [
+		# Home at the Gullwatch post, sorting again.
+		{"if": ["settled_ansel"], "unless": ["ansel_post_told"], "set": ["ansel_post_told"], "lines": ["ANSEL_POST_1", "ANSEL_POST_2"]},
+		{"if": ["settled_ansel"], "lines": ["ANSEL_POST_AGAIN"]},
 		{"if": ["ansel_home"], "lines": ["ANSEL_BYE"]},
 		{"if": ["sorrel_ansel"], "set": ["ansel_home"], "lines": [["", "NARRATE_WREN_KITE"], "ANSEL_HOME_1", "ANSEL_HOME_2"]},
 		{"if": ["ansel_met"], "lines": ["ANSEL_WAITING"]},

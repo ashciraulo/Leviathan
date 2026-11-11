@@ -122,6 +122,15 @@ const SINGERS := {
 	"pim": [Vector2i(3, 2), Vector2i(19, 2)],
 	"ansel": [Vector2i(3, -4), Vector2i(21, 5)],
 }
+## Where the other three turn up once they're home (a room reload later):
+## Pim counting Wick's lanterns at Fenmouth, Sela at the mills with the new
+## baby, Ansel sorting post beside Sorrel. Placing one sets settled_<kind>,
+## so their talk moves on from the goodbye.
+const SINGER_HOMES := {
+	"pim": [Vector2i(4, 1), Vector2i(21, 5)],
+	"sela": [Vector2i(4, -3), Vector2i(13, 2)],
+	"ansel": [Vector2i(3, -3), Vector2i(19, 2)],
+}
 const KILN_MOUTH := Vector2i(10, -2)
 const BRAM_FORGE_AT := Vector2(16 * 16 + 8, 5 * 16 + 10)
 ## The Edge Survey: Ferrin camps on Edgewatch Bluff, past the far north of
@@ -1288,6 +1297,15 @@ func _put_singers(coord: Vector2i) -> void:
 			_put_npc(kind, Vector2(spot[1]) * 16.0 + Vector2(8, 10))
 	if coord == KILN_MOUTH and GameState.has_flag("bram_home"):
 		_put_npc("bram", BRAM_FORGE_AT)
+	for kind: String in SINGER_HOMES:
+		var home: Array = SINGER_HOMES[kind]
+		if home[0] == coord and GameState.has_flag(kind + "_home"):
+			_settle_singer(kind, Vector2(home[1]) * 16.0 + Vector2(8, 10))
+
+
+func _settle_singer(kind: String, at: Vector2) -> void:
+	GameState.set_flag("settled_" + kind)
+	_put_npc(kind, at)
 
 
 static func _gully_on_the_shelf() -> bool:

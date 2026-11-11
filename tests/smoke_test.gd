@@ -107,6 +107,7 @@ func _ready() -> void:
 		await _test_lighting_day()
 		await _test_small_finds()
 		_test_jam_trade()
+		await _test_singers_at_home()
 		await _test_grotto_marks()
 		_test_challenge_talk()
 		await _test_ebb_shelf()
@@ -7744,6 +7745,33 @@ func _test_small_finds() -> void:
 	for who in ["corrin", "dunstan", "bram", "ide", "marlo"]:
 		Conversations.talk(who)
 	_check(GameState.has_flag("corrin_bottles_done") and GameState.has_flag("dunstan_boat_done") and GameState.has_flag("bram_pot_cast") and GameState.has_flag("ide_board_done") and GameState.has_flag("marlo_pearls_done"), "things found early are handed straight in")
+	GameState.reset_new_game()
+
+
+## The last singers, home: Pim at Fenmouth, Sela at the mills, Ansel at
+## the Gullwatch post, each with new lines once they're settled.
+func _test_singers_at_home() -> void:
+	for kind: String in StoryDirector.SINGER_HOMES:
+		GameState.reset_new_game()
+		var home: Array = StoryDirector.SINGER_HOMES[kind]
+		var tile: Vector2i = home[1]
+		var game: Node = await _stand_below(home[0], tile)
+		_check(_find_kind(game.current_room, kind) == null, "%s isn't home before going home" % kind)
+		game.queue_free()
+		await _wait(0.1)
+		for flag in [StoryDirector.ENDING_FLAG, kind + "_met", kind + "_home"]:
+			GameState.set_flag(flag)
+		_check(str(Conversations.branch_for(kind)["lines"][0]).ends_with("_BYE"), "%s says goodbye where Wren found them" % kind)
+		game = await _stand_below(home[0], tile)
+		var room: Room = game.current_room
+		_check(_find_kind(room, kind) != null and GameState.has_flag("settled_" + kind), "%s is home in %s" % [kind, home[0]])
+		_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "%s stands on open floor clear of the box" % kind)
+		_check(game.player.try_interact(), "Wren can talk to %s" % kind)
+		await _play_scene(game, 10.0)
+		_check(not DialogueBox.is_open and GameState.has_flag(kind + ("_fen_told" if kind == "pim" else "_mills_told" if kind == "sela" else "_post_told")), "%s has news" % kind)
+		_check(str(Conversations.branch_for(kind)["lines"][0]).ends_with("_AGAIN"), "and a line for every visit after")
+		game.queue_free()
+		await _wait(0.1)
 	GameState.reset_new_game()
 
 
