@@ -39,6 +39,8 @@ var dying := false
 var _stun := 0.0
 var _knockback := Vector2.ZERO
 var _flash := 0.0
+## Set once a death shudder has pulsed (see _shudder_flash).
+var _shudder_flashed := false
 var _hurtbox: Area2D
 var _contact: DamageArea
 var _sprite: Sprite2D
@@ -318,6 +320,14 @@ func _die() -> void:
 	tween.tween_callback(queue_free)
 
 
+## One white pulse of a beaten boss's death shudder. With flashes turned
+## off only the first pulse shows: the shudder keeps its shake, not a strobe.
+func _shudder_flash(time: float) -> void:
+	if Settings.flashes or not _shudder_flashed:
+		_flash = time
+	_shudder_flashed = true
+
+
 ## A beaten boss's last light lifting off it as it fades: two waves of
 ## pale specks across its body.
 func _dissolve() -> void:
@@ -344,9 +354,20 @@ func body_colour() -> Color:
 	var texture := _sprite.texture if _sprite else null
 	if texture == null:
 		return HitSpark.DUST
+	# Worked out ahead of time from the PNGs (tools/body_colours.py): reading a
+	# texture back from the GPU stalls the web build for a quarter second.
+	if BodyColours.COLOURS.has(texture.resource_path):
+		return Color.hex(BodyColours.COLOURS[texture.resource_path])
 	var key := texture.get_rid()
-	if _body_colours.has(key):
-		return _body_colours[key]
+	if not _body_colours.has(key):
+		_body_colours[key] = count_body_colour(texture)
+	return _body_colours[key]
+
+
+## Reads a sheet's pixels for its body colour: the most common colour,
+## clear pixels, outlines, eyes and glints aside (tools/body_colours.py
+## does the same from the PNG).
+static func count_body_colour(texture: Texture2D) -> Color:
 	var counts := {}
 	var image := texture.get_image()
 	if image:
@@ -364,7 +385,6 @@ func body_colour() -> Color:
 		if counts[c] > most:
 			most = counts[c]
 			best = c
-	_body_colours[key] = best
 	return best
 
 

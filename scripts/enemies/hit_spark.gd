@@ -103,12 +103,18 @@ func _draw_rise(t: float, dim: float) -> void:
 			continue
 		var x := (float((_seed + i * 37) % 100) / 100.0 - 0.5) * spread
 		var at := Vector2(x + sin(u * 6.0 + float(i)) * 3.0, -u * 46.0 - float(i % 4) * 4.0)
-		if (int(_time * 20.0) + i) % 5 == 0:
+		if _flickered_out(i):
 			continue
 		var a := minf(u / 0.15, 1.0) * (1.0 - u) * dim
 		var size := 2.0 if i % 2 == 0 else 1.0
 		draw_rect(Rect2(at.round(), Vector2(size, size)).grow(1.0), Color(HIT_EDGE, a * 0.5))
 		draw_rect(Rect2(at.round(), Vector2(size, size)), Color(HIT_CORE, a))
+
+
+## True while speck i of a boss's last light blinks out. The flicker is a
+## flash of its own, so with flashes off the light is steady.
+func _flickered_out(i: int) -> bool:
+	return Settings.flashes and (int(_time * 20.0) + i) % 5 == 0
 
 
 func _draw_hit(t: float, dim: float) -> void:

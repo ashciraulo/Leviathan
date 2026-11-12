@@ -282,7 +282,7 @@ func _die() -> void:
 		area.set_deferred("monitorable", false)
 	# The heart beats out, slower and slower, and the dreams drift free.
 	for i in 5:
-		_flash = 0.1
+		_shudder_flash(0.1)
 		Audio.play_sfx("heart_beat", global_position, 1.0 - i * 0.1)
 		Feel.shake(1.5)
 		await get_tree().create_timer(0.3 + i * 0.12).timeout

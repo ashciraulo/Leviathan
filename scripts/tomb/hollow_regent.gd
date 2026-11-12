@@ -241,7 +241,7 @@ func _die() -> void:
 	_sprite.frame = 3
 	Audio.play_sfx("regent_roar", global_position, 0.5)
 	for i in 5:
-		_flash = 0.1
+		_shudder_flash(0.1)
 		Feel.shake(2.0)
 		KilnDebris.burst(get_parent(), global_position + Vector2(randf_range(-16, 16), randf_range(-50, -10)), 5, TombSprites.BONE_SHARD)
 		await get_tree().create_timer(0.25).timeout
