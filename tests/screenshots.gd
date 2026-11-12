@@ -366,6 +366,7 @@ func _ready() -> void:
 				await _wait(0.2)
 				await _quest_story_shots()
 				await _fishing_shots()
+				await _echo_shot()
 				await _party_shot()
 			"far_story":
 				game.queue_free()
@@ -2297,6 +2298,29 @@ func _fishing_shots() -> void:
 			box.advance()
 			box.advance()
 		await _wait(0.1)
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Coralie's echo game: the glass singing a note onto its shell.
+func _echo_shot() -> void:
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "coralie_asked", "coralie_chime_done", EchoGame.ASK_FLAG]:
+		GameState.set_flag(flag)
+	GameState.flags["coralie_glass"] = 12
+	GameState.set_checkpoint(StoryDirector.SHORE, EchoGame.centre() + Vector2(0, 44))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(2.8)
+	var room: Room = game.current_room
+	var echo := room.get_children().filter(func(c: Node) -> bool: return c is EchoGame)[0] as EchoGame
+	game.player.facing = Vector2.UP
+	echo.start()
+	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME + 0.05)
+	await _capture("quest_21_echo_game")
 	game.queue_free()
 	await _wait(0.2)
 

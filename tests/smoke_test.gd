@@ -94,6 +94,7 @@ func _ready() -> void:
 		await _test_ottilie()
 		await _test_fishing_book()
 		await _test_coralie()
+		await _test_echo_game()
 		await _test_lowe_after()
 		await _test_murmur_and_dace()
 		_test_talk_order()
@@ -7304,6 +7305,78 @@ func _test_fishing_book() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4"), "after it, she'll collect on their old bet")
 
 
+## Coralie's echo game: once the chime's hung she shows Wren; striking the
+## chime sings a tune on four shells, and Wren hops it back. Each tune
+## landed adds a note; a wrong shell or walking off ends the round.
+func _test_echo_game() -> void:
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "coralie_asked", "coralie_chime_done"]:
+		GameState.set_flag(flag)
+	var first := func() -> String: return str(Conversations.branch_for("coralie").get("lines", [""])[0])
+	_check(first.call() == "CORALIE_ECHO_1", "with the chime hung, Coralie shows Wren her gran's game")
+	var talk_at := StoryDirector.CORALIE_AT + Vector2(0, -18)
+	GameState.set_checkpoint(StoryDirector.SHORE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	var echo := room.get_children().filter(func(c: Node) -> bool: return c is EchoGame)[0] as EchoGame
+	var chime := room.get_children().filter(func(c: Node) -> bool: return c is GlassChime)[0] as GlassChime
+	for tile: Vector2i in EchoGame.SHELLS:
+		_check(room.tile_at(tile.x, tile.y) == ".", "shell %s on open sand" % tile)
+	chime.interact()
+	_check(echo.state == EchoGame.State.IDLE, "the chime's just a chime before she asks")
+	Conversations.talk("coralie")
+	await _play_scene(game, 10.0)
+	_check(EchoGame.open() and first.call() == "CORALIE_AFTER", "she's asked, and back to her usual")
+	var at_shells := room.global_position + EchoGame.centre() + Vector2(0, 30)
+	game.player.global_position = at_shells
+	await _wait(0.1)
+	chime.interact()
+	_check(echo.state == EchoGame.State.SHOW and echo.tune.size() == EchoGame.START_LENGTH, "striking the chime sings three notes")
+	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME * EchoGame.START_LENGTH + 0.2)
+	_check(echo.state == EchoGame.State.LISTEN, "then it's Wren's turn")
+	# A wrong shell ends it.
+	echo.hop((echo.tune[0] + 1) % EchoGame.SHELLS.size())
+	_check(echo.state == EchoGame.State.IDLE, "a wrong shell ends the round")
+	# Hopping by walking: stand on each shell in turn.
+	chime.interact()
+	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME * EchoGame.START_LENGTH + 0.2)
+	for i: int in echo.tune.duplicate():
+		game.player.global_position = room.global_position + EchoGame.shell_at(i)
+		await _wait(0.1)
+		game.player.global_position = at_shells
+		await _wait(0.1)
+	_check(EchoGame.best() == EchoGame.START_LENGTH and echo.tune.size() == EchoGame.START_LENGTH + 1 and echo.state == EchoGame.State.SHOW, "walking the shells in order lands it, and the next tune is a note longer")
+	# Landing tunes up to twelve, by hops.
+	while echo.tune.size() <= 12:
+		echo.state = EchoGame.State.LISTEN
+		echo.at = 0
+		for i: int in echo.tune.duplicate():
+			echo.hop(i)
+		if echo.tune.size() == 6:
+			_check(GameState.has_flag("echo_5") and not GameState.has_flag("echo_8"), "five notes")
+	_check(GameState.has_flag("echo_8") and GameState.has_flag("echo_12") and EchoGame.best() == 12, "eight and twelve")
+	# Walking off ends a round.
+	game.player.global_position = room.global_position + EchoGame.centre() + Vector2(-EchoGame.LEAVE - 20, 0)
+	await _wait(0.1)
+	_check(echo.state == EchoGame.State.IDLE, "walking off ends the round")
+	game.queue_free()
+	await _wait(0.1)
+	var glints := GameState.item_count("glint")
+	for e: Array in [["CORALIE_ECHO_5_1", 50], ["CORALIE_ECHO_8_1", 100], ["CORALIE_ECHO_12_1", 200]]:
+		_check(first.call() == e[0], "Coralie pays for each: %s" % e[0])
+		Conversations.talk("coralie")
+		glints += int(e[1])
+	_check(GameState.item_count("glint") == glints and first.call() == "CORALIE_AFTER", "every prize paid, even reaching twelve first")
+	GameState.reset_new_game()
+	for flag in ["coralie_asked", "coralie_chime_done", "coralie_echo_ask", "echo_5"]:
+		GameState.set_flag(flag)
+	_check(first.call() == "CORALIE_ECHO_5_1", "five has its own prize")
+	Conversations.talk("coralie")
+	_check(GameState.item_count("glint") == 50, "fifty glints")
+
 ## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a
 ## piece, and a little more when all twelve are hung.
 func _test_coralie() -> void:
@@ -7358,6 +7431,8 @@ func _test_coralie() -> void:
 	await _play_scene(game, 10.0)
 	_check(GlassChime.hung() == SeaGlass.TOTAL and GameState.has_flag("coralie_chime_done"), "twelve hung")
 	_check(GameState.item_count("glint") == glints + 25 + 100, "the last piece, and her savings")
+	_check(Conversations.branch_for("coralie").get("lines")[0] == "CORALIE_ECHO_1", "then she shows Wren her echo game (_test_echo_game)")
+	GameState.set_flag(EchoGame.ASK_FLAG)
 	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_AFTER"], "then she listens to the wind")
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
 	_check(Conversations.branch_for("coralie").get("lines") == ["CORALIE_TURNED"], "the chime rings when the Old One turns")

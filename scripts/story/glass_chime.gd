@@ -3,7 +3,8 @@ extends StaticBody2D
 ## Coralie's wind chime on Saltmarrow Shore (StoryDirector): a driftwood
 ## frame with twelve strings. Each piece of sea-glass Wren hands her
 ## (Conversations.GLASS_TRADE) is hung on the next string, and they all
-## sway and catch the light in the wind.
+## sway and catch the light in the wind. Once she's shown Wren her echo
+## game, striking it starts a round (EchoGame).
 
 ## Sun-bleached driftwood.
 const WOOD := Color("#a8906c")
@@ -24,6 +25,8 @@ var _time := 0.0
 ## Pieces hung, as last drawn: a new one glints as it goes up.
 var _hung := 0
 var _fresh := 0.0
+## Coralie's echo game: striking the chime starts a round once she's asked.
+var echo: EchoGame
 
 
 func _ready() -> void:
@@ -31,6 +34,18 @@ func _ready() -> void:
 	add_child(Layers.rect_shape(Vector2(30, 4), Vector2(0, -2)))
 	add_child(Art.shadow())
 	_hung = hung()
+	add_to_group("interactable")
+
+
+func interact() -> void:
+	if echo and EchoGame.open():
+		if echo.state == EchoGame.State.IDLE:
+			# Lower than any shell's note, so it isn't heard as the first.
+			Audio.play_sfx("glass_chime", global_position, 0.6)
+			echo.start()
+		return
+	# Before the game, it just rings.
+	Audio.play_sfx("glass_chime", global_position, 1.1)
 
 
 ## How many pieces Coralie has hung.

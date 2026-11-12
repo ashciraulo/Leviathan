@@ -165,7 +165,7 @@ const SIGNAL_STONES := {
 ## the Choir's chimes for Bram, deep-bed pearls for Marlo, the nameboard
 ## off Ide's boat, the Lantern Wake's lanterns for Gully and Lowe's plants.
 const FINDS := {
-	"bottle_shore": [Vector2i(0, 0), Vector2i(20, 2)],
+	"bottle_shore": [Vector2i(0, 0), Vector2i(22, 2)],
 	"bottle_pools": [Vector2i(1, 0), Vector2i(10, 8)],
 	"bottle_strand": [Vector2i(4, 0), Vector2i(20, 3)],
 	"pell_shell": [Vector2i(6, -2), Vector2i(20, 2)],
@@ -1295,6 +1295,10 @@ func _put_coralie() -> void:
 	var chime := GlassChime.new()
 	chime.position = CHIME_AT
 	room.add_child(chime)
+	# Her echo game's shells on the sand (they only show once she's asked).
+	var echo := EchoGame.new()
+	room.add_child(echo)
+	chime.echo = echo
 
 
 ## The last singers, where Lowe's errand finds them; Bram at the forge.

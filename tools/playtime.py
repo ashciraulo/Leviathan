@@ -71,6 +71,9 @@ MINIGAMES = {
     # and about 40 casts for ten in a row at 4 in 5. About 60 casts at
     # 8 s each (the wait, the pull, the fish landing).
     "Ottilie's fishing book": 60 * 8.0,
+    # Coralie's echo game (EchoGame): rounds of about 30 s, tunes of 3 to
+    # 12 notes; about 12 rounds on the way to twelve.
+    "Coralie's echo game": 12 * 30.0,
 }
 
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
