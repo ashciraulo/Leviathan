@@ -200,8 +200,9 @@ func _build_texture() -> void:
 		for y in rows.size():
 			for x in rows[y].length():
 				var ch := rows[y][x]
-				# Sea-glass hides on the map: its tile shows as what's beside it.
-				if ch == "*" and x > 0:
+				# Sea-glass and pearl shards hide on the map: their tile shows as
+				# what's beside it.
+				if (ch == "*" or ch == "8") and x > 0:
 					ch = rows[y][x - 1]
 				var color := _tile_color(ch, colors, str(info["dungeon"]) == "")
 				# A faint grain on floors, darker at room edges.

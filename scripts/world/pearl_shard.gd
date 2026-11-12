@@ -33,7 +33,6 @@ func _ready() -> void:
 	Layers.assign(self, 0, [Layers.PLAYER])
 	monitorable = false
 	add_child(Layers.rect_shape(Vector2(10, 8), Vector2(0, -3)))
-	body_entered.connect(_on_body_entered)
 	add_child(Art.shadow())
 	_spark = Node2D.new()
 	_spark.z_index = 30
@@ -47,23 +46,38 @@ func flag_key() -> String:
 	return "pearl_shard_%d_%d_%d_%d" % [room_coord.x, room_coord.y, tile.x, tile.y]
 
 
-## What the box says on finding a shard, `found` being how many Wren now has.
-static func talk(found: int) -> PackedStringArray:
+## True when going from `before` shards to `found` completes a bubble.
+static func makes_bubble(before: int, found: int) -> bool:
+	return found / Items.SHARDS_PER_BUBBLE > before / Items.SHARDS_PER_BUBBLE
+
+
+## What the box says on finding shards: Wren had `before` and now has
+## `found` (nothing if none were gained).
+static func talk(before: int, found: int) -> PackedStringArray:
 	var lines := PackedStringArray()
-	if found == 1:
+	if found <= before:
+		return lines
+	if before == 0:
 		lines.append("GOT_PEARL_SHARD_FIRST")
 	var toward := found % Items.SHARDS_PER_BUBBLE
-	if toward == 0:
+	if makes_bubble(before, found):
 		lines.append("GOT_PEARL_SHARD_WHOLE")
-		if found >= TOTAL:
-			lines.append("GOT_PEARL_SHARD_LAST")
-	else:
+	if found >= TOTAL:
+		lines.append("GOT_PEARL_SHARD_LAST")
+	elif toward != 0:
 		lines.append(TranslationServer.translate("GOT_PEARL_SHARD_COUNT") % [toward, Items.SHARDS_PER_BUBBLE])
 	return lines
 
 
 func _process(delta: float) -> void:
 	_time += delta
+	# Picked up only while nothing else holds the screen (a talk, a scene,
+	# a door's fade), so its box never lands on top of one; standing on it
+	# when that ends picks it up then.
+	if not _taken and not DialogueBox.is_open and not Cutscene.active:
+		for body in get_overlapping_bodies():
+			if body is Player and not body.frozen:
+				_take()
 	# A slow bob, so it reads as something to pick up.
 	position.y = _rest_y + roundf(sin(_time * 2.4))
 	_spark.queue_redraw()
@@ -93,15 +107,16 @@ func _draw_spark() -> void:
 		_spark.draw_rect(Rect2(at.x, at.y - s, 1, s * 2 + 1), SPARK)
 
 
-func _on_body_entered(body: Node2D) -> void:
-	if _taken or not body is Player:
-		return
+func _take() -> void:
 	_taken = true
 	GameState.set_flag(flag_key())
+	var before := GameState.item_count("pearl_shard")
 	GameState.give_item("pearl_shard")
 	var found := GameState.item_count("pearl_shard")
 	Audio.play_sfx("pickup", global_position, 1.0 + found * 0.04)
-	if found % Items.SHARDS_PER_BUBBLE == 0:
+	if PearlShard.makes_bubble(before, found):
 		Audio.play_jingle("jingle_pearl")
-	Events.dialogue_requested.emit("", talk(found))
+	var lines := talk(before, found)
+	if not lines.is_empty():
+		Events.dialogue_requested.emit("", lines)
 	queue_free()

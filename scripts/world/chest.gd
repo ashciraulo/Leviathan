@@ -99,7 +99,7 @@ func interact() -> void:
 	tween.tween_interval(ITEM_SHOW_TIME)
 	tween.tween_property(shown, "modulate:a", 0.0, 0.25)
 	tween.tween_callback(shown.queue_free)
-	var talk := item_talk(item)
+	var talk := item_talk(item, count)
 	if not talk.is_empty():
 		await get_tree().create_timer(0.6).timeout
 		Events.dialogue_requested.emit("", talk)
@@ -107,9 +107,10 @@ func interact() -> void:
 
 ## What the box says on finding an item, with the keys to press filled in
 ## from the bindings in use now (MenuKit.fill_keys).
-static func item_talk(id: String) -> PackedStringArray:
+static func item_talk(id: String, count := 1) -> PackedStringArray:
 	if id == "pearl_shard":
-		return PearlShard.talk(GameState.item_count(id))
+		var found := GameState.item_count(id)
+		return PearlShard.talk(maxi(found - count, 0), found)
 	var lines := PackedStringArray()
 	for key: String in ITEM_TALK.get(id, []):
 		var text := TranslationServer.translate(key)

@@ -152,6 +152,26 @@ def stops_flight(tile):
     return tile == "#" or tile in PROPS or tile in BLOCKERS or tile in "Y%$"
 
 
+def count_pearl_shards():
+    """Every pearl shard in every room, dungeons too: each 8 tile in either
+    layout (once per tile), and chests holding pearl_shard times their count."""
+    total = 0
+    for path in glob.glob(os.path.join(ROOT, "rooms", "room_*.tscn")):
+        text = open(path).read()
+        spots = {"8": set(), "C": set()}
+        for name in ("layout", "alt_layout"):
+            f = re.search(r'^%s = "(.*?)"' % name, text, re.M | re.S)
+            for y, row in enumerate(f.group(1).split("\n") if f else []):
+                for x, ch in enumerate(row):
+                    if ch in spots:
+                        spots[ch].add((x, y))
+        total += len(spots["8"])
+        if re.search(r'^chest_item = "pearl_shard"', text, re.M):
+            count = re.search(r"^chest_count = (\d+)", text, re.M)
+            total += len(spots["C"]) * (int(count.group(1)) if count else 1)
+    return total
+
+
 def load_rooms():
     rooms = {}
     for path in glob.glob(os.path.join(ROOT, "rooms", "room_*.tscn")):
@@ -521,9 +541,9 @@ def main():
     # loose ones within reach. (Chests are checked above.)
     shards = [(coord, (x, y)) for coord in sorted(rooms) for y in range(ROWS) for x in range(COLS)
               if rows_for(rooms[coord], final_items)[y][x] == "8"]
-    in_chests = sum(len(chest_tiles(rooms[c], final_items)) for c in rooms if rooms[c]["chest"] == "pearl_shard")
-    if len(shards) + in_chests > PEARL_SHARD_TOTAL:
-        problems.append("%d pearl shards, at most %d" % (len(shards) + in_chests, PEARL_SHARD_TOTAL))
+    placed = count_pearl_shards()
+    if placed > PEARL_SHARD_TOTAL:
+        problems.append("%d pearl shards, at most %d" % (placed, PEARL_SHARD_TOTAL))
     for coord, spot in shards:
         if not any((coord, spot) in st[3] for st in stages):
             problems.append("pearl shard %s %s is never reachable" % (coord, spot))

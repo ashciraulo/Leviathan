@@ -6127,8 +6127,10 @@ func _test_pearl_shards() -> void:
 	_check(GameState.max_bubbles == GameState.START_BUBBLES + 1 and GameState.bubbles == GameState.max_bubbles, "the fourth makes one more bubble, full")
 	GameState.give_item("pearl_shard", 20, false)
 	_check(GameState.item_count("pearl_shard") == PearlShard.TOTAL and GameState.max_bubbles == GameState.START_BUBBLES + 3, "twelve make three bubbles, and no more")
-	_check(PearlShard.talk(1)[0] == "GOT_PEARL_SHARD_FIRST" and "1" in PearlShard.talk(1)[1], "the first shard explains itself and counts")
-	_check(PearlShard.talk(4)[0] == "GOT_PEARL_SHARD_WHOLE" and Array(PearlShard.talk(12)).has("GOT_PEARL_SHARD_LAST"), "a fourth says it's whole, the twelfth that it's the last")
+	_check(PearlShard.talk(0, 1)[0] == "GOT_PEARL_SHARD_FIRST" and "1" in PearlShard.talk(0, 1)[1], "the first shard explains itself and counts")
+	_check(PearlShard.talk(3, 4)[0] == "GOT_PEARL_SHARD_WHOLE" and Array(PearlShard.talk(11, 12)).has("GOT_PEARL_SHARD_LAST"), "a fourth says it's whole, the twelfth that it's the last")
+	_check(PearlShard.talk(3, 5)[0] == "GOT_PEARL_SHARD_WHOLE" and PearlShard.talk(3, 5).size() == 2 and PearlShard.talk(12, 12).is_empty(),
+		"two at once can cross a bubble and still count on; none gained says nothing")
 	_check(Chest.item_talk("pearl_shard").size() > 0, "a shard from a chest explains itself too")
 	GameState.reset_new_game()
 	GameState.set_checkpoint(Vector2i(1, 1), GameState.NO_POSITION)
@@ -6146,7 +6148,11 @@ func _test_pearl_shards() -> void:
 	var at := shard.global_position
 	await _wait(0.1)
 	_check(is_instance_valid(shard) and GameState.item_count("pearl_shard") == 0, "a shard lies waiting")
+	player.frozen = true
 	player.global_position = at
+	await _wait(0.3)
+	_check(GameState.item_count("pearl_shard") == 0 and is_instance_valid(shard), "not while Wren is held (a door's fade)")
+	player.frozen = false
 	await _wait(0.3)
 	_check(GameState.item_count("pearl_shard") == 1 and not is_instance_valid(shard), "walking over a shard picks it up")
 	_check(DialogueBox.is_open, "and the box explains it")
