@@ -4,8 +4,9 @@ extends StaticBody2D
 ## one of Corrin's grandad's message bottles, Pell's lucky shell, a piece
 ## of pale driftwood for Dunstan, one of the Choir's chimes for Bram, an
 ## oyster with a pearl in it for Marlo, the nameboard off Ide's boat, a
-## ship's lantern for Gully, a hardy plant for Lowe's garden, or a page of
-## Hessa's lost logbook. Picking it up is a conversation with no
+## ship's lantern for Gully, a hardy plant for Lowe's garden, a page of
+## Hessa's lost logbook, or a clue on the trail of Pell's night bell-ringer
+## (and the seal pup at the end of it). Picking it up is a conversation with no
 ## speaker (Conversations "find_<id>"), which sets found_<id>; then it's
 ## gone for good.
 
@@ -34,7 +35,8 @@ const BOARD := Color("#4a78a8")
 const BOARD_DARK := Color("#34587e")
 
 ## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
-## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*" or "log_*".
+## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*", "log_*" or
+## "seal_*".
 var id := ""
 var _time := 0.0
 
@@ -134,6 +136,30 @@ func _draw() -> void:
 		for y in [-7, -5, -3]:
 			draw_line(Vector2(-4, y), Vector2(3, y), Color(0.3, 0.32, 0.45, 0.8))
 		draw_rect(Rect2(3, -8, 2, 2), Color(0.85, 0.78, 0.6))
+	elif id == "seal_track":
+		# Small flipper prints in wet sand, a drag mark between them.
+		draw_rect(Rect2(-9, -2, 18, 1), Color(0.55, 0.45, 0.32, 0.6))
+		for x in [-8, -3, 2, 7]:
+			draw_rect(Rect2(x, -5, 2, 2), Color(0.45, 0.36, 0.25))
+			draw_rect(Rect2(x + 1, 0, 2, 2), Color(0.45, 0.36, 0.25))
+	elif id == "seal_bones":
+		# Fish bones picked clean: a spine and ribs, a head.
+		for i in 2:
+			var o := Vector2(-6 + i * 8, -3 - i * 2)
+			draw_line(o, o + Vector2(7, 0), PAPER)
+			for r in 3:
+				draw_line(o + Vector2(2 + r * 2, -2), o + Vector2(2 + r * 2, 2), PAPER)
+			draw_rect(Rect2(o + Vector2(7, -1), Vector2(2, 3)), PAPER)
+	elif id == "seal_net":
+		# A torn scrap of brown net.
+		draw_rect(Rect2(-7, -8, 14, 8), Palette.OUTLINE)
+		for x in range(-6, 7, 3):
+			draw_line(Vector2(x, -7), Vector2(x, -1), CORD)
+		for y in range(-7, 0, 3):
+			draw_line(Vector2(-6, y), Vector2(6, y), CORD)
+		draw_rect(Rect2(3, -8, 4, 3), Palette.OUTLINE)
+	elif id == "seal_pup":
+		SealPup.draw_pup(self, _time, true)
 	elif id == "nameboard":
 		# A long blue board with a few salt-eaten white letters.
 		draw_rect(Rect2(-11, -7, 22, 7), Palette.OUTLINE)

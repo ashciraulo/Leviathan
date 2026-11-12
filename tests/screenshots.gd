@@ -92,6 +92,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=seal_pup: the seal pup in her nook, and at home.
+	if OS.get_environment("SHOTS_ONLY") == "seal_pup":
+		game.queue_free()
+		await _quest_story_shots(["quest_26_seal_pup", "quest_27_pup_home"])
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=jumpers: Ottilie's Knits on her shelf and on Wren.
 	if OS.get_environment("SHOTS_ONLY") == "jumpers":
 		game.queue_free()
@@ -2223,10 +2232,13 @@ func _far_story_shots() -> void:
 
 
 ## Agna's scales, Nettle's signal stones and the errand finds.
-func _quest_story_shots() -> void:
+func _quest_story_shots(only: Array = []) -> void:
+	var trail := ["pell_night_ask", "found_seal_track", "found_seal_bones", "found_seal_net"]
 	var scale: Array = StoryDirector.SHED_SCALES["dragline"]
 	var stone: Array = StoryDirector.SIGNAL_STONES["stacks"]
-	for shot in [["quest_8_bottle", StoryDirector.FINDS["bottle_shore"], [], true], ["quest_9_shell", StoryDirector.FINDS["pell_shell"], [], false], ["quest_10_chime", StoryDirector.FINDS["chime_pass"], [], false], ["quest_11_nameboard", StoryDirector.FINDS["nameboard"], [], true], ["quest_12_pearl", StoryDirector.FINDS["pearl_tangle"], [], false], ["quest_16_ship_lantern", StoryDirector.FINDS["lantern_dunes"], [], false], ["quest_17_frost_thistle", StoryDirector.FINDS["seed_frost"], [], false], ["quest_22_log_page", StoryDirector.FINDS["log_cinder"], [], true], ["quest_13_pim_home", StoryDirector.SINGER_HOMES["pim"], ["seen_ending", "pim_met", "pim_home"], true], ["quest_14_sela_home", StoryDirector.SINGER_HOMES["sela"], ["seen_ending", "sela_met", "sela_home"], true], ["quest_15_ansel_home", StoryDirector.SINGER_HOMES["ansel"], ["seen_ending", "ansel_met", "ansel_home", "sorrel_asked"], true], ["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
+	for shot in [["quest_8_bottle", StoryDirector.FINDS["bottle_shore"], [], true], ["quest_9_shell", StoryDirector.FINDS["pell_shell"], [], false], ["quest_10_chime", StoryDirector.FINDS["chime_pass"], [], false], ["quest_11_nameboard", StoryDirector.FINDS["nameboard"], [], true], ["quest_12_pearl", StoryDirector.FINDS["pearl_tangle"], [], false], ["quest_16_ship_lantern", StoryDirector.FINDS["lantern_dunes"], [], false], ["quest_17_frost_thistle", StoryDirector.FINDS["seed_frost"], [], false], ["quest_22_log_page", StoryDirector.FINDS["log_cinder"], [], true], ["quest_26_seal_pup", StoryDirector.FINDS["seal_pup"], trail, false], ["quest_27_pup_home", StoryDirector.SEAL_PUP_HOME, trail + ["found_seal_pup"], false], ["quest_13_pim_home", StoryDirector.SINGER_HOMES["pim"], ["seen_ending", "pim_met", "pim_home"], true], ["quest_14_sela_home", StoryDirector.SINGER_HOMES["sela"], ["seen_ending", "sela_met", "sela_home"], true], ["quest_15_ansel_home", StoryDirector.SINGER_HOMES["ansel"], ["seen_ending", "ansel_met", "ansel_home", "sorrel_asked"], true], ["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
+		if not only.is_empty() and not only.has(shot[0]):
+			continue
 		GameState.reset_new_game()
 		for flag: String in shot[2]:
 			GameState.set_flag(flag)
