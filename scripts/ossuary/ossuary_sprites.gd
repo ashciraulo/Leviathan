@@ -5,3 +5,4 @@ extends Object
 const DUNEJAW := preload("res://assets/ossuary/dunejaw.png")
 const RIB := preload("res://assets/ossuary/rib.png")
 const SKULL := preload("res://assets/ossuary/skull.png")
+const JAW := preload("res://assets/ossuary/jaw.png")

@@ -143,7 +143,30 @@ SEA_GLASS = {
 # windmill (4,-4), in the Wreck's ruin (1,1), out on Cockle Flats at low
 # tide (0,2), and in the middle of Rimewatch Pass's ice (2,-3).
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
-PROPS = set("ouf nHLMWlRJZBUF".replace(" ", ""))
+PROPS = set("ouf nHLMWlRJZBUF9".replace(" ", ""))
+
+
+def _big_prop_tiles():
+    """Props whose footprint is a list of rects (the whale skull and jaw):
+    the tiles, relative to the prop's letter, whose middles they cover. Read
+    from Prop.KINDS so the two can't drift apart."""
+    text = open(os.path.join(ROOT, "scripts", "world", "prop.gd")).read()
+    out = {}
+    for letter, const in re.findall(r'^\t"(.)": \[[^,]+, \d+, ([A-Z_]+), ', text, re.M):
+        body = re.search(r"^const %s := \[(.*?)^\]" % const, text, re.M | re.S).group(1)
+        rects = [tuple(float(v) for v in m) for m in re.findall(r"Rect2\(([-\d.]+), ([-\d.]+), ([-\d.]+), ([-\d.]+)\)", body)]
+        tiles = set()
+        for dy in range(-8, 4):
+            for dx in range(-8, 9):
+                # a tile's middle, from the prop's anchor (tile middle-x, 12 down)
+                cx, cy = dx * 16, dy * 16 - 4
+                if any(x <= cx < x + w and y <= cy < y + h for x, y, w, h in rects):
+                    tiles.add((dx, dy))
+        out[letter] = tiles
+    return out
+
+
+BIG_PROPS = _big_prop_tiles()
 # Solid things that aren't scenery: stones, chests, hook posts, NPCs, ice
 # eyes, and boulders, crates and hatches, which also stop the chain and the
 # cloak.
@@ -219,6 +242,7 @@ LAVA_BIOMES = {"cinderreach"}
 
 def rows_for(room, items):
     rows = room["alt"] if room["alt"] and room["alt_flag"] in items else room["layout"]
+    rows = with_big_props(rows)
     needs = GATE_TOOLS.get(room["gate"], "")
     if room["gate"] == "plates" and room["name"] in PLATE_HOOK_ROOMS:
         needs = "tide_hook"
@@ -228,6 +252,20 @@ def rows_for(room, items):
     if room["biome"] in LAVA_BIOMES:
         return [r.replace("~", "^") for r in rows]
     return rows
+
+
+def with_big_props(rows):
+    """Wall off the ground a big prop lies on (its doorway stays open)."""
+    marks = [(x, y, BIG_PROPS[t]) for y, r in enumerate(rows) for x, t in enumerate(r) if t in BIG_PROPS]
+    if not marks:
+        return rows
+    grid = [list(r) for r in rows]
+    for x, y, tiles in marks:
+        for dx, dy in tiles:
+            tx, ty = x + dx, y + dy
+            if 0 <= ty < len(grid) and 0 <= tx < len(grid[ty]) and grid[ty][tx] in ".S":
+                grid[ty][tx] = "#"
+    return ["".join(r) for r in grid]
 
 
 def walkable(tile, items):

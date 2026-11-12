@@ -44,7 +44,7 @@ script = ExtResource("1_room")
 """
 
 # The way out: the Barrow Mouth in the Ossuary Dunes, just below its doorway.
-OUTSIDE = {"door_to": "Vector2i(9, 0)", "door_spawn": "Vector2i(12, 7)"}
+OUTSIDE = {"door_to": "Vector2i(9, 0)", "door_spawn": "Vector2i(17, 9)"}
 
 
 # coord: (name key, extra exports, layout)

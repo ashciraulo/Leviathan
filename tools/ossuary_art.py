@@ -12,6 +12,8 @@ sprites to assets/ossuary/.
 import math
 import random
 
+import whale_bones_art
+
 
 def hex_color(h, a=255):
     h = h.lstrip("#")
@@ -290,55 +292,13 @@ def rib(flip=False):
     return [r[::-1] for r in rows] if flip else rows
 
 
-# A great beast's skull (layout Q), side on and half sunk in the dunes:
-# a domed braincase, one empty eye, a long toothed snout. The Marrow
-# Tomb's door is the dark of its throat. 64x48, foot row 45.
-def skull():
-    w, h = 64, 48
-    c = _grid(w, h)
-    # Braincase.
-    for y in range(6, 46):
-        for x in range(30, 62):
-            if ((x - 46) / 16.0) ** 2 + ((y - 24) / 19.0) ** 2 <= 1.0:
-                c[y][x] = "o"
-    # Snout, tapering to the left, upper jaw over lower.
-    for x in range(3, 36):
-        t = (x - 3) / 33.0
-        top = int(26 - t * 10)
-        bottom = int(34 + t * 4)
-        for y in range(top, bottom):
-            c[y][x] = "o"
-    # The gape between the jaws, teeth on both sides.
-    for x in range(6, 34):
-        t = (x - 6) / 28.0
-        gy = int(30 + t * 1)
-        c[gy][x] = "k"
-        if x % 3 == 0:
-            c[gy - 1][x] = "t"
-            c[gy + 1][x + 1 if x + 1 < 34 else x] = "t"
-    # Eye socket and nostril.
-    for y in range(13, 23):
-        for x in range(38, 50):
-            if ((x - 44) / 6.0) ** 2 + ((y - 18) / 5.0) ** 2 <= 1.0:
-                c[y][x] = "k"
-    for y in range(22, 25):
-        for x in range(8, 12):
-            c[y][x] = "k"
-    # The throat: a dark arch under the braincase.
-    for y in range(32, 46):
-        half = 7 if y > 35 else 7 - (35 - y) * 2
-        for x in range(46 - half, 46 + half):
-            if 0 <= half:
-                c[y][x] = "k"
-    # Cracks and wear.
-    for i in range(9):
-        c[8 + i][52 + (i % 3)] = "k" if i < 6 else "s"
-    # Sand drifted against it.
-    for x in range(1, 63):
-        for y in range(42 - (2 if (x * 7) % 9 < 4 else 0), 46):
-            if not (39 <= x < 53 and y >= 32):
-                c[y][x] = "s"
-    return _rows(c)
+# The great whale skull of Skull Rise (layout F) and the lower jaw in
+# Whalefall Steps (layout 9): see whale_bones_art.py. The skull's side
+# hollow is the Marrow Tomb's door.
+
+
+SKULL, SKULL_DOOR, SKULL_FOOTPRINT = whale_bones_art.skull()
+JAW, JAW_FOOTPRINT = whale_bones_art.jaw()
 
 
 def build(lit, sheet):
@@ -346,5 +306,6 @@ def build(lit, sheet):
     return {
         "dunejaw": sheet([[lit(dunejaw(f), 100) for f in ("ripple", "spout", "bite", "exposed")]], 24, 20),
         "rib": sheet([[lit(rib(False), 101)]], 24, 56),
-        "skull": sheet([[lit(skull(), 102)]], 64, 48),
+        "skull": sheet([[SKULL]], len(SKULL[0]), len(SKULL)),
+        "jaw": sheet([[JAW]], len(JAW[0]), len(JAW)),
     }

@@ -6727,7 +6727,7 @@ func _test_journal() -> void:
 func _test_tobin() -> void:
 	Cutscene.fast = true
 	GameState.reset_new_game()
-	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(12 * Room.TILE + 8, 7 * Room.TILE + 10))
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(17 * Room.TILE + 8, 9 * Room.TILE + 10))
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.4)
