@@ -8691,6 +8691,54 @@ func _test_older_secrets() -> void:
 	_check(ribs.chest_item == "glint" and rib_rows[10][20] == "%" and rib_rows[10][21] == "." and rib_rows[10][22] == "C" and rib_rows[9].substr(21, 2) == "##" and rib_rows[11].substr(21, 2) == "##",
 		"Rib Hollow: a chest in a niche behind a bone barricade")
 	ribs.free()
+	# The Brine Cistern, Sluice Gallery and Smugglers' Vault: a cave run west
+	# of Smugglers' Cut. Two crates on two plates unbar the way on, boulders
+	# seal the gallery's far end, and the vault shuts Wren in with its crew.
+	GameState.reset_new_game()
+	var cut := Room.parse_layout(((load("res://rooms/room_0_1.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(cut[8][0] == "." and cut[9][0] == ".", "Smugglers' Cut opens west to the Brine Cistern")
+	var cistern: Room = (load("res://rooms/room_-1_1.tscn") as PackedScene).instantiate()
+	add_child(cistern)
+	await _wait(0.1)
+	var c_rows := Room.parse_layout(cistern.layout)
+	var c_bars := _child_of(cistern, Bars)
+	var c_crates := _child_of(cistern, Crate)
+	var c_plates := _child_of(cistern, PressurePlate)
+	_check(cistern.cave and cistern.gate == "plates" and c_bars.size() == 2 and c_crates.size() == 2 and c_plates.size() == 2
+		and c_rows[8][23] == "." and c_rows[9][23] == "." and c_rows[5][0] == "." and c_rows[6][0] == ".",
+		"the Brine Cistern: two crates, two plates, barred to the west")
+	# One crate sits at the dead end of a ledge, walled on three sides: only
+	# the Tide Hook drags it out. No hook posts, so nothing can strand Wren.
+	var dry := _walkable_from(c_rows, Vector2i(18, 8))
+	_check(dry.has(Vector2i(5, 5)) and dry.has(Vector2i(19, 3)) and c_rows[3][20] == "K" and c_rows[2][20] == "#" and c_rows[4][20] == "#" and c_rows[3][21] == "#"
+		and not "O" in "".join(c_rows), "the Cistern is one floor; its ledge crate is walled in on three sides")
+	(c_crates[0] as Crate).global_position = (c_plates[0] as Node2D).global_position
+	await _wait(0.2)
+	_check(not (c_bars[0] as Bars).is_open, "one crate isn't enough")
+	(c_crates[1] as Crate).global_position = (c_plates[1] as Node2D).global_position
+	await _wait(0.2)
+	_check((c_bars[0] as Bars).is_open and (c_bars[1] as Bars).is_open, "both plates down, the bars open")
+	cistern.queue_free()
+	GameState.reset_new_game()
+	var sluice := Room.parse_layout(((load("res://rooms/room_-2_1.tscn") as PackedScene).instantiate() as Room).layout)
+	var unbroken := sluice.duplicate()
+	unbroken[2] = unbroken[2].replace("Y", "#")
+	_check(sluice[5][23] == "." and sluice[6][23] == "." and sluice[2].substr(5, 2) == "YY" and sluice[1].substr(5, 2) == ".." and not _walkable_from(unbroken, Vector2i(18, 5)).has(Vector2i(5, 0)),
+		"the Sluice Gallery: boulders seal the way north")
+	var vault: Room = (load("res://rooms/room_-2_0.tscn") as PackedScene).instantiate()
+	add_child(vault)
+	await _wait(0.1)
+	var v_rows := Room.parse_layout(vault.layout)
+	var v_chests := _child_of(vault, Chest)
+	_check(vault.gate == "clear" and vault.chest_hidden and _child_of(vault, Bars).size() == 2 and v_chests.size() == 1 and not (v_chests[0] as Chest).visible
+		and v_rows[12][5] == "." and v_rows[12][6] == "." and v_rows[11].substr(5, 2) == "||", "the Smugglers' Vault: a hidden cache, bars that shut behind Wren")
+	var crew := 0
+	for child in vault.get_children():
+		if child is Enemy:
+			crew += 1
+	_check(crew >= 5, "the vault keeps a crew (%d)" % crew)
+	vault.queue_free()
+	GameState.reset_new_game()
 	# Three shoals out in deep water, walled by rocks so that no glide, even
 	# a steered one, can curve in: the Diver's Helm alone reaches them (the
 	# story thread leaves pearls on them).

@@ -209,7 +209,7 @@ def load_rooms():
 # Lantern, ice eyes only open to a frost arrow.
 GATE_TOOLS = {"braziers": "glowmoth_lantern", "eyes": "frostfang_bow"}
 # Plate rooms whose crate only the Tide Hook can drag out of its slot.
-PLATE_HOOK_ROOMS = {"room_4_1.tscn"}
+PLATE_HOOK_ROOMS = {"room_4_1.tscn", "room_-1_1.tscn"}
 
 
 # Regions whose "~" is lava: the Frostfang Bow can't freeze it, so it acts
