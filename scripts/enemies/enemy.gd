@@ -398,6 +398,16 @@ func _update_sprite() -> void:
 	pass
 
 
+## A slow rise and fall for a foe holding one pose a while, so a long
+## idle never looks frozen. Whole pixels only, at most `depth` of them;
+## returns the offset so pieces drawn apart from the sprite can follow it.
+func _breathe(period: float = 1.6, depth: float = 1.0) -> float:
+	var t := Time.get_ticks_msec() / 1000.0
+	var dy := roundf(sin(t * TAU / period + float(get_instance_id() % 7)) * depth)
+	_sprite.position.y += dy
+	return dy
+
+
 ## Shake the sprite sideways: part of most wind-up tells.
 func _jitter(timer: float) -> void:
 	_sprite.position.x += 1.0 if int(timer * 30.0) % 2 == 0 else -1.0

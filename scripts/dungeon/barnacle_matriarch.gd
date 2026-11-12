@@ -300,6 +300,8 @@ func _update_sprite() -> void:
 			frame = FRAME_DEAD
 	_sprite.frame = frame
 	_sprite.flip_h = false
+	if mode == Mode.STALK and velocity.length() <= 1.0:
+		_breathe(1.6)
 	# Tell: a gold glow while she winds up.
 	if mode in [Mode.WINDUP, Mode.SPIT_WINDUP]:
 		_jitter(_timer)

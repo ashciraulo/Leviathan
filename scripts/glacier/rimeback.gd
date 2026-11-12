@@ -406,6 +406,7 @@ func _update_sprite() -> void:
 			_sprite.frame = FRAME_DAZED
 		_:
 			_sprite.frame = FRAME_UP
+			_breathe(1.4)
 
 
 ## The breach tell drawn on the ice: cracks spreading out from the spot it

@@ -250,5 +250,7 @@ func _update_sprite() -> void:
 	if mode == Mode.INTRO:
 		_jitter(_timer)
 	_sprite.frame = FRAME_OUT if mode in [Mode.DAZED, Mode.RETREAT] else FRAME_PEEK
+	if mode == Mode.ARMS and _ink_tell <= 0.0:
+		_breathe(1.8)
 	if mode == Mode.DAZED and _timer < 1.0:
 		_jitter(_timer)

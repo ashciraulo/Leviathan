@@ -281,6 +281,7 @@ func _make_sprite() -> Sprite2D:
 func _update_sprite() -> void:
 	if mode == Mode.DYING:
 		return
+	var lift := 0.0
 	match mode:
 		Mode.RAISE:
 			_sprite.frame = 1
@@ -299,5 +300,15 @@ func _update_sprite() -> void:
 				s.visible = int(_timer * 10.0) % 2 == 0
 		_:
 			_sprite.frame = 0
+			if velocity.length() > 1.0:
+				# A heavy step: the whole frame, armour and all, lifts a
+				# pixel each stride and comes down hard.
+				var stride := Time.get_ticks_msec() / 1000.0 * TAU * 1.4
+				lift = -absf(roundf(sin(stride)))
+				_sprite.position.y += lift
+			else:
+				lift = _breathe(1.7)
+	for i in _plate_sprites.size():
+		_plate_sprites[i].position = PLATES[i]["at"] + Vector2(0.0, lift)
 	for s in _plate_sprites:
 		Art.set_flash(s, 1.0 if _flash > 0.0 else 0.0)
