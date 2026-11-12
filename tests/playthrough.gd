@@ -145,12 +145,16 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		if not get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room.is_ancestor_of(b)).is_empty():
 			boss_room = coord
 	_check(way_out, "%s: its entry room has a doorway back out" % id)
-	# Saved and loaded mid-dungeon (chests open, keys and map in hand, boss
-	# still to come): everything comes back, and an opened chest stays open.
-	await _save_and_reload("the middle of " + id)
+	# Saved and loaded mid-dungeon, in a chest room (chests open, keys and
+	# map in hand, boss still to come): everything comes back, and an
+	# opened chest stays open.
 	if chest_rooms.size() > 0:
 		room = await _goto(chest_rooms[0])
 		await _play_scene(20.0)
+		_keep_safe()
+		await _save_and_reload("the middle of " + id)
+		_keep_safe()
+		room = _game.current_room
 		var reopened := _all(room, Chest)
 		_check(not reopened.is_empty() and reopened.all(func(c: Chest) -> bool: return c.opened),
 			"%s: after loading, the chests in %s are still open" % [id, chest_rooms[0]])

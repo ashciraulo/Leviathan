@@ -1568,8 +1568,8 @@ func _test_boss_game_over_dungeon() -> void:
 		_check(game.current_room != null and game.current_room.coord == entry, "%s: Wren wakes at the checkpoint (%s)" % [label, game.current_room.coord if game.current_room else null])
 		_check(is_equal_approx(Engine.time_scale, 1.0) and not get_tree().paused and not Cutscene.active,
 			"%s: time runs again (scale %.2f, paused %s, scene %s)" % [label, Engine.time_scale, get_tree().paused, Cutscene.active])
-		_check(Audio.music_cue == Audio.cue_for_room(game.current_room.biome, game.current_room.dungeon) if game.current_room else false,
-			"%s: the dungeon's own music plays again (%s)" % [label, Audio.music_cue])
+		_check(Audio.music_cue == Audio.music_for_room(game.current_room.biome, game.current_room.dungeon, game.current_room.music) if game.current_room else false,
+			"%s: the boss theme gives way to the room's own music (%s)" % [label, Audio.music_cue])
 		player = game.player
 		Input.action_press("move_right")
 		await _wait(0.3)

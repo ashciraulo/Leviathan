@@ -298,7 +298,8 @@ func _walk(room: Room, dungeon: String, path: Array[Vector2i]) -> bool:
 ## Falls: Wren walks off the edge into a gap or a lava pool from up to
 ## FALL_TRIES spots around the room, and must climb back out onto solid
 ## floor (not into the drop again, not into a wall) and walk on from there.
-func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> void:
+## Returns false if Wren ended up out of the room (the room is gone).
+func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> bool:
 	var lips: Array = []
 	for at: Vector2i in walk:
 		for d: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
@@ -309,14 +310,14 @@ func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> void:
 					lips.append([at, d])
 				break
 	if lips.is_empty():
-		return
+		return true
 	lips.sort_custom(func(a: Array, b: Array) -> bool: return a[0].y * 100 + a[0].x < b[0].y * 100 + b[0].x)
 	var step := maxi(1, lips.size() / FALL_TRIES)
 	var player: Player = _game.player
+	var fell_here := 0
 	for k in range(0, lips.size(), step):
 		var from: Vector2i = lips[k][0]
 		var dir: Vector2i = lips[k][1]
-		_falls += 1
 		_hold_breath()
 		_keep_safe()
 		player.velocity = Vector2.ZERO
@@ -334,6 +335,8 @@ func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> void:
 		if not fell:
 			# Something in the way (a crate, closed bars, a ledge): not a fall.
 			continue
+		_falls += 1
+		fell_here += 1
 		waited = 0.0
 		while waited < 4.0 and player.state == Player.State.FALL:
 			await get_tree().physics_frame
@@ -343,7 +346,7 @@ func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> void:
 		if _game.current_room != room:
 			_fail("%s, and came back in another room" % where)
 			await _goto(room.coord)
-			return
+			return false
 		var tile := Vector2i(((player.global_position - room.global_position) / Room.TILE).floor())
 		if player.state == Player.State.FALL:
 			_fail("%s, and is still falling" % where)
@@ -356,6 +359,10 @@ func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> void:
 					free += 1
 			if free < 2:
 				_fail("%s, and came back wedged at %s (%d of 4 ways open)" % [where, tile, free])
+	# Every try blocked would mean the check checked nothing.
+	if fell_here == 0:
+		_fail("%s %s: Wren couldn't walk into any of its %d drops" % [dungeon, room.coord, lips.size()])
+	return true
 
 
 ## The Maw's palate floor (",") floods and drains on the Old One's breath:
