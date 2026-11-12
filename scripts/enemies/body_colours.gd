@@ -30,7 +30,7 @@ const COLOURS := {
 	"res://assets/kiln/wyrm_head.png": 0x4c3c40ff,
 	"res://assets/kiln/wyrm_segment.png": 0x4c3c40ff,
 	"res://assets/maw/dreaming_heart.png": 0xd04050ff,
-	"res://assets/maw/gumleech.png": 0x6a5a44ff,
+	"res://assets/maw/gumleech.png": 0x5a2434ff,
 	"res://assets/maw/note.png": 0x246860ff,
 	"res://assets/mire/brazier.png": 0x4b3f72ff,
 	"res://assets/mire/heart.png": 0x8fe3c8ff,

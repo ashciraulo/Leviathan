@@ -37,11 +37,15 @@ RAMPS = {
     "w": ["#C8B488", "#A08660", "#7A6040", "#54402A", "#2A2016"],   # bow wood
     "b": ["#D4DCE8", "#A8B4C8", "#8090AA", "#56647E", "#2C3446"],   # bell silver
     "f": ["#B0F0FF", "#6ADCF6", "#34B4E0", "#1E7CAE", "#0E4064"],   # frost glow
+    "d": ["#8CC4E2", "#5CA8D2", "#3A84B4", "#2A6894", "#163A5C"],   # shadowed ice
+    "m": ["#E6CCB4", "#D0B096", "#B89278", "#94725C", "#4A342A"],   # pale muzzle
 }
 FLAT = {
     "!": "#FFFFFF",   # glint
     "_": "#0A1420",   # dark inside things
     "*": "#9AF0FF",   # cold spark
+    "-": "#4A3428",   # a fold in the hide
+    "~": "#E4F4FC",   # rime crusted on the hide
 }
 
 # --------------------------------------------------------------------------
@@ -417,64 +421,110 @@ def rimeback(pose):
     """Rimeback, an ancient walrus with an iceberg grown on its back. 64x56.
     Poses: up (risen from a hole, eyes squeezed shut), spit (head back,
     mouth open), dazed (burst up through the ice, eyes wide and open to an
-    arrow) and under (only the iceberg showing above the water)."""
+    arrow) and under (only the iceberg showing above the water).
+
+    Drawn to read at a glance: the berg in lit and shadowed facets with
+    cracks, a rime crust where it grows out of the hide, folds of hide on a
+    heavy body with flippers, and a head set apart from the body by a fold,
+    with pale whisker pads, nostrils and long tusks."""
     c = canvas(64, 56)
+    peaks = [(14, 18), (22, 6), (30, 12), (38, 2), (46, 14), (52, 24)]
+
+    def berg(top_limit, bottom, left, right):
+        for x in range(left, right):
+            top = 99
+            near = peaks[0]
+            for (px_, py) in peaks:
+                t = py + abs(x - px_) * 1.4
+                if t < top:
+                    top, near = t, (px_, py)
+            top = max(top, top_limit)
+            for y in range(int(top), bottom):
+                # Faces left of a peak catch the light; right of it, shadow.
+                put(c, x, y, "i" if x <= near[0] else "d")
+        for (px_, py) in peaks:
+            if py + 1 < top_limit:
+                continue
+            put(c, px_, int(py), "!")
+            put(c, px_ - 1, int(py) + 1, "s")
+            put(c, px_, int(py) + 1, "s")
+
     if pose == "under":
         # Just the berg's tip and a ring of ripples.
         for y in range(28, 46):
             half = (y - 26) // 2 + 3
-            fill_rect(c, 30 - half, y, half * 2, 1, "i")
-        line(c, 28, 29, 24, 42, "s")
-        line(c, 31, 29, 36, 40, "s")
+            for x in range(30 - half, 30 + half):
+                put(c, x, y, "i" if x < 30 else "d")
+        put(c, 29, 27, "!")
+        line(c, 29, 30, 25, 40, "s")
+        line(c, 33, 31, 35, 38, "_")
         for x in range(12, 52):
             if x % 3:
                 put(c, x, 47, "f")
         return rows_of(c)
     base = 54
-    # The body rising out of the water: a huge brown mass.
-    fill_ellipse(c, 32, base - 8, 26, 12, "h")
-    # The iceberg on its back, jagged.
-    peaks = [(14, 18), (22, 6), (30, 12), (38, 2), (46, 14), (52, 24)]
-    for x in range(10, 56):
-        top = 40
-        for (px_, py) in peaks:
-            top = min(top, py + abs(x - px_) * 1.4)
-        for y in range(int(top), base - 14):
-            put(c, x, y, "i" if (x + y // 2) % 7 else "s")
-    for (px_, py) in peaks:
-        put(c, px_, int(py), "!")
-        line(c, px_, int(py) + 1, px_ - 3, int(py) + 8, "s")
-    # Head at the front.
+    # The heavy body rising out of the water, with front flippers.
+    fill_ellipse(c, 32, base - 9, 27, 12, "h")
+    fill_ellipse(c, 9, base - 3, 6, 3, "h")
+    fill_ellipse(c, 55, base - 3, 6, 3, "h")
+    line(c, 6, base - 3, 12, base - 2, "-")
+    line(c, 52, base - 2, 58, base - 3, "-")
+    # The berg on its back: lit and shadowed faces, a few deep cracks.
+    berg(0, base - 15, 10, 56)
+    line(c, 22, 9, 19, 22, "_")
+    line(c, 38, 5, 41, 20, "_")
+    line(c, 30, 15, 31, 26, "s")
+    line(c, 46, 17, 49, 30, "s")
+    # Rime crusted where the berg grows out of the hide.
+    for x in range(9, 57):
+        if c[base - 16][x] in ("i", "d"):
+            put(c, x, base - 15, "~")
+            if x % 4 == 1:
+                put(c, x, base - 14, "~")
+    # Folds of old hide along the flank.
+    for (x0, x1, y) in ((10, 18, base - 9), (46, 54, base - 9), (12, 20, base - 5), (44, 52, base - 5)):
+        line(c, x0, y, x1, y + 1, "-")
+    # The head at the front, set off from the body by a fold.
     hy = base - 12 if pose != "dazed" else base - 8
     hy = hy - 4 if pose == "spit" else hy
+    fill_ellipse(c, 32, hy, 13, 9, "-")
     fill_ellipse(c, 32, hy, 12, 8, "h")
-    # Whiskered muzzle and tusks.
-    fill_ellipse(c, 27, hy + 4, 5, 3.4, "t" if pose == "spit" else "h")
-    fill_ellipse(c, 37, hy + 4, 5, 3.4, "t" if pose == "spit" else "h")
-    for x in (24, 27, 37, 40):
-        put(c, x, hy + 4, "k")
+    # Brow ridge.
+    line(c, 23, hy - 5, 41, hy - 5, "-")
+    # Whisker pads, pale, with whisker dots, and nostrils between.
+    pad = "t" if pose == "spit" else "m"
+    fill_ellipse(c, 27, hy + 3, 5.5, 3.6, pad)
+    fill_ellipse(c, 37, hy + 3, 5.5, 3.6, pad)
+    for (x, y) in ((24, hy + 2), (26, hy + 4), (28, hy + 2), (36, hy + 2), (38, hy + 4), (40, hy + 2)):
+        put(c, x, y, "-")
+    put(c, 31, hy, "k")
+    put(c, 33, hy, "k")
     if pose == "spit":
-        fill_ellipse(c, 32, hy + 6, 4, 2.4, "_")
-        for (x, y) in ((30, hy + 10), (34, hy + 11), (32, hy + 13)):
+        fill_ellipse(c, 32, hy + 7, 4, 2.6, "_")
+        for (x, y) in ((30, hy + 11), (34, hy + 12), (32, hy + 14)):
             put(c, x, y, "*")
-    tusk_len = 12
+    # Long tusks, pale with a dark edge.
+    tusk_len = 13
     line(c, 28, hy + 6, 27, hy + 6 + tusk_len, "t", 2)
     line(c, 35, hy + 6, 36, hy + 6 + tusk_len, "t", 2)
     # Eyes.
-    for ex in (26, 38):
+    for ex in (25, 39):
         if pose == "dazed":
-            fill_ellipse(c, ex, hy - 3, 2.6, 2.4, "s")
-            put(c, ex, hy - 3, "k")
-            put(c, ex + 1, hy - 3, "k")
+            fill_ellipse(c, ex, hy - 2, 2.6, 2.4, "s")
+            put(c, ex, hy - 2, "k")
+            put(c, ex + 1, hy - 2, "k")
+            put(c, ex - 1, hy - 3, "!")
         else:
-            line(c, ex - 2, hy - 3, ex + 2, hy - 3, "k")
+            # Squeezed shut: a lid line that dips.
+            line(c, ex - 2, hy - 3, ex, hy - 2, "k")
+            line(c, ex, hy - 2, ex + 2, hy - 3, "k")
     if pose == "dazed":
-        for (x, y) in ((20, hy - 12), (44, hy - 13), (32, hy - 15)):
+        for (x, y) in ((18, hy - 12), (46, hy - 13), (32, hy - 15)):
             put(c, x, y, "*")
             put(c, x + 1, y + 1, "!")
         # Broken ice round it.
-        for x in range(4, 60, 5):
-            fill_rect(c, x, base - 2 - (x % 3), 4, 2, "s")
+        for x in range(2, 62, 5):
+            fill_rect(c, x, base - 1 - (x % 3), 4, 2, "s")
     return rows_of(c)
 
 
