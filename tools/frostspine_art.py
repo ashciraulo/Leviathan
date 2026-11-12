@@ -212,37 +212,58 @@ FLAT = {}
 # Sledgeseal: a stocky seal that rears up (the tell), then throws itself
 # onto its belly and toboggans straight at Wren, sliding on until it hits
 # something. On its belly it's slow to turn: step aside and strike its
-# side. 20x14 frames: idle, rear, slide.
+# side. Drawn side-on, facing right (the game flips it): round head and big
+# dark eyes, a pale belly and whiskered muzzle, fore flippers planted and
+# tail flippers splayed behind. 20x14 frames: idle, rear, slide.
+SEAL = {
+"idle": [
+"....................",
+"....................",
+"............||||....",
+"...........||||||...",
+"...........|,,||||..",
+"...........|,,|||''.",
+"...........|||||'',,",
+".......|||||||||''..",
+"....||||||||||||'...",
+".||||||||||||'''....",
+"||..|''''''''''|....",
+".|...'''''''''.||...",
+"...............|....",
+"....................",
+],
+"rear": [
+".............||||...",
+"............||||||..",
+"............|,,|||'.",
+"............|,,|||''",
+"............||||'',,",
+"............||||''..",
+"...........|||||''..",
+"..........|||||''...",
+".......||||||||'....",
+"....||||||||||''|...",
+".||||||||||'''.||...",
+"||..|''''''''..|....",
+".|...''''''''.......",
+"....................",
+],
+"slide": [
+"....................",
+"....................",
+"....................",
+"....................",
+"....................",
+"....................",
+"....................",
+"..............||||..",
+".......||||||||,,||.",
+"..||||||||||||||,,|'",
+".||..||''''''''''''|",
+"|....''''''''''''',,",
+".|..|..........||...",
+"....................",
+],
+}
 def sledgeseal(frame):
-    w, h = 20, 14
-    c = [["."] * w for _ in range(h)]
-    if frame == "slide":
-        # Long and flat, flippers back.
-        for y in range(6, 12):
-            half = 9 - abs(y - 9) * 2
-            for x in range(10 - half, 10 + half):
-                if 0 <= x < w:
-                    c[y][x] = "|" if y < 10 else "'"
-        c[7][16], c[7][17] = ",", ","
-        c[8][18] = ","
-        for x in (1, 2):
-            c[10][x] = "|"
-    else:
-        rear = frame == "rear"
-        top = 1 if rear else 4
-        for y in range(top, 13):
-            t = (y - top) / (12 - top)
-            half = int(2 + t * 6)
-            for x in range(10 - half, 10 + half):
-                c[y][x] = "'" if (x > 10 - half + 2 and x < 10 + half - 2 and y > top + 3) else "|"
-        # Head and face.
-        c[top + 1][8], c[top + 1][11] = ",", ","
-        c[top + 2][9], c[top + 2][10] = ",", ","
-        # Flippers.
-        fy = top + (3 if rear else 5)
-        for (x, d) in ((10 - (4 if rear else 6), -1), (10 + (3 if rear else 5), 1)):
-            for i in range(3):
-                xx, yy = x + d * i, fy + (i if not rear else -i)
-                if 0 <= xx < w and 0 <= yy < h:
-                    c[yy][xx] = "|"
-    return ["".join(r) for r in c]
+    return list(SEAL[frame])

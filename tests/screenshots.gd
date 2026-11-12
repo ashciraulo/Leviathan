@@ -250,6 +250,29 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=foes: the redrawn Sledgeseal and Dunejaw in their regions.
+	if OS.get_environment("SHOTS_ONLY") == "foes":
+		var shots := [
+			[Vector2i(1, -3), Vector2i(10, 6), "foe_sledgeseal", Sledgeseal, -1],
+			[Vector2i(9, 3), Vector2i(12, 9), "foe_dunejaw_bite", Dunejaw, Dunejaw.Mode.BITE],
+			[Vector2i(9, 3), Vector2i(12, 9), "foe_dunejaw_exposed", Dunejaw, Dunejaw.Mode.EXPOSED],
+		]
+		for shot: Array in shots:
+			var room := await _jump(game, shot[0], shot[1])
+			game.player._invuln = 600.0
+			for child in room.get_children():
+				if child is Enemy:
+					child.ai_enabled = false
+					child.velocity = Vector2.ZERO
+					if is_instance_of(child, shot[3]) and int(shot[4]) >= 0:
+						child.mode = shot[4]
+			await _wait(0.3)
+			await _capture(shot[2])
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=secrets: exploration secrets in the older regions.
 	if OS.get_environment("SHOTS_ONLY") == "secrets":
 		await _room_shots(game, {

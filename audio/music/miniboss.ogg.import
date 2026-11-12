@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/miniboss.ogg-d8cab32823ec28672b8eedb453bfdd78
 [params]
 
 loop=false
-loop_offset=0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

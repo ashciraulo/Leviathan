@@ -227,3 +227,33 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Open MINOR (v8):** E4, G4 and Bb3 (played 76, 79, 70) are 3-7 dB soft in the loud layer; E4 is the and-of-1 on
   every Am bar. Fix: send them to a clone channel and lower the main pizz about 5 dB with `volume_db`. Tuning: B3, D4,
   F4, G#4 about +10 c (don't retune C4, it reads -6 c now). No shared reverb send yet.
+
+## Teeth in the Dark, the miniboss (2026-11-12)
+- **Template:** `templates\boss_template3.flp`, shared with the boss; its channels carry the boss's part names, so
+  `maps/miniboss.json` maps strings_staccato to strings_ostinato, brass_stab to horns_brass, drum_toms to drum_taiko.
+- **Brass:** Analog Lab "Trumpfal", a Fairlight CMI trumpet sample: in tune, 72 ms release, mono and lo-fi. Dirty
+  Bronze (v2) failed review: it carries a layer an octave below the written notes, starts +54 c sharp and falls, and
+  its release slurs stabs together. +3 dB at 2 kHz for some front.
+- **Strings:** Analog Lab "Staccato Blend" (Bowed Strings), Time macro at 0. 12 Low Strings is a sustain patch and
+  can't play eighths. Staccato Blend still peaks ~100 ms after note-on, so the part plays 60 ms early
+  (`"advance_s": 0.06` in the fix map; flp_build wraps a note before 0 to the loop end and finalize folds it back).
+  It follows velocity at only ~0.16 dB/step, so accents are written at 110 and per-key velocity trims barely work.
+- **Toms:** written 45 plays 42, 48 plays 45 (G minor tones, no C#).
+- v7: review PASS (5 MINOR). Gate: key 53 still -3.5 dB (needs a clone channel). -16.88 LUFS, TP -2.37 dBTP.
+- **Open MINORs (v7):** the strings' front is still a ramp; the trumpet has no bite in its first 30 ms (2-6 kHz share
+  -24.7 dB); toms glide and have no attack above 150 Hz; strings lean 5.6 dB left and the brass is mono and dry;
+  the even bars sag 3-4 dB.
+
+## Wake Not the Deep, the boss (2026-11-12)
+- **Template:** `templates\boss_template3.flp`. Ostinato = Staccato Blend (Time 0, `"advance_s": 0.04`, ~0.07
+  dB/step on sixteenths, per-key trims in `maps/boss_fix.json`); horns = Trumpfal; brass_low = 12 Low Strings (+12,
+  held notes only); timpani = Emulator II "Gong & Timpani" (+1); taiko keys 36/38 play 47/50; choir = Ah Voice, which
+  ignores velocity (level only through channel gain).
+- **Form:** section C drops to timpani on the root (beats 1 and 3) under the choir; bars 32-33 build with a snare
+  ramp and a G timpani roll; in D the choir doubles the trumpet melody (bars 34-49) so the long notes don't fade.
+- v10: review PASS (0 MAJOR, 6 MINOR). -16.59 LUFS, TP -2.39 dBTP, seam step -0.41 dB.
+- **Open MINORs (v10):** above 150 Hz the build rises only +3.8 dB (cap the taiko ramp near vel 105, add more on
+  top in bar 34); D bars 35, 42, 46 dip 11-14 dB at the choir hand-off (double on its own choir clone +2-3 dB, or drop
+  the ostinato octaves there); trumpet 2-6 kHz still ~5 dB hotter in D (take +0.9 dB on horns per stem_balance); the
+  taiko needs a stick layer for 2-6 kHz; the C timpani read as F/Eb above 150 Hz on small speakers (narrow cut near
+  700 Hz); ostinato low keys ~26 ms late.

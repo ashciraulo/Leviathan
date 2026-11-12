@@ -97,6 +97,14 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         quiet = min(10 * np.log10(max(1e-12, float(np.mean(mono_all[k:k + w] ** 2))))
                     for k in range(start, end - w, w // 2))
         report.update(loop_end_tail_below_quietest_db=round(quiet - drop[1], 1))
+        # A cut is a cliff: FL stops and the next 10 ms are silent. A dry staccato loop (miniboss v4: eighth-note
+        # strings, trumpet stabs, toms, nothing quiet in the body) also falls >12 dB past the end, but as a ring
+        # that decays a few dB per 10 ms. Largest 10 ms step down in the tail while it is still audible:
+        h = int(0.01 * rate)
+        seg = mono_all[end - h: end - h + (mono_all.shape[0] - end + h) // h * h]  # from 10 ms before the end
+        env = 10 * np.log10(np.mean(seg.reshape(-1, h) ** 2, axis=1) + 1e-12) if seg.shape[0] >= 2 * h else np.zeros(2)
+        steps_down = [env[i] - env[i + 1] for i in range(len(env) - 1) if env[i] > -70]
+        report.update(loop_end_tail_cliff_db=round(max(steps_down, default=0.0), 1))
         report.update(seam_jump=round(jump, 4), seam_step_db=round(after - before, 2),
                       bar_step_p90_db=round(float(np.percentile(steps, 90)), 2) if steps else 0.0,
                       tail_folded_s=round(n / rate, 2))
@@ -140,7 +148,8 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
     if spec["loop"] and report["tail_room_s"] < 2.0:
         problems.append(f"the render ends {report['tail_room_s']} s past the loop end: render with two bars of room "
                         "(flp_build adds them) so the tail rings over the seam")
-    if spec["loop"] and report["loop_end_drop_db"] > 12 and report["loop_end_tail_below_quietest_db"] > 12:
+    if spec["loop"] and report["loop_end_drop_db"] > 12 and report["loop_end_tail_below_quietest_db"] > 12 \
+            and report["loop_end_tail_cliff_db"] > 20:
         problems.append(f"the render falls {report['loop_end_drop_db']} dB right after the loop end: FL cut the tail")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")

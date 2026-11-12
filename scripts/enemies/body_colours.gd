@@ -50,7 +50,7 @@ const COLOURS := {
 	"res://assets/sprites/scuttler.png": 0xf58a5eff,
 	"res://assets/sprites/shellback.png": 0x6f9a4eff,
 	"res://assets/sprites/slagbeetle.png": 0x4e4048ff,
-	"res://assets/sprites/sledgeseal.png": 0xc4d2e6ff,
+	"res://assets/sprites/sledgeseal.png": 0x343f54ff,
 	"res://assets/sprites/spitter.png": 0xb0a0b8ff,
 	"res://assets/sprites/spore_cloud.png": 0x6e3a6eff,
 	"res://assets/sprites/sporecap.png": 0x6e4e8aff,

@@ -25,6 +25,7 @@ const TEXT_GOLD := Color("#f4c542")
 const TEXT_WARN := Color("#f27a5e")
 const FILL := Color("#18324a")
 const FILL_DARK := Color("#10223a")
+const FILL_LIGHT := Color("#24466a")
 const INK := Color("#0c1626")
 
 ## Map marker frames in map_markers.png.
