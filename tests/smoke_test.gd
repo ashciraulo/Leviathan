@@ -104,6 +104,7 @@ func _ready() -> void:
 		await _test_boat_raised()
 		await _test_wick_round()
 		await _test_gran_table()
+		await _test_pad_tour()
 		await _test_reeds_song()
 		await _test_murmur_and_dace()
 		_test_talk_order()
@@ -7946,6 +7947,248 @@ func _test_boat_raised() -> void:
 	Cutscene.fast = false
 	GameState.reset_new_game()
 
+
+## A whole pass on a gamepad, with real pad events: the title, the pause
+## menu's every tab, remapping, the minigames and the glyphs in the text.
+func _test_pad_tour() -> void:
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	var had_settings := FileAccess.file_exists(settings_path)
+	var old_settings := FileAccess.get_file_as_string(settings_path) if had_settings else ""
+	Settings.reset_controls()
+	# Whatever ran before may have left the game paused or an action held.
+	get_tree().paused = false
+	for held: String in Settings.REMAPPABLE:
+		Input.action_release(held)
+	# The title: the D-pad and the stick move between buttons, A picks, B backs out.
+	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
+	add_child(title)
+	var until := Time.get_ticks_msec() + 8000
+	while get_viewport().gui_get_focus_owner() == null and Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+	(title._menu.get_child(1) as Button).grab_focus()
+	await _pad_tap(JOY_BUTTON_DPAD_DOWN)
+	var after_dpad := get_viewport().gui_get_focus_owner()
+	_check(after_dpad == title._menu.get_child(2), "the D-pad moves down the title menu")
+	await _stick_tap(JOY_AXIS_LEFT_Y, -1.0)
+	_check(get_viewport().gui_get_focus_owner() == title._menu.get_child(1), "and the stick moves back up")
+	_check(Settings.using_pad, "pad presses switch the prompts to the pad")
+	await _pad_tap(JOY_BUTTON_A)
+	_check(title._page == title._files, "A opens Journeys on the title")
+	await _pad_tap(JOY_BUTTON_B)
+	_check(title._page == null, "B goes back to the title menu")
+	title._leaving = true
+	title.queue_free()
+	await get_tree().process_frame
+	# The pause menu: Start opens it, the triggers and LB go round every tab.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, StoryDirector.FISHING_HOLE_AT + Vector2(0, -18))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	game.player._invuln = 600.0
+	var menu: PauseMenu = game.get_node("PauseMenu") if game.has_node("PauseMenu") else null
+	if menu == null:
+		for child in game.get_children():
+			if child is PauseMenu:
+				menu = child
+	_check(menu != null, "the game has a pause menu")
+	if menu == null:
+		game.queue_free()
+		_restore_pad_settings(had_settings, old_settings)
+		return
+	await _pad_tap(JOY_BUTTON_START)
+	_check(menu.visible and menu.current == PauseMenu.Tab.SATCHEL, "Start opens the pause menu on the Satchel")
+	var visited := [menu.current]
+	for i in PauseMenu.TABS.size():
+		await _stick_tap(JOY_AXIS_TRIGGER_RIGHT, 1.0)
+		visited.append(menu.current)
+	_check(visited == [0, 1, 2, 3, 4, 0], "RT goes through every tab, Progress too, and round (%s)" % [visited])
+	await _pad_tap(JOY_BUTTON_LEFT_SHOULDER)
+	_check(menu.current == PauseMenu.Tab.JOURNEY, "LB goes back a tab")
+	await _stick_tap(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_check(menu.current == PauseMenu.Tab.OPTIONS, "and so does LT")
+	# On a pad, no page's hint names a keyboard key.
+	var compared := 0
+	for tab in PauseMenu.TABS.size():
+		menu.show_tab(tab)
+		var page: MenuPage = menu._pages[tab]
+		Settings.using_pad = false
+		var keys_hint := page.hint()
+		Settings.using_pad = true
+		var pad_hint := page.hint()
+		for action: String in Settings.REMAPPABLE:
+			var key := MenuKit.keyboard_name(action)
+			var word := RegEx.create_from_string("(^|[^A-Za-z])%s([^A-Za-z]|$)" % key)
+			if word.search(keys_hint) != null:
+				compared += 1
+				_check(word.search(pad_hint) == null, "%s's hint shows no keyboard key on a pad: %s" % [PauseMenu.TABS[tab], pad_hint])
+	_check(compared > 0, "some page hints name keys to compare")
+	_check(_pad_names_ok(), "every action has a pad button with a name")
+	await _pad_tap(JOY_BUTTON_B)
+	_check(not menu.visible, "B closes the pause menu")
+	# Remapping on a pad: the cursor starts on the pad column, and a pad button
+	# rebinds the button even from the keyboard column.
+	var controls := ControlsPage.new()
+	add_child(controls)
+	controls.on_open()
+	_check(controls._column == 1, "on a pad, remapping starts in the gamepad column")
+	var action: String = Settings.REMAPPABLE[controls._row]
+	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	_check(controls._waiting, "A waits for the new button")
+	controls.handle_input(_pad_event(JOY_BUTTON_RIGHT_STICK))
+	_check(not controls._waiting and ControlsPage.pad_text(action) == MenuKit.pad_key("PAD_BUTTON_%d" % JOY_BUTTON_RIGHT_STICK), "a pad button rebinds it")
+	controls._column = 0
+	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	controls.handle_input(_pad_event(JOY_BUTTON_LEFT_STICK))
+	_check(not controls._waiting and controls._column == 1 and ControlsPage.pad_text(action) == MenuKit.pad_key("PAD_BUTTON_%d" % JOY_BUTTON_LEFT_STICK), "picked on the keyboard column, a pad button still rebinds the button")
+	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	_check(not OS.get_keycode_string(KEY_ESCAPE) in controls.hint(), "on a pad, waiting says Start cancels, not Escape: " + controls.hint())
+	controls.handle_input(_pad_event(JOY_BUTTON_START))
+	_check(not controls._waiting, "Start cancels waiting for a button")
+	controls.queue_free()
+	Settings.reset_controls()
+	Settings.save_settings()
+	# The left stick walks Wren.
+	var from: Vector2 = game.player.global_position
+	_stick(JOY_AXIS_LEFT_X, -1.0)
+	await _wait(0.3)
+	_stick(JOY_AXIS_LEFT_X, 0.0)
+	_check(game.player.global_position.x < from.x - 4, "the left stick walks Wren")
+	# Ice fishing: A casts.
+	var room: Room = game.current_room
+	var hole := room.get_children().filter(func(c: Node) -> bool: return c is FishingHole)[0] as FishingHole
+	GameState.set_flag("ottilie_asked")
+	game.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	await _pad_tap(JOY_BUTTON_A)
+	_check(hole.state == FishingHole.State.WAITING, "A casts at the fishing hole")
+	game.queue_free()
+	await _wait(0.1)
+	# The echo game: A strikes Coralie's chime.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "coralie_asked", "coralie_chime_done", EchoGame.ASK_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.SHORE, StoryDirector.CHIME_AT + Vector2(0, 18))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	room = game.current_room
+	var echo := room.get_children().filter(func(c: Node) -> bool: return c is EchoGame)[0] as EchoGame
+	game.player.global_position = room.global_position + StoryDirector.CHIME_AT + Vector2(0, 18)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	await _pad_tap(JOY_BUTTON_A)
+	_check(echo.state == EchoGame.State.SHOW, "A strikes the chime and starts the echo game")
+	game.queue_free()
+	await _wait(0.1)
+	# Wick's round: A rings the dusk bell.
+	GameState.reset_new_game()
+	var flags := ["wick_asked", "wick_gave_jar", "wick_told_sink", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG, LamplighterRound.ASK_FLAG]
+	for coord: Vector2i in FenLantern.SPOTS:
+		flags.append(FenLantern.flag_for(coord))
+	for flag: String in flags:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.DUSK_BELL_AT + Vector2(0, 18))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	game.player._invuln = 600.0
+	game.player.global_position = game.current_room.global_position + StoryDirector.DUSK_BELL_AT + Vector2(0, 18)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	await _pad_tap(JOY_BUTTON_A)
+	_check(LamplighterRound.running, "A rings Wick's dusk bell and starts the round")
+	if is_instance_valid(LamplighterRound.current):
+		LamplighterRound.current.stop()
+	game.queue_free()
+	await _wait(0.1)
+	# Every line that names a control names a pad button, in every pad style.
+	var csv := FileAccess.open("res://locale/strings.csv", FileAccess.READ)
+	var with_tokens: Array[String] = []
+	while not csv.eof_reached():
+		var row := csv.get_csv_line()
+		if row.size() > 1 and "{" in row[1]:
+			with_tokens.append(row[0])
+	_check(not with_tokens.is_empty(), "some lines name controls")
+	Settings.using_pad = true
+	for style: String in ["xbox", "playstation", "nintendo"]:
+		Settings.pad_style = style
+		_check(_pad_names_ok(), "every action has a named %s button" % style)
+		var either := tr("ITEM_KEYS_EITHER") % [MenuKit.pad_name("item_1"), MenuKit.pad_name("item_2")]
+		for key: String in with_tokens:
+			var expected := tr(key).replace("{key}", either)
+			for act: String in Settings.REMAPPABLE:
+				expected = expected.replace("{%s}" % act, MenuKit.pad_name(act))
+			var text := MenuKit.fill_keys(tr(key))
+			_check(text == expected and not "{" in text, "%s names %s buttons: %s" % [key, style, text])
+	_restore_pad_settings(had_settings, old_settings)
+
+
+## Puts the settings file and the pad state back after the pad tour.
+func _restore_pad_settings(had_settings: bool, old_settings: String) -> void:
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	Settings.pad_style = "xbox"
+	Settings.using_pad = false
+	Settings._pad_device = -1
+	if had_settings:
+		var file := FileAccess.open(settings_path, FileAccess.WRITE)
+		file.store_string(old_settings)
+		file.close()
+	else:
+		DirAccess.remove_absolute(settings_path)
+	Settings.load_settings()
+	Settings.apply()
+
+
+## Every action has a gamepad button, and the button has a name.
+func _pad_names_ok() -> bool:
+	for action: String in Settings.REMAPPABLE:
+		var named := false
+		for event in InputMap.action_get_events(action):
+			var key := ""
+			if event is InputEventJoypadButton:
+				key = MenuKit.pad_key("PAD_SHORT_%d" % event.button_index)
+			elif event is InputEventJoypadMotion:
+				key = MenuKit.pad_key("PAD_SHORT_AXIS_%d" % event.axis)
+			if key != "":
+				named = tr(key) != key
+				break
+		if not named:
+			return false
+	return true
+
+
+## A pad button pressed and let go, the way a pad sends it.
+func _pad_tap(button: JoyButton) -> void:
+	Input.parse_input_event(_pad_event(button))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var up := _pad_event(button)
+	up.pressed = false
+	Input.parse_input_event(up)
+	await get_tree().physics_frame
+	await get_tree().process_frame
+
+
+func _stick(axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = value
+	Input.parse_input_event(event)
+
+
+## A stick (or trigger) pushed and let back.
+func _stick_tap(axis: JoyAxis, value: float) -> void:
+	_stick(axis, value)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_stick(axis, 0.0)
+	await get_tree().physics_frame
+	await get_tree().process_frame
 
 ## Wick's lamplighter's round: ring the dusk bell and the fen's lanterns
 ## go out for the round; light all five against the clock. The lanterns'

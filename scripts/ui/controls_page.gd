@@ -3,6 +3,9 @@ extends MenuPage
 ## Remapping: every action with its keyboard key and gamepad button.
 ## Pick a cell and press Interact, then press the new key or button.
 ## Escape (or Start on a pad) cancels. The last row resets everything.
+## On a pad the cursor starts in the gamepad column, and whichever column is
+## picked, a key press rebinds the key and a pad button the button (a pad
+## player who pressed A on the keyboard column isn't left waiting).
 
 const PANEL := Rect2(8, 22, 368, 128)
 const INFO_PANEL := Rect2(8, 152, 368, 44)
@@ -20,7 +23,7 @@ var _waiting := false
 
 func on_open() -> void:
 	_row = 0
-	_column = 0
+	_column = 1 if Settings.using_pad else 0
 	_scroll = 0
 	_waiting = false
 
@@ -56,7 +59,7 @@ func handle_input(event: InputEvent) -> bool:
 	return false
 
 
-## Takes the next key (column 0) or pad button (column 1).
+## Takes the next key or pad button, and moves the cursor to its column.
 func _capture(event: InputEvent) -> bool:
 	if not event.is_pressed() or event.is_echo():
 		return true
@@ -66,9 +69,9 @@ func _capture(event: InputEvent) -> bool:
 	if event is InputEventJoypadButton and event.button_index == JOY_BUTTON_START:
 		_waiting = false
 		return true
-	var wanted := (_column == 0 and event is InputEventKey) or (_column == 1 and event is InputEventJoypadButton)
-	if wanted:
+	if event is InputEventKey or event is InputEventJoypadButton:
 		if Settings.rebind(Settings.REMAPPABLE[_row], event):
+			_column = 1 if event is InputEventJoypadButton else 0
 			Settings.save_settings()
 			_waiting = false
 		else:
