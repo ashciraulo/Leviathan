@@ -1300,11 +1300,11 @@ func reeds_song() -> void:
 	await scene.narrate(["NARRATE_GOT_SONG_PURSE"])
 	await scene.speak("murmur", ["MURMUR_CHAPEL_6"])
 	GameState.set_flag(REED_DONE_FLAG)
-	# Murmur heads home to the fen, out through the chapel's south door.
+	# Murmur heads home to the fen, out by the chapel's west door.
 	if is_instance_valid(murmur):
 		var go := murmur.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		var at := murmur.position
-		for point: Vector2 in [Vector2(9 * 16 + 8, 9 * 16 + 8), Vector2(9 * 16 + 8, 13 * 16)]:
+		for point: Vector2 in [Vector2(4 * 16, 10 * 16 + 8), Vector2(-16, 10 * 16 + 8)]:
 			go.tween_property(murmur, "position", point, at.distance_to(point) / 40.0)
 			at = point
 		await go.finished

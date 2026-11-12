@@ -358,11 +358,11 @@ const TALKS := {
 		# and Liesl, then Murmur sings it in the chapel (StoryDirector).
 		{"if": ["murmur_song_ask", "found_hymn_chapel", "found_hymn_vault", "song_liesl"], "unless": ["reed_song"], "set": ["reed_song"], "lines": [["", "NARRATE_HAND_HYMNS"], "MURMUR_SONG_DONE_1", "MURMUR_SONG_DONE_2", "MURMUR_SONG_DONE_3"]},
 		{"if": ["murmur_saw_lantern", "old_one_turned"], "unless": ["murmur_song_ask"], "set": ["murmur_song_ask"], "lines": ["MURMUR_SONG_1", "MURMUR_SONG_1B", "MURMUR_SONG_2", "MURMUR_SONG_2B", "MURMUR_SONG_3"]},
-		{"if": ["murmur_song_ask"], "unless": ["reed_song"], "lines": ["MURMUR_SONG_WAITING"]},
-		{"if": ["reed_song"], "unless": ["reed_song_done"], "lines": ["MURMUR_SONG_GO"]},
 		# The Calf's Rest: Wren has found the little skull in the far fen.
 		{"if": ["found_calf_rest", "seen_ending"], "unless": ["murmur_left_robe"], "set": ["murmur_left_robe"], "lines": ["MURMUR_REST_1", "MURMUR_REST_2", "MURMUR_REST_3"]},
 		{"if": ["found_calf_rest"], "unless": ["seen_ending", "murmur_heard_rest"], "set": ["murmur_heard_rest"], "lines": ["MURMUR_REST_EARLY"]},
+		{"if": ["murmur_song_ask"], "unless": ["reed_song"], "lines": ["MURMUR_SONG_WAITING"]},
+		{"if": ["reed_song"], "unless": ["reed_song_done"], "lines": ["MURMUR_SONG_GO"]},
 		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
 		{"if": ["reed_song_done"], "lines": ["MURMUR_SONG_AFTER"]},
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
