@@ -21,7 +21,7 @@ marimba = song.part("marimba", program=12, vel=78)
 kalimba = song.part("kalimba", program=108, vel=58)
 flute = song.part("flute_wood", program=73, vel=80)
 drums = song.part("drum_hand", program=0, vel=80)
-bass = song.part("bass_fretless", program=35, vel=84)
+bass = song.part("bass_upright", program=32, vel=84)
 pad = song.part("pad_warm", program=89, vel=40)
 
 A = ["Em7", "A", "Em7", "A", "G", "D", "Bm7", "A",
@@ -97,29 +97,43 @@ for b in range(song.bars):
     for s, p, v in pattern:
         drums.note(t + s, S * 1.5, p, v)
 
-# Fretless bass: root and a pushed fifth, sliding note into each A bar pair.
+# Upright bass (the sampled Diamond bass, Ash's pick for every folk cue): root
+# and a pushed fifth. F2..G3 only, the sample's clean range, and never F#3
+# (that sample has two fundamentals); see music/PILOT.md.
+def low_root(sym, lowest=41):
+    return lowest + (bass_of(sym) - lowest) % 12
+
+
+def bass_ok(m):
+    return 41 <= m <= 55 and m != 54
+
+
 for b, sym in enumerate(CHORDS):
     sec = section(b)
     if sec == "A" and b < 4:
         continue
     t = song.bar(b)
-    root = 28 + (bass_of(sym) - 4) % 12  # E1..D#2
-    if root < 33:
-        root += 12
-    # The chord's own fifth (on D/F# that is A, not the slash note's C#).
-    cpc = chord(sym)[0]
-    fifth = min((m for m in range(root - 7, root + 10) if m % 12 == (cpc + 7) % 12), key=lambda m: abs(m - root - 5))
+    root = low_root(sym)
+    # The chord's own fifth (on D/F# that is A, not the slash note's C#); if the
+    # fifth is F#3, the chord's third instead.
+    cpc, _ = chord(sym)
+    want = (cpc + 7) % 12 if (cpc + 7) % 12 != root % 12 else cpc
+    fifth = min((m for m in range(root - 9, 56) if m % 12 == want and bass_ok(m)), key=lambda m: abs(m - root - 4))
+    other = root + 12 if bass_ok(root + 12) else (root - 12 if bass_ok(root - 12) else fifth)
+    last = b == song.bars - 1
     if sec == "C":
-        bass.note(t, 3.9, root, 74)
+        bass.note(t, 1.9, root, 74)
+        bass.note(t + 2, 1.9, fifth, 64)  # re-plucked: the sample dies after ~1 s
     elif sec == "B":
         bass.note(t, 1.5, root, 84)
-        bass.note(t + 1.5, 2.4, root + 12 if root < 40 else fifth, 72)
+        bass.note(t + 1.5, 2.4 if not last else 2.5, other, 72)
     else:
         bass.note(t, 0.9, root, 88)
         bass.note(t + 1.5, 0.45, fifth, 70)
-        bass.note(t + 2, 1.4, root + 12 if root + 12 <= 52 else root, 76)
-        if b % 2:
-            bass.note(t + 3.5, 0.45, fifth - 2, 64)
+        bass.note(t + 2, 1.4, other, 76)
+        walk = fifth - 2
+        if b % 2 and bass_ok(walk):
+            bass.note(t + 3.5, 0.45, walk, 64)
 
 # Warm pad: under B and C only.
 for b, sym in enumerate(CHORDS):

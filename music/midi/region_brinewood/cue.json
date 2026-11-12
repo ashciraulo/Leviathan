@@ -35,10 +35,10 @@
    "high": 52
   },
   {
-   "name": "bass_fretless",
-   "notes": 150,
-   "low": 33,
-   "high": 52
+   "name": "bass_upright",
+   "notes": 158,
+   "low": 42,
+   "high": 55
   },
   {
    "name": "pad_warm",
