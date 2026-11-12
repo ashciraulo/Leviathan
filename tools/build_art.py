@@ -21,6 +21,7 @@ Only the Python standard library is needed. Output goes to assets/.
 import math
 import os
 import random
+import re
 import struct
 import sys
 import zlib
@@ -1084,6 +1085,73 @@ assert not {n for n, _ in TILE_LAYOUT} & {n for n, _ in dungeon_setpiece_art.TIL
 TILE_LAYOUT += dungeon_setpiece_art.TILES
 assert not {n for n, _ in TILE_LAYOUT} & {n for n, _ in verge_art.EBB_TILES}, "verge_art.EBB_TILES reuses tile names"
 TILE_LAYOUT += verge_art.EBB_TILES
+
+
+# Rounded shores: where a pool's corner juts into open ground (land on two
+# sides), the overworld draws a corner cap over the water so the bank turns
+# a curve instead of a square. Built from each region's own floor and bank
+# tiles (read from Room.BIOMES, so the two can't drift apart): ground
+# outside a quarter circle, the bank's band of colours along the arc.
+SHORE_RADIUS = 6
+SHORE_BIOMES = ["saltmarrow", "brinewood", "gloamfen", "windmere", "frostspine", "sunken_verge", "ossuary"]
+
+
+def _biome_tiles():
+    text = open(os.path.join(ROOT, "scripts", "world", "room.gd")).read()
+    out = {}
+    for name in SHORE_BIOMES:
+        block = re.search(r'^\t"%s": \{(.*?)^\t\}' % name, text, re.M | re.S).group(1)
+        floor = re.search(r'"floor": "([^"]+)"', block).group(1)
+        edge = re.search(r'"water_edge": "([^"]+)"', block).group(1)
+        water = re.search(r'"water": "([^"]+)"', block).group(1)
+        out[name] = (floor, edge, water)
+    return out
+
+
+def shore_cap(biome, corner, frame):
+    builders = dict(TILE_LAYOUT)
+    floor_name, edge_name, water_name = _biome_tiles()[biome]
+    ground = builders[floor_name % 0]()
+    water = builders[water_name % frame]()
+    r = SHORE_RADIUS
+    side = "left" if corner[1] == "l" else "right"
+    band_tile = builders[edge_name % (side, frame)]()
+    # The bank's colours from the shore inward, read across the middle of
+    # its straight side tile (no deeper than the curve, so the arc always
+    # shows the bank's line).
+    band = []
+    cols = range(T) if side == "left" else range(T - 1, -1, -1)
+    for x in cols:
+        c = band_tile[T // 2][x]
+        if c[3] == 0:
+            break
+        band.append(c)
+    band = band[-(r - 1):]
+    cx = r if corner[1] == "l" else T - r
+    cy = r if corner[0] == "t" else T - r
+    px = blank()
+    for y in range(T):
+        for x in range(T):
+            inx = x < cx if corner[1] == "l" else x >= cx
+            iny = y < cy if corner[0] == "t" else y >= cy
+            if not (inx and iny):
+                continue
+            d = r - math.hypot(x + 0.5 - cx, y + 0.5 - cy)
+            if d < 0:
+                px[y][x] = ground[y][x]
+            elif d < len(band):
+                px[y][x] = band[int(d)]
+            else:
+                # Open water, over the square ends of the straight banks.
+                px[y][x] = water[y][x]
+    return px
+
+
+SHORE_TILES = [
+    ("shore_%s_%s_%d" % (biome, corner, frame), (lambda b=biome, c=corner, f=frame: shore_cap(b, c, f)))
+    for biome in SHORE_BIOMES for corner in ("tl", "tr", "bl", "br") for frame in range(2)
+]
+TILE_LAYOUT += SHORE_TILES
 
 
 def build_tiles():

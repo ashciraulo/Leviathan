@@ -48,9 +48,10 @@ func _ready() -> void:
 		return
 
 	# SHOTS_ONLY=env: the overworld ground the art pass redrew: lava pools,
-	# the tide flats at low water, and sinking sand.
-	if OS.get_environment("SHOTS_ONLY") == "env":
-		await _env_shots(game)
+	# the tide flats at low water, and sinking sand. SHOTS_ONLY=shores:
+	# pools and shorelines, for their rounded corners.
+	if OS.get_environment("SHOTS_ONLY") in ["env", "shores"]:
+		await _env_shots(game, OS.get_environment("SHOTS_ONLY"))
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -3585,8 +3586,15 @@ func _close_dialogue(game: Node) -> void:
 				await _wait(0.05)
 
 
-func _env_shots(game: Node) -> void:
+func _env_shots(game: Node, which: String) -> void:
 	var shots := [
+		[Vector2i(0, 0), "shore_saltmarrow_shore", Vector2i(2, 3)],
+		[Vector2i(3, 0), "shore_brinewood_edge", Vector2i(7, 6)],
+		[Vector2i(1, -3), "shore_frostbite_shelf", Vector2i(4, 4)],
+		[Vector2i(6, -4), "shore_windbreak_cliffs", Vector2i(3, 5)],
+		[Vector2i(4, 1), "shore_fenmouth", Vector2i(11, 1)],
+		[Vector2i(2, 2), "shore_wrack_shore", Vector2i(3, 8)],
+	] if which == "shores" else [
 		[Vector2i(8, -1), "env_geyser_basin", Vector2i(11, 1)],
 		[Vector2i(9, -2), "env_slag_fields", Vector2i(2, 6)],
 		[Vector2i(0, 2), "env_cockle_flats", Vector2i(6, 7)],
