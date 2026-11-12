@@ -18,6 +18,7 @@ var _time := 0.0
 var _cursor := 0
 var _done := false
 var _canvas: Control
+var _wren: Sprite2D
 var _bubbles: Array[Vector3] = []
 
 
@@ -34,6 +35,13 @@ func _ready() -> void:
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_screen)
 	add_child(_canvas)
+	# Wren as a sprite (not drawn straight from the sheet) so they sink in
+	# the jumper they wear.
+	_wren = Art.sprite(Art.WREN, 6, 3, 22)
+	_wren.position = Vector2(184, 70)
+	_wren.modulate = Color(0.55, 0.65, 0.85, 1.0)
+	Jumpers.dress(_wren, GameState.jumper)
+	_canvas.add_child(_wren)
 
 
 func _process(delta: float) -> void:
@@ -81,8 +89,7 @@ func _draw_screen() -> void:
 	# Wren drifting down, the light above fading.
 	var fall := minf(_time / 2.5, 1.0)
 	var wren_y := roundf(70.0 + fall * 18.0 + sin(_time * 1.2) * 1.5)
-	_canvas.draw_texture_rect_region(Art.WREN, Rect2(184, wren_y, 16, 24),
-		Rect2(0, 0, 16, 24), Color(0.55, 0.65, 0.85, 1.0))
+	_wren.position = Vector2(184, wren_y)
 	var fade := clampf(_time / INPUT_DELAY, 0.0, 1.0)
 	MenuKit.draw_text(_canvas, "GAMEOVER_TITLE_TEXT", Vector2(0, 30), Color(MenuKit.TEXT, fade),
 		HORIZONTAL_ALIGNMENT_CENTER, 384)
