@@ -70,8 +70,8 @@ func _capture(event: InputEvent) -> bool:
 		_waiting = false
 		return true
 	if event is InputEventKey or event is InputEventJoypadButton:
-		_column = 1 if event is InputEventJoypadButton else 0
 		if Settings.rebind(Settings.REMAPPABLE[_row], event):
+			_column = 1 if event is InputEventJoypadButton else 0
 			Settings.save_settings()
 			_waiting = false
 		else:

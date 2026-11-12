@@ -7947,10 +7947,6 @@ func _test_boat_raised() -> void:
 	GameState.reset_new_game()
 
 
-## Wick's lamplighter's round: ring the dusk bell and the fen's lanterns
-## go out for the round; light all five against the clock. The lanterns'
-## own flags stay as they were; each time beaten earns a purse, in order.
-
 ## A whole pass on a gamepad, with real pad events: the title, the pause
 ## menu's every tab, remapping, the minigames and the glyphs in the text.
 func _test_pad_tour() -> void:
@@ -7998,6 +7994,7 @@ func _test_pad_tour() -> void:
 	_check(menu != null, "the game has a pause menu")
 	if menu == null:
 		game.queue_free()
+		_restore_pad_settings(had_settings, old_settings)
 		return
 	await _pad_tap(JOY_BUTTON_START)
 	_check(menu.visible and menu.current == PauseMenu.Tab.SATCHEL, "Start opens the pause menu on the Satchel")
@@ -8011,6 +8008,7 @@ func _test_pad_tour() -> void:
 	await _stick_tap(JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_check(menu.current == PauseMenu.Tab.OPTIONS, "and so does LT")
 	# On a pad, no page's hint names a keyboard key.
+	var compared := 0
 	for tab in PauseMenu.TABS.size():
 		menu.show_tab(tab)
 		var page: MenuPage = menu._pages[tab]
@@ -8022,7 +8020,9 @@ func _test_pad_tour() -> void:
 			var key := MenuKit.keyboard_name(action)
 			var word := RegEx.create_from_string("(^|[^A-Za-z])%s([^A-Za-z]|$)" % key)
 			if word.search(keys_hint) != null:
+				compared += 1
 				_check(word.search(pad_hint) == null, "%s's hint shows no keyboard key on a pad: %s" % [PauseMenu.TABS[tab], pad_hint])
+	_check(compared > 0, "some page hints name keys to compare")
 	_check(_pad_names_ok(), "every action has a pad button with a name")
 	await _pad_tap(JOY_BUTTON_B)
 	_check(not menu.visible, "B closes the pause menu")
@@ -8042,10 +8042,12 @@ func _test_pad_tour() -> void:
 	controls.handle_input(_pad_event(JOY_BUTTON_LEFT_STICK))
 	_check(not controls._waiting and controls._column == 1 and ControlsPage.pad_text(action) == MenuKit.pad_key("PAD_BUTTON_%d" % JOY_BUTTON_LEFT_STICK), "picked on the keyboard column, a pad button still rebinds the button")
 	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	_check(not OS.get_keycode_string(KEY_ESCAPE) in controls.hint(), "on a pad, waiting says Start cancels, not Escape: " + controls.hint())
 	controls.handle_input(_pad_event(JOY_BUTTON_START))
 	_check(not controls._waiting, "Start cancels waiting for a button")
 	controls.queue_free()
 	Settings.reset_controls()
+	Settings.save_settings()
 	# The left stick walks Wren.
 	var from: Vector2 = game.player.global_position
 	_stick(JOY_AXIS_LEFT_X, -1.0)
@@ -8111,17 +8113,26 @@ func _test_pad_tour() -> void:
 		if row.size() > 1 and "{" in row[1]:
 			with_tokens.append(row[0])
 	_check(not with_tokens.is_empty(), "some lines name controls")
+	Settings.using_pad = true
 	for style: String in ["xbox", "playstation", "nintendo"]:
 		Settings.pad_style = style
 		_check(_pad_names_ok(), "every action has a named %s button" % style)
+		var either := tr("ITEM_KEYS_EITHER") % [MenuKit.pad_name("item_1"), MenuKit.pad_name("item_2")]
 		for key: String in with_tokens:
-			var text := MenuKit.fill_keys(tr(key))
+			var expected := tr(key).replace("{key}", either)
 			for act: String in Settings.REMAPPABLE:
-				if ("{%s}" % act) in tr(key):
-					_check(MenuKit.pad_name(act) in text, "%s names the %s button for %s" % [key, style, act])
-			_check(not "{key}" in text and not ("{" + "item_1}") in text, "%s has no token left" % key)
+				expected = expected.replace("{%s}" % act, MenuKit.pad_name(act))
+			var text := MenuKit.fill_keys(tr(key))
+			_check(text == expected and not "{" in text, "%s names %s buttons: %s" % [key, style, text])
+	_restore_pad_settings(had_settings, old_settings)
+
+
+## Puts the settings file and the pad state back after the pad tour.
+func _restore_pad_settings(had_settings: bool, old_settings: String) -> void:
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
 	Settings.pad_style = "xbox"
 	Settings.using_pad = false
+	Settings._pad_device = -1
 	if had_settings:
 		var file := FileAccess.open(settings_path, FileAccess.WRITE)
 		file.store_string(old_settings)
@@ -8178,6 +8189,9 @@ func _stick_tap(axis: JoyAxis, value: float) -> void:
 	await get_tree().physics_frame
 	await get_tree().process_frame
 
+## Wick's lamplighter's round: ring the dusk bell and the fen's lanterns
+## go out for the round; light all five against the clock. The lanterns'
+## own flags stay as they were; each time beaten earns a purse, in order.
 func _test_wick_round() -> void:
 	GameState.reset_new_game()
 	var flags := ["wick_asked", "wick_gave_jar", "wick_told_sink", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG]
@@ -9779,4 +9793,3 @@ func _test_puzzle_caves() -> void:
 			"Gustway: the hook carries Wren from %s to %s (at %s)" % [throw[0], want, at])
 	game.queue_free()
 	await _wait(0.1)
-
