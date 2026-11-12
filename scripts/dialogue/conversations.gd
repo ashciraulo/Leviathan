@@ -244,7 +244,7 @@ const TALKS := {
 		{"if": ["seen_ending"], "set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_END"]},
 		{"set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_FERRY_AGAIN"]},
 	],
-	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
+	# Liesl in Drowned Lane, and her long-ago gran's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
 	"liesl": [
 		{"if": ["sorrel_letters", "liesl_asked"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},

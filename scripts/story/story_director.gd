@@ -102,7 +102,7 @@ const WREN_SOUTH := Vector2(21 * 16 + 8, 9 * 16 + 12)
 const FERRY_BELL_AT := Vector2(17 * 16 + 4, 9 * 16 + 14)
 const FERRY_ROW_TIME := 3.0
 ## Liesl at the head of Drowned Lane, looking out over the flats to her
-## great-grandmother's cottage; and that cottage's door bell, lost on Belfry
+## long-ago gran's cottage; and that cottage's door bell, lost on Belfry
 ## Square's flats until Wren finds it, then hung back by the door.
 const DROWNED_LANE := Vector2i(0, 3)
 const BELFRY_SQUARE := Vector2i(1, 3)
@@ -1228,7 +1228,7 @@ func grans_supper() -> void:
 	scene.face(Vector2.DOWN)
 	table.set_out = true
 	table.queue_redraw()
-	await scene.narrate(["NARRATE_GRAN_TABLE"])
+	await scene.wait(0.8)
 	await scene.speak("liesl", ["LIESL_SUPPER_1"])
 	var ide := Npc.new("ide")
 	ide.position = IDE_SUPPER_ROUTE[0]
@@ -1238,7 +1238,6 @@ func grans_supper() -> void:
 	for point: Vector2 in IDE_SUPPER_ROUTE.slice(1):
 		come.tween_property(ide, "position", point, from.distance_to(point) / 40.0)
 		from = point
-	await scene.narrate(["NARRATE_IDE_COMES"])
 	if come.is_running():
 		await come.finished
 	table.bread = true
@@ -1247,14 +1246,14 @@ func grans_supper() -> void:
 	await scene.speak("liesl", ["LIESL_SUPPER_2"])
 	await scene.lamp(room.global_position + GRAN_TABLE_AT + GranTable.FLAME_AT, Cutscene.LAMP_HERE)
 	table.candle_lit = true
-	await scene.narrate(["NARRATE_GRAN_CANDLE"])
+	await scene.wait(0.8)
 	var bell: Doorbell = null
 	for child in room.get_children():
 		if child is Doorbell and (child as Doorbell).hung:
 			bell = child
 	if bell:
 		bell.ring()
-	await scene.narrate(["NARRATE_GRAN_BELL"])
+	await scene.wait(1.0)
 	await scene.speak("liesl", ["LIESL_SUPPER_BELL"])
 	await scene.speak("liesl", ["LIESL_SUPPER_3", "LIESL_SUPPER_4"])
 	GameState.give_item("glint", SUPPER_GLINTS, false)
@@ -1295,7 +1294,7 @@ func reeds_song() -> void:
 	await scene.wait(0.4)
 	await scene.walk_route(room.global_position + WREN_CHAPEL_AT)
 	scene.face(Vector2.UP)
-	await scene.narrate(["NARRATE_REED_CHAPEL"])
+	await scene.wait(0.6)
 	await scene.speak("murmur", ["MURMUR_CHAPEL_1", "MURMUR_CHAPEL_2"])
 	await scene.narrate(["NARRATE_REED_SINGS"])
 	await scene.lamp(murmur.global_position + Vector2(0, -14), Cutscene.LAMP_HERE)
@@ -1342,7 +1341,7 @@ func _put_ide() -> void:
 		room.add_child(bell)
 
 
-## Liesl and her great-grandmother's door bell: Liesl sweeping at the head
+## Liesl and her long-ago gran's door bell: Liesl sweeping at the head
 ## of Drowned Lane, and the bell out on Belfry Square's flats while she
 ## waits for it, or back by the drowned cottage's door once she has it.
 func _put_liesl(coord: Vector2i) -> void:
@@ -1499,7 +1498,7 @@ func the_hollow_sings() -> void:
 		for i: int in RibChime.SONG:
 			(ribs[i] as RibChime).ring()
 			await scene.wait(0.45)
-	await scene.narrate(["NARRATE_RIB_SONG_1"])
+	await scene.wait(0.6)
 	for rib: RibChime in ribs:
 		rib.ring()
 		await scene.wait(0.2)
@@ -1713,7 +1712,7 @@ func the_boat_comes_home() -> void:
 	var scene := _scene()
 	await scene.wait(0.6)
 	await scene.lamp(game.current_room.global_position + BOAT_HOME_AT + BoatHome.LAMP_AT, Cutscene.LAMP_HERE)
-	await scene.narrate(["NARRATE_BOAT_HOME"])
+	await scene.wait(0.8)
 	if hessa:
 		await scene.walk_around_to(hessa.global_position + HOME_FROM_HESSA)
 		scene.face(Vector2.UP)
