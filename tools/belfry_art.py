@@ -443,7 +443,7 @@ def tollshell(pose):
             put(c, x + d, rim_y + 2, "s")
             put(c, x, rim_y + 3, "s")
         for x in (4, 11):
-            put(c, x, 15, "s")
+            put(c, x, 14, "s")
     else:
         fill_rect(c, 2, rim_y + 1, 12, 1, "_")
         if pose == "shut":

@@ -418,8 +418,8 @@ def heron(pose):
         return rows_of(c)
     if pose == "flare":
         # Wings mantled up and out behind the body, crackling.
-        _heron_wing(c, 19, 22, 2, 7, 11)
-        _heron_wing(c, 25, 22, 45, 6, 11)
+        _heron_wing(c, 19, 22, 2, 7, 10)
+        _heron_wing(c, 25, 22, 45, 6, 10)
         for (x, y) in ((3, 3), (44, 2), (1, 13), (46, 12), (9, 1), (38, 0)):
             put(c, x, y, "!")
             put(c, x + 1, y + 1, "y")
