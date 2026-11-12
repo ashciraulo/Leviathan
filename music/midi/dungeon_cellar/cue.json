@@ -18,13 +18,13 @@
   },
   {
    "name": "bassoon",
-   "notes": 63,
+   "notes": 64,
    "low": 52,
    "high": 69
   },
   {
    "name": "drum_tom",
-   "notes": 16,
+   "notes": 17,
    "low": 45,
    "high": 45
   },

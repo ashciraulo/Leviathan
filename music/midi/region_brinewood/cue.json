@@ -12,13 +12,13 @@
  "parts": [
   {
    "name": "marimba",
-   "notes": 216,
+   "notes": 215,
    "low": 57,
    "high": 78
   },
   {
    "name": "kalimba",
-   "notes": 40,
+   "notes": 38,
    "low": 69,
    "high": 84
   },
@@ -35,14 +35,14 @@
    "high": 52
   },
   {
-   "name": "bass_fretless",
-   "notes": 150,
-   "low": 33,
-   "high": 52
+   "name": "bass_upright",
+   "notes": 158,
+   "low": 40,
+   "high": 55
   },
   {
    "name": "pad_warm",
-   "notes": 48,
+   "notes": 60,
    "low": 52,
    "high": 62
   }
