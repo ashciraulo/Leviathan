@@ -17,7 +17,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
-from mtk import Song, seq, voicing, bass_of, n  # noqa: E402
+from mtk import Song, seq, voicing, bass_of, chord, n  # noqa: E402
 
 GATE = "--gate" in sys.argv
 
@@ -66,20 +66,29 @@ for b, sym in enumerate(CH):
     sec = b // 8
     if sec in (0, 3):  # strum: down on 1 and 3, light ups between
         for s, v in ((0, 70), (1, 46), (1.5, 52), (2, 66), (3, 46), (3.5, 52)):
-            mando.chord(t + s, 0.45, tones, v, roll=0.012)
+            # The loop's last strum rings on across the seam instead of stopping short.
+            ring = 0.9 if b == len(CH) - 1 and s == 3.5 else 0.45
+            mando.chord(t + s, ring, tones, v, roll=0.012)
     elif sec == 1:  # tremolo-like repeated eighths on two notes
         for k in range(8):
             mando.chord(t + k * 0.5, 0.4, tones[-2:], 54 if k % 2 else 62)
     else:  # B: broken chord, root-third-fifth-third
         for k, p in enumerate((tones[0], tones[1], tones[2], tones[1]) * 2):
             mando.note(t + k * 0.5, 0.45, p, 58)
-    root = low_root(sym, 31)
+    # F2..E3, the sampled Diamond bass's measured range (keys under F2 read
+    # inharmonic in the v1 stem gate); fifths stay at G3 or below.
+    root = low_root(sym, 41)
+    # The chord's own fifth near the bass note: on G/B the slash note's fifth (F#)
+    # is not a chord tone, so the chord's fifth (D) is used; if the fifth is
+    # already in the bass, the chord's root.
+    cpc, _ = chord(sym)
+    want = (cpc + 7) % 12 if (cpc + 7) % 12 != root % 12 else cpc
+    fifth = min((m for m in range(root - 9, 56) if m % 12 == want), key=lambda m: abs(m - root - 4))
     if sec == 2:
         bass.note(t, 1.9, root, 80)
-        bass.note(t + 2, 1.9, root + 7 if root + 7 < 50 else root - 5, 70)
+        bass.note(t + 2, 1.9, fifth, 70)
     else:
-        for k, (s, p) in enumerate(((0, root), (1, root + 7 if root + 7 < 50 else root - 5), (2, root),
-                                    (3, root + 7 if root + 7 < 50 else root - 5))):
+        for k, (s, p) in enumerate(((0, root), (1, fifth), (2, root), (3, fifth))):
             bass.note(t + s, 0.85, p, 82 if k % 2 == 0 else 66)
     if sec != 2 or b % 2:
         for s, p, v in ((0, 60, 62), (1.5, 62, 44), (2, 61, 54), (3, 62, 44), (3.5, 62, 38)):

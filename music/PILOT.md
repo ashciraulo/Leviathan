@@ -143,3 +143,17 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   Open MINORs (v2): Sustained Bells at the written octave would read more distant than +12 (the gate's L/R reading on
   its strike is noise); 12 Low Strings' +22 c layer beats at ~0.9 Hz; Simple Ohh's D4 beats at 3.6 Hz; the folded
   tail also smears bar 36's A ring over the first pass's bar 5; harp key 50 sits ~2 dB low (velocity can't fix it).
+
+## Market Day, the village (2026-11-12)
+- **Template:** `templates\saltmarrow_template8.flp` as it is. `maps/place_village.json` puts the "mandolin" strum on
+  the nylon guitar (Ash's folk palette has no mandolin; Analog Lab has no acoustic one), the whistle on the Meadow Flute,
+  and perc_hand on the frame drum; `maps/place_village_fix.json` sends perc key 61 to the drum a third up and key 62 to
+  the shaker channel. Re-stage the template from the PC before building: an older staged copy still named bass_a2
+  "bass_up". Project files: `projects\place_village_v1..v3.flp` (v3 is final).
+- **The Diamond bass under F2:** G1, A1 and C2 read 15-39 c flat on their strongest partial in the v1 gate. The cue's
+  bass moved up to F2..G3, the range Saltmarrow measured, and uses Saltmarrow's fix map unchanged.
+- **Ample Guitar:** about 0.3 dB per velocity step; open G3 (key 55) is ~5 dB hot and gets -4.5 dB in the fix map. The
+  gate's chord-tone tuning read +11 c on short strums (0.25 s notes, windows overlapping the next strum); solo notes
+  in the B section read in tune.
+- **Seam:** the loop's last up-strum rings 0.9 beats instead of 0.45, so the render no longer drops >12 dB at the loop end.
+- v3: every stem on its target, -20.01 LUFS, true peak -5.0 dBTP, seam step 5.9 dB, finalize clean.

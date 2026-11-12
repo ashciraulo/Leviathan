@@ -1,0 +1,106 @@
+{
+ "cue": "place_village",
+ "lufs": -20.0,
+ "parts": {
+  "bass_upright": {
+   "insert": 3,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 72,
+     "gain": -3.0,
+     "q": 1.4
+    },
+    {
+     "shape": "bell",
+     "freq": 110,
+     "gain": -3.5,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "mandolin": {
+   "insert": 6,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "whistle": {
+   "insert": 2,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 24
+    }
+   ]
+  },
+  "perc_hand": {
+   "insert": 1,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highshelf",
+     "freq": 8000,
+     "gain": -6
+    }
+   ]
+  },
+  "shaker": {
+   "insert": 7,
+   "target": -41.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "notes": "Market Day. Built on saltmarrow_template8 (Diamond bass on insert 3). mandolin plays on the nylon guitar (Ash's folk palette has nylon guitar, no mandolin), whistle on the Meadow Flute. perc_hand key 60 = frame drum, 61 = frame drum played a third higher, 62 = shaker (maps/place_village_fix.json). Targets: gated short-term LUFS per stem, 2 dB under Saltmarrow for a -20 LUFS place cue."
+}
