@@ -101,6 +101,24 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=gran_supper: supper at Gran's table.
+	if OS.get_environment("SHOTS_ONLY") == "gran_supper":
+		game.queue_free()
+		await _supper_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=wick_round: the lamplighter's round under way.
+	if OS.get_environment("SHOTS_ONLY") == "wick_round":
+		game.queue_free()
+		await _wick_round_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=seal_pup: the seal pup in her nook, and at home.
 	if OS.get_environment("SHOTS_ONLY") == "seal_pup":
 		game.queue_free()
@@ -114,6 +132,24 @@ func _ready() -> void:
 	if OS.get_environment("SHOTS_ONLY") == "jumpers":
 		game.queue_free()
 		await _jumper_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=air: each dungeon's air (dust, embers, spores, rain, snow,
+	# drips, sand), in its first room.
+	if OS.get_environment("SHOTS_ONLY") == "air":
+		await _room_shots(game, {
+			Vector2i(10, 10): ["air_hull", Vector2i(11, 10)],
+			Vector2i(21, 10): ["air_kiln", Vector2i(11, 10)],
+			Vector2i(25, 10): ["air_mire", Vector2i(11, 10)],
+			Vector2i(28, 10): ["air_gale", Vector2i(11, 11)],
+			Vector2i(32, 10): ["air_glacier", Vector2i(11, 11)],
+			Vector2i(36, 10): ["air_belfry", Vector2i(11, 11)],
+			Vector2i(40, 10): ["air_tomb", Vector2i(11, 10)],
+			Vector2i(44, 10): ["air_maw", Vector2i(11, 10)],
+		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
 		get_tree().quit(0)
@@ -154,6 +190,19 @@ func _ready() -> void:
 			Vector2i(0, -3): ["thin_crevasse_way_in", Vector2i(16, 2)],
 			Vector2i(0, -4): ["thin_crevasse_shelf", Vector2i(17, 10)],
 			Vector2i(-1, 3): ["thin_tidewrack_strand", Vector2i(5, 4)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=verge_side: the cave run under the Verge.
+	if OS.get_environment("SHOTS_ONLY") == "verge_side":
+		await _room_shots(game, {
+			Vector2i(2, 4): ["side_wreckers_stair", Vector2i(14, 10)],
+			Vector2i(2, 5): ["side_kelp_stair", Vector2i(14, 2)],
+			Vector2i(3, 5): ["side_drowned_chapel", Vector2i(5, 10)],
+			Vector2i(3, 6): ["side_wreck_vault", Vector2i(9, 3)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -413,6 +462,8 @@ func _ready() -> void:
 				await _party_shot()
 				await _walk_shots()
 				await _boat_home_shot()
+				await _wick_round_shot()
+				await _supper_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -922,7 +973,10 @@ func _hull_shots(game: Node) -> void:
 		# The last blow: the great star as time runs slow.
 		await get_tree().create_timer(0.5, true, false, true).timeout
 		await _capture("39b_matriarch_final_blow")
-		await _wait(3.2)
+		# Her last light lifting off her as she sinks.
+		await _wait(1.55)
+		await _capture("39c_matriarch_dissolve")
+		await _wait(1.65)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
 		await _wait(0.3)
 		await _capture("40_tidebell")
@@ -1231,6 +1285,17 @@ func _feel_shots(game: Node) -> void:
 	crab.take_hit(1, Vector2.RIGHT)
 	await _wait(0.12)
 	await _capture("05d_fall_dust")
+	# The pop and the bits of it that fly, on a second crab.
+	var crab2 := Scuttler.new()
+	crab2.ai_enabled = false
+	crab2.position = Vector2(200, 7 * Room.TILE + 12)
+	room.add_child(crab2)
+	await _wait(0.3)
+	crab2.take_hit(9, Vector2.RIGHT)
+	await _wait(0.03)
+	await _capture("05e_death_pop")
+	await _wait(0.12)
+	await _capture("05f_death_shards")
 
 
 func _tomb_shots(game: Node) -> void:
@@ -2374,6 +2439,66 @@ func _echo_shot() -> void:
 	echo.start()
 	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME + 0.05)
 	await _capture("quest_21_echo_game")
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Wick's lamplighter's round: Glowcap Grove's lantern just caught, the
+## clock running at the top.
+func _wick_round_shot() -> void:
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in ["wick_asked", "wick_gave_jar", "wick_told_sink", "wick_round_ask", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG]:
+		GameState.set_flag(flag)
+	for coord: Vector2i in FenLantern.SPOTS:
+		GameState.set_flag(FenLantern.flag_for(coord))
+	GameState.give_item("glowmoth_lantern", 1, false)
+	var spot: Vector2i = FenLantern.SPOTS[Vector2i(3, 1)]
+	GameState.set_checkpoint(Vector2i(3, 1), Vector2(spot) * 16.0 + Vector2(-8, 30))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var round := LamplighterRound.begin(game)
+	round.elapsed = 47.0
+	await _wait(1.0)
+	var lantern: FenLantern = game.current_room.get_children().filter(func(c: Node) -> bool: return c is FenLantern)[0]
+	lantern.light()
+	game.player.facing = Vector2.UP
+	await _wait(0.3)
+	await _capture("quest_29_wick_round")
+	round.stop()
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Supper at Gran's table in Drowned Lane: Liesl, Ide's bread, Gran's
+## candle lit and her place at the head left empty.
+func _supper_shot() -> void:
+	await _wait(0.2)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+	for flag in ["liesl_asked", "liesl_bell_hung", StoryDirector.TURNED_FLAG, "tidebell_belfry", "read_grotto_marks", "liesl_heard_marks", "liesl_table_ask", "table_cup", "found_gran_candle", "found_gran_salt", StoryDirector.SUPPER_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, StoryDirector.LIESL_AT + Vector2(-14, 0))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	var box := _dialogue_box(game)
+	var shot := false
+	for i in 300:
+		if DialogueBox.is_open:
+			var table: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+			if not shot and not table.is_empty() and (table[0] as GranTable).candle_lit:
+				shot = true
+				await _wait(1.6)
+				await _capture("quest_30_gran_supper")
+			box.advance()
+			box.advance()
+		await _wait(0.15)
+		if not Cutscene.active and not DialogueBox.is_open and shot:
+			break
 	game.queue_free()
 	await _wait(0.2)
 

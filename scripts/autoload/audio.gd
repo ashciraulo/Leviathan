@@ -250,13 +250,16 @@ func _ready() -> void:
 	for i in 2:
 		var player := AudioStreamPlayer.new()
 		player.bus = "Music"
+		player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 		add_child(player)
 		_music.append(player)
 	_phrase = AudioStreamPlayer.new()
 	_phrase.bus = "Music"
+	_phrase.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	add_child(_phrase)
 	_ambience = AudioStreamPlayer.new()
 	_ambience.bus = "Ambience"
+	_ambience.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	add_child(_ambience)
 	for i in VOICES:
 		var voice := AudioStreamPlayer2D.new()

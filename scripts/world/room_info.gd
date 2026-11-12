@@ -72,34 +72,20 @@ static func _load() -> void:
 		if room == null:
 			continue
 		var rows := Room.parse_layout(room.layout)
-		var stones: Array[Vector2i] = []
-		var chests: Array[Vector2i] = []
-		var doors: Array[Vector2i] = []
-		var glass: Array[Vector2i] = []
 		var boss := Vector2i(-1, -1)
-		for y in rows.size():
-			for x in rows[y].length():
-				match rows[y][x]:
-					"T":
-						stones.append(Vector2i(x, y))
-					"C":
-						chests.append(Vector2i(x, y))
-					"D":
-						doors.append(Vector2i(x, y))
-					"*":
-						glass.append(Vector2i(x, y))
-					"V":
-						if room.dungeon != "":
-							boss = Vector2i(x, y)
+		if room.dungeon != "":
+			var bosses := tiles_of(rows, "V")
+			if not bosses.is_empty():
+				boss = bosses[-1]
 		_rooms[coord] = {
 			"name_key": room.name_key,
 			"biome": room.biome,
 			"dungeon": room.dungeon,
 			"rows": rows,
-			"stones": stones,
-			"chests": chests,
-			"doors": doors,
-			"glass": glass,
+			"stones": tiles_of(rows, "T"),
+			"chests": tiles_of(rows, "C"),
+			"doors": tiles_of(rows, "D"),
+			"glass": tiles_of(rows, "*"),
 			"boss": boss,
 			"door_to": room.door_to,
 			"chest_item": room.chest_item,
@@ -108,6 +94,19 @@ static func _load() -> void:
 			"alt_rows": Room.parse_layout(room.alt_layout) if room.alt_layout != "" else PackedStringArray(),
 		}
 		room.free()
+
+
+## Every tile holding this layout letter, row by row. String.find does the
+## searching, which keeps reading all the rooms quick (a hitch on the web
+## build otherwise, the first time a menu or a save needs them).
+static func tiles_of(rows: PackedStringArray, letter: String) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for y in rows.size():
+		var x := rows[y].find(letter)
+		while x != -1:
+			out.append(Vector2i(x, y))
+			x = rows[y].find(letter, x + 1)
+	return out
 
 
 ## "room_3_-1.tscn" -> Vector2i(3, -1); null for anything else.

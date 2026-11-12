@@ -230,6 +230,9 @@ const TALKS := {
 	"ide": [
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		# Gran's blue cup, for Liesl's table: Ide's bailed her boat with it
+		# for years. (Handing it over is all; she rows Wren next time.)
+		{"if": ["liesl_table_ask", "met_ide_ferry"], "unless": ["table_cup"], "set": ["table_cup"], "lines": ["IDE_CUP_1", "IDE_CUP_2", "IDE_CUP_3", ["", "NARRATE_GOT_GRAN_CUP"]]},
 		# The jam trade ends here: Ferrin's chart of the far shores.
 		{"if": ["trade_chart"], "unless": ["trade_done"], "set": ["trade_done", "ide_ferry"], "give": {"glint": 200}, "lines": [["", "NARRATE_HAND_CHART"], "IDE_TRADE_1", "IDE_TRADE_2", "IDE_TRADE_3", ["", "NARRATE_GOT_TRADE_PURSE"]]},
 		# Her boat's lost nameboard (QuestFind). Every branch still rows Wren over.
@@ -248,7 +251,14 @@ const TALKS := {
 		{"if": ["wick_murmur_ask", "liesl_asked"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
 		# The Ebb Grotto's flood marks: a Liesl, three hundred years back.
 		{"if": ["read_grotto_marks", "liesl_asked"], "unless": ["liesl_heard_marks"], "set": ["liesl_heard_marks"], "lines": ["LIESL_MARKS_1", "LIESL_MARKS_1B", "LIESL_MARKS_2", "LIESL_MARKS_3"]},
+		# Gran's table: her cup (Ide has it), candlestick and salt fish
+		# (QuestFind), then supper in the lane (StoryDirector.grans_supper).
+		# Only once her door bell's home, so the bell's hand-in is never hidden.
+		{"if": ["liesl_table_ask", "table_cup", "found_gran_candle", "found_gran_salt"], "unless": ["gran_supper"], "set": ["gran_supper"], "lines": [["", "NARRATE_HAND_GRAN_THINGS"], "LIESL_TABLE_DONE_1", "LIESL_TABLE_DONE_2"]},
+		{"if": ["liesl_heard_marks", "liesl_bell_hung"], "unless": ["liesl_table_ask"], "set": ["liesl_table_ask"], "lines": ["LIESL_TABLE_1", "LIESL_TABLE_1B", "LIESL_TABLE_2", "LIESL_TABLE_2B", "LIESL_TABLE_3", "LIESL_TABLE_3B"]},
+		{"if": ["liesl_table_ask"], "unless": ["gran_supper"], "lines": ["LIESL_TABLE_WAITING"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
+		{"if": ["gran_supper_done"], "lines": ["LIESL_TABLE_AFTER"]},
 		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
 		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
@@ -528,12 +538,16 @@ const TALKS := {
 	"find_seal_bones": [{"set": ["found_seal_bones"], "lines": ["NARRATE_FOUND_SEAL_BONES", "NARRATE_FOUND_SEAL_BONES_2"]}],
 	"find_seal_net": [{"set": ["found_seal_net"], "lines": ["NARRATE_FOUND_SEAL_NET", "NARRATE_FOUND_SEAL_NET_2"]}],
 	"find_seal_pup": [{"set": ["found_seal_pup"], "lines": ["NARRATE_FOUND_SEAL_PUP", "NARRATE_FOUND_SEAL_PUP_2", "NARRATE_FOUND_SEAL_PUP_3"]}],
+	# Wick's dusk bell at Fenmouth, before Wick has explained it.
+	"dusk_bell": [{"lines": ["NARRATE_DUSK_BELL"]}],
 	# The pup at home on the Shore (SealPup).
 	"seal_pup": [
 		{"if": ["pell_pup_told"], "lines": ["NARRATE_PUP_DING"]},
 		{"lines": ["NARRATE_PUP_HOME"]},
 	],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
+	"find_gran_candle": [{"set": ["found_gran_candle"], "lines": ["NARRATE_FOUND_GRAN_CANDLE", "NARRATE_FOUND_GRAN_CANDLE_2"]}],
+	"find_gran_salt": [{"set": ["found_gran_salt"], "lines": ["NARRATE_FOUND_GRAN_SALT", "NARRATE_FOUND_GRAN_SALT_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.
@@ -557,12 +571,19 @@ const TALKS := {
 	"wick": [
 		{"if": ["wick_asked", "pim_home"], "unless": ["wick_met_pim"], "set": ["wick_met_pim"], "lines": ["WICK_PIM"]},
 		{"if": ["lighting_ask", "wick_asked"], "unless": ["party_wick"], "set": ["party_wick"], "lines": ["WICK_PARTY_1", "WICK_PARTY_2"]},
+		# The lamplighter's round (LamplighterRound): a purse for each time
+		# beaten, in order.
+		{"if": ["wick_round_100"], "unless": ["wick_round_paid_100"], "set": ["wick_round_paid_100"], "give": {"glint": 50}, "lines": ["WICK_ROUND_100_1", ["", "NARRATE_GOT_ROUND_100_PURSE"]]},
+		{"if": ["wick_round_80", "wick_round_paid_100"], "unless": ["wick_round_paid_80"], "set": ["wick_round_paid_80"], "give": {"glint": 100}, "lines": ["WICK_ROUND_80_1", "WICK_ROUND_80_2", ["", "NARRATE_GOT_ROUND_80_PURSE"]]},
+		{"if": ["wick_round_65", "wick_round_paid_80"], "unless": ["wick_round_paid_65"], "set": ["wick_round_paid_65"], "give": {"glint": 200}, "lines": ["WICK_ROUND_65_1", "WICK_ROUND_65_2", ["", "NARRATE_GOT_ROUND_65_PURSE"]]},
 		# The jam trade: Marga's bramble jam for fen candles, for Sorrel.
 		{"if": ["trade_jam", "wick_asked"], "unless": ["trade_candles"], "set": ["trade_candles"], "lines": [["", "NARRATE_HAND_JAM"], "WICK_TRADE_1", "WICK_TRADE_2", "WICK_TRADE_2B", ["", "NARRATE_GOT_TRADE_CANDLES"]]},
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
 		# The Lampless Sink's four braziers, lit at last.
 		{"if": ["wick_gave_jar", "gate_5_3"], "unless": ["wick_saw_sink"], "set": ["wick_saw_sink"], "lines": ["WICK_SINK_DONE_1", "WICK_SINK_DONE_2"]},
+		# The lamplighter's round: told once, ahead of any waiting line.
+		{"if": ["wick_gave_jar", "old_one_turned"], "unless": ["wick_round_ask"], "set": ["wick_round_ask"], "lines": ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B"]},
 		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
 		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
 		{"if": ["wick_gave_jar"], "unless": ["wick_told_sink", "wick_saw_sink"], "set": ["wick_told_sink"], "lines": ["WICK_SINK_1", "WICK_SINK_1B"]},

@@ -68,6 +68,13 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         out = audio[:end].copy()
         n = min(tail.shape[0], end - start)
         out[start: start + n] += tail[:n]
+        # The seam: on a repeat the body's first sample is its own start plus the folded ring past the loop end,
+        # which continues the body's end; what led into the start on the first pass was the intro's last ms.
+        # Fade those last 10 ms of lead-in onto the body's end, so both waveforms run on across the loop point
+        # (title v6: two low notes at different phases jumped 0.052 there).
+        xf = min(int(0.01 * rate), start, end - start)
+        if xf:
+            out[end - xf: end] += audio[start - xf: start] * np.linspace(0, 1, xf)[:, None]
         body = out[start:]
         # The seam: last samples of the body into the first of the body.
         jump = float(np.abs(body[0] - body[-1]).max())
@@ -77,6 +84,12 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         mono = body.mean(axis=1)
         bar = round(meta["bar_q"] * 60 / meta["qbpm"] * rate)
         steps = [a - b for b, a in (momentary(mono, rate, k) for k in range(bar, mono.shape[0] - bar, bar))]
+        # The tail folded onto the start must hold the ring: a render cut at the loop end folds silence, and the
+        # crossfaded seam would hide the cut (review of the title v1, MAJOR 1).
+        room = (audio.shape[0] - end) / rate
+        mono_all = audio.mean(axis=1)
+        drop = momentary(mono_all, rate, end)
+        report.update(tail_room_s=round(room, 2), loop_end_drop_db=round(drop[0] - drop[1], 1))
         report.update(seam_jump=round(jump, 4), seam_step_db=round(after - before, 2),
                       bar_step_p90_db=round(float(np.percentile(steps, 90)), 2) if steps else 0.0,
                       tail_folded_s=round(n / rate, 2))
@@ -117,6 +130,11 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
                         "find it and render again")
     if not spec["loop"] and report["cut_db"] > -50:
         problems.append(f"the tail is cut at {report['cut_db']} dBFS: give the render more room after the last note")
+    if spec["loop"] and report["tail_room_s"] < 2.0:
+        problems.append(f"the render ends {report['tail_room_s']} s past the loop end: render with two bars of room "
+                        "(flp_build adds them) so the tail rings over the seam")
+    if spec["loop"] and report["loop_end_drop_db"] > 12:
+        problems.append(f"the render falls {report['loop_end_drop_db']} dB right after the loop end: FL cut the tail")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")
     # The handoff's slam limit is +6 dB; a seam no bigger than the cue's usual downbeat step is a downbeat,

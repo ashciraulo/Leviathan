@@ -108,9 +108,23 @@ const DROWNED_LANE := Vector2i(0, 3)
 const BELFRY_SQUARE := Vector2i(1, 3)
 const LIESL_AT := Vector2(10 * 16 + 8, 3 * 16 + 10)
 const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
+## Gran's table: Liesl lays it at the head of the lane once she asks for
+## Gran's things; handing the last of them over sets SUPPER_FLAG and supper
+## plays (grans_supper), which sets SUPPER_DONE_FLAG. Gran's place is the
+## empty one at the head (the left end).
+const SUPPER_FLAG := "gran_supper"
+const SUPPER_DONE_FLAG := "gran_supper_done"
+const GRAN_TABLE_AT := Vector2(8 * 16, 4 * 16 + 14)
+const LIESL_SUPPER_AT := Vector2(9 * 16 + 12, 4 * 16 + 12)
+const WREN_SUPPER_AT := Vector2(7 * 16 + 10, 3 * 16 + 12)
+const IDE_SUPPER_AT := Vector2(8 * 16 + 10, 3 * 16 + 12)
+## Ide comes down the lane from the top.
+const IDE_SUPPER_ROUTE := [Vector2(5 * 16 + 8, -8), Vector2(5 * 16 + 8, 20), Vector2(7 * 16 + 8, 28), IDE_SUPPER_AT]
+const SUPPER_GLINTS := 150
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
 const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
+const DUSK_BELL_AT := Vector2(12 * 16 + 8, 5 * 16 + 12)
 ## Gully dozing beside the Lantern Wake's figurehead on Wreck Strand, and
 ## his strongbox out in the pool.
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
@@ -191,6 +205,10 @@ const FINDS := {
 	# Ide's errand: her boat's nameboard, torn off by the bad water and
 	# carried right round to the far side of the dunes.
 	"nameboard": [Vector2i(7, 0), Vector2i(20, 6)],
+	# Liesl's errand: her gran's candlestick, washed round to the Wrack
+	# Shore, and her salt fish, deep in the Ebb Grotto. (Ide has the cup.)
+	"gran_candle": [Vector2i(2, 2), Vector2i(2, 6)],
+	"gran_salt": [Vector2i(0, 4), Vector2i(5, 8)],
 	# Hessa's logbook, blown all over the coast in the lantern-boat storm:
 	# one page in a side nook in each of six regions.
 	"log_brinewood": [Vector2i(2, -1), Vector2i(2, 3)],
@@ -213,6 +231,8 @@ const FIND_NEEDS := {
 	"seal_bones": "found_seal_track",
 	"seal_net": "found_seal_bones",
 	"seal_pup": "found_seal_net",
+	"gran_candle": "liesl_table_ask",
+	"gran_salt": "liesl_table_ask",
 }
 ## Where the seal pup lives once Wren's found her: on the Shore, where her
 ## trail began.
@@ -469,6 +489,9 @@ func _on_room_entered(coord: Vector2i) -> void:
 		tobin_comes_home()
 	elif coord == SALTMARROW and GameState.has_flag(BOAT_DONE_FLAG) and not GameState.has_flag(BOAT_HOME_FLAG) and not GameState.has_flag(WALK_FLAG):
 		the_boat_comes_home()
+	elif coord == DROWNED_LANE and GameState.has_flag(SUPPER_FLAG) and not GameState.has_flag(SUPPER_DONE_FLAG):
+		# Supper was asked for but the game closed first.
+		grans_supper.call_deferred()
 	elif coord == MAW_VAEL and choir_waits() and not echo:
 		vaels_choir()
 	elif lowe_waits(coord):
@@ -518,6 +541,8 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		hessas_lighting_day()
 	elif flag == ROW_ASKED_FLAG and GameState.room_coord == SALTMARROW:
 		rowing_to_the_maw()
+	elif flag == SUPPER_FLAG and GameState.room_coord == DROWNED_LANE and GameState.has_flag(SUPPER_FLAG) and not GameState.has_flag(SUPPER_DONE_FLAG):
+		grans_supper()
 	elif flag == HollowRegent.DEFEATED_FLAG and GameState.room_coord == TOMB_BOSS and not GameState.has_flag(MURAL_FLAG):
 		the_last_mural()
 
@@ -1140,6 +1165,90 @@ func hessa_at_the_maw(rowed: bool, carried: Cutscene = null) -> void:
 	scene.finish()
 
 
+func _gran_table() -> GranTable:
+	if game.current_room == null:
+		return null
+	for child in game.current_room.get_children():
+		if child is GranTable:
+			return child
+	return null
+
+
+## Supper at Gran's table: Liesl lays out Gran's things, Ide comes down the
+## lane with bread, Wren lights the candle, and the old door bell (hung
+## before Liesl ever asked) rings once out by the drowned cottage.
+func grans_supper() -> void:
+	var room: Node2D = game.current_room
+	# The flag is set just before Liesl's words open: let her finish them.
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if Cutscene.active or not is_instance_valid(room) or room != game.current_room or GameState.has_flag(SUPPER_DONE_FLAG):
+		return
+	var scene := _scene()
+	var table := _gran_table()
+	var liesl := _find_npc("liesl")
+	if table == null or liesl == null:
+		scene.finish()
+		return
+	await scene.wait(0.3)
+	var lay := liesl.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	lay.tween_property(liesl, "position", LIESL_SUPPER_AT, liesl.position.distance_to(LIESL_SUPPER_AT) / 40.0)
+	await scene.walk_route(room.global_position + WREN_SUPPER_AT)
+	if lay.is_running():
+		await lay.finished
+	scene.face(Vector2.DOWN)
+	table.set_out = true
+	table.queue_redraw()
+	await scene.narrate(["NARRATE_GRAN_TABLE"])
+	await scene.speak("liesl", ["LIESL_SUPPER_1"])
+	var ide := Npc.new("ide")
+	ide.position = IDE_SUPPER_ROUTE[0]
+	room.add_child(ide)
+	var come := ide.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	var from: Vector2 = IDE_SUPPER_ROUTE[0]
+	for point: Vector2 in IDE_SUPPER_ROUTE.slice(1):
+		come.tween_property(ide, "position", point, from.distance_to(point) / 40.0)
+		from = point
+	await scene.narrate(["NARRATE_IDE_COMES"])
+	if come.is_running():
+		await come.finished
+	table.bread = true
+	table.queue_redraw()
+	await scene.speak("ide", ["IDE_SUPPER_1", "IDE_SUPPER_2"])
+	await scene.speak("liesl", ["LIESL_SUPPER_2"])
+	await scene.lamp(room.global_position + GRAN_TABLE_AT + GranTable.FLAME_AT, Cutscene.LAMP_HERE)
+	table.candle_lit = true
+	await scene.narrate(["NARRATE_GRAN_CANDLE"])
+	var bell: Doorbell = null
+	for child in room.get_children():
+		if child is Doorbell and (child as Doorbell).hung:
+			bell = child
+	if bell:
+		bell.ring()
+	await scene.narrate(["NARRATE_GRAN_BELL"])
+	await scene.speak("liesl", ["LIESL_SUPPER_BELL"])
+	await scene.speak("liesl", ["LIESL_SUPPER_3", "LIESL_SUPPER_4"])
+	GameState.give_item("glint", SUPPER_GLINTS, false)
+	Audio.play_jingle("jingle_item")
+	await scene.narrate(["NARRATE_GOT_SUPPER_PURSE"])
+	await scene.speak("ide", ["IDE_SUPPER_3"])
+	GameState.set_flag(SUPPER_DONE_FLAG)
+	# Back up the lane to her boat, still in the scene (she isn't someone
+	# to talk to here).
+	if is_instance_valid(ide):
+		var go := ide.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		var at := ide.position
+		for i in range(IDE_SUPPER_ROUTE.size() - 2, -1, -1):
+			var point: Vector2 = IDE_SUPPER_ROUTE[i]
+			go.tween_property(ide, "position", point, at.distance_to(point) / 40.0)
+			at = point
+		await go.finished
+		if is_instance_valid(ide):
+			ide.queue_free()
+	scene.finish()
+
+
 ## Ide on the north shore of Causeway End, her boat tied up below her, and
 ## once the Belfry's bell is quiet, a hand bell on the far landing to call
 ## her over with.
@@ -1177,6 +1286,14 @@ func _put_liesl(coord: Vector2i) -> void:
 			bell.hung = true
 			bell.position = DOORBELL_HUNG_AT
 			room.add_child(bell)
+		if GameState.has_flag("liesl_table_ask") and _gran_table() == null:
+			var table := GranTable.new()
+			var done := GameState.has_flag(SUPPER_DONE_FLAG)
+			table.set_out = done
+			table.candle_lit = done
+			table.bread = done
+			table.position = GRAN_TABLE_AT
+			room.add_child(table)
 	elif coord == BELFRY_SQUARE and GameState.has_flag("liesl_asked") and not GameState.has_flag("found_doorbell"):
 		var lost := Doorbell.new()
 		lost.position = DOORBELL_LOST_AT
@@ -1192,6 +1309,11 @@ func _put_wick(coord: Vector2i) -> void:
 		var wick := Npc.new("wick")
 		wick.position = WICK_AT
 		room.add_child(wick)
+	# Wick's dusk bell, for the lamplighter's round, once the fen's lit.
+	if coord == FENMOUTH and GameState.has_flag("wick_gave_jar") and not room.get_children().any(func(c: Node) -> bool: return c is DuskBell):
+		var bell := DuskBell.new()
+		bell.position = DUSK_BELL_AT
+		room.add_child(bell)
 	if FenLantern.SPOTS.has(coord) and not room.get_children().any(func(c: Node) -> bool: return c is FenLantern):
 		var lantern := FenLantern.new()
 		lantern.room_coord = coord
