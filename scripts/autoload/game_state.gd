@@ -387,22 +387,32 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(data: Dictionary) -> void:
-	max_bubbles = clampi(int(data.get("max_bubbles", START_BUBBLES)), 1, MAX_BUBBLES)
+	max_bubbles = clampi(Safe.whole(data.get("max_bubbles"), START_BUBBLES), 1, MAX_BUBBLES)
 	# Never load into a dead state.
-	bubbles = clampi(int(data.get("bubbles", max_bubbles)), 1, max_bubbles)
-	resonance_max = maxf(float(data.get("resonance_max", START_RESONANCE_MAX)), 1.0)
-	resonance = clampf(float(data.get("resonance", 0.0)), 0.0, resonance_max)
+	bubbles = clampi(Safe.whole(data.get("bubbles"), max_bubbles), 1, max_bubbles)
+	resonance_max = maxf(Safe.number(data.get("resonance_max"), START_RESONANCE_MAX), 1.0)
+	resonance = clampf(Safe.number(data.get("resonance"), 0.0), 0.0, resonance_max)
 	checkpoint_room = _to_vec2i(data.get("checkpoint_room", [0, 0]))
 	checkpoint_pos = _to_vec2(data.get("checkpoint_pos", [NO_POSITION.x, NO_POSITION.y]))
 	room_coord = checkpoint_room
+	# Flags are switches and counts; anything else in a damaged file is dropped.
+	flags = {}
 	var saved_flags = data.get("flags", {})
-	flags = saved_flags if saved_flags is Dictionary else {}
+	if saved_flags is Dictionary:
+		for flag in saved_flags:
+			var value = saved_flags[flag]
+			if value is bool or value is int:
+				flags[str(flag)] = value
+			elif value is float or (value is String and value.is_valid_float()):
+				var count := Safe.number(value, NAN)
+				if not is_nan(count):
+					flags[str(flag)] = int(count) if is_equal_approx(count, roundf(count)) else count
 	inventory = {}
 	var saved_inventory = data.get("inventory", START_ITEMS)
 	if saved_inventory is Dictionary:
 		for id in saved_inventory:
 			if Items.exists(str(id)):
-				inventory[str(id)] = clampi(int(saved_inventory[id]), 0, Items.max_count(str(id)))
+				inventory[str(id)] = clampi(Safe.whole(saved_inventory[id], 0), 0, Items.max_count(str(id)))
 	equipped = {}
 	var saved_equipped = data.get("equipped", {})
 	if saved_equipped is Dictionary:
@@ -438,24 +448,24 @@ func from_dict(data: Dictionary) -> void:
 		jumper = ""
 	var saved_stones = data.get("tidestones", {})
 	tidestones = saved_stones if saved_stones is Dictionary else {}
-	play_time = maxf(float(data.get("play_time", 0.0)), 0.0)
+	play_time = maxf(Safe.number(data.get("play_time"), 0.0), 0.0)
 	area_stats = {}
 	var saved_stats = data.get("area_stats", {})
 	if saved_stats is Dictionary:
 		for area in saved_stats:
 			var entry = saved_stats[area]
 			if entry is Dictionary:
-				area_stats[str(area)] = {"time": maxf(float(entry.get("time", 0.0)), 0.0),
-					"deaths": maxi(int(entry.get("deaths", 0)), 0)}
+				area_stats[str(area)] = {"time": maxf(Safe.number(entry.get("time"), 0.0), 0.0),
+					"deaths": maxi(Safe.whole(entry.get("deaths"), 0), 0)}
 
 
 static func _to_vec2i(value: Variant) -> Vector2i:
 	if value is Array and value.size() >= 2:
-		return Vector2i(int(value[0]), int(value[1]))
+		return Vector2i(Safe.whole(value[0], 0), Safe.whole(value[1], 0))
 	return Vector2i.ZERO
 
 
 static func _to_vec2(value: Variant) -> Vector2:
 	if value is Array and value.size() >= 2:
-		return Vector2(float(value[0]), float(value[1]))
+		return Vector2(Safe.number(value[0], 0.0), Safe.number(value[1], 0.0))
 	return NO_POSITION

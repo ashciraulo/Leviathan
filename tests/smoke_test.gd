@@ -27,6 +27,8 @@ func _ready() -> void:
 		_test_game_state()
 		_test_save_load()
 		await _test_old_saves()
+		_test_save_fuzz()
+		_test_settings_fuzz()
 		_test_keys()
 		_test_items()
 		await _test_audio()
@@ -443,6 +445,105 @@ func _write_json(path: String, data: Dictionary) -> void:
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(data))
 	file.close()
+
+
+## Damaged saves: any field of a save with the wrong kind of value (a
+## hand-edited file, a half-written one) still loads into a game that makes
+## sense, never stopping partway.
+func _test_save_fuzz() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("tide_hook")
+	GameState.give_item("breath_pearl")
+	GameState.set_flag("met_hessa")
+	var good: Dictionary = GameState.to_dict()
+	var bad_values: Array = [null, "x", "12", {}, [], -5, 1e12, [1], [[1, 2], "a"], {"a": {}}, true, -1.5]
+	for key: String in good:
+		for bad: Variant in bad_values:
+			var state := good.duplicate(true)
+			state[key] = bad
+			GameState.area_stats = {"unfinished": {"time": 0.0, "deaths": 0}}
+			GameState.from_dict(state)
+			var what := "a save with %s = %s" % [key, JSON.stringify(bad)]
+			_check(not GameState.area_stats.has("unfinished"), what + " loads to the end")
+			_check(GameState.max_bubbles >= 1 and GameState.bubbles >= 1 and GameState.bubbles <= GameState.max_bubbles, what + " has breath")
+			_check(GameState.play_time >= 0.0 and is_finite(GameState.play_time), what + " has a time played")
+			_check(GameState.item_slots.size() == 2, what + " has two item slots")
+	# Inside the inventory, flags and the rest: odd values per entry.
+	for key: String in ["inventory", "equipped", "flags", "tidestones", "area_stats"]:
+		for bad: Variant in bad_values:
+			var state := good.duplicate(true)
+			state[key] = {"tide_hook": bad, "met_hessa": bad, "0_0": bad, "region_saltmarrow": bad, "tool": bad}
+			GameState.area_stats = {"unfinished": {"time": 0.0, "deaths": 0}}
+			GameState.from_dict(state)
+			var what := "a save with %s entries = %s" % [key, JSON.stringify(bad)]
+			_check(not GameState.area_stats.has("unfinished"), what + " loads to the end")
+			GameState.tidestone_position(Vector2i(0, 0))
+	# The file select reads a summary that isn't the right shape.
+	for bad: Variant in bad_values:
+		_check(SaveManager._write(TEST_SLOT, {"format_version": 1, "state": good, "summary": bad, "saved_at": bad}), "a save with an odd summary writes")
+		var summary := SaveManager.read_summary(TEST_SLOT)
+		_check(summary is Dictionary, "an odd summary (%s) still reads" % JSON.stringify(bad))
+	SaveManager.delete_save(TEST_SLOT)
+	# Text that isn't a save at all.
+	for text: String in ["", "{", "null", "[]", "{\"state\": 5}", "\u0000\u0001", "{\"format_version\": \"two\", \"state\": {}}"]:
+		var file := FileAccess.open(SaveManager.slot_path(TEST_SLOT), FileAccess.WRITE)
+		file.store_string(text)
+		file.close()
+		_check(not SaveManager.load_game(TEST_SLOT), "%s doesn't load as a save" % JSON.stringify(text))
+		SaveManager.read_summary(TEST_SLOT)
+		SaveManager.latest_slot()
+	SaveManager.delete_save(TEST_SLOT)
+	GameState.reset_new_game()
+
+
+## A damaged settings file: odd values fall back to sensible ones, and every
+## action keeps a key and a button.
+func _test_settings_fuzz() -> void:
+	var path := ProjectSettings.globalize_path(Settings.PATH)
+	var had := FileAccess.file_exists(path)
+	var old := FileAccess.get_file_as_string(path) if had else ""
+	# Loading only sets what the file has, so put every value back after.
+	var before := {}
+	for prop: String in ["hitstop_scale", "screen_shake_scale", "flashes", "hum_toggle", "locale", "text_speed",
+			"large_text", "captions", "high_contrast", "color_filter", "music_volume", "effects_volume",
+			"ambience_volume", "fullscreen"]:
+		before[prop] = Settings.get(prop)
+	var bad_values: Array = [null, "x", {}, [], -5, 1e12, true, {"attack": "x", "interact": -3, "hum": 1e12, "map": {}}]
+	for bad: Variant in bad_values:
+		var cfg := ConfigFile.new()
+		for entry: Array in [["feel", "hitstop_scale"], ["feel", "screen_shake_scale"], ["feel", "flashes"],
+				["controls", "hum_toggle"], ["language", "locale"], ["text", "speed"], ["text", "large"],
+				["text", "captions"], ["feel", "high_contrast"], ["feel", "color_filter"], ["audio", "music"],
+				["audio", "effects"], ["audio", "ambience"], ["display", "fullscreen"], ["controls", "keys"], ["controls", "pad"]]:
+			cfg.set_value(entry[0], entry[1], bad)
+		cfg.save(Settings.PATH)
+		Settings.reset_controls()
+		Settings.hitstop_scale = -99.0
+		Settings.load_settings()
+		Settings.apply()
+		var what := "settings full of %s" % JSON.stringify(bad)
+		_check(Settings.hitstop_scale >= 0.0 and Settings.hitstop_scale <= 1.0, what + " load")
+		_check(Settings.locale in Settings.languages(), what + " keep a language we have (%s)" % Settings.locale)
+		for action: String in Settings.REMAPPABLE:
+			var key := MenuKit.keyboard_name(action)
+			_check(key != "-" and key != "" and not key.begins_with("("), what + ": %s keeps a key (%s)" % [action, key])
+	for text: String in ["", "[", "garbage = = =", "\u0000"]:
+		var file := FileAccess.open(Settings.PATH, FileAccess.WRITE)
+		file.store_string(text)
+		file.close()
+		Settings.load_settings()
+		Settings.apply()
+	Settings.reset_controls()
+	for prop: String in before:
+		Settings.set(prop, before[prop])
+	if had:
+		var file := FileAccess.open(Settings.PATH, FileAccess.WRITE)
+		file.store_string(old)
+		file.close()
+	else:
+		DirAccess.remove_absolute(path)
+	Settings.load_settings()
+	Settings.apply()
 
 
 func _test_keys() -> void:
@@ -9973,3 +10074,4 @@ func _test_puzzle_caves() -> void:
 			"Gustway: the hook carries Wren from %s to %s (at %s)" % [throw[0], want, at])
 	game.queue_free()
 	await _wait(0.1)
+

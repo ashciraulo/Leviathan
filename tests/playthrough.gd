@@ -762,7 +762,12 @@ func _accessibility_runs() -> void:
 		for key: String in defaults:
 			Settings.set(key, profile.get(key, defaults[key]))
 		Settings.apply()
+		MenuKit.audit = profile == PROFILES[0]
 		await _menu_sweep(label)
+		if MenuKit.audit:
+			_check(MenuKit.missing_keys.is_empty(), "every key the menus show has text: %s" % [MenuKit.missing_keys.keys()])
+			_check(MenuKit.cut_texts.is_empty(), "no menu text is cut short in English: %s" % [MenuKit.cut_texts])
+			MenuKit.audit = false
 		await _hit_and_hum(label)
 		await _conversation(label)
 		_check_captions(label)
@@ -794,6 +799,9 @@ func _menu_sweep(label: String) -> void:
 			for i in 12:
 				_send(pause, action)
 				_check_hint(page, label, tab)
+				if MenuKit.audit:
+					# Drawn after every move, so every row's text is checked.
+					await get_tree().process_frame
 			await _wait(0.02)
 		if tab == PauseMenu.Tab.SATCHEL:
 			var satchel := page as SatchelPage
