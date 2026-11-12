@@ -180,6 +180,22 @@ jobs:
           fi
           grep -q "WALKER PASSED" walk.log || { echo "::error::Dungeon walk did not pass (exit $status)"; exit 1; }
 
+      - name: Walk the overworld
+        # The same walk on every overworld screen: no snags, every edge
+        # meets open ground next door, no scenery closes a way through,
+        # and every Tidestone sets Wren down free (tests/world_walker.gd).
+        if: ${{ !cancelled() && steps.import.outcome == 'success' }}
+        run: |
+          set +e
+          timeout 300 "$RUNNER_TEMP/godot" --headless --fixed-fps 60 --path . res://tests/world_walker.tscn 2>&1 | tee worldwalk.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" worldwalk.log; then
+            echo "::error::Script errors during the overworld walk"
+            exit 1
+          fi
+          grep -q "WORLD WALK PASSED" worldwalk.log || { echo "::error::Overworld walk did not pass (exit $status)"; exit 1; }
+
       - name: Die in every boss fight
         # Running out of breath mid-fight in each boss room: game over, wake
         # at the checkpoint, and the boss is there again. Kept out of the
