@@ -9185,6 +9185,52 @@ func _test_older_secrets() -> void:
 		_check(swim_rows[at.y][at.x] == "." and swim_rows[at.y + 1][at.x] == "." and swim_rows[at.y - 1][at.x] == "#" and ways >= 1,
 			"room %s has a rock-sheltered shoal at %s, open to deep water" % [shoal[0], at])
 		probe.free()
+	# The Kelp Stair, Drowned Chapel and Wreck Vault: a cave run under the
+	# Verge, south of Wreckers' Stair. Deep water only the Diver's Helm
+	# crosses, two eyes for the bow, and a vault that shuts Wren in.
+	GameState.reset_new_game()
+	var wreckers := Room.parse_layout(((load("res://rooms/room_2_4.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(wreckers[12].substr(14, 2) == "..", "Wreckers' Stair opens south to the Kelp Stair")
+	var stair: Room = (load("res://rooms/room_2_5.tscn") as PackedScene).instantiate()
+	var s_rows := Room.parse_layout(stair.layout)
+	var band := true
+	for y in range(5, 10):
+		for x in range(5, 22):
+			band = band and s_rows[y][x] == "Q"
+	var north_side := _walkable_from(s_rows, Vector2i(14, 1))
+	_check(stair.cave and stair.biome == "sunken_verge" and band and s_rows[0].substr(14, 2) == ".." and s_rows[10][23] == "." and s_rows[11][23] == "."
+		and not north_side.has(Vector2i(10, 10)), "the Kelp Stair: five rows of deep water between the stair and the way on")
+	stair.free()
+	var chapel: Room = (load("res://rooms/room_3_5.tscn") as PackedScene).instantiate()
+	add_child(chapel)
+	await _wait(0.2)
+	var ch_rows := Room.parse_layout(chapel.layout)
+	var ch_eyes: Array = _child_of(chapel, IceEye)
+	var ch_bars := _child_of(chapel, Bars)
+	_check(chapel.cave and chapel.biome == "sunken_verge" and chapel.gate == "eyes" and ch_eyes.size() == 2 and ch_bars.size() == 2 and not (ch_bars[0] as Bars).is_open
+		and ch_rows[10][0] == "." and ch_rows[11][0] == "." and ch_rows[12].substr(9, 2) == "..", "the Drowned Chapel: two eyes bar the way down")
+	(ch_eyes[0] as IceEye).arrow_hit(Vector2.UP)
+	await _wait(0.3)
+	_check(not (ch_bars[0] as Bars).is_open, "one eye isn't enough")
+	(ch_eyes[1] as IceEye).arrow_hit(Vector2.UP)
+	await _wait(0.4)
+	_check((ch_bars[0] as Bars).is_open and (ch_bars[1] as Bars).is_open, "both eyes open, the bars lift")
+	chapel.queue_free()
+	GameState.reset_new_game()
+	var wreck: Room = (load("res://rooms/room_3_6.tscn") as PackedScene).instantiate()
+	add_child(wreck)
+	await _wait(0.1)
+	var w_rows := Room.parse_layout(wreck.layout)
+	var w_chests := _child_of(wreck, Chest)
+	var w_crew := 0
+	for child in wreck.get_children():
+		if child is Enemy:
+			w_crew += 1
+	_check(wreck.cave and wreck.biome == "sunken_verge" and wreck.gate == "clear" and wreck.chest_hidden and _child_of(wreck, Bars).size() == 2 and w_chests.size() == 1 and not (w_chests[0] as Chest).visible
+		and w_rows[0].substr(9, 2) == ".." and w_rows[1].substr(9, 2) == "||" and w_crew >= 5, "the Wreck Vault: a hidden cache, a crew of %d, bars that shut behind Wren" % w_crew)
+	wreck.queue_free()
+	GameState.reset_new_game()
+
 
 
 ## One short trial cave per region: a single puzzle and a glint cache.
