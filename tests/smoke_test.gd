@@ -97,6 +97,7 @@ func _ready() -> void:
 		await _test_echo_game()
 		_test_hessa_log()
 		await _test_lowe_after()
+		await _test_hessa_walk()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -7526,6 +7527,125 @@ func _test_lowe_after() -> void:
 	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_SINGERS_1", "then asks after her last singers")
 	game.queue_free()
 	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## Hessa's walk: after the ending she asks Wren to light her way out to
+## Lullaby Point. She follows the lamp, waits when Wren goes out of sight,
+## crosses only when close, and on the Point has her word with Lowe.
+func _test_hessa_walk() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG, StoryDirector.HEART_VISIT_FLAG, "hessa_log_ask"]:
+		GameState.set_flag(flag)
+	var first := func() -> String: return str(Conversations.branch_for("hessa").get("lines", [""])[0])
+	_check(first.call() == "HESSA_AFTER_END", "no walk before Wren has met Lowe on the Point")
+	GameState.set_flag("lowe_spoke")
+	_check(first.call() == "HESSA_WALK_1", "then Hessa asks Wren to light her way out to Lowe")
+	for line: String in ["HESSA_WALK_1", "HESSA_WALK_1B", "HESSA_WALK_2", "HESSA_WALK_2B", "HESSA_WALK_SHORE", "HESSA_WALK_POOLS_B", "HESSA_WALK_POINT_3", "LOWE_WALK_4", "HESSA_POINT_STAY", "LOWE_WALK_AFTER_2"]:
+		_check(tr(line).length() <= 70, "%s fits the box" % line)
+	var home := Vector2(18 * 16 + 8, 5 * 16 + 12)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, home + StoryDirector.HOME_FROM_HESSA)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var player: Player = game.player
+	player._invuln = 600.0
+	var director: StoryDirector = get_tree().get_first_node_in_group("story_director")
+	var room: Room = game.current_room
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.try_interact()
+	await _play_scene(game, 6.0)
+	await _wait(0.2)
+	var walker := director._walker
+	_check(GameState.has_flag(StoryDirector.WALK_FLAG) and is_instance_valid(walker) and _find_kind(room, "hessa") == null, "she leaves her spot and follows")
+	# She follows Wren over open ground.
+	player.global_position = _tile_pos(room, Vector2i(14, 8))
+	var before := walker.global_position.distance_to(player.global_position)
+	await _wait(1.0)
+	_check(walker.global_position.distance_to(player.global_position) < before - 20.0, "she walks after the lamp")
+	# Out of sight, she stops and holds up her own lamp.
+	player.global_position = _tile_pos(room, Vector2i(2, 11))
+	walker.position = Vector2(21 * 16 + 8, 8 * 16 + 10)
+	await _wait(0.6)
+	var stood := walker.position
+	await _wait(0.5)
+	_check(walker.waiting and walker.position == stood, "too far: she waits for Wren to come back")
+	# Leave without her: she stays in the village.
+	player.global_position = _tile_pos(room, Vector2i(11, 12)) + Vector2(0, 12)
+	await _wait(0.8)
+	_check(game.current_room.coord == StoryDirector.SHORE and director._walker == null and director.walk_room == StoryDirector.SALTMARROW, "left behind, she waits at home")
+	player.global_position = _tile_pos(game.current_room, Vector2i(11, 0)) + Vector2(0, -24)
+	await _wait(0.8)
+	room = game.current_room
+	walker = director._walker
+	_check(room.coord == StoryDirector.SALTMARROW and is_instance_valid(walker) and walker.position.distance_to(stood) < 2.0 and _find_kind(room, "hessa") == null, "and she's still waiting where she stood")
+	# Now together, all the way out.
+	var route := [[Vector2i(11, 12), Vector2i.DOWN, Vector2(0, 6)], [Vector2i(23, 6), Vector2i.RIGHT, Vector2(6, 0)], [Vector2i(11, 12), Vector2i.DOWN, Vector2(0, 6)], [Vector2i(23, 9), Vector2i.RIGHT, Vector2(6, 0)]]
+	var beats := ["hessa_walk_shore", "hessa_walk_pools", "hessa_walk_wreck"]
+	for i in route.size():
+		room = game.current_room
+		player.global_position = _tile_pos(room, route[i][0])
+		director._walker.position = player.global_position - room.global_position - Vector2(route[i][1]) * 16.0
+		await _wait(0.1)
+		# Over the edge: the game slides on to the next room.
+		player.global_position += route[i][2] * 2.0
+		await _wait(0.8)
+		if i < beats.size():
+			await _play_scene(game, 6.0)
+			_check(is_instance_valid(director._walker) and GameState.has_flag(beats[i]), "she comes along and has a word (%s)" % beats[i])
+	room = game.current_room
+	var glints := GameState.item_count("glint")
+	var pages := await _play_scene(game, 20.0)
+	_check(room.coord == StoryDirector.LULLABY_POINT and pages >= 12, "on the Point, Hessa and Lowe talk (%d pages)" % pages)
+	_check(GameState.has_flag(StoryDirector.WALK_DONE_FLAG) and not GameState.has_flag(StoryDirector.WALK_FLAG) and GameState.item_count("glint") == glints + StoryDirector.WALK_GLINTS, "the walk's done, and she pays for the oil")
+	var stays := _find_kind(room, "hessa_point")
+	_check(stays != null and director._walker == null and Vector2i(stays.position / Room.TILE).y <= 8, "she stays on the Point with Lowe, above the box")
+	_check(Conversations.branch_for("hessa_point").get("lines") == ["HESSA_POINT_STAY"], "and sends Wren home")
+	_check(Conversations.branch_for("lowe").get("lines")[0] != "LOWE_WALK_AFTER_1", "Lowe keeps her evenings to herself for now")
+	_check(first.call() == "HESSA_WALK_HOME_1", "Hessa has a word about it, back home")
+	Conversations.talk("hessa")
+	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_WALK_AFTER_1", "and then so does Lowe")
+	game.queue_free()
+	await _wait(0.1)
+	# Gone further than the next room without her: she makes her own way home.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG, StoryDirector.HEART_VISIT_FLAG, "hessa_log_ask", "lowe_spoke", "hessa_walk_ask"]:
+		GameState.set_flag(flag)
+	_check(first.call() == "HESSA_WALK_AGAIN", "asked again after a walk that came to nothing")
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, home + StoryDirector.HOME_FROM_HESSA)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	player = game.player
+	player._invuln = 600.0
+	director = get_tree().get_first_node_in_group("story_director")
+	Conversations.talk("hessa")
+	await _play_scene(game, 6.0)
+	_check(GameState.has_flag(StoryDirector.WALK_FLAG), "and she sets off again")
+	director._walker.position = Vector2(2 * 16 + 8, 8 * 16 + 10)
+	await _wait(0.1)
+	player.global_position = _tile_pos(game.current_room, Vector2i(11, 12)) + Vector2(0, 12)
+	await _wait(0.8)
+	player.global_position = _tile_pos(game.current_room, Vector2i(23, 6)) + Vector2(12, 0)
+	await _wait(0.8)
+	_check(not GameState.has_flag(StoryDirector.WALK_FLAG) and director._walker == null, "two rooms off without her: she's gone home")
+	# Off the route, she stays at the edge rather than wander off with Wren.
+	GameState.flags[StoryDirector.WALK_FLAG] = true
+	director.walk_room = Vector2i(1, 0)
+	director._walker = HessaWalker.new()
+	director._walker.near = true
+	director._walk_on(Vector2i(2, 0))
+	_check(director.walk_room == Vector2i(1, 0) and GameState.has_flag(StoryDirector.WALK_FLAG), "she won't be led off the way to the Point")
+	# Mantle flies Wren off: the walk's over.
+	director.end_walk()
+	_check(not GameState.has_flag(StoryDirector.WALK_FLAG), "flown off: she makes her own way home")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
 	GameState.reset_new_game()
 
 

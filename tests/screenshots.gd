@@ -83,6 +83,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=hessa_walk: Hessa following the lamp, and on the Point.
+	if OS.get_environment("SHOTS_ONLY") == "hessa_walk":
+		game.queue_free()
+		await _walk_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=jumpers: Ottilie's Knits on her shelf and on Wren.
 	if OS.get_environment("SHOTS_ONLY") == "jumpers":
 		game.queue_free()
@@ -371,6 +380,7 @@ func _ready() -> void:
 				await _fishing_shots()
 				await _echo_shot()
 				await _party_shot()
+				await _walk_shots()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2328,6 +2338,70 @@ func _echo_shot() -> void:
 	echo.start()
 	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME + 0.05)
 	await _capture("quest_21_echo_game")
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Hessa's walk: following Wren's lamp along the tidepools, waiting with
+## her own lamp up when Wren's gone too far, and with Lowe on the Point.
+func _walk_shots() -> void:
+	Cutscene.fast = false
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG, StoryDirector.HEART_VISIT_FLAG, "hessa_log_ask", "lowe_spoke", "hessa_walk_shore", "hessa_walk_pools", "hessa_walk_wreck"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(Vector2i(1, 0), Vector2(12 * 16 + 8, 7 * 16 + 10))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	# Out on the tidepools together.
+	var director: StoryDirector = get_tree().get_first_node_in_group("story_director")
+	# Set quietly: out here, setting it would call the walk off.
+	GameState.flags[StoryDirector.WALK_FLAG] = true
+	director.walk_room = Vector2i(1, 0)
+	director.walk_at = Vector2(7 * 16 + 8, 6 * 16 + 10)
+	director._walk_on(Vector2i(1, 0))
+	game.player.global_position = game.current_room.global_position + Vector2(12 * 16 + 8, 7 * 16 + 10)
+	game.player.facing = Vector2.RIGHT
+	await _wait(1.2)
+	await _capture("quest_23_hessa_follows")
+	game.player.global_position = game.current_room.global_position + Vector2(21 * 16 + 8, 2 * 16 + 10)
+	for i in 40:
+		if game.current_room.get_children().any(func(c: Node) -> bool: return c is LampGlow):
+			break
+		await _wait(0.1)
+	await _wait(0.4)
+	await _capture("quest_24_hessa_waits")
+	game.queue_free()
+	await _wait(0.2)
+	# On the Point, with Lowe.
+	GameState.set_checkpoint(StoryDirector.LULLABY_POINT, Vector2(2 * 16 + 8, 9 * 16 + 10))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	director = get_tree().get_first_node_in_group("story_director")
+	# Set quietly: out here, setting it would call the walk off.
+	GameState.flags[StoryDirector.WALK_FLAG] = true
+	director.walk_room = Vector2i(1, 1)
+	director.walk_at = Vector2(22 * 16 + 8, 9 * 16 + 10)
+	game.player.global_position = game.current_room.global_position + Vector2(1 * 16 + 8, 9 * 16 + 10)
+	director._walker = HessaWalker.new()
+	director._walker.near = true
+	director._walk_on(StoryDirector.LULLABY_POINT)
+	var box := _dialogue_box(game)
+	var pages := 0
+	for i in 200:
+		if DialogueBox.is_open:
+			pages += 1
+			if pages == 3:
+				await _wait(1.6)
+				await _capture("quest_25_hessa_and_lowe")
+			box.advance()
+			box.advance()
+		await _wait(0.15)
+		if not Cutscene.active and not DialogueBox.is_open and pages > 3:
+			break
 	game.queue_free()
 	await _wait(0.2)
 
