@@ -5710,13 +5710,16 @@ func _test_far_reaches() -> void:
 	var sands: Room = game.current_room
 	for foe in _child_of(sands, Enemy):
 		foe.free()
-	_check(_child_of(sands, BoneWall).size() == 2 and _child_of(sands, SinkField).size() == 1 and sands.tile_at(2, 9) == "Y" and sands.tile_at(2, 10) == "Y", "Ribfall Sands: a bone barricade, sinking sand, and a cracked boulder at the far side")
+	# Two bone walls bar the way north; two more hide the way east into the
+	# Marrow Seep (the side area behind Ribfall Sands).
+	_check(_child_of(sands, BoneWall).size() == 4 and _child_of(sands, SinkField).size() == 1 and sands.tile_at(2, 9) == "Y" and sands.tile_at(2, 10) == "Y", "Ribfall Sands: a bone barricade, sinking sand, and a cracked boulder at the far side")
 	player.global_position = _tile_pos(sands, Vector2i(8, 1))
 	player.facing = Vector2.DOWN
 	await _wait(0.3)
 	player.use_item("echo_horn")
 	await _wait(0.8)
-	_check(_child_of(sands, BoneWall).is_empty(), "the horn brings Ribfall's barricade down")
+	var north_walls := _child_of(sands, BoneWall).filter(func(w: Node) -> bool: return (w as Node2D).position.y < 3 * Room.TILE)
+	_check(north_walls.is_empty() and _child_of(sands, BoneWall).size() == 2, "the horn brings Ribfall's barricade down (the hidden east wall is out of earshot)")
 	game.queue_free()
 	await _wait(0.1)
 	var brink: Room = (load("res://rooms/room_8_3.tscn") as PackedScene).instantiate()
