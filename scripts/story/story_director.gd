@@ -311,7 +311,11 @@ const WALK_BEATS := {
 }
 ## On the Point: Hessa beside Lowe, Wren just below them.
 const WALK_HESSA_AT := Vector2(14 * 16 + 8, 8 * 16 + 10)
-const WALK_WREN_AT := Vector2(15 * 16 + 8, 10 * 16 + 10)
+const WALK_WREN_AT := Vector2(15 * 16 + 8, 9 * 16 + 10)
+## The rooms of her walk: she only comes along between these.
+const WALK_ROUTE := [Vector2i(0, -1), Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 1), Vector2i(2, 1)]
+## Her own spot in Saltmarrow (the layout's "h").
+const HESSA_HOME := Vector2(18 * 16 + 8, 5 * 16 + 12)
 const WALK_GLINTS := 200
 
 var game: Node
@@ -330,6 +334,8 @@ func _ready() -> void:
 	Events.flag_changed.connect(_on_flag_changed)
 	Events.game_finished.connect(the_ending)
 	Events.boss_defeated.connect(_on_boss_defeated)
+	# Flown off by Mantle mid-walk: she makes her own way home.
+	Events.fast_travel_requested.connect(func(_coord: Vector2i) -> void: end_walk())
 
 
 func _on_game_started() -> void:
@@ -826,6 +832,8 @@ func hessas_confession() -> void:
 func hessas_lighting_day() -> void:
 	if Cutscene.active or GameState.has_flag(PARTY_DONE_FLAG):
 		return
+	# Her own party: she's home for it, walk or no walk.
+	end_walk()
 	GameState.set_flag(PARTY_DONE_FLAG)
 	var scene := _scene()
 	# Nettle's "go and fetch her" opens just after the flag is set: let it
@@ -1981,7 +1989,7 @@ func _put_walker(room: Room) -> void:
 ## her own way home.
 func _walk_on(coord: Vector2i) -> void:
 	var room: Room = game.current_room
-	var carried := is_instance_valid(_walker) and _walker.near and coord != walk_room
+	var carried := is_instance_valid(_walker) and _walker.near and coord != walk_room and WALK_ROUTE.has(coord) and WALK_ROUTE.has(walk_room)
 	if is_instance_valid(_walker):
 		walk_at = _walker.position
 		_walker.queue_free()
@@ -2008,6 +2016,19 @@ func _walk_on(coord: Vector2i) -> void:
 		hessa_meets_lowe.call_deferred()
 	elif WALK_BEATS.has(coord) and not GameState.has_flag(WALK_BEATS[coord][0]):
 		_walk_beat.call_deferred(coord)
+
+
+## The walk's off: Hessa goes home (and, if Wren's in Saltmarrow, is back
+## at her spot by the lighthouse).
+func end_walk() -> void:
+	if not GameState.has_flag(WALK_FLAG):
+		return
+	GameState.clear_flag(WALK_FLAG)
+	if is_instance_valid(_walker):
+		_walker.queue_free()
+	_walker = null
+	if GameState.room_coord == SALTMARROW and game.current_room and _find_npc("hessa") == null:
+		_put_npc("hessa", HESSA_HOME)
 
 
 ## Just inside the edge Wren came in by, a step behind them.

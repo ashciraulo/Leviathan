@@ -309,8 +309,8 @@ const TALKS := {
 	],
 	"lowe": [
 		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
-		# Once she's walked Hessa home from the Point.
-		{"if": ["hessa_walk_done"], "unless": ["lowe_walk_after"], "set": ["lowe_walk_after"], "lines": ["LOWE_WALK_AFTER_1", "LOWE_WALK_AFTER_2"]},
+		# Once she's walked Hessa home from the Point (and Hessa has said so).
+		{"if": ["hessa_walk_done", "hessa_walk_home"], "unless": ["lowe_walk_after"], "set": ["lowe_walk_after"], "lines": ["LOWE_WALK_AFTER_1", "LOWE_WALK_AFTER_2"]},
 		# The last singers: four of the Choir who never went home.
 		{"if": ["lowe_singers_ask", "bram_home", "sela_home", "pim_home", "ansel_home"], "unless": ["lowe_singers_done"], "set": ["lowe_singers_done"], "give": {"glint": 300}, "lines": ["LOWE_SINGERS_DONE_1", "LOWE_SINGERS_DONE_2", ["", "NARRATE_LOWE_ROBE"], "LOWE_SINGERS_DONE_3", ["", "NARRATE_GOT_CHOIR_PURSE"]]},
 		# A garden at Lullaby Point: three stubborn plants (QuestFind).

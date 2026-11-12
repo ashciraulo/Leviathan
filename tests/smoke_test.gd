@@ -7599,8 +7599,10 @@ func _test_hessa_walk() -> void:
 	var stays := _find_kind(room, "hessa_point")
 	_check(stays != null and director._walker == null and Vector2i(stays.position / Room.TILE).y <= 8, "she stays on the Point with Lowe, above the box")
 	_check(Conversations.branch_for("hessa_point").get("lines") == ["HESSA_POINT_STAY"], "and sends Wren home")
-	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_WALK_AFTER_1", "Lowe has a word about it after")
-	_check(first.call() == "HESSA_WALK_HOME_1", "and so does Hessa, back home")
+	_check(Conversations.branch_for("lowe").get("lines")[0] != "LOWE_WALK_AFTER_1", "Lowe keeps her evenings to herself for now")
+	_check(first.call() == "HESSA_WALK_HOME_1", "Hessa has a word about it, back home")
+	Conversations.talk("hessa")
+	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_WALK_AFTER_1", "and then so does Lowe")
 	game.queue_free()
 	await _wait(0.1)
 	# Gone further than the next room without her: she makes her own way home.
@@ -7626,6 +7628,16 @@ func _test_hessa_walk() -> void:
 	player.global_position = _tile_pos(game.current_room, Vector2i(23, 6)) + Vector2(12, 0)
 	await _wait(0.8)
 	_check(not GameState.has_flag(StoryDirector.WALK_FLAG) and director._walker == null, "two rooms off without her: she's gone home")
+	# Off the route, she stays at the edge rather than wander off with Wren.
+	GameState.flags[StoryDirector.WALK_FLAG] = true
+	director.walk_room = Vector2i(1, 0)
+	director._walker = HessaWalker.new()
+	director._walker.near = true
+	director._walk_on(Vector2i(2, 0))
+	_check(director.walk_room == Vector2i(1, 0) and GameState.has_flag(StoryDirector.WALK_FLAG), "she won't be led off the way to the Point")
+	# Mantle flies Wren off: the walk's over.
+	director.end_walk()
+	_check(not GameState.has_flag(StoryDirector.WALK_FLAG), "flown off: she makes her own way home")
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false
