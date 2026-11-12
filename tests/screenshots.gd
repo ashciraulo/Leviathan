@@ -147,6 +147,19 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=verge_side: the cave run under the Verge.
+	if OS.get_environment("SHOTS_ONLY") == "verge_side":
+		await _room_shots(game, {
+			Vector2i(2, 4): ["side_wreckers_stair", Vector2i(14, 10)],
+			Vector2i(2, 5): ["side_kelp_stair", Vector2i(14, 2)],
+			Vector2i(3, 5): ["side_drowned_chapel", Vector2i(5, 10)],
+			Vector2i(3, 6): ["side_wreck_vault", Vector2i(9, 3)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=secrets: exploration secrets in the older regions.
 	if OS.get_environment("SHOTS_ONLY") == "secrets":
 		await _room_shots(game, {
