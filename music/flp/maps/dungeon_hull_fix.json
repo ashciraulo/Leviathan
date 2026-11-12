@@ -1,0 +1,14 @@
+{
+ "bassclarinet": {
+  "pitch": {
+   "choir_pad": -17
+  }
+ },
+ "drum_deep": {
+  "keys": {
+   "36": {
+    "play": 50
+   }
+  }
+ }
+}

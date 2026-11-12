@@ -20,7 +20,7 @@
    },
    "47": {
     "channel": "bass_soft",
-    "db": 3.3
+    "db": 1.6
    },
    "45": {
     "channel": "bass_a2",
@@ -32,6 +32,11 @@
    },
    "42": {
     "channel": "bass_soft"
+   },
+   "40": {
+    "channel": "bass_a2",
+    "play": 41,
+    "db": 1.9
    }
   },
   "pitch": {
@@ -48,21 +53,23 @@
   "db_per_vel": 0.3,
   "keys": {
    "41": {
-    "play": 57
+    "play": 54
    },
    "50": {
-    "play": 62
+    "channel": "drum_high",
+    "play": 60
    },
    "52": {
-    "play": 65
+    "channel": "drum_high",
+    "play": 64
    }
   }
  },
  "marimba": {
-  "db_per_vel": 0.25,
+  "db_per_vel": 0.125,
   "keys": {
    "52": {
-    "db": -8.7
+    "db": -4.35
    }
   }
  }

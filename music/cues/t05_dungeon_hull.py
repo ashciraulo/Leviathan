@@ -41,7 +41,7 @@ def section(b):
 
 slow1 = phrase_items(0, transpose=-12, beat=1.5)  # A F G A on cello, 3 bars
 # A: phrase 1, an answer, phrase 1 again, a different answer that turns home.
-cello.line(song.bar(0), slow1 + seq("E3:3 C3:3", E), legato=0.96)
+cello.line(song.bar(0), slow1 + seq("E3:3 C3:3", E), vel=76, legato=0.96)  # softer entry: the loop seam (v4 +7.4 dB)
 cello.line(song.bar(4), seq("F3:4 E3:2 | D3:3 G3:3 | A3:5 r:1 | E3:6".replace("|", ""), E), vel=76, legato=0.96)
 cello.line(song.bar(8), slow1 + seq("G3:3 E3:3", E), legato=0.96)
 cello.line(song.bar(12), seq("F3:4 D3:2 | A3:3 F3:3 | G3:3 Bb3:3 | C#4:6".replace("|", ""), E), vel=78, legato=0.96)
@@ -61,9 +61,14 @@ cello.line(song.bar(36), seq("D4:4 F4:2 | D4:3 Bb3:3 | A3:6 | E3:5 r:1".replace(
 
 # Low strings sway: each bar swells in on beat 1 and eases on beat 2.
 for b, sym in enumerate(CHORDS):
-    if section(b) == "BRIDGE":
+    if section(b) == "BRIDGE" and b < 44:
         continue
     tones = voicing(sym, 41, 57)[:3]
+    if section(b) == "BRIDGE":  # the strings creep back in under the last four bars, so the loop doesn't jump at A
+        v = 36 + 4 * (b - 44)
+        strings.chord(song.bar(b), 3 * E * 0.98, tones, v)
+        strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones, v + 2)
+        continue
     full = section(b) == "A2"
     strings.chord(song.bar(b), 3 * E * 0.98, tones, 54 if full else 46)
     strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones, 40 if full else 34)
@@ -93,7 +98,7 @@ for b, sym in enumerate(CHORDS):
     root = 26 + (bass_of(sym) - 2) % 12  # D1..C#2 -> keep in 31..48
     root = root + 12 if root < 31 else root
     if section(b) == "BRIDGE":
-        bass.line(song.bar(b), seq(["D2:6", "D2:3 F2:3", "G2:6", "F2:3 E2:3", "Bb1:6", "C2:6", "A1:6", "C#2:3 E2:3"][b - 40], E),
+        bass.line(song.bar(b), seq(["D2:6", "D2:3 F2:3", "G2:6", "F2:3 E2:3", "Bb1:6", "D2:6", "A1:6", "C#2:3 E2:3"][b - 40], E),
                   vel=70, legato=0.96)
     elif b % 2 == 0:
         bass.note(song.bar(b), song.bar_q * (2 if CHORDS[b + 1] == sym else 1) * 0.97, root, 72)

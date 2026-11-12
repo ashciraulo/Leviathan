@@ -47,6 +47,8 @@ for b in range(0, song.bars, 2):
     t = song.bar(b)
     if sec in ("A", "A2"):
         text = HOOK if (b // 2) % 2 == 0 else HOOK2
+        if sec == "A" and b == 12:
+            text = HOOK.replace("D5:3 C#5:1", "D5:4")  # over Cmaj7 the C# rubs (review v3): hold the D
         if sec == "A2" and b % 8 == 6:
             text = "G4:1 A4:1 B4:1 D5:1 E5:2 D5:2 | B4:1 A4:1 G4:2 E4:4"  # third ending
         marimba.line(t, seq(text.replace("|", ""), 0.5), vel=82 if sec == "A" else 74, legato=0.8)
@@ -66,7 +68,11 @@ for b, sym in enumerate(CHORDS):
     tones = voicing(sym, 72, 86)
     if sec == "A2" and b % 2 == 1:
         for k, s in enumerate((1.5, 2.5, 3.5)):
-            kalimba.note(song.bar(b) + s, 0.4, tones[k % len(tones)], 52)
+            t0, p = song.bar(b) + s, tones[k % len(tones)]
+            # Skip a sparkle a semitone from a marimba note sounding with it (review v3: C#5 against D5).
+            if any(abs((p - m[2]) % 12) in (1, 11) and m[0] < t0 + 0.4 and m[0] + m[1] > t0 for m in marimba.notes):
+                continue
+            kalimba.note(t0, 0.4, p, 52)
     elif sec == "C":
         line = {0: "B5:2 G5:1 E5:1", 1: "G5:3 r:1", 2: "E5:2 B4:1 G5:1", 3: "E5:4",
                 4: "C6:2 A5:1 E5:1", 5: "G5:3 r:1", 6: "F#5:2 D5:1 B4:1", 7: "A4:2 r:2"}[b - 40]
@@ -98,14 +104,15 @@ for b in range(song.bars):
         drums.note(t + s, S * 1.5, p, v)
 
 # Upright bass (the sampled Diamond bass, Ash's pick for every folk cue): root
-# and a pushed fifth. F2..G3 only, the sample's clean range, and never F#3
+# and a pushed fifth. E2..G3 only (E2 is the F2 sample retuned, maps/region_brinewood_fix.json;
+# review v3: an E3 root was too thin for the home chord), and never F#3
 # (that sample has two fundamentals); see music/PILOT.md.
-def low_root(sym, lowest=41):
+def low_root(sym, lowest=40):
     return lowest + (bass_of(sym) - lowest) % 12
 
 
 def bass_ok(m):
-    return 41 <= m <= 55 and m != 54
+    return 40 <= m <= 55 and m != 54
 
 
 for b, sym in enumerate(CHORDS):
@@ -132,13 +139,17 @@ for b, sym in enumerate(CHORDS):
         bass.note(t + 1.5, 0.45, fifth, 70)
         bass.note(t + 2, 1.4, other, 76)
         walk = fifth - 2
-        if b % 2 and bass_ok(walk):
+        if last:  # a soft root rings over the loop point (v4: no walk, but a bare stop read as a cut render)
+            bass.note(t + 3.5, 0.5, root, 60)
+        elif b % 2 and bass_ok(walk):
             bass.note(t + 3.5, 0.45, walk, 64)
 
 # Warm pad: under B and C only.
 for b, sym in enumerate(CHORDS):
     if section(b) in ("B", "C"):
         pad.chord(song.bar(b), 3.95, voicing(sym, 52, 66)[:3], 38)
+    elif b < 4:  # the solo-marimba intro: a soft floor so the loop restart doesn't fall silent (review v3)
+        pad.chord(song.bar(b), 3.95, voicing(sym, 52, 66)[:3], 30)
 
 for i, p in enumerate(song.parts):
     p.humanize(seed=400 + i)

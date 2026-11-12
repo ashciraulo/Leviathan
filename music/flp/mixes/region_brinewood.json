@@ -40,6 +40,12 @@
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 2500,
+     "gain": -3.5,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
      "freq": 3000,
      "db_oct": 24
@@ -48,7 +54,7 @@
   },
   "drum_hand": {
    "insert": 1,
-   "target": -28.5,
+   "target": -31.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -57,14 +63,14 @@
     },
     {
      "shape": "bell",
-     "freq": 120,
+     "freq": 85,
      "gain": -4,
      "q": 1.0
     },
     {
-     "shape": "highshelf",
-     "freq": 8000,
-     "gain": -6
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
     }
    ]
   },
@@ -115,6 +121,22 @@
      "db_oct": 12
     }
    ]
+  },
+  "drum_high": {
+   "insert": 7,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
   }
  },
  "master_eq": [
@@ -124,5 +146,5 @@
    "db_oct": 12
   }
  ],
- "notes": "Under the Mangrove. Built on brinewood_template (shop_template with Meadow Flute on flute_wood, Analog Lab Kalimba replacing Ample Guitar on channel 'kalimba' (insert 6), 12 Low Strings as the pad (+12, it sounds an octave low), Emulator II Marimba on reed_concertina (-12)). Hand drums are the frame drum sample at keys 57/62/65 (maps/region_brinewood_fix.json). Diamond bass on insert 3, F2..G3."
+ "notes": "Under the Mangrove. Built on brinewood_template (shop_template with Meadow Flute on flute_wood, Analog Lab Kalimba replacing Ample Guitar on channel 'kalimba' (insert 6), 12 Low Strings as the pad (+12, it sounds an octave low), Emulator II Marimba on reed_concertina (-12)). Hand drums are the frame drum sample at keys 57/62/65 (maps/region_brinewood_fix.json). Diamond bass on insert 3, F2..G3. Review v3 (FAIL): E2 root from the F2 sample on bass_a2 (key 40); low hand-drum stroke at key 54 (E2) with the drum's cut moved to 85 Hz; the high and slap strokes moved to a real hand-drum preset on channel drum_high (insert 7); pad floor under bars 1-4; marimba -3.5 dB at 2.5 kHz."
 }
