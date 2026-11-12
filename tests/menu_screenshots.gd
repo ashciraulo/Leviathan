@@ -44,6 +44,14 @@ func _ready() -> void:
 	GameState.play_time = 760.0
 	SaveManager.current_slot = 1
 	SaveManager.save_game()
+	# A file with every bell and all the breath there is (sixteen bubbles).
+	GameState.reset_new_game()
+	GameState.give_item("tidebell", Items.max_count("tidebell"), false)
+	GameState.give_item("breath_pearl", Items.max_count("breath_pearl"), false)
+	GameState.give_item("pearl_shard", Items.max_count("pearl_shard"), false)
+	GameState.play_time = 15.0 * 3600.0
+	SaveManager.current_slot = 2
+	SaveManager.save_game()
 	title._show_page(title._files)
 	await _wait(0.3)
 	await _capture("31_file_select")
