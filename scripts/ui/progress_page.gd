@@ -8,9 +8,10 @@ const PANEL := Rect2(8, 22, 368, 174)
 const NAME_X := 16.0
 const NAME_W := 100.0
 ## Where each column of numbers starts, and how wide it is (errands asked,
-## done, shards, stones, glass, chests). Asked only ever holds a number.
-const COL_X := [116.0, 152.0, 192.0, 236.0, 280.0, 324.0]
-const COL_W := [36.0, 40.0, 44.0, 44.0, 44.0, 44.0]
+## done, shards, stones, glass, chests). Asked only ever holds a number;
+## chests is widest, for "100/125".
+const COL_X := [116.0, 150.0, 188.0, 232.0, 276.0, 316.0]
+const COL_W := [34.0, 38.0, 44.0, 44.0, 40.0, 50.0]
 const HEAD_Y := 26.0
 const SUBHEAD_Y := 38.0
 const ROW_Y := 54.0
@@ -41,7 +42,7 @@ func _draw() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, NAME_W)
 	for i in HEADS.size():
 		MenuKit.draw_text(self, HEADS[i], Vector2(COL_X[i], SUBHEAD_Y), MenuKit.TEXT_HEAD,
-			HORIZONTAL_ALIGNMENT_CENTER, COL_W[i], COL_W[i] - 2)
+			HORIZONTAL_ALIGNMENT_CENTER, COL_W[i])
 	draw_line(Vector2(NAME_X, ROW_Y - 3.5), Vector2(PANEL.end.x - 8, ROW_Y - 3.5), LINE)
 	for r in Completion.REGIONS.size():
 		var region: String = Completion.REGIONS[r]

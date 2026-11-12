@@ -23,7 +23,7 @@ const QUESTS := [
 	{"id": "marga_rope", "region": "saltmarrow", "start": "asked_for_rope", "done": "marga_gave_jar"},
 	{"id": "jam_trade", "region": "saltmarrow", "start": "trade_jam", "done": "trade_done"},
 	{"id": "nettle_signals", "region": "saltmarrow", "start": "nettle_signals_ask", "done": "nettle_signals_done"},
-	{"id": "lighting_day", "region": "saltmarrow", "start": "lighting_ask", "done": "lighting_party"},
+	{"id": "lighting_day", "region": "saltmarrow", "start": "lighting_ask", "done": "lighting_day"},
 	{"id": "dunstan_boat", "region": "saltmarrow", "start": "dunstan_boat_ask", "done": "dunstan_boat_done"},
 	{"id": "hessa_log", "region": "saltmarrow", "start": "hessa_log_ask", "done": "hessa_log_done"},
 	{"id": "hessa_walk", "region": "saltmarrow", "start": "hessa_walk_ask", "done": "hessa_walk_done"},
