@@ -22,15 +22,24 @@ const LIZARD := preload("res://assets/ambient/lizard.png")
 
 ## How much of each kind of life a biome has.
 const LIFE := {
-	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2, "clouds": 2, "glints": 6},
-	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3, "reeds": 10, "leaves": 7},
-	"cinderreach": {"embers": 14, "ash": 40, "lizards": 2},
-	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4, "reeds": 12},
-	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5, "hares": 2, "reeds": 14, "clouds": 3, "glints": 8},
-	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60, "hares": 2, "clouds": 1, "glints": 4},
-	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2, "clouds": 2, "glints": 8},
-	"ossuary": {"buzzards": 2, "gusts": 4, "lizards": 3, "clouds": 1, "glints": 4},
+	"saltmarrow": {"gulls": 2, "fish": 2, "crabs": 2, "gusts": 2, "clouds": 2, "glints": 4},
+	"brinewood": {"gulls": 1, "fish": 2, "butterflies": 3, "mist": 2, "reeds": 10, "leaves": 5},
+	"cinderreach": {"embers": 12, "ash": 30, "lizards": 2},
+	"gloamfen": {"fish": 2, "fireflies": 8, "mist": 3, "reeds": 10},
+	"windmere": {"gulls": 2, "butterflies": 1, "gusts": 3, "hares": 2, "reeds": 12, "clouds": 2, "glints": 5},
+	"frostspine": {"gulls": 1, "fish": 2, "gusts": 2, "snow": 50, "hares": 2, "clouds": 1, "glints": 3},
+	"sunken_verge": {"gulls": 2, "fish": 2, "crabs": 2, "gusts": 2, "clouds": 2, "glints": 5},
+	"ossuary": {"buzzards": 2, "gusts": 3, "lizards": 2, "clouds": 1, "glints": 3},
 }
+## Creatures (not weather) thin out on a screen that is already busy: each
+## foe, villager or stall on it takes this share off, down to the floor
+## (and one of each kind always stays).
+const CREATURES := ["gulls", "buzzards", "fish", "crabs", "butterflies", "fireflies", "hares", "lizards"]
+const CROWD_SHARE := 0.12
+const CROWD_FLOOR := 0.35
+## Layout letters that put something lively on the screen: foes, the stall,
+## the quest crab (villagers are counted from Npc.LETTERS).
+const LIVELY := "csmweqt0gAb7k"
 ## Wind streak colours: sea air is white, the dunes blow sand.
 const GUST_COLOUR := {"ossuary": Color(0.7, 0.55, 0.36), "cinderreach": Color(0.75, 0.7, 0.68)}
 ## Gulls fly this high: their shadow falls this far below them.
@@ -120,6 +129,18 @@ func _ready() -> void:
 		life = life.duplicate()
 		for key in ["gulls", "buzzards", "gusts", "snow", "ash", "butterflies", "clouds", "glints", "leaves"]:
 			life.erase(key)
+	# Shore crabs keep off a screen with Scuttlers on it: side by side, the
+	# harmless ones and the foes are too easily taken for each other.
+	if _room and _room.layout.contains("c") and life.has("crabs"):
+		life = life.duplicate()
+		life.erase("crabs")
+	var crowd := _crowd()
+	if crowd < 1.0:
+		life = life.duplicate()
+		for key: String in CREATURES:
+			if life.has(key):
+				# One of each kind stays, so the screen still has its life.
+				life[key] = maxi(1, roundi(int(life[key]) * crowd))
 	for i in int(life.get("gulls", 0)):
 		gulls.append(_new_gull(true))
 	for i in int(life.get("buzzards", 0)):
@@ -166,6 +187,20 @@ func _ready() -> void:
 		var flake := _new_ash(true)
 		flake["shade"] = 1.0
 		ash.append(flake)
+
+
+## How much of the usual wildlife a screen keeps, by how much is already
+## going on there (foes and villagers from the layout).
+func _crowd() -> float:
+	if _room == null:
+		return 1.0
+	var busy := 0
+	for y in Room.ROWS:
+		for x in Room.COLS:
+			var t := _room.raw_tile(x, y)
+			if LIVELY.contains(t) or Npc.LETTERS.has(t):
+				busy += 1
+	return clampf(1.0 - busy * CROWD_SHARE, CROWD_FLOOR, 1.0)
 
 
 ## Sorts the room's tiles: open water, sand by the water (for crabs), and

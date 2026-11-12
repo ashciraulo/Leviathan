@@ -6949,7 +6949,7 @@ func _test_jumpers() -> void:
 ## bought with glints.
 func _test_shop() -> void:
 	GameState.reset_new_game()
-	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW_MARKET, GameState.NO_POSITION)
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.4)

@@ -6,6 +6,8 @@ extends Node
 ## next save plays it again from the start, flags and items together.
 
 const SALTMARROW := Vector2i(0, -1)
+## The market lane west of the village square: Marlo Pike's stall.
+const SALTMARROW_MARKET := Vector2i(-1, -1)
 const WRECK_STRAND := Vector2i(4, 0)
 ## Where Mantle lies netted on the Wreck Strand (its feet), and where Wren
 ## stands to cut it free.
