@@ -244,7 +244,7 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   -24.7 dB); toms glide and have no attack above 150 Hz; strings lean 5.6 dB left and the brass is mono and dry;
   the even bars sag 3-4 dB.
 
-## Hunger of the Deep, the boss (2026-11-12)
+## Wake Not the Deep, the boss (2026-11-12)
 - **Template:** `templates\boss_template3.flp`. Ostinato = Staccato Blend (Time 0, `"advance_s": 0.04`, ~0.07
   dB/step on sixteenths, per-key trims in `maps/boss_fix.json`); horns = Trumpfal; brass_low = 12 Low Strings (+12,
   held notes only); timpani = Emulator II "Gong & Timpani" (+1); taiko keys 36/38 play 47/50; choir = Ah Voice, which
