@@ -36,7 +36,7 @@ const BOARD_DARK := Color("#34587e")
 
 ## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
 ## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*", "log_*",
-## "seal_*" or "gran_*".
+## "seal_*", "gran_*" or "hymn_*".
 var id := ""
 var _time := 0.0
 
@@ -129,6 +129,15 @@ func _draw() -> void:
 		draw_circle(Vector2(0, -3), 3.0, BULB)
 		draw_line(Vector2(-1, -6), Vector2(-3, -11), LEAF)
 		draw_line(Vector2(1, -6), Vector2(2, -10), LEAF)
+	elif id.begins_with("hymn_"):
+		# A hymn page: staves ruled across it, a note or two still showing.
+		draw_rect(Rect2(-6, -9, 12, 9), Palette.OUTLINE)
+		draw_rect(Rect2(-5, -8, 10, 7), PAPER)
+		for y in [-7, -4]:
+			draw_line(Vector2(-4, y), Vector2(4, y), Color(0.35, 0.3, 0.3, 0.6))
+			draw_line(Vector2(-4, y + 1), Vector2(4, y + 1), Color(0.35, 0.3, 0.3, 0.6))
+		for p in [Vector2(-3, -8), Vector2(0, -7), Vector2(2, -4), Vector2(-2, -5)]:
+			draw_rect(Rect2(p, Vector2(1, 1)), Palette.OUTLINE)
 	elif id.begins_with("log_"):
 		# A loose logbook page, curled at one corner, close-written.
 		draw_rect(Rect2(-6, -9, 12, 9), Palette.OUTLINE)

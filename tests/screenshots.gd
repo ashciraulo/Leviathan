@@ -101,6 +101,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=reeds_song: Murmur sings in the Drowned Chapel.
+	if OS.get_environment("SHOTS_ONLY") == "reeds_song":
+		game.queue_free()
+		await _reeds_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=gran_supper: supper at Gran's table.
 	if OS.get_environment("SHOTS_ONLY") == "gran_supper":
 		game.queue_free()
@@ -464,6 +473,7 @@ func _ready() -> void:
 				await _boat_home_shot()
 				await _wick_round_shot()
 				await _supper_shot()
+				await _reeds_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2469,6 +2479,36 @@ func _wick_round_shot() -> void:
 	await _wait(0.3)
 	await _capture("quest_29_wick_round")
 	round.stop()
+	game.queue_free()
+	await _wait(0.2)
+
+
+## The Reeds' song: Murmur singing in the Drowned Chapel, Wren's lamp up.
+func _reeds_shot() -> void:
+	await _wait(0.2)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+	for flag in [StoryDirector.CALF_FLAG, StoryDirector.TURNED_FLAG, "murmur_met", "murmur_lantern_lit", "murmur_saw_lantern", "murmur_song_ask", "found_hymn_chapel", "found_hymn_vault", "song_liesl", StoryDirector.REED_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.DROWNED_CHAPEL, Vector2(9 * 16 + 8, 10 * 16 + 8))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var box := _dialogue_box(game)
+	var pages := 0
+	for i in 300:
+		if DialogueBox.is_open:
+			pages += 1
+			if pages == 5:
+				await _wait(1.8)
+				await _capture("quest_31_reeds_song")
+			box.advance()
+			box.advance()
+		await _wait(0.15)
+		if not Cutscene.active and not DialogueBox.is_open and pages > 5:
+			break
 	game.queue_free()
 	await _wait(0.2)
 
