@@ -29,10 +29,6 @@ import brinewood_art
 import hull_art
 import npc_art
 import whale_bones_art
-
-# The calf at the Calf's Rest: the dune skull's bones, small and sunk in
-# the fen (whale_bones_art.calf_skull); its foot row goes to Prop.KINDS.
-CALF_SKULL, CALF_SKULL_FOOT = whale_bones_art.calf_skull()
 import hull_dungeon_art
 import kiln_art
 import cinderreach_art
@@ -682,13 +678,17 @@ def lighthouse():
 
 
 def build_props():
+    calf, calf_foot = whale_bones_art.calf_skull()
+    assert calf_foot == 42, "calf_skull foot row moved: update Prop.KINDS"
     return {
         "pot": sheet([[lit(POT, 11)]], 16, 14),
         "market_stall": sheet([[lit(npc_art.market_stall(), 7)]], 48, 46),
         "journal_ice": sheet([[lit(npc_art.journal_ice(), 3)]], 16, 20),
         "rowboat": sheet([[lit(npc_art.rowboat(), 5)]], 36, 16),
         "figurehead": sheet([[lit(npc_art.figurehead(), 6)]], 24, 40),
-        "calf_skull": sheet([[CALF_SKULL]], len(CALF_SKULL[0]), len(CALF_SKULL)),
+        # The calf at the Calf's Rest: the dune skull's bones, small and sunk
+        # in the fen. Its foot row is Prop.KINDS' 42 (checked above).
+        "calf_skull": sheet([[calf]], len(calf[0]), len(calf)),
         "barrel": sheet([[lit(BARREL, 12)]], 16, 14),
         "fence": sheet([[lit(FENCE, 13)]], 16, 14),
         "sign": sheet([[lit(SIGN, 14)]], 16, 14),

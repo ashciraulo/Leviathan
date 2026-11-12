@@ -8701,9 +8701,17 @@ func _test_rib_song() -> void:
 	# A wrong note partway, then the song.
 	for i in [1, 0, 4]:
 		await strike.call(i)
-	for i: int in RibChime.SONG:
+	_check(RibChime.heard.is_empty(), "a wrong note forgets the start")
+	# The deepest again partway starts the song over from that note.
+	for i in [1, 0, 1]:
+		await strike.call(i)
+	_check(RibChime.heard == [1], "the deepest starts it over")
+	for i: int in RibChime.SONG.slice(1):
 		await strike.call(i)
 	_check(GameState.has_flag(RibChime.SUNG_FLAG), "the song, struck right")
+	var chimes := get_tree().get_nodes_in_group("rib_chimes")
+	_check(chimes.size() == 5 and not chimes.any(func(r: Node) -> bool: return r.is_in_group("interactable")), "sung, there's nothing left to strike")
+	_check(chimes.all(func(r: Node) -> bool: return r.process_mode == Node.PROCESS_MODE_ALWAYS), "the ribs ring on through the narration")
 	var pages := await _play_scene(game, 20.0)
 	_check(pages >= 2 and not Cutscene.active, "the hollow sings it back (%d pages)" % pages)
 	game.queue_free()

@@ -527,4 +527,12 @@ def calf_skull():
         out[fy][fx + 1] = lights[1]
         if out[fy - 1][fx][3] == 0:
             out[fy - 1][fx] = lights[1]
+    # Centre the bone's foot on the sprite, so the prop's footprint (centred
+    # on its middle) sits under it.
+    cols = [x for x in range(w) if any(out[y][x][3] for y in range(foot - 3, foot))]
+    shift = int(round(w / 2.0 - (min(cols) + max(cols) + 1) / 2.0))
+    if shift > 0:
+        out = [[(0, 0, 0, 0)] * shift + row for row in out]
+    elif shift < 0:
+        out = [row + [(0, 0, 0, 0)] * -shift for row in out]
     return out, foot

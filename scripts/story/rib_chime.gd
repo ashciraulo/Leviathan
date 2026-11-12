@@ -29,6 +29,8 @@ var _ring := 0.0
 func _ready() -> void:
 	# Over the rib's own art.
 	z_index = 5
+	# Rings on through the hollow's narration (DialogueBox pauses the tree).
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("interactable")
 	add_to_group("rib_chimes")
 
@@ -59,6 +61,9 @@ func interact() -> void:
 		heard = [index] if index == SONG[0] else []
 	if heard.size() == SONG.size():
 		heard.clear()
+		# Sung: the ribs are only bones again, nothing to strike.
+		for rib: Node in get_tree().get_nodes_in_group("rib_chimes"):
+			rib.remove_from_group("interactable")
 		GameState.set_flag(SUNG_FLAG)
 
 
