@@ -124,7 +124,10 @@ func _draw() -> void:
 			if active and _waiting:
 				text = "CONTROLS_PRESS" if int(Time.get_ticks_msec() / 300) % 2 == 0 else ""
 			if active:
-				draw_rect(Rect2(x - 4, y - 1, 82, ROW_H), Color(MenuKit.FILL, 1.0))
+				# The chosen cell stands out lighter than the row's bar.
+				var cell := Rect2(x - 4, y - 1, 82, ROW_H)
+				draw_rect(cell, MenuKit.FILL_LIGHT)
+				draw_rect(Rect2(cell.position, Vector2(cell.size.x, 1)), Color(MenuKit.TEXT_HEAD, 0.35))
 				MenuKit.draw_text(self, "~", Vector2(x - 10, y), MenuKit.TEXT_HEAD)
 			MenuKit.draw_text(self, text, Vector2(x, y), MenuKit.TEXT_GOLD if active else color, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
 				(PAD_X - KEY_X - 8) if col == 0 else (PANEL.end.x - PAD_X - 6))

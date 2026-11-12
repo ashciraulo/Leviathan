@@ -274,19 +274,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _draw_panel() -> void:
 	var box := BOX
-	_panel.draw_rect(box.grow(1), Palette.OUTLINE)
+	_panel.draw_rect(box.grow(1), MenuKit.INK)
 	_panel.draw_rect(box, Palette.TALK_BG)
 	_panel.draw_rect(Rect2(box.position, Vector2(box.size.x, 1)), Palette.TALK_EDGE)
 	if _name.visible:
 		var tab := _tab_rect()
-		_panel.draw_rect(tab.grow(1), Palette.OUTLINE)
+		_panel.draw_rect(tab.grow(1), MenuKit.INK)
 		_panel.draw_rect(tab, Palette.TALK_BG)
 		_panel.draw_rect(Rect2(tab.position, Vector2(tab.size.x, 1)), Palette.TALK_EDGE)
 	var portrait := current_portrait()
 	if portrait:
 		var at := box.position + PORTRAIT_AT
 		var frame := Rect2(at - Vector2.ONE, Vector2.ONE * (PORTRAIT_SIZE + 2))
-		_panel.draw_rect(frame.grow(1), Palette.OUTLINE)
+		_panel.draw_rect(frame.grow(1), MenuKit.INK)
 		_panel.draw_rect(frame, Palette.TALK_EDGE)
 		_panel.draw_rect(frame.grow(-1), Palette.PORTRAIT_BG)
 		_panel.draw_texture(portrait, at)

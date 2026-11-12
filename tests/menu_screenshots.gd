@@ -65,6 +65,14 @@ func _ready() -> void:
 	add_child(game)
 	await _wait(0.8)
 	await _capture("32_hud_item_slots")
+	# The dialogue box, with a portrait and a name tab, over the same room.
+	for child in game.get_children():
+		if child is DialogueBox:
+			child.open_pages([{"name": "NAME_MARGA", "portrait": Conversations.SPEAKERS["marga"][1], "text": "MARGA_1"}])
+			await _wait(2.5)
+			await _capture("32b_dialogue_box")
+			child.close()
+			await _wait(0.3)
 	var pause: PauseMenu = null
 	for child in game.get_children():
 		if child is PauseMenu:
