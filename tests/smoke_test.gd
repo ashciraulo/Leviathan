@@ -7437,6 +7437,9 @@ func _test_errands() -> void:
 	GameState.set_flag(StoryDirector.TURNED_FLAG)
 	GameState.set_flag("ottilie_told_vael")
 	GameState.set_flag("ottilie_knits_told")
+	# Her fishing book long since opened and the Old Grey landed.
+	GameState.set_flag(FishingHole.BOOK_FLAG)
+	GameState.set_flag("booked_grey")
 	_check(first.call("ottilie") == "OTTILIE_AFTER", "before Hessa's confession, Ottilie keeps her quarrel to herself")
 	GameState.set_flag(StoryDirector.CONFESSION_FLAG)
 	_check(first.call("ottilie") == "OTTILIE_SIGNAL_1", "after it, she sends Hessa her old cave sign")
