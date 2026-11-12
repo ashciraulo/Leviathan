@@ -116,6 +116,13 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str], octaves: dict[str, in
         x, rate = soundfile.read(os.path.join(stem_dir, stem), always_2d=True)
         mono = x.mean(axis=1)
         notes = notes_of(os.path.join(MUSIC, "midi", cue, name + ".mid"), meta["qbpm"])
+        # A part built with "advance_s" (flp_build: a slow-attack preset played early) sounds that much
+        # before its written time; notes pushed before 0 sit at the loop end (miniboss review v7).
+        fix_path = os.path.join(MUSIC, "flp", "maps", f"{cue}_fix.json")
+        adv = json.load(open(fix_path)).get(name, {}).get("advance_s", 0) if os.path.exists(fix_path) else 0
+        if adv:
+            loop_s = meta["end_q"] * 60 / meta["qbpm"]
+            notes = sorted((s - adv if s >= adv else s - adv + loop_s, *rest) for s, *rest in notes)
         first = int(notes[0][0] * rate)
         pre = mono[: max(0, first - int(0.02 * rate))]
         if pre.size and 20 * np.log10(np.abs(pre).max() + 1e-9) > -60:

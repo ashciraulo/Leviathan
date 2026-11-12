@@ -117,11 +117,12 @@ CH = A + B
 for b, sym in enumerate(CH):
     t = song.bar(b)
     root = low_root(sym, 38)
-    fig = [root, root, root + 12, root, root + 7, root, root + 12, root + 10 if "m" in sym else root + 11]
+    # The last eighth is the flat seventh on every chord (review v2 NOTE 2: C#3 on the D bars left G minor).
+    fig = [root, root, root + 12, root, root + 7, root, root + 12, root + 10]
     if b >= 8:
         fig = [root, root + 7, root + 12, root + 7] * 2
     for k, p in enumerate(fig):
-        low.note(t + k * 0.5, 0.28, p, 92 if k % 4 == 0 else 72)
+        low.note(t + k * 0.5, 0.28, p, 110 if k % 4 == 0 else 72)  # Staccato Blend gives ~0.16 dB/step (review v4)
     for s, p, v in ((0, 45, 96), (1, 47, 70), (1.5, 47, 64), (2, 45, 88), (3, 48, 72), (3.5, 50, 80)):
         tom.note(t + s, 0.25, p, v)
     if b % 2 == 0:  # the stab: D C Bb (phrase 4's head), or its answer
@@ -177,7 +178,7 @@ for b, sym in enumerate(CH):
     if sec != "C":
         fig = [0, 0, 12, 0, 7, 0, 12, 8 if "m" in sym or sym in ("Ab", "Db") else 7] * 2
         for k, iv in enumerate(fig):
-            ost.note(t + k * 0.25, 0.18, 48 + (bass_of(sym) - 48) % 12 + iv, 84 if k % 4 == 0 else 66)
+            ost.note(t + k * 0.25, 0.18, 48 + (bass_of(sym) - 48) % 12 + iv, 104 if k % 4 == 0 else 66)
 for b in range(2, 18, 2):  # A: brass answers the ostinato
     sym = CH[b]
     tones = voicing(sym, 55, 70)

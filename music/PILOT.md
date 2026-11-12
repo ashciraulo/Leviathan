@@ -227,3 +227,19 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Open MINOR (v8):** E4, G4 and Bb3 (played 76, 79, 70) are 3-7 dB soft in the loud layer; E4 is the and-of-1 on
   every Am bar. Fix: send them to a clone channel and lower the main pizz about 5 dB with `volume_db`. Tuning: B3, D4,
   F4, G#4 about +10 c (don't retune C4, it reads -6 c now). No shared reverb send yet.
+
+## Teeth in the Dark, the miniboss (2026-11-12)
+- **Template:** `templates\boss_template3.flp`, shared with the boss; its channels carry the boss's part names, so
+  `maps/miniboss.json` maps strings_staccato to strings_ostinato, brass_stab to horns_brass, drum_toms to drum_taiko.
+- **Brass:** Analog Lab "Trumpfal", a Fairlight CMI trumpet sample: in tune, 72 ms release, mono and lo-fi. Dirty
+  Bronze (v2) failed review: it carries a layer an octave below the written notes, starts +54 c sharp and falls, and
+  its release slurs stabs together. +3 dB at 2 kHz for some front.
+- **Strings:** Analog Lab "Staccato Blend" (Bowed Strings), Time macro at 0. 12 Low Strings is a sustain patch and
+  can't play eighths. Staccato Blend still peaks ~100 ms after note-on, so the part plays 60 ms early
+  (`"advance_s": 0.06` in the fix map; flp_build wraps a note before 0 to the loop end and finalize folds it back).
+  It follows velocity at only ~0.16 dB/step, so accents are written at 110 and per-key velocity trims barely work.
+- **Toms:** written 45 plays 42, 48 plays 45 (G minor tones, no C#).
+- v7: review PASS (5 MINOR). Gate: key 53 still -3.5 dB (needs a clone channel). -16.88 LUFS, TP -2.37 dBTP.
+- **Open MINORs (v7):** the strings' front is still a ramp; the trumpet has no bite in its first 30 ms (2-6 kHz share
+  -24.7 dB); toms glide and have no attack above 150 Hz; strings lean 5.6 dB left and the brass is mono and dry;
+  the even bars sag 3-4 dB.
