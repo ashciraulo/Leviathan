@@ -245,7 +245,17 @@ const TALKS := {
 		{"if": ["hessa_answered_ottilie"], "unless": ["ottilie_reunion"], "set": ["ottilie_reunion"], "give": {"glint": 100}, "lines": [["", "NARRATE_WREN_FLASH_ONCE"], "OTTILIE_REPLY_1", "OTTILIE_REPLY_2", ["", "NARRATE_GOT_OTTILIE_THANKS"]]},
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "lines": ["OTTILIE_SIGNAL_WAITING"]},
 		{"if": ["ottilie_paid", "seen_hessa_confession"], "unless": ["ottilie_signal"], "set": ["ottilie_signal"], "lines": ["OTTILIE_SIGNAL_1", "OTTILIE_SIGNAL_1B", "OTTILIE_SIGNAL_2", "OTTILIE_SIGNAL_2B"]},
+		# Her fishing book (FishingHole): each new kind, then runs without a loss.
+		{"if": ["ottilie_book", "caught_grey", "ottilie_reunion"], "unless": ["booked_grey"], "set": ["booked_grey"], "give": {"glint": 250}, "lines": [["", "NARRATE_GREY_ARMS"], "OTTILIE_GREY_1", "OTTILIE_GREY_2", "OTTILIE_GREY_3", "OTTILIE_GREY_4", ["", "NARRATE_GOT_GREY_PURSE"]]},
+		# Before she and Hessa are speaking again.
+		{"if": ["ottilie_book", "caught_grey"], "unless": ["booked_grey"], "set": ["booked_grey"], "give": {"glint": 250}, "lines": [["", "NARRATE_GREY_ARMS"], "OTTILIE_GREY_1", "OTTILIE_GREY_2", "OTTILIE_GREY_3", "OTTILIE_GREY_4B", ["", "NARRATE_GOT_GREY_PURSE"]]},
+		{"if": ["ottilie_book", "caught_perch"], "unless": ["booked_perch"], "set": ["booked_perch"], "give": {"glint": 40}, "lines": ["OTTILIE_PERCH_1", "OTTILIE_PERCH_2", ["", "NARRATE_GOT_FISH_COIN"]]},
+		{"if": ["ottilie_book", "caught_eel"], "unless": ["booked_eel"], "set": ["booked_eel"], "give": {"glint": 40}, "lines": ["OTTILIE_EEL_1", "OTTILIE_EEL_2", ["", "NARRATE_GOT_FISH_COIN"]]},
+		{"if": ["ottilie_book", "fish_streak_10"], "unless": ["ottilie_streak_10"], "set": ["ottilie_streak_10", "ottilie_streak_5"], "give": {"glint": 200}, "lines": ["OTTILIE_STREAK_10_1", "OTTILIE_STREAK_10_2", ["", "NARRATE_GOT_STREAK_10_PURSE"]]},
+		{"if": ["ottilie_book", "fish_streak_5"], "unless": ["ottilie_streak_5"], "set": ["ottilie_streak_5"], "give": {"glint": 100}, "lines": ["OTTILIE_STREAK_5_1", "OTTILIE_STREAK_5_2", ["", "NARRATE_GOT_STREAK_5_PURSE"]]},
+		{"if": ["ottilie_paid", "ottilie_knits_told"], "unless": ["ottilie_book"], "set": ["ottilie_book"], "lines": ["OTTILIE_BOOK_1", "OTTILIE_BOOK_1B", "OTTILIE_BOOK_2", "OTTILIE_BOOK_2B", "OTTILIE_BOOK_3"]},
 		{"if": ["ottilie_paid", "seen_ending"], "lines": ["OTTILIE_END"]},
+		{"if": ["ottilie_book"], "unless": ["booked_grey"], "lines": ["OTTILIE_BOOK_WAITING"]},
 		{"if": ["ottilie_paid"], "lines": ["OTTILIE_AFTER"]},
 		{"if": ["ottilie_fish_done"], "set": ["ottilie_paid", "ottilie_knits_told"], "give": {"glint": 200}, "lines": ["OTTILIE_DONE_1", "OTTILIE_DONE_2", ["", "NARRATE_GOT_KEEPERS_COIN"], "OTTILIE_KNITS_1", "OTTILIE_KNITS_1B", "OTTILIE_KNITS_2"]},
 		{"if": ["ottilie_asked"], "lines": ["OTTILIE_WAITING"]},

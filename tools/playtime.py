@@ -63,6 +63,16 @@ DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party)_[a-z0-9_]+)"')
 # gives the rimefin along with her own invitation.
 NOT_DELIVERIES = {"trade_jam", "party_marga_ask", "party_rimefin"}
 
+# Minigames, by hand: what they take on a first play beyond the quest
+# that opens them.
+MINIGAMES = {
+    # Ottilie's fishing book (FishingHole): about 8 catches to see a
+    # frostperch and a glass eel, about 9 more before the Old Grey bites,
+    # and about 40 casts for ten in a row at 4 in 5. About 60 casts at
+    # 8 s each (the wait, the pull, the fish landing).
+    "Ottilie's fishing book": 60 * 8.0,
+}
+
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
 # Puzzle pieces out in the overworld (side areas and challenges); letters
 # that mean a prop there (R, Z, L...) are left out. A run of veiled planks
@@ -129,6 +139,7 @@ def estimate():
     areas["story (reading dialogue)"] = {"time": words / RATES["words_per_second"], "rooms": 0, "words": words}
     stops = errand_stops()
     areas["side quests (legwork)"] = {"time": stops * RATES["errand_stop"] * RATES["first_play"], "rooms": 0}
+    areas["minigames"] = {"time": sum(MINIGAMES.values()), "rooms": 0}
     return areas
 
 

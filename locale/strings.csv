@@ -1429,3 +1429,33 @@ NARRATE_FOUND_SEED_FROST,"A frost thistle, blue and bristling, growing right out
 NARRATE_FOUND_SEED_EMBER,"A tuft of ember moss, warm to the touch, clinging to the cinders."
 NARRATE_FOUND_SEED_FEN,"A fen lily bulb, fat and pale, with the mud still on it."
 NARRATE_HAND_SEEDS,"Wren hands Lowe the thistle, the moss and the lily bulb."
+OTTILIE_BOOK_1,"Fancy a sit by the hole? There's more in this cove than rimefin."
+OTTILIE_BOOK_1B,"Frostperch, quick as a blink. Glass eels that nibble to test you."
+OTTILIE_BOOK_2,"And the Old Grey, if he's in the mood. He mostly isn't."
+OTTILIE_BOOK_3,"Pull on a nibble and it's gone, and your run starts over."
+OTTILIE_BOOK_2B,"Land something new and I'll book it. Five in a row earns a prize."
+OTTILIE_BOOK_WAITING,"If the Old Grey bites, he'll dive. Pull every time he goes under."
+OTTILIE_PERCH_1,"A frostperch! Most folk never even see them bite."
+OTTILIE_PERCH_2,"That's going in the book. Here, a little something for quick hands."
+OTTILIE_EEL_1,"A glass eel. You can see right through him, look. That's his supper."
+OTTILIE_EEL_2,"They nibble first to test you. You didn't fall for it. Good."
+NARRATE_GOT_FISH_COIN,Wren got 40 Glints.
+OTTILIE_STREAK_5_1,"Five in a row, and not one lost? My hands did that once. Long ago."
+OTTILIE_STREAK_5_2,"Take this. And see if you can make it ten."
+NARRATE_GOT_STREAK_5_PURSE,Wren got 100 Glints.
+OTTILIE_STREAK_10_1,"Ten! I've stopped watching the hole and started watching you."
+OTTILIE_STREAK_10_2,"That's the bottom of my coin tin. Worth every glint."
+NARRATE_GOT_STREAK_10_PURSE,Wren got 200 Glints.
+OTTILIE_GREY_1,"The Old Grey? That big? Then it was him. He's older than I am."
+OTTILIE_GREY_2,"Hessa and I hooked him once, when we were young. He took rod and all."
+OTTILIE_GREY_3,"And you let him go. Good. Some old things should get to stay old."
+NARRATE_GREY_ARMS,Wren holds both arms out as wide as they go. Ottilie's eyebrows go up.
+OTTILIE_GREY_4,"Hessa bet me nobody would ever land him. I'll collect. You keep these."
+OTTILIE_GREY_4B,"Hessa swore nobody would ever land him. I wish I could tell her."
+NARRATE_GOT_GREY_PURSE,Wren got 250 Glints.
+TOAST_FISH_RIMEFIN,A rimefin!
+TOAST_FISH_PERCH,A frostperch!
+TOAST_FISH_EEL,A glass eel!
+TOAST_FISH_GREY,The Old Grey!
+TOAST_FISH_STREAK_5,Five in a row!
+TOAST_FISH_STREAK_10,Ten in a row!

@@ -353,6 +353,7 @@ func _ready() -> void:
 				game.queue_free()
 				await _wait(0.2)
 				await _quest_story_shots()
+				await _fishing_shots()
 				await _party_shot()
 			"far_story":
 				game.queue_free()
@@ -2184,6 +2185,58 @@ func _quest_story_shots() -> void:
 			await _wait(0.1)
 		game.queue_free()
 		await _wait(0.2)
+
+
+## Ottilie's fishing book: a glass eel's nibble, the Old Grey landed, and
+## Ottilie telling of the time he got away.
+func _fishing_shots() -> void:
+	GameState.reset_new_game()
+	for flag in ["ottilie_asked", FishingHole.DONE_FLAG, "ottilie_paid", "ottilie_knits_told", FishingHole.BOOK_FLAG, "caught_perch", "caught_eel", "booked_perch", "booked_eel", "ottilie_told_vael"]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, StoryDirector.FISHING_HOLE_AT + Vector2(0, -18))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	await _wait(2.8)
+	var room: Room = game.current_room
+	var hole := room.get_children().filter(func(c: Node) -> bool: return c is FishingHole)[0] as FishingHole
+	game.player.facing = Vector2.DOWN
+	game.player.try_interact()
+	hole.species = "eel"
+	hole.nibbles = 1
+	hole.bite_in = 0.1
+	await _wait(0.2)
+	await _capture("quest_18_eel_nibble")
+	await _wait(0.5)
+	hole.state = FishingHole.State.IDLE
+	game.player.try_interact()
+	hole.species = FishingHole.GREY
+	hole.nibbles = 0
+	for i in FishingHole.GREY_PULLS:
+		hole.bite_in = minf(hole.bite_in, 0.1)
+		await _wait(0.2)
+		game.player.try_interact()
+	await _wait(0.3)
+	await _capture("quest_19_old_grey")
+	await _wait(2.0)
+	Conversations.talk("ottilie")
+	var box := _dialogue_box(game)
+	await _wait(2.6)
+	box.advance()
+	box.advance()
+	await _wait(2.6)
+	await _capture("quest_20_ottilie_grey")
+	for i in 200:
+		if not Cutscene.active and not DialogueBox.is_open:
+			break
+		if box and DialogueBox.is_open:
+			box.advance()
+			box.advance()
+		await _wait(0.1)
+	game.queue_free()
+	await _wait(0.2)
 
 
 ## Hessa's lighting day: every lantern in the square at once.
