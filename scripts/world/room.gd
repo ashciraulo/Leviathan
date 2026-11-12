@@ -192,7 +192,7 @@ const BIOMES := {
 	},
 	"cinderreach": {
 		"floor": "ash_%d", "wall_top": "mesa_top_%d", "wall_face": "mesa_face_%d",
-		"water": "lava_%d", "water_edge": "crust_%s_%d", "damp": "scorch_%s",
+		"water": "lava_%d", "water_block": ["lava_%d_%d", 4], "water_edge": "crust_%s_%d", "damp": "scorch_%s",
 		"wet_deco": "vent_%d", "dry_deco": "scrub_%d",
 		"floor_overlay": ["shimmer_%d", 7], "door": "exit_glow",
 	},
@@ -219,7 +219,8 @@ const BIOMES := {
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
 		"water": "shallows_%d", "water_edge": "tideline_%s_%d", "damp": "seep_%s",
 		"wet_deco": "wrack_%d", "dry_deco": "cockle_%d",
-		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d", "seabed": "seabed_%d", "door": "exit_glow",
+		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d",
+		"tidal_block": ["flat_block_%d", 2], "tidal_edge": "flat_edge_%s", "seabed": "seabed_%d", "door": "exit_glow",
 	},
 	"ossuary": {
 		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
@@ -977,7 +978,13 @@ func _draw_ground() -> void:
 			elif tile == "~" or tile == "v" or tile == "Q":
 				# Deep water is the same deep green wherever it is (Wren's
 				# waterline is drawn to match it).
-				_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
+				if tile == "~" and tiles.has("water_block"):
+					# Drawn from a larger block, picked by position, so a
+					# pool shows no repeat.
+					var block: int = tiles["water_block"][1]
+					_draw_tile(tiles["water_block"][0] % [_water_frame, x % block + (y % block) * block], x, y)
+				else:
+					_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
 				if tile != "Q" and tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
@@ -994,6 +1001,9 @@ func _draw_ground() -> void:
 					# Mostly bare; now and then a starfish or an anemone.
 					var k := h % 9
 					_draw_tile(tiles["seabed"] % (2 if k == 7 else 3 if k == 8 else k % 2), x, y)
+				elif Tide.is_flat(tile) and tiles.has("tidal_block"):
+					var block: int = tiles["tidal_block"][1]
+					_draw_tile(tiles["tidal_block"][0] % (x % block + (y % block) * block), x, y)
 				elif Tide.is_flat(tile) and tiles.has("tidal"):
 					_draw_tile(tiles["tidal"] % (h % 2), x, y)
 				elif tile == "p":
@@ -1004,6 +1014,9 @@ func _draw_ground() -> void:
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					if _tile_at(x + side[1], y + side[2]) in ["~", "v", "Q"] and not is_drop_plank(x + side[1], y + side[2]):
 						_draw_tile(tiles["damp"] % side[0], x, y)
+					# And dry sand darkens toward a tide flat beside it.
+					elif tiles.has("tidal_edge") and not Tide.is_flat(tile) and _tile_at(x + side[1], y + side[2]) in ["r", "d"]:
+						_draw_tile(tiles["tidal_edge"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
 					# A wall light's glow pooled below it; elsewhere, now and
