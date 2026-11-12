@@ -270,3 +270,19 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Open MINORs (v4):** the anvil still rings (hits only 5-9 dB over the ring; needs a 0.4-0.5 s decay, then +2 dB;
   its mix target is -35 on purpose so stem_balance doesn't undo the cut); the organ canon in B' is 3.5 dB under the
   bassoon (own clone channel +4-5 dB, E4 and C4 +4 more); the frame drum has no body above 150 Hz (+4 dB at 250-300 Hz).
+
+## Ashfall, Cinderreach (2026-11-12)
+- **Template:** `templates\kiln_template3.flp` (see the Kiln). strings_ostinato = Pop Staccato (Time 0, 40 ms early);
+  brass_low = 12 Low Strings (+12, `advance_s` 0.12: it swells in ~145 ms late); drum_frame plays on drum_taiko
+  (41 -> 42); pad on sub_breath (insert 7); reed = Emulator II Bassoon; anvil = Hammer And Anvil.
+- **Staccato strings below F#2 are stretched samples:** Pop Staccato and Staccato Blend both read C#2-E2 an octave up
+  or 13-19 c flat, so the ostinato's floor is G#2. The pad's added root an octave down gives the low floor.
+- **Tune from harmonics, not the fundamental:** on short low notes the gate's fundamental reading is wrong (v6 retuned
+  47/50/62 by +17 c from it and made them 20-30 c sharp). Measure h2-h6 with a +-60 c search; the strings_up clone's
+  PITCH knob is ~1 c per unit in Analog Lab.
+- **The anvil sounds an octave above its key**, so it plays 73 (C#6) and 74 on D bars; its mix target is -36.5 so
+  stem_balance doesn't undo the cut.
+- v8: review PASS (2 MINOR). -17.98 LUFS, TP -3.4 dBTP, seam 1.15 dB.
+- **Open MINORs (v8):** key 50 reads +13 c and 62 +17 c on the reviewer's harmonics (put 50 on the clone at -10 c and
+  take 62 off); section A has nothing pitched below 100 Hz (pad root or a brass pedal from bar 11) and the frame drum
+  has no stick above 150 Hz (a slap/rim layer).

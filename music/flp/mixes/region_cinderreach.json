@@ -70,7 +70,7 @@
   },
   "perc_anvil": {
    "insert": 4,
-   "target": -34.0,
+   "target": -36.5,
    "eq": [
     {
      "shape": "lowcut",
