@@ -43,6 +43,7 @@ const QUESTS := [
 	{"id": "wick_jar", "region": "gloamfen", "start": "wick_asked", "done": "wick_gave_jar"},
 	{"id": "murmur_lantern", "region": "gloamfen", "start": "wick_murmur_ask", "done": "murmur_lantern_lit"},
 	{"id": "lampless_sink", "region": "gloamfen", "start": "wick_told_sink", "done": "wick_saw_sink"},
+	{"id": "reeds_song", "region": "gloamfen", "start": "murmur_song_ask", "done": "reed_song_done"},
 	# Windmere Heights
 	{"id": "sorrel_race", "region": "windmere", "start": "sorrel_asked", "done": "sorrel_paid"},
 	{"id": "sorrel_letters", "region": "windmere", "start": "sorrel_letters", "done": "sorrel_letters_paid"},

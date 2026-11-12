@@ -120,6 +120,15 @@ const IDE_SUPPER_AT := Vector2(8 * 16 + 10, 3 * 16 + 12)
 ## Ide comes down the lane from the top.
 const IDE_SUPPER_ROUTE := [Vector2(5 * 16 + 8, -8), Vector2(5 * 16 + 8, 20), Vector2(7 * 16 + 8, 28), IDE_SUPPER_AT]
 const SUPPER_GLINTS := 150
+## The Reeds' song: once Murmur has the three hymn pages, REED_FLAG is set
+## and Murmur waits in the Drowned Chapel to sing it (reeds_song), which
+## sets REED_DONE_FLAG. Murmur is out of the fen while waiting there.
+const DROWNED_CHAPEL := Vector2i(3, 5)
+const REED_FLAG := "reed_song"
+const REED_DONE_FLAG := "reed_song_done"
+const MURMUR_CHAPEL_AT := Vector2(12 * 16, 6 * 16 + 10)
+const WREN_CHAPEL_AT := Vector2(12 * 16, 8 * 16 + 10)
+const REED_GLINTS := 150
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
 const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
@@ -208,6 +217,11 @@ const FINDS := {
 	# Shore, and her salt fish, deep in the Ebb Grotto. (Ide has the cup.)
 	"gran_candle": [Vector2i(2, 2), Vector2i(2, 6)],
 	"gran_salt": [Vector2i(0, 4), Vector2i(5, 8)],
+	# Murmur's errand: the Reeds' hymn pages, one on a pew in the Drowned
+	# Chapel and one packed in a sea chest in the Wreck Vault. (Liesl has
+	# the third.)
+	"hymn_chapel": [Vector2i(3, 5), Vector2i(19, 7)],
+	"hymn_vault": [Vector2i(3, 6), Vector2i(5, 8)],
 	# Hessa's logbook, blown all over the coast in the lantern-boat storm:
 	# one page in a side nook in each of six regions.
 	"log_brinewood": [Vector2i(2, -1), Vector2i(2, 3)],
@@ -232,6 +246,8 @@ const FIND_NEEDS := {
 	"seal_pup": "found_seal_net",
 	"gran_candle": "liesl_table_ask",
 	"gran_salt": "liesl_table_ask",
+	"hymn_chapel": "murmur_song_ask",
+	"hymn_vault": "murmur_song_ask",
 }
 ## Where the seal pup lives once Wren's found her: on the Shore, where her
 ## trail began.
@@ -418,8 +434,10 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_liesl(coord)
 	if coord == FENMOUTH or FenLantern.SPOTS.has(coord):
 		_put_wick(coord)
-	if coord == FENMOUTH and GameState.has_flag(CALF_FLAG):
+	if coord == FENMOUTH and GameState.has_flag(CALF_FLAG) and not _murmur_in_chapel():
 		_put_npc("murmur", MURMUR_FEN_AT)
+	if coord == DROWNED_CHAPEL and _murmur_in_chapel():
+		_put_npc("murmur", MURMUR_CHAPEL_AT)
 	if coord == TOMB_BOSS and GameState.has_flag(ENDING_FLAG) and GameState.has_flag(MURAL_FLAG) and not echo:
 		_put_npc("dace", DACE_AFTER_AT)
 	if coord == WRECK_STRAND:
@@ -488,6 +506,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		tobin_comes_home()
 	elif coord == SALTMARROW and GameState.has_flag(BOAT_DONE_FLAG) and not GameState.has_flag(BOAT_HOME_FLAG) and not GameState.has_flag(WALK_FLAG):
 		the_boat_comes_home()
+	elif coord == DROWNED_CHAPEL and _murmur_in_chapel():
+		reeds_song.call_deferred()
 	elif coord == DROWNED_LANE and GameState.has_flag(SUPPER_FLAG) and not GameState.has_flag(SUPPER_DONE_FLAG):
 		# Supper was asked for but the game closed first.
 		grans_supper.call_deferred()
@@ -1245,6 +1265,51 @@ func grans_supper() -> void:
 		await go.finished
 		if is_instance_valid(ide):
 			ide.queue_free()
+	scene.finish()
+
+
+## Murmur waits in the Drowned Chapel with the Reeds' hymn pages.
+static func _murmur_in_chapel() -> bool:
+	return GameState.has_flag(REED_FLAG) and not GameState.has_flag(REED_DONE_FLAG)
+
+
+## The Reeds' song: Murmur sings it in the Drowned Chapel, where the family
+## used to, and far under the Verge the Old One breathes out easy.
+func reeds_song() -> void:
+	var room: Node2D = game.current_room
+	if Cutscene.active or not is_instance_valid(room) or GameState.room_coord != DROWNED_CHAPEL or not _murmur_in_chapel():
+		return
+	var murmur := _find_npc("murmur")
+	if murmur == null:
+		return
+	var scene := _scene()
+	await scene.wait(0.4)
+	await scene.walk_route(room.global_position + WREN_CHAPEL_AT)
+	scene.face(Vector2.UP)
+	await scene.narrate(["NARRATE_REED_CHAPEL"])
+	await scene.speak("murmur", ["MURMUR_CHAPEL_1", "MURMUR_CHAPEL_2"])
+	await scene.narrate(["NARRATE_REED_SINGS"])
+	await scene.lamp(murmur.global_position + Vector2(0, -14), Cutscene.LAMP_HERE)
+	await scene.wait(0.6)
+	# The chapel's pool answers, lit from far below.
+	await scene.lamp(room.global_position + Vector2(12 * 16, 4 * 16), Cutscene.LAMP_HERE)
+	await scene.narrate(["NARRATE_REED_SEA"])
+	await scene.speak("murmur", ["MURMUR_CHAPEL_3", "MURMUR_CHAPEL_4", "MURMUR_CHAPEL_5"])
+	GameState.give_item("glint", REED_GLINTS, false)
+	Audio.play_jingle("jingle_item")
+	await scene.narrate(["NARRATE_GOT_SONG_PURSE"])
+	await scene.speak("murmur", ["MURMUR_CHAPEL_6"])
+	GameState.set_flag(REED_DONE_FLAG)
+	# Murmur heads home to the fen, out through the chapel's south door.
+	if is_instance_valid(murmur):
+		var go := murmur.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		var at := murmur.position
+		for point: Vector2 in [Vector2(9 * 16 + 8, 9 * 16 + 8), Vector2(9 * 16 + 8, 13 * 16)]:
+			go.tween_property(murmur, "position", point, at.distance_to(point) / 40.0)
+			at = point
+		await go.finished
+		if is_instance_valid(murmur):
+			murmur.queue_free()
 	scene.finish()
 
 
