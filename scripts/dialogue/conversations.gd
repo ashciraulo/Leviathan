@@ -129,13 +129,13 @@ const TALKS := {
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_corrin_hull"], "set": ["heard_corrin_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
 		# Grandad's message bottles, washed back in by strange currents (QuestFind).
 		{"if": ["corrin_bottles_ask", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand"], "unless": ["corrin_bottles_done"], "set": ["corrin_bottles_done"], "give": {"glint": 120}, "lines": ["CORRIN_BOTTLES_DONE_1", "CORRIN_BOTTLES_DONE_2", "CORRIN_BOTTLES_DONE_3", ["", "NARRATE_GOT_BOTTLE_PURSE"]]},
-		# All three found before he asked.
+		# All three found before Corrin asked.
 		{"if": ["talked_corrin_quest", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask", "corrin_bottles_done"], "give": {"glint": 120}, "lines": [["", "NARRATE_HAND_BOTTLES"], "CORRIN_BOTTLES_EARLY", "CORRIN_BOTTLES_DONE_2", "CORRIN_BOTTLES_DONE_3", ["", "NARRATE_GOT_BOTTLE_PURSE"]]},
 		{"if": ["talked_corrin_quest", "seen_wayshell"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask"], "lines": ["CORRIN_BOTTLES_1", "CORRIN_BOTTLES_1B", "CORRIN_BOTTLES_2"]},
-		{"if": ["corrin_bottles_ask"], "unless": ["corrin_bottles_done"], "lines": ["CORRIN_BOTTLES_WAITING"]},
-		{"if": ["corrin_bottles_done"], "unless": ["corrin_bottles_after"], "set": ["corrin_bottles_after"], "lines": ["CORRIN_BOTTLES_AFTER"]},
 		# Pell's night bell: the pup's been raiding Corrin's nets.
 		{"if": ["found_seal_pup"], "unless": ["corrin_pup_paid"], "set": ["corrin_pup_paid"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_NET"], "CORRIN_PUP_1", "CORRIN_PUP_2", "CORRIN_PUP_3", ["", "NARRATE_GOT_PUP_PURSE"]]},
+		{"if": ["corrin_bottles_ask"], "unless": ["corrin_bottles_done"], "lines": ["CORRIN_BOTTLES_WAITING"]},
+		{"if": ["corrin_bottles_done"], "unless": ["corrin_bottles_after"], "set": ["corrin_bottles_after"], "lines": ["CORRIN_BOTTLES_AFTER"]},
 		{"if": ["talked_corrin_quest", "seen_ending"], "lines": ["CORRIN_END"]},
 		{"if": ["talked_corrin_quest", "old_one_turned"], "lines": ["CORRIN_TURNED"]},
 		{"if": ["talked_corrin_quest"], "lines": ["CORRIN_AGAIN"]},

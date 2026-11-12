@@ -7426,9 +7426,11 @@ func _test_echo_game() -> void:
 	_check(first.call() == "CORALIE_ECHO_5_1", "five has its own prize")
 	Conversations.talk("coralie")
 	_check(GameState.item_count("glint") == 50, "fifty glints")
-## Pell's night bell: after the Hull, Pell asks who rings the buoy bell at
-## night. A trail of clues, each showing once the last is found, leads west
-## to a seal pup, who comes home to the Shore. Pell names her; Corrin pays.
+
+
+## Pell's night bell: after the Hull, Pell asks who rings a bell out on
+## the water at night. A trail of clues, each showing once the last is
+## found, leads to a seal pup, who comes home to the Shore. Pell names her; Corrin pays.
 func _test_seal_trail() -> void:
 	GameState.reset_new_game()
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
@@ -7436,7 +7438,7 @@ func _test_seal_trail() -> void:
 		GameState.set_flag(flag)
 	_check(first.call("pell") == "PELL_AGAIN", "no night bell before the Hull's bell is back")
 	GameState.set_flag("heard_pell_bell")
-	_check(first.call("pell") == "PELL_NIGHT_1", "then Pell asks who rings the buoy bell at night")
+	_check(first.call("pell") == "PELL_NIGHT_1", "then Pell asks who rings a bell out on the water at night")
 	# No trail before Pell asks.
 	var track: Array = StoryDirector.FINDS["seal_track"]
 	var game: Node = await _stand_below(track[0], track[1])
@@ -7479,6 +7481,10 @@ func _test_seal_trail() -> void:
 	Conversations.talk("pell")
 	GameState.set_flag(QuestFind.flag_for("seal_pup"))
 	_check(Conversations.branch_for("pell").get("lines").has("PELL_PUP_1"), "and the pup's hand-in too")
+	# And Corrin's bottles errand doesn't hold up the pup's pay.
+	for flag in ["talked_corrin_quest", "corrin_bottles_ask"]:
+		GameState.set_flag(flag)
+	_check(Conversations.branch_for("corrin").get("lines").has("CORRIN_PUP_1"), "Corrin's waiting for bottles doesn't hide the net thief")
 
 
 ## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a

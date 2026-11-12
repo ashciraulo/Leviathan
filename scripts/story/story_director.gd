@@ -198,8 +198,8 @@ const FINDS := {
 	"log_windmere": [Vector2i(6, -3), Vector2i(20, 3)],
 	"log_frost": [Vector2i(1, -4), Vector2i(18, 5)],
 	"log_verge": [Vector2i(3, 4), Vector2i(12, 4)],
-	# Pell's night bell: a seal pup's trail west from the Shore, into the
-	# Brine Cistern and up to a nook in the Sluice Gallery (Tide Hook, two
+	# Pell's night bell: a seal pup's trail south from the Shore to
+	# Smugglers' Cut, west into the Brine Cistern and up to a nook in the Sluice Gallery (Tide Hook, two
 	# crates). Each clue only shows once the one before is found (FIND_NEEDS).
 	"seal_track": [Vector2i(0, 0), Vector2i(5, 8)],
 	"seal_bones": [Vector2i(0, 1), Vector2i(14, 7)],
@@ -214,7 +214,7 @@ const FIND_NEEDS := {
 	"seal_pup": "found_seal_net",
 }
 ## Where the seal pup lives once Wren's found her: on the Shore, where her
-## trail began, by the old buoy bell.
+## trail began.
 const SEAL_PUP_HOME := [Vector2i(0, 0), Vector2i(5, 8)]
 ## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
 ## Asking for it sets PARTY_FLAG (the scene plays); the scene sets

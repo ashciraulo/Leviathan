@@ -1,6 +1,6 @@
 class_name SealPup
 extends StaticBody2D
-## The seal pup who rang the buoy bell at night, at home on the Shore once
+## The seal pup who rang a bell out on the water at night, at home on the Shore once
 ## Wren's found her (StoryDirector). Talking to her is a conversation with
 ## no speaker ("seal_pup"), and she barks.
 
