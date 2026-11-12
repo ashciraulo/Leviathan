@@ -142,6 +142,8 @@ var player_spawn := SIZE / 2.0
 
 var _rows := PackedStringArray()
 var _ground: Node2D
+## The swaying tufts, drawn over the ground.
+var _sway: Sway
 ## The ground is drawn in pieces of this many tiles, so a light (a dark
 ## room's lantern, a wisp) only shades the pieces it reaches: a whole-room
 ## canvas item under one small light costs a browser a lit full screen.
@@ -322,6 +324,10 @@ func _ready() -> void:
 			var rect := Rect2i(Vector2i(cx, cy) * GROUND_CHUNK, GROUND_CHUNK)
 			piece.draw.connect(_draw_ground_piece.bind(piece, rect))
 			_ground.add_child(piece)
+	_sway = Sway.new()
+	_sway.name = "Sway"
+	_sway.room = self
+	_ground.add_child(_sway)
 	_build()
 	if dark:
 		var darkness := Darkness.new()
@@ -863,6 +869,7 @@ func cut_plants(area: Rect2) -> int:
 			if not has_plant(x, y):
 				continue
 			_cut[Vector2i(x, y)] = true
+			_sway.tufts.erase(Vector2i(x, y))
 			cut += 1
 			var at := Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
 			var bits := Clippings.new()
@@ -933,6 +940,11 @@ func _redraw_ground() -> void:
 func _draw_ground_piece(piece: Node2D, rect: Rect2i) -> void:
 	_chunk = piece
 	_chunk_rect = rect
+	# The ground may have changed (water frozen or thawed): the piece sends
+	# its swaying tufts again.
+	for tile: Vector2i in _sway.tufts.keys():
+		if rect.has_point(tile):
+			_sway.tufts.erase(tile)
 	_draw_ground()
 	_chunk = null
 
@@ -954,6 +966,18 @@ func _draw_tile(tile_name: String, x: int, y: int) -> void:
 	if not _chunk_rect.has_point(Vector2i(x, y)):
 		return
 	_chunk.draw_texture_rect_region(Art.WORLD_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
+
+
+## Grass, ferns and reeds outside the dungeons sway in the wind (see
+## Sway): they are drawn there, not baked into the ground. Not under a cave
+## roof, nor in the dark, where a whole-room layer under a small light
+## would cost a browser a lit full screen.
+func _draw_deco(tile_name: String, x: int, y: int) -> void:
+	if dungeon == "" and not cave and not dark and Sway.sways(tile_name):
+		if _chunk_rect.has_point(Vector2i(x, y)):
+			_sway.tufts[Vector2i(x, y)] = tile_name
+		return
+	_draw_tile(tile_name, x, y)
 
 
 func _draw_ground() -> void:
@@ -1066,9 +1090,9 @@ func _draw_ground() -> void:
 				if tile == "D" or tile == "I":
 					pass
 				elif wet and h % 11 == 0:
-					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
+					_draw_deco(tiles["wet_deco"] % (h % 2), x, y)
 				elif not wet and h % 13 == 0 and not _cut.has(Vector2i(x, y)):
-					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)
+					_draw_deco(tiles["dry_deco"] % (h % 2), x, y)
 	# The floor set pieces go over the floor they lie on.
 	var deco: String = tiles.get("wall_deco", "")
 	for piece: Array in _set_pieces:
