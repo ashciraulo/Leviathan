@@ -186,6 +186,7 @@ const BIOMES := {
 		"water_overlay": ["tidepool_%d", 5],
 	},
 	"brinewood": {
+		"deep": "deep_brinewood_%d", "deep_shelf": "deepshelf_brinewood_%s_%d", "deep_colour": "#193b40",
 		"shore": "shore_brinewood_%s_%d",
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
 		"water": "bog_%d", "water_edge": "bank_%s_%d", "damp": "mire_%s",
@@ -208,6 +209,7 @@ const BIOMES := {
 		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s", "door": "exit_glow",
 	},
 	"windmere": {
+		"deep": "deep_windmere_%d", "deep_shelf": "deepshelf_windmere_%s_%d", "deep_colour": "#1c4676",
 		"shore": "shore_windmere_%s_%d",
 		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
 		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
@@ -223,6 +225,7 @@ const BIOMES := {
 		"gap": "crevasse",
 	},
 	"sunken_verge": {
+		"deep": "deep_sunken_verge_%d", "deep_shelf": "deepshelf_sunken_verge_%s_%d", "deep_colour": "#233b4a",
 		"shore": "shore_sunken_verge_%s_%d",
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
 		"water": "shallows_%d", "water_edge": "tideline_%s_%d", "damp": "seep_%s",
@@ -231,6 +234,7 @@ const BIOMES := {
 		"tidal_block": ["flat_block_%d", 2], "tidal_edge": "flat_edge_%s", "seabed": "seabed_%d", "door": "exit_glow",
 	},
 	"ossuary": {
+		"deep": "deep_ossuary_%d", "deep_shelf": "deepshelf_ossuary_%s_%d", "deep_colour": "#244e65",
 		"shore": "shore_ossuary_%s_%d",
 		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
 		"water": "bitter_sea_%d", "water_edge": "salt_crust_%s_%d", "damp": "sandshade_%s",
@@ -840,6 +844,11 @@ func _plain_block(x0: int, y0: int, size: int) -> bool:
 				return false
 	return true
 
+## The colour of this room's deep water, for Wren's waterline as they swim.
+func deep_colour() -> Color:
+	return Color(str(BIOMES.get(biome, {}).get("deep_colour", "#1c4a5c")))
+
+
 ## True when the tile shows a tuft a sword can cut (drawn by _draw_ground).
 func has_plant(x: int, y: int) -> bool:
 	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
@@ -1020,13 +1029,20 @@ func _draw_ground() -> void:
 				if not _tile_at(x, y - 1) in ["_", "v"]:
 					_draw_tile(gap + "_lip", x, y)
 			elif tile == "~" or tile == "v" or tile == "Q":
-				# Deep water is the same deep green wherever it is (Wren's
-				# waterline is drawn to match it).
+				# Deep water is the same deep green in every dungeon; out in
+				# the open it is the region's own water, darker, with a shelf
+				# where the shallows drop off into it (Wren's waterline is
+				# drawn to match: see deep_colour()).
 				if tile == "~" and tiles.has("water_block"):
 					# Drawn from a larger block, picked by position, so a
 					# pool shows no repeat.
 					var block: int = tiles["water_block"][1]
 					_draw_tile(tiles["water_block"][0] % [_water_frame, x % block + (y % block) * block], x, y)
+				elif tile == "Q" and tiles.has("deep"):
+					_draw_tile(tiles["deep"] % _water_frame, x, y)
+					for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
+						if _tile_at(x + side[1], y + side[2]) == "~":
+							_draw_tile(tiles["deep_shelf"] % [side[0], _water_frame], x, y)
 				else:
 					_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
 				if tile != "Q" and tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:

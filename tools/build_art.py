@@ -1154,6 +1154,45 @@ SHORE_TILES = [
 TILE_LAYOUT += SHORE_TILES
 
 
+# Deep water on the overworld: the region's own water, darker, instead of
+# the dungeons' deep green, with a shelf where the shallows drop off into it
+# (drawn on the deep tile, on each side that meets shallow water).
+DEEP_BIOMES = ["windmere", "brinewood", "sunken_verge", "ossuary"]
+DEEP_SHADE = (0.55, 0.62, 0.74)
+
+
+def _deepen(c):
+    return (int(c[0] * DEEP_SHADE[0]), int(c[1] * DEEP_SHADE[1]), int(c[2] * DEEP_SHADE[2]), c[3])
+
+
+def deep_water(biome, frame):
+    water = dict(TILE_LAYOUT)[_biome_tiles()[biome][2] % frame]()
+    return [[_deepen(c) for c in row] for row in water]
+
+
+def deep_shelf(biome, side, frame):
+    """The shallows' own water along one side of a deep tile, two pixels
+    deep, then a checker of it, so the drop-off reads as a soft edge."""
+    water = dict(TILE_LAYOUT)[_biome_tiles()[biome][2] % frame]()
+    px = blank()
+    for y in range(T):
+        for x in range(T):
+            d = {"top": y, "bottom": T - 1 - y, "left": x, "right": T - 1 - x}[side]
+            if d < 2 or (d == 2 and (x + y) % 2 == 0):
+                px[y][x] = water[y][x]
+    return px
+
+
+DEEP_TILES = [
+    ("deep_%s_%d" % (biome, frame), (lambda b=biome, f=frame: deep_water(b, f)))
+    for biome in DEEP_BIOMES for frame in range(2)
+] + [
+    ("deepshelf_%s_%s_%d" % (biome, side, frame), (lambda b=biome, sd=side, f=frame: deep_shelf(b, sd, f)))
+    for biome in DEEP_BIOMES for side in ("top", "bottom", "left", "right") for frame in range(2)
+]
+TILE_LAYOUT += DEEP_TILES
+
+
 def build_tiles():
     tiles = [builder() for _, builder in TILE_LAYOUT]
     rows = [tiles[i:i + TILE_COLUMNS] for i in range(0, len(tiles), TILE_COLUMNS)]
