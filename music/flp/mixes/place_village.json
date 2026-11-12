@@ -64,7 +64,7 @@
   },
   "perc_hand": {
    "insert": 1,
-   "target": -31.0,
+   "target": -33.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -86,7 +86,7 @@
   },
   "shaker": {
    "insert": 7,
-   "target": -44.0,
+   "target": -47.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -108,5 +108,5 @@
    "db_oct": 12
   }
  ],
- "notes": "Market Day. Built on saltmarrow_template8 (Diamond bass on insert 3). the strum is a nylon guitar part (Ash's folk palette has nylon guitar, no mandolin), whistle on the Meadow Flute. perc_hand key 60 = frame drum, 61 = frame drum played a third higher, 62 = shaker (maps/place_village_fix.json). Targets: gated short-term LUFS per stem, 2 dB under Saltmarrow for a -20 LUFS place cue. Review v3: shaker high cut 5 kHz and target -3 dB, guitar high cut 3.5 kHz (2-6 kHz share), frame drum -4 dB bell at 120 Hz (its 113/141 Hz ring doubled the bass)."
+ "notes": "Market Day. Built on saltmarrow_template8 (Diamond bass on insert 3). the strum is a nylon guitar part (Ash's folk palette has nylon guitar, no mandolin), whistle on the Meadow Flute. perc_hand key 60 = frame drum, 61 = frame drum played a third higher, 62 = shaker (maps/place_village_fix.json). Targets: gated short-term LUFS per stem, 2 dB under Saltmarrow for a -20 LUFS place cue. Review v3: shaker high cut 5 kHz and target -3 dB, guitar high cut 3.5 kHz (2-6 kHz share), frame drum -4 dB bell at 120 Hz (its 113/141 Hz ring doubled the bass). Review v5 polish: shaker -47 and frame drum -33 (the drum's attack had come back up with its gain)."
 }

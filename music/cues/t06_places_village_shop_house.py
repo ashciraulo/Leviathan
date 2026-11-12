@@ -156,8 +156,10 @@ for b, sym in enumerate(CH):
     if line[-1] > 55:
         low3 = root - 12 + third if root - 12 + third >= 41 else root + third
         line = [root, root - 5, low3, root - 5]
-    for k in range(4):  # a walking bass, but stepping, not swinging jazz
-        bass.note(t + k, 1.0 if last and k == 3 else 0.8, line[k] if b % 2 == 0 else line[3 - k], 84 if k == 0 else 70)
+    # A walking bass, but stepping, not swinging jazz. Every bar starts on its root (review v3: odd bars
+    # walked back from the sixth, so the Bb bars opened on G and sounded like G minor); odd bars then walk down.
+    for k in range(4):
+        bass.note(t + k, 1.0 if last and k == 3 else 0.8, line[k] if b % 2 == 0 or k == 0 else line[4 - k], 84 if k == 0 else 70)
     for s, v in ((1, 46), (3, 50), (sw(3.5), 32)):
         snare.note(t + s, 0.2, 38, v)
 for i, p in enumerate(song.parts):
@@ -173,6 +175,8 @@ song = Song("place_house")
 box = song.part("musicbox", program=10, vel=70)
 piano = song.part("piano_felt", program=0, vel=58)
 cello = song.part("cello", program=42, vel=60)
+# A glockenspiel doubles each music-box pluck well under it, as in the lullaby (its 23 Celesta is near a sine).
+shine = song.part("box_shine", program=9, vel=60)
 INTRO = ["Eb", "Ab", "Eb", "Bb"]
 A = ["Eb", "Cm", "Ab", "Bb", "Eb", "Gm", "Ab", "Bb"]
 B = ["Ab", "Bb", "Gm", "Cm", "Fm", "Bb", "Eb/G", "Ab"]
@@ -198,7 +202,13 @@ for b, sym in enumerate(CH):
     if 12 <= b < 24:  # cello joins for B and A'
         cello.note(t, 2.95, low_root(sym, 43) if b < 20 else voicing(sym, 50, 62)[0], 58)
 for i, p in enumerate(song.parts):
-    p.humanize(seed=800 + i, time_q=0.01, vel=4)
+    if p.name != "box_shine":
+        p.humanize(seed=800 + i, time_q=0.01, vel=4)
+shine.notes = [list(nt) for nt in box.notes]
+# Let each glockenspiel pluck ring past the next one: at the box's note lengths its note-off cut the ring dead.
+for k, nt in enumerate(shine.notes):
+    nxt = shine.notes[k + 1][0] if k + 1 < len(shine.notes) else nt[0] + nt[1]
+    nt[1] = max(nt[1], nxt - nt[0] + 1.0)
 song.save()
 if GATE:
     from gate_midi import check

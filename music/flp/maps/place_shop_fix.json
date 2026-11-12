@@ -28,6 +28,9 @@
    "55": {
     "channel": "bass_g3",
     "play": 53
+   },
+   "42": {
+    "channel": "bass_soft"
    }
   },
   "pitch": {
