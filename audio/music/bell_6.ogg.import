@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/bell_6.ogg-88a16a6736addf34edf9223a5da0f73a.o
 [params]
 
 loop=false
-loop_offset=0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

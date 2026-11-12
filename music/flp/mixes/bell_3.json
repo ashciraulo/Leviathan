@@ -1,0 +1,26 @@
+{
+ "cue": "bell_3",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "23 Celesta (Analog Lab), insert 2: soft, glassy, almost a celesta as the sheet asks. The preset's own reverb is turned up so the last note rings out instead of stopping. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "parts": {
+  "bell_moth": {
+   "insert": 2,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

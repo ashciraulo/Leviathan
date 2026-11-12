@@ -13,8 +13,9 @@ For a looping cue this script:
      seconds> in its .import file. The import keeps loop=false: the game turns
      looping on for its own copy (Audio._looping), and the shared track stays
      unlooped so one-shot uses of it still end.
-One-shot cues (bells, lullaby, credits) keep their natural tail, with a
-short fade over the last 50 ms so they never end on a cut.
+One-shot cues (bells, lullaby, credits) keep their natural tail: the .flp
+leaves two bars of room after the last note, the silence after the tail is
+trimmed, and the last 50 ms fade so they never end on a cut.
 Nothing here changes the music's level: loudness is set inside FL (Pro-L 2),
 and this only measures it, so the .flp stays the single source.
 """
@@ -81,7 +82,24 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
                       tail_folded_s=round(n / rate, 2))
         measured = body
     else:
-        out = audio
+        # One-shots render with two bars of room after the last note (flp_build), so the tail
+        # rings out; trim the silence after it, keeping 0.1 s, then fade the last 50 ms.
+        level = np.abs(audio).max(axis=1)
+        # A preset with a constant noise floor (review of the bells v2, BLOCKER: a DX7 bell hummed at -73 dBFS)
+        # never falls below a fixed threshold, so the tail is cut where it reaches 10 dB above the floor.
+        hop = int(0.05 * rate)
+        env = np.array([level[k:k + hop].max() for k in range(0, level.size - hop, hop)])
+        # The floor is read from the render's last 2 s, which the .flp's two bars of room leave past the ring:
+        # a percentile over the whole render reads the music itself when a cue is rarely quiet (review of the
+        # bells v3, MAJOR 1: the lullaby's 'floor' came out at -59 dBFS and its ring would have been cut).
+        floor = float(np.percentile(env[-int(2 / 0.05):], 5))
+        report["floor_db"] = round(20 * np.log10(floor + 1e-12), 1)
+        loud = np.nonzero(level > max(10 ** (-70 / 20), floor * 10 ** (10 / 20)))[0]
+        stop = min(audio.shape[0], (loud[-1] if loud.size else end) + int(0.1 * rate))
+        report["cut_db"] = round(20 * np.log10(level[max(0, stop - int(0.15 * rate)):stop].max() + 1e-12), 1)
+        # The game dips the music for the whole OGG, so it ends when the sound does, even before the
+        # cue's written end (review v2, MAJOR 2: bell_5 kept 2.4 s of silence).
+        out = audio[:stop].copy()
         fade = int(0.05 * rate)
         out[-fade:] *= np.linspace(1, 0, fade)[:, None]
         measured = out
@@ -94,6 +112,11 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         problems.append(f"loudness {lufs:.1f} LUFS, target {spec['lufs']:.0f} (fix the Pro-L 2 gain in FL)")
     if tp > TP_MAX:
         problems.append(f"true peak {tp:.2f} dBTP is over {TP_MAX}")
+    if not spec["loop"] and report["floor_db"] > -70:  # an audible hum; DX7 V idles near -80 (inaudible)
+        problems.append(f"the render has a noise floor at {report['floor_db']} dBFS peak (a preset hums or hisses): "
+                        "find it and render again")
+    if not spec["loop"] and report["cut_db"] > -50:
+        problems.append(f"the tail is cut at {report['cut_db']} dBFS: give the render more room after the last note")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")
     # The handoff's slam limit is +6 dB; a seam no bigger than the cue's usual downbeat step is a downbeat,
@@ -109,6 +132,14 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
                         "-c:a", "libvorbis", "-q:a", "5", path], input=pcm, check=True)
         set_import(path, meta["intro_s"] if spec["loop"] else 0.0)
         report["wrote"] = os.path.relpath(path, ROOT)
+        # Vorbis can overshoot the master's peak (review of the bells v1: bell_7's OGG reached -0.80 dBTP
+        # from a -1.12 master), so measure what ships.
+        dec = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-f", "f32le", "-ac", "2", "-"],
+                             capture_output=True, check=True).stdout
+        ogg_tp = true_peak_db(np.frombuffer(dec, "<f4").reshape(-1, 2), rate)
+        report["ogg_true_peak"] = round(float(ogg_tp), 2)
+        if ogg_tp > TP_MAX:
+            problems.append(f"the OGG's true peak is {ogg_tp:.2f} dBTP (the encode overshoots): lower the Pro-L ceiling")
     return report
 
 

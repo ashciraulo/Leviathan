@@ -1,0 +1,42 @@
+{
+ "cue": "bell_4",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Sustained Bells (Analog Lab), insert 5, at the written notes; the preset itself sounds an octave low, so it reads as a tower bell (gate: --octave bell_gale=-1). The DX7 26-TUB BELLS before it idled at -73 dBFS (an audible hum, review v2 BLOCKER). Under it 12 Low Strings (Analog Lab Prophet, the Saltmarrow pad, in tune) on insert 8, played an octave up because the preset sounds an octave low. The swell grows by voices, one to five, and the bell rings on through bars 3-4. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); reviews of the bells v1 and v2 replaced the detuned and humming ones.",
+ "parts": {
+  "bell_gale": {
+   "insert": 5,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 50,
+     "db_oct": 12
+    }
+   ]
+  },
+  "strings_swell": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

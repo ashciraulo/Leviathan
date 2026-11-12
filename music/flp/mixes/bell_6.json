@@ -1,0 +1,31 @@
+{
+ "cue": "bell_6",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Rom2B 20-T.BL-EXPA (Analog Lab DX7), insert 4, at the written octave, low-passed at 1 kHz so it reads as a church bell heard through water; it sustains, so its last note lets go after a bar (LAST_HOLD in t02) and rings out on the reverb. The preset's own reverb is turned up so the last note rings out instead of stopping. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); reviews of the bells v1 and v2 replaced the detuned and humming ones.",
+ "parts": {
+  "bell_verge": {
+   "insert": 4,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 1000,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

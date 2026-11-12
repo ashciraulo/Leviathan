@@ -1,0 +1,79 @@
+{
+ "cue": "lullaby",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Ambient: the music box (Analog Lab 23 Celesta (Arturia): one layer, no beating, sounds at the written octave; Celestia (v6) had a second layer 13 c sharp on the left channel that beat 4-9 Hz, and MUSIC BOX 2 sounds two octaves up. A real music box has no dynamics to speak of, and neither does this preset (about 1 dB over the velocity range). v9 review (MINOR 1): 23 Celesta is near a sine, so box_shine (Analog Lab Full Range Glockenspiel, insert 1) doubles each pluck about 13 dB under it, and the box gets a +6 dB shelf at 2.5 kHz. The glockenspiel sounds an octave above the box on purpose (gate: --octave box_shine=1).",
+ "parts": {
+  "musicbox": {
+   "insert": 4,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 250,
+     "db_oct": 12
+    },
+    {
+     "shape": "highshelf",
+     "freq": 2500,
+     "gain": 6.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 12000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "harp": {
+   "insert": 5,
+   "target": -32.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_oo": {
+   "insert": 2,
+   "target": -36.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "box_shine": {
+   "insert": 1,
+   "target": -42.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 1200,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

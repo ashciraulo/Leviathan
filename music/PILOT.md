@@ -87,3 +87,39 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Stem gate:** `gate_stems.py` takes tuning from the fundamental and harmonics 2-4, flags any key whose median or
   strongest partial is off, and flags any key more than 3 dB off at equal velocity.
 - **Mix:** bass gain +13 dB, with bells at 72 Hz (-3 dB) and 110 Hz (-3.5 dB).
+
+## Batch 2: the lullaby and the seven bells (2026-11-12)
+- **Audition:** gate candidate presets on one MIDI line before choosing (a scratch cue with the box line, transposed
+  -12). Rejected for wobble or detune: Celestia (a second layer 13 c sharp on the left), Church Bell, AnaBell, Belle
+  Bell, Bell Dong, Resonance Bells, Marimba; Glass Bells +10 c; Clangorous keys 67/74 off; Air Bell arpeggiates;
+  MUSIC BOX 2 sounds two octaves up. Several presets sound an octave off on purpose; pass `--octave part=N` to the gate.
+- **Gate:** `gate_stems.py` now measures envelope wobble on struck parts (fails over 8 dB median ripple) and the
+  L-vs-R pitch of stereo parts (fails over 6 c). When fewer than five notes are strictly solo it falls back to notes
+  that start alone, so an always-overlapping line (a music box) is still checked for octave.
+- **Balance:** a template's insert Pro-Q gains are left over from wherever it was saved, so the first stem balance is
+  only relative. Render once, measure the stems with known gains, then set gain = old gain + delta.
+- **Loudness:** Pro-L 2's gain cannot go below 0 dB. A cue whose parts already sum above target came out 1.7 LU hot
+  twice (bell_3) because the negative make-up gain was clamped. `flp_mix.py` now takes the excess off every part.
+- **Dialogs:** in a save or open dialog, click the name box, ctrl+a, type, zoom to check it before Return; the box
+  sometimes comes up empty. In Analog Lab: CLEAR ALL, wait, click the search box, paste, Return.
+- **Bells review v1 (FAIL) and what it changed:** the gate skipped its wobble/detune check on phrases of fewer than five
+  held notes and never measured chord tones, so a Tubular Bell with three layers at -20/0/+20 c, a Big Crystal Bells
+  beating at 1 Hz and a string swell 30 c sharp all printed PASS. The gate now checks from three held notes, judges
+  octave and tuning with fewer notes, and reads each chord tone's own peak. Audition presets on the real phrases at
+  their real velocities (`zz_` scratch cue), not on another line. Passed: Clock Bell, DX7 26-TUB BELLS, DX7
+  20-T.BL-EXPA; failed: Icy Bells (silent without mod wheel), Dark Bell and Distant Bells (keys off by 14-22 c).
+- **Swells:** Analog Lab strings barely follow velocity; a swell has to grow by voices (1, 2, 3, 5 gave +9 dB).
+- **Peaks:** Vorbis overshoots the master by up to 0.3 dB, so Pro-L's ceiling is -1.5 dBTP and finalize.py measures
+  the OGG itself.
+- **Bells review v2 (FAIL) and what it changed:** DX7 V presets idle at about -73 dBFS, so the render never fell silent,
+  every one-shot came out 41-43 s long and the game would have dipped the music for all of it. finalize.py now trims
+  where the tail reaches 10 dB above the render's own floor and fails a floor above -70 dBFS; the hummy DX7 on the
+  Gale Bell became Sustained Bells. A preset that sustains (the Verge's T.BL-EXPA) gets its last note let go after a
+  bar (`LAST_HOLD`) and rings out on the preset's reverb, turned up on the Point, Moth, Rime and Verge bells. The gate's
+  octave check on long sustained bells takes a 60% majority, since overtones win single readings.
+- **Final bells (2026-11-12):** bell_1/2/3/5/7 from the v8 renders, bell_6 v9, bell_4 v10, all -16.0 ±0.4 LUFS and
+  every gate PASS. The .flp of each is in projects\bell_N_v8/v9/v10.flp.
+- **Bells review v3: PASS.** finalize.py now reads the noise floor from the render's last 2 s only (a whole-render
+  percentile read the lullaby's music as its floor). Open polish (MINOR): bell_1 and bell_3 stop at the note-off
+  rather than ringing (lengthen their last notes), bell_2's vibraphone auto-pans, bell_4's Sustained Bells warbles at
+  0.84 Hz and leans 2 dB left, bell_6 steps down 6 dB when its held note lets go.

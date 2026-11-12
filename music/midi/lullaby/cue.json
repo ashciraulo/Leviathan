@@ -18,15 +18,21 @@
   },
   {
    "name": "harp",
-   "notes": 64,
+   "notes": 60,
    "low": 38,
    "high": 64
   },
   {
    "name": "choir_oo",
-   "notes": 48,
+   "notes": 39,
    "low": 50,
    "high": 60
+  },
+  {
+   "name": "box_shine",
+   "notes": 31,
+   "low": 74,
+   "high": 86
   }
  ]
 }

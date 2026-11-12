@@ -1,0 +1,31 @@
+{
+ "cue": "bell_2",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Vibraphone (Analog Lab, Menno Meijer), insert 6, sounding an octave below the written notes, cut above 2.5 kHz so it reads as dark warm metal (review v1: a mode near 21x the fundamental made it the brightest bell). Gate: --octave bell_ember=-1. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); review of the bells v1 replaced the detuned ones.",
+ "parts": {
+  "bell_ember": {
+   "insert": 6,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 24
+    }
+   ]
+  }
+ }
+}

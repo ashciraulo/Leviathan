@@ -1,0 +1,31 @@
+{
+ "cue": "bell_5",
+ "lufs": -16.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Full Range Glockenspiel (Analog Lab), insert 3, played an octave below the written notes so it sounds as written: icy and pure. Big Crystal Bells before it beat at 1 Hz. The preset's own reverb is turned up so the last note rings out instead of stopping. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); reviews of the bells v1 and v2 replaced the detuned and humming ones.",
+ "parts": {
+  "bell_rime": {
+   "insert": 3,
+   "target": -20.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}

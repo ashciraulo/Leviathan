@@ -4499,10 +4499,11 @@ func _test_audio() -> void:
 	var next: AudioStreamPlayer = Audio._music[Audio._music_index]
 	_check(Audio._phrase.playing and next.playing and next.volume_db < -15.0, "a new track stays under the ringing phrase (%.1f dB)" % next.volume_db)
 	_check(not playing.playing, "the old track fades out and stops")
-	_check(is_equal_approx(phrase.get_list_stream(0).get_length(), 9 * 60.0 / 80.0), "a phrase is three bars long, so phrases run on in time")
+	_check(phrase.get_list_stream(0).get_length() >= Audio.PHRASE_BEATS * 60.0 / Audio.LULLABY_BPM, "a phrase is at least three bars long, so it rings out in full")
 	Audio.play_lullaby(3)
 	phrase = Audio._phrase.stream as AudioStreamPlaylist
 	_check(phrase.stream_count == 3 and not phrase.loop, "the lullaby plays the phrases learned so far, once")
+	_check(int(phrase.get_list_stream(0).get("beat_count")) == Audio.PHRASE_BEATS and is_equal_approx(float(phrase.get_list_stream(0).get("bpm")), Audio.LULLABY_BPM) and int(phrase.get_list_stream(2).get("beat_count")) == 0, "in a run each phrase hands over after three bars, so phrases stay in time, and the last rings out")
 	Audio._phrase.stop()
 	Audio.stop_music(0.01)
 	# The credits play once, as the soundtrack plan has them.
