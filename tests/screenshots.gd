@@ -57,6 +57,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=motion: a few seconds of frames from one screen per
+	# region (screenshots/motion/<name>_NN.png), for judging what moves.
+	if OS.get_environment("SHOTS_ONLY") == "motion":
+		await _motion_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=ebb: the sea bed, under water and then held bare.
 	if OS.get_environment("SHOTS_ONLY") == "ebb":
 		await _ebb_shots(game)
@@ -3617,3 +3626,35 @@ func _env_shots(game: Node, which: String) -> void:
 		game.respawn()
 		await _wait(2.2)
 		await _capture(shot[1])
+
+
+## Frame runs for SHOTS_ONLY=motion: 3 s at 10 fps per screen, native size.
+## MOTION_ONLY=<name> takes one of them.
+func _motion_shots(game: Node) -> void:
+	var shots := [
+		[Vector2i(0, 0), "saltmarrow", Vector2i(2, 3)],
+		[Vector2i(3, 0), "brinewood", Vector2i(7, 6)],
+		[Vector2i(4, 1), "gloamfen", Vector2i(11, 1)],
+		[Vector2i(6, -4), "windmere", Vector2i(3, 5)],
+		[Vector2i(1, -3), "frostspine", Vector2i(4, 4)],
+		[Vector2i(2, 2), "sunken_verge", Vector2i(3, 8)],
+		[Vector2i(9, -2), "cinderreach", Vector2i(2, 6)],
+		[Vector2i(7, 0), "ossuary", Vector2i(11, 11)],
+	]
+	var only := OS.get_environment("MOTION_ONLY")
+	var dir := _out_dir.path_join("motion")
+	DirAccess.make_dir_recursive_absolute(dir)
+	for shot: Array in shots:
+		if only != "" and not only.split(",").has(shot[1]):
+			continue
+		var tile: Vector2i = shot[2]
+		GameState.set_checkpoint(shot[0], Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		await _wait(2.0)
+		for i in 30:
+			await RenderingServer.frame_post_draw
+			var image := get_viewport().get_texture().get_image()
+			image.save_png(dir.path_join("%s_%02d.png" % [shot[1], i]))
+			await _wait(0.1)
+		print("Saved motion %s" % shot[1])

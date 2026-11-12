@@ -7,7 +7,8 @@ extends Node2D
 ## wind streaks over the heights and sand blowing over the dunes, ash and
 ## embers
 ## drifting up off Cinderreach's lava, and buzzards' shadows circling the
-## Ossuary. It has no collisions and does no harm: it only draws. A room
+## Ossuary, and the shadows of clouds sliding over the open country. It
+## has no collisions and does no harm: it only draws. A room
 ## outside the dungeons adds one (see Room).
 
 const GULL := preload("res://assets/ambient/gull.png")
@@ -20,14 +21,14 @@ const LIZARD := preload("res://assets/ambient/lizard.png")
 
 ## How much of each kind of life a biome has.
 const LIFE := {
-	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2},
+	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2, "clouds": 2},
 	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3, "reeds": 10},
 	"cinderreach": {"embers": 14, "ash": 40, "lizards": 2},
 	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4, "reeds": 12},
-	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5, "hares": 2, "reeds": 14},
-	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60, "hares": 2},
-	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2},
-	"ossuary": {"buzzards": 2, "gusts": 4, "lizards": 3},
+	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5, "hares": 2, "reeds": 14, "clouds": 3},
+	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60, "hares": 2, "clouds": 1},
+	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2, "clouds": 2},
+	"ossuary": {"buzzards": 2, "gusts": 4, "lizards": 3, "clouds": 1},
 }
 ## Wind streak colours: sea air is white, the dunes blow sand.
 const GUST_COLOUR := {"ossuary": Color(0.7, 0.55, 0.36), "cinderreach": Color(0.75, 0.7, 0.68)}
@@ -76,6 +77,14 @@ var mist: Array[Dictionary] = []
 ## Flakes sifting down: grey ash over Cinderreach, snow over Frostspine.
 var ash: Array[Dictionary] = []
 var gusts: Array[Dictionary] = []
+## Shadows of clouds sliding over the open regions with the wind.
+var clouds: Array[Dictionary] = []
+## Cloud shadow shapes (three, one above the other): soft-edged lumps,
+## flat inside so they darken the ground evenly.
+const CLOUD := preload("res://assets/ambient/cloud.png")
+const CLOUD_CELL := Vector2(190, 80)
+const CLOUD_SPEED := Vector2(9.0, 1.5)
+const CLOUD_SHADE := Color(0.1, 0.12, 0.22, 0.13)
 var _water: Array[Vector2i] = []
 var _sand: Array[Vector2i] = []
 var _floor: Array[Vector2i] = []
@@ -100,7 +109,7 @@ func _ready() -> void:
 	# falling snow or ash).
 	if _room and _room.cave:
 		life = life.duplicate()
-		for key in ["gulls", "buzzards", "gusts", "snow", "ash", "butterflies"]:
+		for key in ["gulls", "buzzards", "gusts", "snow", "ash", "butterflies", "clouds"]:
 			life.erase(key)
 	for i in int(life.get("gulls", 0)):
 		gulls.append(_new_gull(true))
@@ -134,6 +143,8 @@ func _ready() -> void:
 		mist.append(_new_mist(true))
 	for i in int(life.get("gusts", 0)):
 		gusts.append(_new_gust(true))
+	for i in int(life.get("clouds", 0)):
+		clouds.append(_new_cloud(true))
 	for i in int(life.get("ash", 0)):
 		ash.append(_new_ash(true))
 	# Snow falls the same way, only white.
@@ -225,6 +236,13 @@ func _new_mist(anywhere: bool) -> Dictionary:
 		"speed": _rnd.randf_range(4.0, 8.0), "clock": _rnd.randf() * TAU}
 
 
+## A cloud's shadow, coming in from the windward side (or anywhere, at first).
+func _new_cloud(anywhere: bool) -> Dictionary:
+	var x := _rnd.randf_range(-CLOUD_CELL.x * 0.5, Room.SIZE.x) if anywhere else -CLOUD_CELL.x - _rnd.randf_range(0.0, 160.0)
+	return {"pos": Vector2(x, _rnd.randf_range(-30.0, Room.SIZE.y - 30.0)), "shape": _rnd.randi_range(0, 2),
+		"speed": _rnd.randf_range(0.8, 1.2)}
+
+
 ## A streak of wind: a thin pale line that races across and fades.
 func _new_gust(anywhere: bool) -> Dictionary:
 	return {"pos": Vector2(_rnd.randf_range(-60.0, Room.SIZE.x), _rnd.randf_range(16.0, Room.SIZE.y - 16.0)),
@@ -290,6 +308,10 @@ func _process(delta: float) -> void:
 		m["pos"] = (m["pos"] as Vector2) + Vector2(float(m["speed"]) * delta, 0.0)
 		if (m["pos"] as Vector2).x - (m["size"] as Vector2).x > Room.SIZE.x:
 			m.merge(_new_mist(false), true)
+	for c in clouds:
+		c["pos"] = (c["pos"] as Vector2) + CLOUD_SPEED * float(c["speed"]) * delta
+		if (c["pos"] as Vector2).x > Room.SIZE.x + 8.0:
+			c.merge(_new_cloud(false), true)
 	for a in ash:
 		a["clock"] = float(a["clock"]) + delta
 		a["pos"] = (a["pos"] as Vector2) + Vector2(sin(float(a["clock"]) * 1.3) * 6.0, float(a["fall"])) * delta
@@ -513,8 +535,11 @@ func _draw_reeds() -> void:
 				_low.draw_rect(Rect2(tip.floor() + Vector2(-1, 0), Vector2(2, 3)), head)
 
 
-## Over everything: gulls, butterflies, fireflies and embers.
+## Over everything: cloud shadows, gulls, butterflies, fireflies and embers.
 func _draw_high() -> void:
+	for c in clouds:
+		_high.draw_texture_rect_region(CLOUD, Rect2((c["pos"] as Vector2).round(), CLOUD_CELL),
+			Rect2(Vector2(0, int(c["shape"]) * CLOUD_CELL.y), CLOUD_CELL), CLOUD_SHADE)
 	for m in mist:
 		# A few overlapping soft ovals, breathing a little.
 		var centre: Vector2 = m["pos"]
