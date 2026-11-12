@@ -6,10 +6,12 @@
 script = ExtResource("1_room")
 name_key = "ROOM_WHALEFALL_STEPS"
 biome = "ossuary"
+chest_item = "glint"
+chest_count = 50
 layout = "########################
-#######.......##########
-#####..U...U....########
-####...........SS....###
+#######.......###C######
+#####..U...U...~~.O#####
+####...........~~~#..###
 ###......SSS..SSSS....##
 ##......SSSSS..SS.A...##
 .........SSS............

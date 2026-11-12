@@ -112,6 +112,8 @@ SECRETS = {
     (3, 2): ("tidebell_tomb",),              # Witheroot Hollow: a hidden wall the Echo Horn brings down
     (7, -2): ("glowmoth_lantern",),          # Ashfall Gate: a niche barred until a brazier burns on each bank
     (10, -2): ("tidebell_tomb",),            # Kiln Mouth: a hidden chamber beside the Kiln's door
+    (10, 0): ("tide_hook", "frostfang_bow", "kite_cloak"),  # Whalefall Steps: a ledge over a pool, a hook post beyond it
+    (8, 0): ("tidebell_tomb",),              # Rib Hollow: a bone barricade walls a niche
     # Puzzle caves: one short trial room per region.
     (-1, 0): ("tide_hook", "stonebreaker"),  # Dragline Cellar: crates and plates past cracked boulders
     (10, -1): ("tide_hook", "glowmoth_lantern"),  # Emberwell Vault: braziers on lava islets, a boulder in the hook's way
