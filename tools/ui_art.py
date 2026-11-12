@@ -297,6 +297,19 @@ TIDEBELL = icon([
 PEARL = stamp(round_icon(5.0, "P"), 10, 1, ["^."])
 PEARL = stamp(PEARL, 11, 2, ["^"])
 
+# A quarter of a Breath Pearl, broken off: four make a bubble.
+PEARL_SHARD = stamp(icon([
+    "..PPP....",
+    ".PPPPPP..",
+    "PPPPPPPP.",
+    ".PPPPPPPP",
+    "PPPPPPPPP",
+    ".PPPPPPPP",
+    "..PPP.PPP",
+    "....P..P.",
+]), 9, 5, ["^"])
+
+
 KEEPER_LAMP = icon([
     "....bbb....",
     "...b...b...",
@@ -424,7 +437,7 @@ def icon_frames():
         TIDEBELL, PEARL, KEEPER_LAMP, GLINT,
         jar(""), jar("&"), SPRITE_JAR,
         MAP, COMPASS, BIG_KEY, hull_art.SMALL_KEY, BLANK,
-        SEA_GLASS,
+        SEA_GLASS, PEARL_SHARD,
     ]
 
 

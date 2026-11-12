@@ -133,6 +133,8 @@ ITEM_TIDEBELL,Tidebell
 ITEM_TIDEBELL_DESC,Each bell holds one phrase of the lullaby that keeps the Old One asleep.
 ITEM_BREATH_PEARL,Breath Pearl
 ITEM_BREATH_PEARL_DESC,Each one gives Wren another breath bubble.
+ITEM_PEARL_SHARD,Pearl Shard
+ITEM_PEARL_SHARD_DESC,A broken piece of a Breath Pearl. Every four Wren finds give one more breath bubble.
 ITEM_KEEPER_LAMP,Keeper's lamp
 ITEM_KEEPER_LAMP_DESC,"The Saltmarrow light, small enough to carry. Keep it lit."
 ITEM_GLINT,Glints
@@ -429,6 +431,7 @@ HESSA_AFTER_BELL,"Cinderreach, child. Follow the smoke to the Kiln. The lamp sta
 PELL_BELL_1,You got the bell back?! Can I hold it? Just for a second?
 PELL_BELL_2,...Fine. But I'm telling everyone I nearly did.
 TOAST_GOT_PEARL,You found a Breath Pearl!
+TOAST_GOT_PEARL_SHARD,You found a Pearl Shard!
 ROOM_ASHFALL_GATE,Ashfall Gate
 ROOM_CINDER_FLATS,Cinder Flats
 ROOM_EMBER_RIDGE,Ember Ridge
@@ -851,6 +854,10 @@ TOAST_GOT_TIDECALLER_SWORD,You found the Tidecaller!
 GOT_NACRE_BUCKLER_1,"The Nacre Buckler! Mother-of-pearl, grown over a bell-ringer's shield in the dark."
 GOT_ABYSSAL_1,"The Abyssal Coat! Cut from something that lived far deeper than this. It is heavier than it looks."
 GOT_TIDECALLER_SWORD_1,"The Tidecaller! A keeper's blade, lost in the Old One's mouth long ago. It hums with the tide."
+GOT_PEARL_SHARD_FIRST,"A Pearl Shard, broken from a Breath Pearl. Find four, and Wren can hold one more breath."
+GOT_PEARL_SHARD_COUNT,That's %d of %d toward the next breath bubble.
+GOT_PEARL_SHARD_WHOLE,"Four shards make a whole! Wren can hold one more breath now."
+GOT_PEARL_SHARD_LAST,"That's every last Pearl Shard there is."
 VAEL_END_1,"It's asleep. Really asleep. I've never once heard it this quiet."
 VAEL_END_2,"I'll stay. Someone should sit with it while it dreams. I'll know if it stirs."
 VAEL_END_3,"Tell Hessa I'm listening now. She'll know what that means. Go home, keeper."

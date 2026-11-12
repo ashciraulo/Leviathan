@@ -73,6 +73,16 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=pearl_shards: a shard lying out, picking it up, sixteen
+	# bubbles, and the Satchel.
+	if OS.get_environment("SHOTS_ONLY") == "pearl_shards":
+		game.queue_free()
+		await _pearl_shard_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=jumpers: Ottilie's Knits on her shelf and on Wren.
 	if OS.get_environment("SHOTS_ONLY") == "jumpers":
 		game.queue_free()
@@ -1838,6 +1848,56 @@ func _wick_shots() -> void:
 	reach.player._invuln = 0.0
 	await _capture("86_it_catches")
 	reach.queue_free()
+	await _wait(0.2)
+
+
+## Pearl shards: one lying on Saltmarrow Shore, Wren picking up the last of
+## twelve (the box explains), the sixteen bubbles that makes, and the Satchel.
+func _pearl_shard_shots() -> void:
+	GameState.reset_new_game()
+	GameState.give_item("breath_pearl", Items.max_count("breath_pearl"), false)
+	GameState.give_item("pearl_shard", PearlShard.TOTAL - 1, false)
+	GameState.set_checkpoint(Vector2i(1, 0), GameState.NO_POSITION)
+	var shore: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(shore)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var room: Room = shore.current_room
+	var shard := PearlShard.new()
+	shard.room_coord = room.coord
+	shard.tile = Vector2i(9, 7)
+	shard.position = Vector2(9 * Room.TILE + 8, 7 * Room.TILE + 12)
+	room.add_child(shard)
+	var at := shard.global_position
+	shore.player.global_position = at + Vector2(-28, 0)
+	shore.player.facing = Vector2.RIGHT
+	shore.player._invuln = 0.0
+	await _wait(0.9)
+	await _capture("shards_lying")
+	shore.player.global_position = at
+	await _wait(0.2)
+	var box := _dialogue_box(shore)
+	for i in 30:
+		await _wait(0.1)
+		if box.page_done():
+			break
+	await _capture("shards_pickup_box")
+	await _finish_talk(shore)
+	await _wait(0.3)
+	await _capture("shards_sixteen_bubbles")
+	var pause: PauseMenu = null
+	for child in shore.get_children():
+		if child is PauseMenu:
+			pause = child
+	pause.open(PauseMenu.Tab.SATCHEL)
+	var satchel: SatchelPage = pause._pages[PauseMenu.Tab.SATCHEL]
+	satchel._cursor = satchel._cells.find_custom(func(c: Dictionary) -> bool: return c["role"] == "shard")
+	satchel.queue_redraw()
+	await _wait(0.3)
+	await _capture("shards_satchel")
+	pause.close()
+	shore.queue_free()
 	await _wait(0.2)
 
 

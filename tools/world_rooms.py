@@ -128,6 +128,8 @@ SECRETS = {
 # them. Rooms listed here hide theirs behind a tool, like SECRETS; the rest
 # are tucked into corners anyone can walk to.
 SEA_GLASS_TOTAL = 12
+# Pearl shards (8): twelve in all, four to a breath bubble.
+PEARL_SHARD_TOTAL = 12
 SEA_GLASS = {
     (0, 0): ("frostfang_bow", "kite_cloak"),                       # the Shore: a pond islet
     (9, -2): ("kite_cloak",),                                      # Slag Fields: a lava islet
@@ -456,7 +458,7 @@ def main():
         for y in range(ROWS):
             for x in range(COLS):
                 t = rows[y][x]
-                if t in ".:xrSpD*" and walkable(t, final_items) and (coord, (x, y)) not in reached:
+                if t in ".:xrSpD*8" and walkable(t, final_items) and (coord, (x, y)) not in reached:
                     problems.append("screen %s tile (%d,%d) '%s' is never reachable" % (coord, x, y, t))
     # Chests: when each comes within reach, and secrets need their tool.
     for coord in sorted(rooms):
@@ -483,9 +485,12 @@ def main():
     for coord in sorted(rooms):
         rows = rows_for(rooms[coord], final_items)
         for y in range(2):
-            # The bubble plate grows with Wren's breath: thirteen bubbles reach x 161.
+            # The bubble plate grows with Wren's breath: thirteen bubbles reach
+            # x 161. The last three (from pearl shards) reach x 199; the plate
+            # fades over anything under it there (HudFade), so finds may sit
+            # under those.
             for x in list(range(0, 11)) + list(range(20, COLS)):
-                if rows[y][x] in "C*Tn":
+                if rows[y][x] in "C*Tn8":
                     problems.append("screen %s: '%s' at (%d,%d) sits under the HUD" % (coord, rows[y][x], x, y))
     # Every signpost in a room reads the room's one sign_key: one per room.
     for coord in sorted(rooms):
@@ -512,6 +517,16 @@ def main():
     for coord in SEA_GLASS:
         if not any(c == coord for c, _ in glass):
             problems.append("SEA_GLASS lists %s but it has no sea-glass" % (coord,))
+    # Pearl shards (8, or a chest holding "pearl_shard"): at most twelve, the
+    # loose ones within reach. (Chests are checked above.)
+    shards = [(coord, (x, y)) for coord in sorted(rooms) for y in range(ROWS) for x in range(COLS)
+              if rows_for(rooms[coord], final_items)[y][x] == "8"]
+    in_chests = sum(len(chest_tiles(rooms[c], final_items)) for c in rooms if rooms[c]["chest"] == "pearl_shard")
+    if len(shards) + in_chests > PEARL_SHARD_TOTAL:
+        problems.append("%d pearl shards, at most %d" % (len(shards) + in_chests, PEARL_SHARD_TOTAL))
+    for coord, spot in shards:
+        if not any((coord, spot) in st[3] for st in stages):
+            problems.append("pearl shard %s %s is never reachable" % (coord, spot))
     # Crossing an edge carries Wren a step into the next screen: that step
     # must be ground, not water, lava or veiled planks (frozen water and lit
     # planks reset when a screen loads). Deep water is fine: Wren swims it.

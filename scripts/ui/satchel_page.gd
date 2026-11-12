@@ -7,6 +7,7 @@ extends MenuPage
 const TOOLS_PANEL := Rect2(8, 22, 124, 128)
 const GEAR_PANEL := Rect2(136, 22, 100, 128)
 const KEEPER_PANEL := Rect2(240, 22, 136, 128)
+const SHARD_AT := Vector2(354, 89)
 const INFO_PANEL := Rect2(8, 152, 368, 44)
 const STEP := 24
 
@@ -46,6 +47,9 @@ func _build_cells() -> void:
 	for i in Items.max_count("breath_pearl"):
 		_add(Vector2(249 + i * 15, 107), "pearl", "breath_pearl", i, 15)
 	_add(Vector2(249, 128), "glint", "glint", 0, 16)
+	# Pearl shards sit at the end of the pearls' heading once Wren has one.
+	if GameState.has_item("pearl_shard"):
+		_add(SHARD_AT, "shard", "pearl_shard", 0, 16)
 	# Sea-glass shows beside the glints once Wren has found a piece: until
 	# then nothing says there's a set to find.
 	if GameState.item_count("sea_glass") > 0:
@@ -159,7 +163,7 @@ func _draw() -> void:
 	MenuKit.draw_text(self, "SATCHEL_BELLS", Vector2(250, 64), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
 		KEEPER_PANEL.end.x - 256)
 	MenuKit.draw_text(self, "SATCHEL_PEARLS", Vector2(250, 94), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
-		KEEPER_PANEL.end.x - 256)
+		SHARD_AT.x - 252)
 	for cell in _cells:
 		_draw_cell(cell)
 	MenuKit.draw_cursor(self, _cells[_cursor]["rect"])
@@ -199,6 +203,8 @@ func _draw_cell(cell: Dictionary) -> void:
 		"jumper":
 			MenuKit.draw_slot(self, rect.position, true)
 			ShopMenu.draw_knit(self, rect.position + Vector2(2, 2), Jumpers.ramp(GameState.jumper))
+		"shard":
+			MenuKit.draw_icon(self, cell["id"], rect.position)
 		"glint", "count":
 			MenuKit.draw_icon(self, cell["id"], rect.position)
 			MenuKit.draw_text(self, "x %d" % GameState.item_count(cell["id"]), rect.position + Vector2(19, 4))
@@ -233,7 +239,7 @@ func _draw_info() -> void:
 			title = tr("ITEM_JAR_" + str(GameState.jars[cell["index"]]).to_upper())
 		"bell":
 			title = tr("SATCHEL_BELL_COUNT") % [title, GameState.item_count("tidebell"), Items.max_count("tidebell")]
-		"pearl", "count":
+		"pearl", "count", "shard":
 			title = tr("SATCHEL_BELL_COUNT") % [title, GameState.item_count(cell["id"]), Items.max_count(cell["id"])]
 	MenuKit.draw_text(self, title, at, MenuKit.TEXT_GOLD)
 	var desc := Items.desc_key(id)

@@ -28,6 +28,7 @@ func _ready() -> void:
 	if GameState.has_flag(flag_key()):
 		queue_free()
 		return
+	add_to_group("pickups")
 	Layers.assign(self, 0, [Layers.PLAYER])
 	monitorable = false
 	add_child(Layers.rect_shape(Vector2(10, 8), Vector2(0, -3)))

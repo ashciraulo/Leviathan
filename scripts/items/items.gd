@@ -30,6 +30,9 @@ const TUNIC := "tunic"
 const JAR := "jar"
 const QUEST := "quest"
 const PEARL := "pearl"
+## A quarter of a Breath Pearl: every SHARDS_PER_BUBBLE add a bubble.
+const SHARD := "shard"
+const SHARDS_PER_BUBBLE := 4
 const DUNGEON := "dungeon"
 const CURRENCY := "currency"
 
@@ -69,6 +72,8 @@ const DEFS := {
 	# Story and collectables.
 	"tidebell": {"kind": QUEST, "icon": 20, "max": 7},
 	"breath_pearl": {"kind": PEARL, "icon": 21, "max": 8},
+	# Twelve shards (PearlShard, room letter 8, or chests): three more bubbles.
+	"pearl_shard": {"kind": SHARD, "icon": 33, "max": 12},
 	"keeper_lamp": {"kind": QUEST, "icon": 22},
 	"glint": {"kind": CURRENCY, "icon": 23, "max": 999},
 	# Twelve pieces hidden off the beaten path (SeaGlass, room letter *).

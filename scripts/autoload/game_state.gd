@@ -3,7 +3,8 @@ extends Node
 ## story flags (keys, bells, tide). SaveManager saves all of it.
 
 const START_BUBBLES := 5
-const MAX_BUBBLES := 13
+## Five to start, eight Breath Pearls and twelve pearl shards (four a bubble).
+const MAX_BUBBLES := 16
 const START_RESONANCE_MAX := 30.0
 ## Resonance gained per sword hit that connects.
 const RESONANCE_PER_HIT := 3.0
@@ -219,8 +220,8 @@ func use_key(dungeon: String) -> bool:
 # --------------------------------------------------------------------------
 
 ## Adds an item. Tools go into the first empty item slot, better equipment
-## is put on straight away, jars arrive empty, and a Breath Pearl adds a
-## bubble. Emits Events.item_gained unless announce is false.
+## is put on straight away, jars arrive empty, and a Breath Pearl (or each
+## fourth pearl shard) adds a bubble. Emits Events.item_gained unless announce is false.
 func give_item(id: String, count: int = 1, announce: bool = true) -> void:
 	if not Items.exists(id):
 		push_error("Unknown item id: %s" % id)
@@ -247,6 +248,11 @@ func give_item(id: String, count: int = 1, announce: bool = true) -> void:
 		Items.PEARL:
 			max_bubbles = mini(max_bubbles + gained, MAX_BUBBLES)
 			bubbles = mini(bubbles + gained, max_bubbles)
+		Items.SHARD:
+			# Each fourth shard makes a whole bubble.
+			var whole := after / Items.SHARDS_PER_BUBBLE - before / Items.SHARDS_PER_BUBBLE
+			max_bubbles = mini(max_bubbles + whole, MAX_BUBBLES)
+			bubbles = mini(bubbles + whole, max_bubbles)
 	if announce and gained > 0:
 		Events.item_gained.emit(id, gained)
 
