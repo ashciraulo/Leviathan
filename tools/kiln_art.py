@@ -512,34 +512,61 @@ def mallet_head():
 # dark crust that the mallet can crack.
 # --------------------------------------------------------------------------
 def wyrm_head(mouth, cooled=False):
-    """32x28, foot 25. Facing down (towards the viewer)."""
+    """32x28, foot 25. Facing down (towards the viewer).
+
+    A skull of crust plates over a molten face: brow plates split by
+    glowing seams, deep dark sockets so the white-hot eyes read against the
+    slag, a snout with two glowing nostrils, and (open) a dark maw with a
+    molten throat and fangs of crust."""
     c = canvas(32, 28)
     skin = "}" if cooled else "]"
     plate = "[" if cooled else "}"
+    seam = "/" if cooled else "<"
     fill_ellipse(c, 15.5, 13.0, 12.0, 10.0, skin)
-    # Brow plates.
-    fill_ellipse(c, 15.5, 8.0, 10.0, 5.0, plate)
-    fill_ellipse(c, 8.0, 11.0, 4.0, 3.0, plate)
-    fill_ellipse(c, 23.0, 11.0, 4.0, 3.0, plate)
-    # Horns of slag.
-    line(c, 6, 6, 3, 1, plate, 2)
-    line(c, 24, 6, 27, 1, plate, 2)
-    # Eyes.
+    # Brow plates, split by seams.
+    fill_ellipse(c, 15.5, 8.0, 10.5, 5.0, plate)
+    fill_ellipse(c, 7.5, 12.0, 4.0, 3.4, plate)
+    fill_ellipse(c, 23.5, 12.0, 4.0, 3.4, plate)
+    for (x, y) in ((15, 4), (15, 5), (16, 6), (15, 7), (10, 6), (9, 7), (21, 6), (22, 7)):
+        put(c, x, y, seam)
+    # Horns of slag, swept back.
+    line(c, 6, 6, 2, 0, plate, 2)
+    line(c, 24, 6, 28, 0, plate, 2)
+    # Eyes: a dark socket, the white-hot eye inside, a slit pupil.
     eye = "/" if cooled else "?"
-    fill_rect(c, 9, 12, 3, 2, eye)
-    fill_rect(c, 20, 12, 3, 2, eye)
+    for ex in (8, 20):
+        fill_rect(c, ex, 11, 5, 4, "/")
+        fill_rect(c, ex + 1, 12, 3, 2, eye)
+        if not cooled:
+            put(c, ex + 2, 12, "<")
+            put(c, ex + 2, 13, "<")
+    # Snout and nostrils.
+    fill_ellipse(c, 15.5, 16.5, 4.5, 2.2, plate)
+    put(c, 14, 17, "/")
+    put(c, 17, 17, "/")
+    if not cooled:
+        put(c, 14, 16, ">")
+        put(c, 17, 16, ">")
     # Jaw.
     if mouth:
-        fill_ellipse(c, 15.5, 20.0, 7.0, 5.0, "/")
-        fill_ellipse(c, 15.5, 21.0, 5.0, 3.0, "<" if not cooled else "/")
+        fill_ellipse(c, 15.5, 21.5, 7.0, 4.5, "/")
+        fill_ellipse(c, 15.5, 22.5, 4.5, 2.4, "<" if not cooled else "/")
+        if not cooled:
+            fill_ellipse(c, 15.5, 22.5, 2.5, 1.2, ">")
+        # Fangs of crust down from the top, up from the bottom.
         for x in (10, 13, 18, 21):
-            put(c, x, 16, ">" if not cooled else "[")
-            put(c, x, 24, ">" if not cooled else "[")
+            put(c, x, 18, plate)
+            put(c, x, 19, plate)
+        for x in (12, 19):
+            put(c, x, 25, plate)
+            put(c, x, 24, plate)
     else:
-        line(c, 9, 19, 22, 19, "/")
+        line(c, 9, 20, 22, 20, "/")
+        for x in (10, 13, 18, 21):
+            put(c, x, 21, plate)
         for x in (11, 14, 17, 20):
-            put(c, x, 20, ">" if not cooled else "[")
-    fill_ellipse(c, 15.5, 24.0, 6.0, 2.0, plate, only={"."})
+            put(c, x, 19, seam)
+    fill_ellipse(c, 15.5, 24.5, 6.0, 2.0, plate, only={"."})
     return rows_of(c)
 
 
