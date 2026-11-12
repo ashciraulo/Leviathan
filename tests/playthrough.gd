@@ -122,6 +122,7 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 	# Every room: it builds, its scenes play, its chests open.
 	var boss_room := Vector2i(-999, -999)
 	var chests := 0
+	var chest_rooms: Array[Vector2i] = []
 	var way_out := false
 	for coord: Vector2i in _rooms_of(id):
 		room = await _goto(coord)
@@ -131,6 +132,8 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 			continue
 		for chest in _all(room, Chest):
 			chests += 1
+			if not chest_rooms.has(coord):
+				chest_rooms.append(coord)
 			chest.interact()
 			_check(chest.opened, "%s: the chest in %s opens" % [id, coord])
 			# Its item's line comes up a moment later: read it through.
@@ -142,6 +145,19 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		if not get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room.is_ancestor_of(b)).is_empty():
 			boss_room = coord
 	_check(way_out, "%s: its entry room has a doorway back out" % id)
+	# Saved and loaded mid-dungeon, in a chest room (chests open, keys and
+	# map in hand, boss still to come): everything comes back, and an
+	# opened chest stays open.
+	if chest_rooms.size() > 0:
+		room = await _goto(chest_rooms[0])
+		await _play_scene(20.0)
+		_keep_safe()
+		await _save_and_reload("the middle of " + id)
+		_keep_safe()
+		room = _game.current_room
+		var reopened := _all(room, Chest)
+		_check(not reopened.is_empty() and reopened.all(func(c: Chest) -> bool: return c.opened),
+			"%s: after loading, the chests in %s are still open" % [id, chest_rooms[0]])
 	_check(chests >= 3, "%s: it has chests (%d)" % [id, chests])
 	_check(GameState.has_dungeon_item(id, "big_key"), "%s: its big key is in a chest" % id)
 	if item != "":

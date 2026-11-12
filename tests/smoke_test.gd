@@ -1495,6 +1495,107 @@ func _test_play() -> void:
 	await _wait(0.1)
 
 
+## Running out of breath mid-boss-fight, in every dungeon: the game over
+## screen comes up, waking brings Wren back at the dungeon's checkpoint with
+## time running and the dungeon's own music, and the boss is there to fight
+## again (not left dying, dead or missing) when Wren walks back in.
+## BGO_ONLY=<id> (an EchoTrial.BOSSES id) runs one boss. Not in the full
+## run (near CI's time limit): CI runs it on its own with --fixed-fps 60.
+func _test_boss_game_over_dungeon() -> void:
+	Cutscene.fast = true
+	for id: String in EchoTrial.BOSSES:
+		if OS.get_environment("BGO_ONLY") != "" and OS.get_environment("BGO_ONLY") != id:
+			continue
+		var boss_room: Vector2i = EchoTrial.BOSSES[id][0]
+		var dungeon := "maw" if id == "vael" else id
+		# The last Tidestone Wren would have woken on the way: the dungeon's
+		# own, else the one outside its door, else Saltmarrow's.
+		var entry := Vector2i(boss_room.x, 10)
+		var probe := (load("res://rooms/room_%d_%d.tscn" % [entry.x, entry.y]) as PackedScene).instantiate() as Room
+		var outside := probe.door_to
+		probe.free()
+		for stone_room: Vector2i in [entry, outside, Tidestone.SALTMARROW_STONE]:
+			if not RoomInfo.get_room(stone_room).get("stones", []).is_empty():
+				entry = stone_room
+				break
+		GameState.reset_new_game()
+		GameState.set_checkpoint(entry, RoomInfo.stone_landing(entry))
+		SaveManager.save_game()
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.5)
+		await _play_scene(game, 10.0)
+		var room := await _goto(game, boss_room, EchoTrial.ENTRY_TILE)
+		await _wait(0.5)
+		await _play_scene(game, 25.0)
+		# Into the fight: the entrance and its veil over (Wren kept unhurt
+		# meanwhile, so no blow knocks them out of the room).
+		var fight_wait := 0.0
+		while fight_wait < 30.0 and (fight_wait < 5.0 or game.busy or Cutscene.active):
+			if game.player:
+				game.player._invuln = 1.0
+			await _wait(0.1)
+			fight_wait += 0.1
+			if DialogueBox.is_open:
+				await _close_dialogue(game)
+		var label := "%s: dying to its boss" % dungeon
+		var bosses := get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room != null and room.is_ancestor_of(b))
+		_check(room != null and room.coord == boss_room and bosses.size() == 1, "%s: the fight is on (%s, %d bosses)" % [label, room.coord if room else null, bosses.size()])
+		var player: Player = game.player
+		player._invuln = 0.0
+		GameState.bubbles = 1
+		player.take_damage(1, player.global_position + Vector2(10, 0))
+		var over: GameOverScreen = null
+		for i in 60:
+			await _wait(0.1)
+			for child in game.get_children():
+				if child is GameOverScreen:
+					over = child
+			if over:
+				break
+		_check(over != null, "%s shows the game over screen" % label)
+		if over == null:
+			game.queue_free()
+			await _wait(0.1)
+			continue
+		while over._time < GameOverScreen.INPUT_DELAY + 0.05:
+			await _wait(0.05)
+		over.chosen.emit(true)
+		for i in 60:
+			await _wait(0.1)
+			if game.player != null and not game.busy:
+				break
+		await _play_scene(game, 10.0)
+		await _wait(0.5)
+		_check(game.current_room != null and game.current_room.coord == entry, "%s: Wren wakes at the checkpoint (%s)" % [label, game.current_room.coord if game.current_room else null])
+		_check(is_equal_approx(Engine.time_scale, 1.0) and not get_tree().paused and not Cutscene.active,
+			"%s: time runs again (scale %.2f, paused %s, scene %s)" % [label, Engine.time_scale, get_tree().paused, Cutscene.active])
+		_check(Audio.music_cue == Audio.music_for_room(game.current_room.biome, game.current_room.dungeon, game.current_room.music) if game.current_room else false,
+			"%s: the boss theme gives way to the room's own music (%s)" % [label, Audio.music_cue])
+		player = game.player
+		Input.action_press("move_right")
+		await _wait(0.3)
+		Input.action_release("move_right")
+		Input.action_press("move_left")
+		await _wait(0.3)
+		Input.action_release("move_left")
+		_check(player.state != Player.State.DEAD and not player.frozen and not player.in_cutscene and GameState.bubbles == GameState.max_bubbles,
+			"%s: Wren is up with full breath and free to move (state %d, frozen %s, scene %s, bubbles %d of %d)" % [label, player.state, player.frozen, player.in_cutscene, GameState.bubbles, GameState.max_bubbles])
+		# Back in: the boss is there again, whole.
+		room = await _goto(game, boss_room, EchoTrial.ENTRY_TILE)
+		await _wait(0.5)
+		await _play_scene(game, 25.0)
+		bosses = get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room != null and room.is_ancestor_of(b))
+		_check(bosses.size() == 1 and not (bosses[0] is Enemy and (bosses[0] as Enemy).dying),
+			"%s: walking back in, the boss is there to fight again (%d)" % [label, bosses.size()])
+		game.queue_free()
+		await _wait(0.1)
+	Cutscene.fast = false
+	get_tree().paused = false
+	SaveManager.delete_save()
+	GameState.reset_new_game()
+
+
 func _count_projectiles(room: Room) -> int:
 	var count := 0
 	for child in room.get_children():
