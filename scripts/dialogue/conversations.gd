@@ -92,6 +92,11 @@ const TALKS := {
 		# round the Tidestones; when every one is read, a new line is cut.
 		{"if": ["read_every_stone"], "unless": ["hessa_carved_wren"], "set": ["hessa_carved_wren"], "lines": ["HESSA_ROUND_DONE_1", "HESSA_ROUND_DONE_2", ["", "NARRATE_HESSA_CARVES"], "HESSA_ROUND_DONE_3"]},
 		{"if": ["seen_wayshell", "tidebell_kiln"], "unless": ["hessa_round_ask", "read_every_stone"], "set": ["hessa_round_ask"], "lines": ["HESSA_ROUND_1", "HESSA_ROUND_1B"]},
+		# Her logbook, its pages blown about in the lantern-boat storm (QuestFind log_*).
+		{"if": ["hessa_log_ask", "found_log_brinewood", "found_log_gloamfen", "found_log_cinder", "found_log_windmere", "found_log_frost", "found_log_verge"], "unless": ["hessa_log_done"], "set": ["hessa_log_done"], "give": {"glint": 200}, "lines": ["HESSA_LOG_DONE_1", ["", "NARRATE_HESSA_READS"], "HESSA_LOG_DONE_2", "HESSA_LOG_DONE_3", ["", "NARRATE_GOT_LOG_PURSE"]]},
+		# All six found before she asked.
+		{"if": ["seen_wayshell", "found_log_brinewood", "found_log_gloamfen", "found_log_cinder", "found_log_windmere", "found_log_frost", "found_log_verge"], "unless": ["hessa_log_ask"], "set": ["hessa_log_ask", "hessa_log_done"], "give": {"glint": 200}, "lines": ["HESSA_LOG_EARLY", ["", "NARRATE_HESSA_READS"], "HESSA_LOG_DONE_2", "HESSA_LOG_DONE_3", ["", "NARRATE_GOT_LOG_PURSE"]]},
+		{"if": ["seen_wayshell", "hessa_round_ask"], "unless": ["hessa_log_ask"], "set": ["hessa_log_ask"], "lines": ["HESSA_LOG_1", "HESSA_LOG_1B", "HESSA_LOG_2"]},
 		# Ottilie's old cave sign, carried by Wren's lamp.
 		{"if": ["ottilie_signal"], "unless": ["hessa_answered_ottilie"], "set": ["hessa_answered_ottilie"], "lines": [["", "NARRATE_WREN_OTTILIE_SIGNAL"], "HESSA_OTTILIE_1", "HESSA_OTTILIE_2"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
@@ -480,6 +485,12 @@ const TALKS := {
 	"find_seed_frost": [{"set": ["found_seed_frost"], "lines": ["NARRATE_FOUND_SEED_FROST"]}],
 	"find_seed_ember": [{"set": ["found_seed_ember"], "lines": ["NARRATE_FOUND_SEED_EMBER"]}],
 	"find_seed_fen": [{"set": ["found_seed_fen"], "lines": ["NARRATE_FOUND_SEED_FEN"]}],
+	"find_log_brinewood": [{"set": ["found_log_brinewood"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_BRINEWOOD"]}],
+	"find_log_gloamfen": [{"set": ["found_log_gloamfen"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_GLOAMFEN"]}],
+	"find_log_cinder": [{"set": ["found_log_cinder"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_CINDER"]}],
+	"find_log_windmere": [{"set": ["found_log_windmere"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_WINDMERE"]}],
+	"find_log_frost": [{"set": ["found_log_frost"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_FROST"]}],
+	"find_log_verge": [{"set": ["found_log_verge"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_VERGE"]}],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur

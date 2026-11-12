@@ -95,6 +95,7 @@ func _ready() -> void:
 		await _test_fishing_book()
 		await _test_coralie()
 		await _test_echo_game()
+		_test_hessa_log()
 		await _test_lowe_after()
 		await _test_murmur_and_dace()
 		_test_talk_order()
@@ -7303,6 +7304,39 @@ func _test_fishing_book() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4B"), "the Old Grey before the reunion: she wishes she could tell Hessa")
 	GameState.set_flag("ottilie_reunion")
 	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4"), "after it, she'll collect on their old bet")
+
+
+## Hessa's logbook: after she's sent Wren round the stones, she asks for the
+## pages the lantern-boat storm blew down the coast; all six bring 200
+## glints and the last page's story. Found early, they hand straight in.
+func _test_hessa_log() -> void:
+	var pages := StoryDirector.FINDS.keys().filter(func(id: String) -> bool: return id.begins_with("log_"))
+	_check(pages.size() == 6, "six logbook pages")
+	var line := func() -> Array: return Conversations.branch_for("hessa").get("lines", [])
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", "tidebell_kiln"]:
+		GameState.set_flag(flag)
+	_check(line.call()[0] == "HESSA_ROUND_1", "the keepers' round first")
+	Conversations.talk("hessa")
+	_check(line.call()[0] == "HESSA_LOG_1", "then she asks for her logbook pages")
+	Conversations.talk("hessa")
+	_check(line.call()[0] != "HESSA_LOG_1", "once")
+	for i in pages.size():
+		_check(not line.call().has("HESSA_LOG_DONE_1"), "not before page %d" % (i + 1))
+		Conversations.talk("find_" + pages[i])
+		_check(GameState.has_flag(QuestFind.flag_for(pages[i])), "%s picked up" % pages[i])
+	var glints := GameState.item_count("glint")
+	_check(line.call()[0] == "HESSA_LOG_DONE_1", "all six home")
+	Conversations.talk("hessa")
+	_check(GameState.item_count("glint") == glints + 200 and line.call()[0] != "HESSA_LOG_DONE_1", "she pays, once")
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell"]:
+		GameState.set_flag(flag)
+	for id: String in pages:
+		GameState.set_flag(QuestFind.flag_for(id))
+	_check(line.call()[0] == "HESSA_LOG_EARLY", "all six found before she asks: straight in")
+	Conversations.talk("hessa")
+	_check(GameState.has_flag("hessa_log_done") and GameState.item_count("glint") == 200, "and paid")
 
 
 ## Coralie's echo game: once the chime's hung she shows Wren; striking the

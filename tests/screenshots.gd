@@ -2213,7 +2213,7 @@ func _far_story_shots() -> void:
 func _quest_story_shots() -> void:
 	var scale: Array = StoryDirector.SHED_SCALES["dragline"]
 	var stone: Array = StoryDirector.SIGNAL_STONES["stacks"]
-	for shot in [["quest_8_bottle", StoryDirector.FINDS["bottle_shore"], [], true], ["quest_9_shell", StoryDirector.FINDS["pell_shell"], [], false], ["quest_10_chime", StoryDirector.FINDS["chime_pass"], [], false], ["quest_11_nameboard", StoryDirector.FINDS["nameboard"], [], true], ["quest_12_pearl", StoryDirector.FINDS["pearl_tangle"], [], false], ["quest_16_ship_lantern", StoryDirector.FINDS["lantern_dunes"], [], false], ["quest_17_frost_thistle", StoryDirector.FINDS["seed_frost"], [], false], ["quest_13_pim_home", StoryDirector.SINGER_HOMES["pim"], ["seen_ending", "pim_met", "pim_home"], true], ["quest_14_sela_home", StoryDirector.SINGER_HOMES["sela"], ["seen_ending", "sela_met", "sela_home"], true], ["quest_15_ansel_home", StoryDirector.SINGER_HOMES["ansel"], ["seen_ending", "ansel_met", "ansel_home", "sorrel_asked"], true], ["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
+	for shot in [["quest_8_bottle", StoryDirector.FINDS["bottle_shore"], [], true], ["quest_9_shell", StoryDirector.FINDS["pell_shell"], [], false], ["quest_10_chime", StoryDirector.FINDS["chime_pass"], [], false], ["quest_11_nameboard", StoryDirector.FINDS["nameboard"], [], true], ["quest_12_pearl", StoryDirector.FINDS["pearl_tangle"], [], false], ["quest_16_ship_lantern", StoryDirector.FINDS["lantern_dunes"], [], false], ["quest_17_frost_thistle", StoryDirector.FINDS["seed_frost"], [], false], ["quest_22_log_page", StoryDirector.FINDS["log_cinder"], [], true], ["quest_13_pim_home", StoryDirector.SINGER_HOMES["pim"], ["seen_ending", "pim_met", "pim_home"], true], ["quest_14_sela_home", StoryDirector.SINGER_HOMES["sela"], ["seen_ending", "sela_met", "sela_home"], true], ["quest_15_ansel_home", StoryDirector.SINGER_HOMES["ansel"], ["seen_ending", "ansel_met", "ansel_home", "sorrel_asked"], true], ["quest_1_scale", scale, [], false], ["quest_2_scale_found", scale, [], true], ["quest_3_signal_stone", stone, [], false], ["quest_4_signal", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true], ["quest_5_answer", stone, ["met_hessa", "nettle_learned", "seen_wayshell", "nettle_signals_ask"], true]]:
 		GameState.reset_new_game()
 		for flag: String in shot[2]:
 			GameState.set_flag(flag)
@@ -2232,7 +2232,11 @@ func _quest_story_shots() -> void:
 			game.player.try_interact()
 			var box := _dialogue_box(game)
 			await _wait(2.6)
-			if not shot[0] in ["quest_2_scale_found", "quest_8_bottle", "quest_11_nameboard", "quest_13_pim_home", "quest_14_sela_home", "quest_15_ansel_home"]:
+			if shot[0] == "quest_22_log_page":
+				box.advance()
+				box.advance()
+				await _wait(2.0)
+			elif not shot[0] in ["quest_2_scale_found", "quest_8_bottle", "quest_11_nameboard", "quest_13_pim_home", "quest_14_sela_home", "quest_15_ansel_home"]:
 				# Past the page, to the lamp on the stone, then the answer.
 				box.advance()
 				box.advance()

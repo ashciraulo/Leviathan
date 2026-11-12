@@ -1483,3 +1483,19 @@ NARRATE_GOT_ECHO_12_PURSE,Wren got 200 Glints.
 TOAST_ECHO_5,Five notes!
 TOAST_ECHO_8,Eight notes!
 TOAST_ECHO_12,Twelve notes!
+HESSA_LOG_1,"Wren. That storm twelve years back took more than boats, you know."
+HESSA_LOG_1B,"It took my logbook out the window. Fifty years of nights, gone."
+HESSA_LOG_2,"If you find a page, bring it home. Square hand. You'll know it."
+NARRATE_FOUND_LOG,"A loose logbook page, salt-stained, in square, careful writing:"
+NARRATE_LOG_BRINEWOOD,"'First night alone at the lamp. Hands shaking. Kept it lit.'"
+NARRATE_LOG_GLOAMFEN,"'Ottilie and Vael up with soup. Sang until the oil ran low.'"
+NARRATE_LOG_CINDER,"'Bells rang wrong today. Felt it in the boards more than heard it.'"
+NARRATE_LOG_WINDMERE,"'Can't hear the gulls now. Funny, the noisy things you miss.'"
+NARRATE_LOG_FROST,"'The others have gone their ways. Just me and the lamp. It's enough.'"
+NARRATE_LOG_VERGE,"'Storm. Lantern-boat's light gone out off the Shelf. Taking the boat.'"
+HESSA_LOG_DONE_1,"My pages. All of them? ...Let me see. My eyes still work, at least."
+NARRATE_HESSA_READS,"Hessa reads every page twice. At the last one, she stops."
+HESSA_LOG_DONE_2,"I never did finish that night's entry. I was busy rowing."
+HESSA_LOG_DONE_3,"Here. For your legs, and for bringing them home. I'll write tonight."
+NARRATE_GOT_LOG_PURSE,Wren got 200 Glints.
+HESSA_LOG_EARLY,"Those are my pages! From the storm. Wherever did you find them all?"

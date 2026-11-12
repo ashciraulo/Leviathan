@@ -190,6 +190,14 @@ const FINDS := {
 	# Ide's errand: her boat's nameboard, torn off by the bad water and
 	# carried right round to the far side of the dunes.
 	"nameboard": [Vector2i(7, 0), Vector2i(20, 6)],
+	# Hessa's logbook, blown all over the coast in the lantern-boat storm:
+	# one page in a side nook in each of six regions.
+	"log_brinewood": [Vector2i(2, -1), Vector2i(2, 3)],
+	"log_gloamfen": [Vector2i(3, 3), Vector2i(16, 3)],
+	"log_cinder": [Vector2i(7, -1), Vector2i(20, 2)],
+	"log_windmere": [Vector2i(6, -3), Vector2i(20, 3)],
+	"log_frost": [Vector2i(1, -4), Vector2i(18, 5)],
+	"log_verge": [Vector2i(3, 4), Vector2i(12, 4)],
 }
 ## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
 ## Asking for it sets PARTY_FLAG (the scene plays); the scene sets
