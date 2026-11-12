@@ -1,13 +1,13 @@
 class_name PauseMenu
 extends CanvasLayer
-## The pause menu: a tab bar over four pages (Satchel, Map, Options,
-## Journey). Pause opens it on the Satchel, Map opens it on the Map.
+## The pause menu: a tab bar over five pages (Satchel, Map, Progress,
+## Options, Journey). Pause opens it on the Satchel, Map opens it on the Map.
 ## Tab Prev / Tab Next (Q / E) switch tabs. Keeps running while the rest
 ## of the game is paused.
 
 const TITLE_SCENE := "res://scenes/title.tscn"
-const TABS := ["TAB_SATCHEL", "TAB_MAP", "TAB_OPTIONS", "TAB_JOURNEY"]
-enum Tab { SATCHEL, MAP, OPTIONS, JOURNEY }
+const TABS := ["TAB_SATCHEL", "TAB_MAP", "TAB_PROGRESS", "TAB_OPTIONS", "TAB_JOURNEY"]
+enum Tab { SATCHEL, MAP, PROGRESS, OPTIONS, JOURNEY }
 const TAB_Y := 5
 const TAB_H := 14
 ## The menu drops in this far as it opens, and a page slides this far in from
@@ -33,7 +33,7 @@ func _ready() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
-	for page: MenuPage in [SatchelPage.new(), MapPage.new(), SettingsPage.new(), JourneyPage.new()]:
+	for page: MenuPage in [SatchelPage.new(), MapPage.new(), ProgressPage.new(), SettingsPage.new(), JourneyPage.new()]:
 		page.set_anchors_preset(Control.PRESET_FULL_RECT)
 		page.visible = false
 		page.close_requested.connect(close)

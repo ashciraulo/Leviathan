@@ -57,6 +57,7 @@ MENU_JOURNEYS,Journeys
 MENU_OPTIONS,Options
 TAB_SATCHEL,Satchel
 TAB_MAP,Map
+TAB_PROGRESS,Progress
 TAB_OPTIONS,Options
 TAB_JOURNEY,Journey
 SATCHEL_TOOLS,Tools
@@ -320,6 +321,24 @@ JOURNEY_TIME,Time
 JOURNEY_BELLS,Tidebells
 JOURNEY_STONES,Stones woken
 JOURNEY_QUIT_CONFIRM,Quit? Progress since the last Tidestone is lost
+PROGRESS_ERRANDS,Errands
+PROGRESS_REGION,Region
+PROGRESS_UNDERWAY,Asked
+PROGRESS_DONE,Done
+PROGRESS_SHARDS,Shards
+PROGRESS_STONES,Stones
+PROGRESS_GLASS,Glass
+PROGRESS_CHESTS,Chests
+PROGRESS_ALL,All
+PROGRESS_UNKNOWN,???
+REGION_SALTMARROW,Saltmarrow
+REGION_BRINEWOOD,Brinewood
+REGION_CINDERREACH,Cinderreach
+REGION_GLOAMFEN,Gloamfen
+REGION_WINDMERE,Windmere Heights
+REGION_FROSTSPINE,Frostspine
+REGION_SUNKEN_VERGE,Sunken Verge
+REGION_OSSUARY,Ossuary Dunes
 JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps everything up to the last one you touched.
 FILES_TITLE,Choose a journey
 FILES_EMPTY,New journey

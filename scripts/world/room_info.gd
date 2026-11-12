@@ -9,7 +9,8 @@ const DIR := "res://rooms/"
 ## coord -> {name_key, biome, dungeon, rows, stones: Array[Vector2i] (tiles),
 ##           chests: Array[Vector2i], doors: Array[Vector2i],
 ##           glass: Array[Vector2i] (sea-glass),
-##           boss: Vector2i (a dungeon boss's tile, or (-1, -1))}
+##           boss: Vector2i (a dungeon boss's tile, or (-1, -1)),
+##           door_to: Vector2i (where its door leads), chest_item, chest_count}
 static var _rooms: Dictionary = {}
 static var _loaded := false
 
@@ -100,6 +101,9 @@ static func _load() -> void:
 			"doors": doors,
 			"glass": glass,
 			"boss": boss,
+			"door_to": room.door_to,
+			"chest_item": room.chest_item,
+			"chest_count": room.chest_count,
 			"alt_flag": room.alt_flag,
 			"alt_rows": Room.parse_layout(room.alt_layout) if room.alt_layout != "" else PackedStringArray(),
 		}

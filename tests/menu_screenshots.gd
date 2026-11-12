@@ -88,6 +88,30 @@ func _ready() -> void:
 	_press(pause, "move_left")
 	await _wait(0.5)
 	await _capture("35_map")
+	# Progress, partway through a file: four regions walked, some errands
+	# asked and done, some finds.
+	var kept := GameState.flags.duplicate()
+	for coord: Vector2i in RoomInfo.all():
+		if Completion.region_of(coord) in ["saltmarrow", "brinewood", "cinderreach", "gloamfen"]:
+			GameState.mark_seen(coord)
+	for i in Completion.QUESTS.size():
+		var quest: Dictionary = Completion.QUESTS[i]
+		if quest["region"] in ["saltmarrow", "brinewood", "cinderreach"] and i % 3 != 2:
+			GameState.set_flag(quest["done"] if i % 3 == 0 else quest["start"])
+	for coord: Vector2i in Tidestone.CARVINGS:
+		if Completion.region_of(coord) in ["saltmarrow", "brinewood"]:
+			GameState.set_flag("tidestone_read_%d_%d" % [coord.x, coord.y])
+	for coord: Vector2i in RoomInfo.all():
+		var info := RoomInfo.get_room(coord)
+		if Completion.region_of(coord) in ["saltmarrow", "cinderreach"]:
+			if not info["glass"].is_empty():
+				GameState.set_flag("sea_glass_%d_%d" % [coord.x, coord.y])
+			for tile: Vector2i in info["chests"]:
+				GameState.set_flag("chest_%d_%d_%d_%d" % [coord.x, coord.y, tile.x, tile.y])
+	pause.show_tab(PauseMenu.Tab.PROGRESS)
+	await _wait(0.2)
+	await _capture("35b_progress")
+	GameState.flags = kept
 	pause.show_tab(PauseMenu.Tab.OPTIONS)
 	for i in 5:
 		_press(pause, "move_down")

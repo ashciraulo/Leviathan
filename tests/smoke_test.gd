@@ -6155,6 +6155,56 @@ func _test_overworld_secrets() -> void:
 	GameState.reset_new_game()
 	await _test_sea_glass()
 	await _test_pearl_shards()
+	await _test_progress()
+
+
+## The Progress tab's counts (Completion): every errand flag is one the game
+## sets, every room and dungeon belongs to a region, the totals match the
+## world, and finding things moves the numbers.
+func _test_progress() -> void:
+	var sources := ""
+	for path in ["res://scripts/dialogue/conversations.gd", "res://scripts/story/story_director.gd"]:
+		sources += FileAccess.get_file_as_string(path)
+	var ids := {}
+	for quest: Dictionary in Completion.QUESTS:
+		_check(not ids.has(quest["id"]), "errand %s is listed once" % quest["id"])
+		ids[quest["id"]] = true
+		_check(Completion.REGIONS.has(quest["region"]), "errand %s is in a region" % quest["id"])
+		for key in ["start", "done"]:
+			_check(sources.contains("\"%s\"" % quest[key]), "errand %s's %s flag %s is one the game uses" % [quest["id"], key, quest[key]])
+	for region: String in Completion.REGIONS:
+		var key := "REGION_" + region.to_upper()
+		_check(tr(key) != key, "%s has a name" % region)
+	var unplaced: Array = []
+	for coord: Vector2i in RoomInfo.all():
+		if not Completion.REGIONS.has(Completion.region_of(coord)):
+			unplaced.append(coord)
+	_check(unplaced.is_empty(), "every room, dungeons too, counts toward a region (%s)" % [unplaced])
+	_check(Completion.region_of(Vector2i(10, 10)) == "brinewood" and Completion.region_of(Vector2i(44, 10)) == "saltmarrow",
+		"a dungeon counts toward the region its door stands in")
+	GameState.reset_new_game()
+	var rows := Completion.tally()
+	var all := Completion.totals(rows)
+	_check(all["stones"][1] == Tidestone.CARVINGS.size(), "every carved Tidestone is counted (%d)" % all["stones"][1])
+	_check(all["shards"][1] <= PearlShard.TOTAL, "the shards counted are the ones placed (%d)" % all["shards"][1])
+	_check(all["glass"][1] > 0 and all["chests"][1] > 0 and all["done"][1] == Completion.QUESTS.size(), "sea-glass, chests and errands are all counted")
+	var nothing := true
+	for kind: String in Completion.KINDS:
+		nothing = nothing and all[kind][0] == 0
+	_check(nothing and not rows["saltmarrow"]["seen"], "a new file has found nothing and been nowhere")
+	var quest: Dictionary = Completion.QUESTS[0]
+	GameState.set_flag(quest["start"])
+	GameState.set_flag(Completion.QUESTS[1]["done"])
+	GameState.set_flag("tidestone_read_%d_%d" % [Tidestone.CARVINGS.keys()[0].x, Tidestone.CARVINGS.keys()[0].y])
+	GameState.mark_seen(Vector2i(0, -1))
+	rows = Completion.tally()
+	all = Completion.totals(rows)
+	_check(rows["saltmarrow"]["seen"] and rows[quest["region"]]["underway"][0] == 1 and all["underway"][0] == 1 and all["done"][0] == 1,
+		"an errand asked shows underway, one done shows done, and a room walked shows its region")
+	_check(all["stones"][0] == 1, "a carving read is counted")
+	GameState.set_flag(quest["done"])
+	_check(Completion.totals(Completion.tally())["underway"][0] == 0, "a finished errand stops being underway")
+	GameState.reset_new_game()
 
 
 ## Pearl shards: every fourth adds a breath bubble. Walking over one picks
