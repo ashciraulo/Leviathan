@@ -93,6 +93,7 @@ func _ready() -> void:
 		await _test_sorrel()
 		await _test_ottilie()
 		await _test_fishing_book()
+		await _test_seal_trail()
 		await _test_coralie()
 		await _test_echo_game()
 		_test_hessa_log()
@@ -7425,6 +7426,60 @@ func _test_echo_game() -> void:
 	_check(first.call() == "CORALIE_ECHO_5_1", "five has its own prize")
 	Conversations.talk("coralie")
 	_check(GameState.item_count("glint") == 50, "fifty glints")
+## Pell's night bell: after the Hull, Pell asks who rings the buoy bell at
+## night. A trail of clues, each showing once the last is found, leads west
+## to a seal pup, who comes home to the Shore. Pell names her; Corrin pays.
+func _test_seal_trail() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in ["met_hessa", "talked_pell_quest", "talked_corrin_quest", "heard_pell_hull", "heard_corrin_hull"]:
+		GameState.set_flag(flag)
+	_check(first.call("pell") == "PELL_AGAIN", "no night bell before the Hull's bell is back")
+	GameState.set_flag("heard_pell_bell")
+	_check(first.call("pell") == "PELL_NIGHT_1", "then Pell asks who rings the buoy bell at night")
+	# No trail before Pell asks.
+	var track: Array = StoryDirector.FINDS["seal_track"]
+	var game: Node = await _stand_below(track[0], track[1])
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == "seal_track"), "no tracks before Pell asks")
+	game.queue_free()
+	await _wait(0.1)
+	Conversations.talk("pell")
+	_check(first.call("pell") == "PELL_NIGHT_WAITING", "Pell waits up")
+	# Each clue only once the one before is found.
+	var order := ["seal_track", "seal_bones", "seal_net", "seal_pup"]
+	for i in order.size():
+		var id: String = order[i]
+		_check(GameState.has_flag(StoryDirector.FIND_NEEDS[id]), "%s shows once %s" % [id, StoryDirector.FIND_NEEDS[id]])
+		if i + 1 < order.size():
+			_check(not GameState.has_flag(StoryDirector.FIND_NEEDS[order[i + 1]]), "and %s doesn't yet" % order[i + 1])
+		Conversations.talk("find_" + id)
+	_check(GameState.has_flag(QuestFind.flag_for("seal_pup")), "the pup found")
+	# She's at home on the Shore now.
+	var home: Array = StoryDirector.SEAL_PUP_HOME
+	game = await _stand_below(home[0], home[1])
+	var room: Room = game.current_room
+	_check(room.get_children().filter(func(c: Node) -> bool: return c is SealPup).size() == 1, "the seal pup lives on the Shore")
+	_check(home[1].y <= 8 and room.tile_at(home[1].x, home[1].y) == "." and room.tile_at(home[1].x, home[1].y + 1) == ".", "on dry sand, reachable from below")
+	_check(game.player.try_interact(), "Wren can say hello")
+	await _play_scene(game, 10.0)
+	game.queue_free()
+	await _wait(0.1)
+	_check(Conversations.branch_for("pell").get("lines").has("PELL_PUP_1"), "Pell meets her")
+	Conversations.talk("pell")
+	_check(first.call("pell") == "PELL_AGAIN" and first.call("seal_pup") == "NARRATE_PUP_DING", "and names her Ding")
+	var glints := GameState.item_count("glint")
+	_check(Conversations.branch_for("corrin").get("lines").has("CORRIN_PUP_1"), "Corrin meets the net thief")
+	Conversations.talk("corrin")
+	_check(GameState.item_count("glint") == glints + 150 and first.call("corrin") == "CORRIN_AGAIN", "and pays for a night's sleep, once")
+	# With Pell's shell errand open, the night bell still gets through.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "seen_wayshell", "pell_shell_ask"]:
+		GameState.set_flag(flag)
+	_check(first.call("pell") == "PELL_NIGHT_1", "the night bell asks ahead of the shell's waiting line")
+	Conversations.talk("pell")
+	GameState.set_flag(QuestFind.flag_for("seal_pup"))
+	_check(Conversations.branch_for("pell").get("lines").has("PELL_PUP_1"), "and the pup's hand-in too")
+
 
 ## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a
 ## piece, and a little more when all twelve are hung.
@@ -8139,6 +8194,8 @@ func _test_small_finds() -> void:
 	for id: String in StoryDirector.FINDS:
 		var spot: Array = StoryDirector.FINDS[id]
 		var tile: Vector2i = spot[1]
+		if StoryDirector.FIND_NEEDS.has(id):
+			GameState.set_flag(StoryDirector.FIND_NEEDS[id])
 		var game: Node = await _stand_below(spot[0], tile)
 		var room: Room = game.current_room
 		_check(room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id), "%s lies in room %s" % [id, spot[0]])
@@ -8154,7 +8211,8 @@ func _test_small_finds() -> void:
 		await _wait(0.1)
 	GameState.reset_new_game()
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
-	for flag in ["met_hessa", "talked_corrin_quest", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "heard_corrin_hull"]:
+	# (Pell's night bell long since done: _test_seal_trail.)
+	for flag in ["met_hessa", "talked_corrin_quest", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "heard_corrin_hull", "pell_night_ask", "found_seal_pup", "pell_pup_told", "corrin_pup_paid"]:
 		GameState.set_flag(flag)
 	_check(first.call("corrin") == "CORRIN_AGAIN" and first.call("pell") == "PELL_AGAIN", "no errands before the Wayshell")
 	GameState.set_flag("seen_wayshell")

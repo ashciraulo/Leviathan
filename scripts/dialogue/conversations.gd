@@ -134,6 +134,8 @@ const TALKS := {
 		{"if": ["talked_corrin_quest", "seen_wayshell"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask"], "lines": ["CORRIN_BOTTLES_1", "CORRIN_BOTTLES_1B", "CORRIN_BOTTLES_2"]},
 		{"if": ["corrin_bottles_ask"], "unless": ["corrin_bottles_done"], "lines": ["CORRIN_BOTTLES_WAITING"]},
 		{"if": ["corrin_bottles_done"], "unless": ["corrin_bottles_after"], "set": ["corrin_bottles_after"], "lines": ["CORRIN_BOTTLES_AFTER"]},
+		# Pell's night bell: the pup's been raiding Corrin's nets.
+		{"if": ["found_seal_pup"], "unless": ["corrin_pup_paid"], "set": ["corrin_pup_paid"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_NET"], "CORRIN_PUP_1", "CORRIN_PUP_2", "CORRIN_PUP_3", ["", "NARRATE_GOT_PUP_PURSE"]]},
 		{"if": ["talked_corrin_quest", "seen_ending"], "lines": ["CORRIN_END"]},
 		{"if": ["talked_corrin_quest", "old_one_turned"], "lines": ["CORRIN_TURNED"]},
 		{"if": ["talked_corrin_quest"], "lines": ["CORRIN_AGAIN"]},
@@ -149,7 +151,12 @@ const TALKS := {
 		# His lucky shell, dropped by Brinewood's spring (QuestFind).
 		{"if": ["pell_shell_ask", "found_pell_shell"], "unless": ["pell_shell_done"], "set": ["pell_shell_done"], "lines": ["PELL_SHELL_DONE_1", "PELL_SHELL_DONE_2", ["", "NARRATE_GOT_PELL_SHELL"]]},
 		{"if": ["talked_pell_quest", "seen_wayshell"], "unless": ["pell_shell_ask"], "set": ["pell_shell_ask"], "lines": ["PELL_SHELL_1", "PELL_SHELL_1B", "PELL_SHELL_2"]},
+		# The night bell: a seal pup's trail (QuestFind seal_*), once Wren's
+		# back from the Rotting Hull.
+		{"if": ["pell_night_ask", "found_seal_pup"], "unless": ["pell_pup_told"], "set": ["pell_pup_told"], "lines": [["", "NARRATE_PUP_WITH_PELL"], "PELL_PUP_1", "PELL_PUP_2", "PELL_PUP_3"]},
+		{"if": ["heard_pell_bell", "talked_pell_quest"], "unless": ["pell_night_ask"], "set": ["pell_night_ask"], "lines": ["PELL_NIGHT_1", "PELL_NIGHT_1B", "PELL_NIGHT_2", "PELL_NIGHT_2B"]},
 		{"if": ["pell_shell_ask"], "unless": ["pell_shell_done"], "lines": ["PELL_SHELL_WAITING"]},
+		{"if": ["pell_night_ask"], "unless": ["found_seal_pup"], "lines": ["PELL_NIGHT_WAITING"]},
 		{"if": ["talked_pell_quest", "seen_ending"], "lines": ["PELL_END"]},
 		{"if": ["talked_pell_quest", "old_one_turned"], "lines": ["PELL_TURNED"]},
 		{"if": ["pell_gave_pearl"], "lines": ["PELL_CRAB_AGAIN"]},
@@ -504,6 +511,15 @@ const TALKS := {
 	"find_log_windmere": [{"set": ["found_log_windmere"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_WINDMERE"]}],
 	"find_log_frost": [{"set": ["found_log_frost"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_FROST"]}],
 	"find_log_verge": [{"set": ["found_log_verge"], "lines": ["NARRATE_FOUND_LOG_SODDEN", "NARRATE_LOG_VERGE"]}],
+	"find_seal_track": [{"set": ["found_seal_track"], "lines": ["NARRATE_FOUND_SEAL_TRACK", "NARRATE_FOUND_SEAL_TRACK_2"]}],
+	"find_seal_bones": [{"set": ["found_seal_bones"], "lines": ["NARRATE_FOUND_SEAL_BONES", "NARRATE_FOUND_SEAL_BONES_2"]}],
+	"find_seal_net": [{"set": ["found_seal_net"], "lines": ["NARRATE_FOUND_SEAL_NET", "NARRATE_FOUND_SEAL_NET_2"]}],
+	"find_seal_pup": [{"set": ["found_seal_pup"], "lines": ["NARRATE_FOUND_SEAL_PUP", "NARRATE_FOUND_SEAL_PUP_2", "NARRATE_FOUND_SEAL_PUP_3"]}],
+	# The pup at home on the Shore (SealPup).
+	"seal_pup": [
+		{"if": ["pell_pup_told"], "lines": ["NARRATE_PUP_DING"]},
+		{"lines": ["NARRATE_PUP_HOME"]},
+	],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur

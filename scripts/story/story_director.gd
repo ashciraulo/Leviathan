@@ -198,7 +198,24 @@ const FINDS := {
 	"log_windmere": [Vector2i(6, -3), Vector2i(20, 3)],
 	"log_frost": [Vector2i(1, -4), Vector2i(18, 5)],
 	"log_verge": [Vector2i(3, 4), Vector2i(12, 4)],
+	# Pell's night bell: a seal pup's trail west from the Shore, into the
+	# Brine Cistern and up to a nook in the Sluice Gallery (Tide Hook, two
+	# crates). Each clue only shows once the one before is found (FIND_NEEDS).
+	"seal_track": [Vector2i(0, 0), Vector2i(5, 8)],
+	"seal_bones": [Vector2i(0, 1), Vector2i(14, 7)],
+	"seal_net": [Vector2i(-1, 1), Vector2i(16, 2)],
+	"seal_pup": [Vector2i(-2, 1), Vector2i(18, 2)],
 }
+## FINDS that only show once a flag is set: find id -> flag.
+const FIND_NEEDS := {
+	"seal_track": "pell_night_ask",
+	"seal_bones": "found_seal_track",
+	"seal_net": "found_seal_bones",
+	"seal_pup": "found_seal_net",
+}
+## Where the seal pup lives once Wren's found her: on the Shore, where her
+## trail began, by the old buoy bell.
+const SEAL_PUP_HOME := [Vector2i(0, 0), Vector2i(5, 8)]
 ## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
 ## Asking for it sets PARTY_FLAG (the scene plays); the scene sets
 ## PARTY_DONE_FLAG. Guests stand around Hessa at these tiles.
@@ -391,6 +408,7 @@ func _on_room_entered(coord: Vector2i) -> void:
 	_put_survey_stake(coord)
 	_put_shed_scale(coord)
 	_put_find(coord)
+	_put_seal_pup(coord)
 	_put_signal_stone(coord)
 	if CALF_REST.has(coord):
 		_put_calf_skull(CALF_REST[coord])
@@ -1248,12 +1266,26 @@ func _put_find(coord: Vector2i) -> void:
 		var spot: Array = FINDS[id]
 		if spot[0] != coord or room == null or GameState.has_flag(QuestFind.flag_for(id)):
 			continue
+		if FIND_NEEDS.has(id) and not GameState.has_flag(FIND_NEEDS[id]):
+			continue
 		if room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id):
 			continue
 		var find := QuestFind.new()
 		find.id = id
 		find.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
 		room.add_child(find)
+
+
+## The seal pup at home on the Shore, once Wren's found her.
+func _put_seal_pup(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	if room == null or coord != SEAL_PUP_HOME[0] or not GameState.has_flag(QuestFind.flag_for("seal_pup")):
+		return
+	if room.get_children().any(func(c: Node) -> bool: return c is SealPup):
+		return
+	var pup := SealPup.new()
+	pup.position = Vector2(SEAL_PUP_HOME[1]) * 16.0 + Vector2(8, 14)
+	room.add_child(pup)
 
 
 ## An old signal stone on a far headland.
