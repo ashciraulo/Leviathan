@@ -247,6 +247,7 @@ var _phrase: AudioStreamPlayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_add_limiter()
 	for i in 2:
 		var player := AudioStreamPlayer.new()
 		player.bus = "Music"
@@ -279,6 +280,17 @@ func _ready() -> void:
 		_prewarm_gradually()
 	else:
 		_prewarm_task = WorkerThreadPool.add_task(_prewarm)
+
+
+## A limiter on the master bus: a boss roar over a bomb over the music
+## would otherwise add up past full scale and crackle.
+func _add_limiter() -> void:
+	for i in AudioServer.get_bus_effect_count(0):
+		if AudioServer.get_bus_effect(0, i) is AudioEffectHardLimiter:
+			return
+	var limiter := AudioEffectHardLimiter.new()
+	limiter.ceiling_db = -0.5
+	AudioServer.add_bus_effect(0, limiter)
 
 
 func _exit_tree() -> void:

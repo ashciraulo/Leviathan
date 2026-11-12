@@ -90,12 +90,11 @@ func _on_room_entered(coord: Vector2i) -> void:
 	_play_room_music()
 
 
-## The room's track, or the boss theme while a boss is still up in it.
+## The room's track, the boss theme while a boss is still up in it, or the
+## mini-boss theme while the room's elite still stands.
 func _play_room_music() -> void:
 	if current_room:
-		var boss := _living_boss()
-		var cue := _room_music() if boss == null else str(boss.get("music_cue") if boss.get("music_cue") else "boss")
-		Audio.play_music(cue)
+		Audio.play_music(_fight_music())
 		Audio.set_muffled(current_room.cave)
 		Audio.play_ambience(Audio.ambience_for_room(current_room.biome, current_room.dungeon, current_room.ambience, current_room.cave))
 
@@ -106,6 +105,25 @@ func _room_music() -> String:
 
 func _room_has_boss() -> bool:
 	return _living_boss() != null
+
+
+## What should play here right now: a living boss's theme, else
+## "miniboss" while an elite is up, else the room's own track.
+func _fight_music() -> String:
+	var boss := _living_boss()
+	if boss:
+		return str(boss.get("music_cue") if boss.get("music_cue") else "boss")
+	if _living_elite():
+		return "miniboss"
+	return _room_music()
+
+
+## The room's elite, if it is still standing (Room.elite).
+func _living_elite() -> Enemy:
+	for child in current_room.get_children():
+		if child is Enemy and (child as Enemy).elite and not (child as Enemy).dying:
+			return child
+	return null
 
 
 ## A boss in this room that is awake and not yet beaten. One with its own
@@ -133,6 +151,9 @@ func _process(delta: float) -> void:
 	# back its own music.
 	if Audio.music_cue.begins_with("boss") and not busy and current_room and not _room_has_boss():
 		_on_boss_defeated()
+	# The elite fell: its theme gives way to the room's, as after a boss.
+	elif Audio.music_cue == "miniboss" and not busy and current_room and not _game_over and _living_elite() == null:
+		Audio.play_music(_room_music(), 2.5)
 
 
 ## Build the world at the checkpoint in GameState. With by_mantle, Mantle
