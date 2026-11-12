@@ -118,7 +118,7 @@ CUES = [
         "Phrase 1 on cello, slowed and heavy.", "A wreck that groans and sways. Damp and uneasy.",
         "explore", 3),
     cue("place_village", "Market Day", "Saltmarrow's village square", "G major", 108, "4/4", 32, 0,
-        "A 8 | A' 8 | B 8 | A'' 8", ["mandolin-like pluck", "tin whistle (soft)", "upright bass", "light hand percussion"],
+        "A 8 | A' 8 | B 8 | A'' 8", ["nylon guitar (strummed)", "tin whistle (soft)", "upright bass", "light hand percussion"],
         "Phrase 2's contour flipped to major in the B section.", "Bright-hearted, people at work.", "place", 3),
     cue("place_shop", "Marlo's Stall", "Marlo's shop menu", "Bb major", 112, "4/4", 24, 0,
         "pickup 1 | A 8 | B 8 | A' 7", ["marimba", "upright bass", "brushed snare (soft)", "clarinet"],
