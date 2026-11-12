@@ -43,10 +43,16 @@ func _walkable(room: Room) -> Dictionary:
 		query.transform = Transform2D(0.0, _foot(room, tile) + Vector2(0, -3))
 		for hit in space.intersect_shape(query, 4):
 			var by: Object = hit.collider
-			if by is Node and (by as Node).get_parent() is Enemy:
-				continue
-			out.erase(tile)
-			break
+			# Only scenery meant to stand on more than its own tile (props,
+			# the market stall, the tide's flood) takes ground away; anything
+			# else spilling onto it is left for _check_floor to report.
+			# Something set down on the tile itself (a story lantern, a sign)
+			# takes it too: Wren walks round it.
+			var own := by is Node2D and Vector2i(((by as Node2D).global_position - room.global_position) / Room.TILE) == tile
+			if own or (by is Node and ((by as Node).get_parent() is Prop or (by as Node).get_parent() is MarketStall \
+					or by is MarketStall or by is Prop or (by as Node).get_parent() is Tide)):
+				out.erase(tile)
+				break
 	return out
 
 
@@ -186,7 +192,7 @@ func _extra_checks(rooms: Dictionary) -> void:
 		if not walk.has(tile) and not "xI".contains(room.raw_tile(tile.x, tile.y)):
 			_fail("overworld %s: the Tidestone sets Wren down on '%s' at %s" % [coord, room.raw_tile(tile.x, tile.y), tile])
 			continue
-		var ways := _targets(room, walk)
+		var ways := super._targets(room, walk)
 		var out := false
 		for target in ways:
 			if not _path(walk, tile, target).is_empty():

@@ -253,7 +253,9 @@ func _move_state() -> void:
 		velocity = velocity.limit_length(SPEED).move_toward(direction * SPEED, grip * get_physics_process_delta_time())
 	else:
 		velocity = direction * SPEED
-		velocity += _corner_slip(direction)
+		var slip := _corner_slip(direction)
+		if slip != Vector2.ZERO:
+			velocity = slip
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
 	if in_cutscene or DialogueBox.recently_closed() or ShopMenu.recently_closed():
@@ -767,12 +769,12 @@ func _hum_requested() -> bool:
 	return Input.is_action_pressed("hum")
 
 
-## Analog or digital input, snapped to 8 directions at a constant speed.
 ## Walking straight into the very corner of something solid (a tree's
 ## trunk, a rock, the end of a wall) eases Wren round it, as long as no
 ## more than CORNER_SLIP pixels of them overlap it: a pixel's misalignment
 ## never stops them dead. Crates and other movers are left alone, so
-## pushing still pushes.
+## pushing still pushes. Returns the sideways velocity that carries Wren
+## exactly clear this frame (never faster than walking), or zero.
 func _corner_slip(direction: Vector2) -> Vector2:
 	# (Input comes snapped to eight angles, so "straight" is near, not exact.)
 	if direction == Vector2.ZERO or (absf(direction.x) > 0.01 and absf(direction.y) > 0.01):
@@ -788,10 +790,11 @@ func _corner_slip(direction: Vector2) -> Vector2:
 			var offset: Vector2 = side * shift * sign_
 			var moved := global_transform.translated(offset)
 			if not test_move(global_transform, offset) and not test_move(moved, step):
-				return side * sign_ * SPEED
+				return side * sign_ * minf(SPEED, shift / get_physics_process_delta_time())
 	return Vector2.ZERO
 
 
+## Analog or digital input, snapped to 8 directions at a constant speed.
 func _input_direction() -> Vector2:
 	if in_cutscene:
 		return script_move
