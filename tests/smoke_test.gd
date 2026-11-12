@@ -95,6 +95,7 @@ func _ready() -> void:
 		await _test_fishing_book()
 		await _test_coralie()
 		await _test_echo_game()
+		_test_hessa_log()
 		await _test_lowe_after()
 		await _test_murmur_and_dace()
 		_test_talk_order()
@@ -7303,6 +7304,48 @@ func _test_fishing_book() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4B"), "the Old Grey before the reunion: she wishes she could tell Hessa")
 	GameState.set_flag("ottilie_reunion")
 	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4"), "after it, she'll collect on their old bet")
+
+
+## Hessa's logbook: after she's sent Wren round the stones, she asks for the
+## pages the lantern-boat storm blew down the coast; all six bring 200
+## glints and the last page's story. Found early, they hand straight in.
+func _test_hessa_log() -> void:
+	var pages := StoryDirector.FINDS.keys().filter(func(id: String) -> bool: return id.begins_with("log_"))
+	_check(pages.size() == 6, "six logbook pages")
+	var line := func() -> Array: return Conversations.branch_for("hessa").get("lines", [])
+	var first := func() -> String: return str(line.call()[0]) if line.call()[0] is String else str(line.call()[1])
+	GameState.reset_new_game()
+	# Every stone read before the round was even asked: the logbook still comes.
+	for flag in ["met_hessa", "seen_wayshell", "tidebell_kiln", Tidestone.ALL_READ_FLAG, "hessa_carved_wren"]:
+		GameState.set_flag(flag)
+	_check(first.call() == "HESSA_HINT_MIRE_1", "no logbook before the Old One turns (the Verge is still under)")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	# Story beats first: Ottilie's sign.
+	GameState.set_flag("ottilie_signal")
+	_check(first.call() == "HESSA_OTTILIE_1", "Ottilie's sign comes ahead of the logbook")
+	Conversations.talk("hessa")
+	_check(first.call() == "HESSA_LOG_1", "then she asks for her logbook pages")
+	Conversations.talk("hessa")
+	_check(first.call() != "HESSA_LOG_1" and not str(first.call()).begins_with("HESSA_LOG"), "once, then her usual")
+	for i in pages.size():
+		_check(not line.call().has("HESSA_LOG_DONE_1"), "not before page %d" % (i + 1))
+		var shown: Array = Conversations.talk("find_" + pages[i])
+		_check(GameState.has_flag(QuestFind.flag_for(pages[i])) and str(shown[-1]["text"]) == "NARRATE_LOG_" + pages[i].trim_prefix("log_").to_upper(), "%s read" % pages[i])
+	var glints := GameState.item_count("glint")
+	_check(line.call().has("HESSA_LOG_DONE_1"), "all six home")
+	Conversations.talk("hessa")
+	_check(GameState.item_count("glint") == glints + 200 and not line.call().has("HESSA_LOG_DONE_1"), "she pays, once")
+	GameState.set_flag("tidebell_tomb")
+	_check(first.call() == "HESSA_ROW_1", "and the row to the Maw still comes first")
+	GameState.reset_new_game()
+	for id: String in pages:
+		GameState.set_flag(QuestFind.flag_for(id))
+	GameState.set_flag("met_hessa")
+	_check(not line.call().has("HESSA_LOG_EARLY"), "no hand-in before the Wayshell")
+	GameState.set_flag("seen_wayshell")
+	_check(line.call().has("HESSA_LOG_EARLY"), "all six found before she asks: straight in")
+	Conversations.talk("hessa")
+	_check(GameState.has_flag("hessa_log_done") and GameState.item_count("glint") == 200, "and paid")
 
 
 ## Coralie's echo game: once the chime's hung she shows Wren; striking the
