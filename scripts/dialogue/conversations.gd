@@ -371,6 +371,11 @@ const TALKS := {
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
 	# (GlassChime) and pays for every piece Wren brings her.
 	"coralie": [
+		# Her echo game (EchoGame): tunes hopped back on the shells.
+		{"if": ["echo_12"], "unless": ["coralie_echo_12"], "set": ["coralie_echo_12", "coralie_echo_8", "coralie_echo_5"], "give": {"glint": 200}, "lines": ["CORALIE_ECHO_12_1", "CORALIE_ECHO_12_2", ["", "NARRATE_GOT_ECHO_12_PURSE"]]},
+		{"if": ["echo_8"], "unless": ["coralie_echo_8"], "set": ["coralie_echo_8", "coralie_echo_5"], "give": {"glint": 100}, "lines": ["CORALIE_ECHO_8_1", "CORALIE_ECHO_8_2", ["", "NARRATE_GOT_ECHO_8_PURSE"]]},
+		{"if": ["echo_5"], "unless": ["coralie_echo_5"], "set": ["coralie_echo_5"], "give": {"glint": 50}, "lines": ["CORALIE_ECHO_5_1", "CORALIE_ECHO_5_2", ["", "NARRATE_GOT_ECHO_5_PURSE"]]},
+		{"if": ["coralie_chime_done"], "unless": ["coralie_echo_ask"], "set": ["coralie_echo_ask"], "lines": ["CORALIE_ECHO_1", "CORALIE_ECHO_1B", "CORALIE_ECHO_2", "CORALIE_ECHO_2B"]},
 		{"if": ["coralie_chime_done", "seen_ending"], "lines": ["CORALIE_END"]},
 		{"if": ["coralie_chime_done", "old_one_turned"], "lines": ["CORALIE_TURNED"]},
 		{"if": ["coralie_chime_done"], "lines": ["CORALIE_AFTER"]},

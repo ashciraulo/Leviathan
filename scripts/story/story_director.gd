@@ -1295,6 +1295,10 @@ func _put_coralie() -> void:
 	var chime := GlassChime.new()
 	chime.position = CHIME_AT
 	room.add_child(chime)
+	# Her echo game's shells on the sand (they only show once she's asked).
+	var echo := EchoGame.new()
+	room.add_child(echo)
+	chime.echo = echo
 
 
 ## The last singers, where Lowe's errand finds them; Bram at the forge.
