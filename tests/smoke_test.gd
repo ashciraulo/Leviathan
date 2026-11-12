@@ -235,11 +235,14 @@ func _test_old_saves() -> void:
 		GameState.reset_new_game()
 		_check(SaveManager._write(TEST_SLOT, parsed) and SaveManager.load_game(TEST_SLOT), "%s loads" % file)
 		_check(not SaveManager.read_summary(TEST_SLOT).is_empty(), "%s shows on the file select" % file)
-		var bad := GameState.inventory.keys().filter(func(id: String) -> bool: return not Items.exists(id))
-		_check(bad.is_empty(), "%s: every item is real (%s)" % [file, bad])
-		for kind: String in Items.EQUIPMENT_KINDS:
-			var worn := GameState.equipped_item(kind)
-			_check(worn == "" or GameState.has_item(worn), "%s: the %s worn is owned" % [file, kind])
+		# Read from the file itself: loading quietly drops unknown items, so a
+		# renamed item would otherwise vanish from old saves unnoticed.
+		var saved: Dictionary = parsed["state"]
+		var bad := (saved.get("inventory", {}) as Dictionary).keys().filter(func(id: String) -> bool: return not Items.exists(id))
+		_check(bad.is_empty(), "%s: every item it holds still exists (%s)" % [file, bad])
+		var worn: Dictionary = saved.get("equipped", {})
+		for kind: String in worn:
+			_check(worn[kind] == "" or GameState.equipped_item(kind) == worn[kind], "%s: still wears its %s (%s)" % [file, kind, worn[kind]])
 		var breath := mini(GameState.START_BUBBLES + GameState.item_count("breath_pearl")
 			+ GameState.item_count("pearl_shard") / Items.SHARDS_PER_BUBBLE, GameState.MAX_BUBBLES)
 		_check(GameState.max_bubbles == breath, "%s: %d bubbles for its pearls" % [file, GameState.max_bubbles])

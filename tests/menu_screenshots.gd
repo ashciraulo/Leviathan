@@ -28,7 +28,7 @@ func _ready() -> void:
 	SaveManager.current_slot = 0
 	SaveManager.save_game()
 
-	# Title, then the file select with one new file, a copy, and an empty one.
+	# Title, then the file select with one new file, one part-way and one finished.
 	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
 	add_child(title)
 	# Wait for the menu to finish surfacing: a button has focus then.
