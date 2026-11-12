@@ -204,6 +204,9 @@ func _build_texture() -> void:
 				# what's beside it.
 				if (ch == "*" or ch == "8") and x > 0:
 					ch = rows[y][x - 1]
+					# Never as rock or a drop, though: they stand on floor.
+					if ch == "#" or ch == "v" or ch == "~" or ch == " ":
+						ch = "."
 				var color := _tile_color(ch, colors, str(info["dungeon"]) == "")
 				# A faint grain on floors, darker at room edges.
 				if ch != "#" and ch != "~" and (x + y) % 2 == 0:

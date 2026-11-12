@@ -84,6 +84,11 @@ func interact() -> void:
 			Audio.play_sfx("key_get", global_position)
 		"map", "compass", "big_key":
 			GameState.give_item(Items.dungeon_item(dungeon, item))
+		"pearl_shard":
+			var before := GameState.item_count(item)
+			GameState.give_item(item, count)
+			if PearlShard.makes_bubble(before, GameState.item_count(item)):
+				Audio.play_jingle("jingle_pearl")
 		_:
 			GameState.give_item(item, count)
 	var spec: Array = ITEMS.get(item, [Items.name_key(item), null])

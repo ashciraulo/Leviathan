@@ -57,6 +57,7 @@ MENU_JOURNEYS,Journeys
 MENU_OPTIONS,Options
 TAB_SATCHEL,Satchel
 TAB_MAP,Map
+TAB_PROGRESS,Progress
 TAB_OPTIONS,Options
 TAB_JOURNEY,Journey
 SATCHEL_TOOLS,Tools
@@ -320,6 +321,24 @@ JOURNEY_TIME,Time
 JOURNEY_BELLS,Tidebells
 JOURNEY_STONES,Stones woken
 JOURNEY_QUIT_CONFIRM,Quit? Progress since the last Tidestone is lost
+PROGRESS_ERRANDS,Errands
+PROGRESS_REGION,Region
+PROGRESS_UNDERWAY,Asked
+PROGRESS_DONE,Done
+PROGRESS_SHARDS,Shards
+PROGRESS_STONES,Stones
+PROGRESS_GLASS,Glass
+PROGRESS_CHESTS,Chests
+PROGRESS_ALL,All
+PROGRESS_UNKNOWN,???
+REGION_SALTMARROW,Saltmarrow
+REGION_BRINEWOOD,Brinewood
+REGION_CINDERREACH,Cinderreach
+REGION_GLOAMFEN,Gloamfen
+REGION_WINDMERE,Windmere Heights
+REGION_FROSTSPINE,Frostspine
+REGION_SUNKEN_VERGE,Sunken Verge
+REGION_OSSUARY,Ossuary Dunes
 JOURNEY_SAVE_NOTE,The game saves when you touch a Tidestone. Quitting keeps everything up to the last one you touched.
 FILES_TITLE,Choose a journey
 FILES_EMPTY,New journey
@@ -562,6 +581,9 @@ ROOM_BONE_RING,The Bone Ring
 ROOM_GULLCRY_STACKS,Gullcry Stacks
 ROOM_LAMPLESS_SINK,The Lampless Sink
 ROOM_SMUGGLERS_CUT,Smugglers' Cut
+ROOM_BRINE_CISTERN,The Brine Cistern
+ROOM_SLUICE_GALLERY,Sluice Gallery
+ROOM_SMUGGLERS_VAULT,The Smugglers' Vault
 ROOM_RIMEFALL_STEPS,Rimefall Steps
 ROOM_ICEFALL_GROTTO,Icefall Grotto
 ROOM_WRECKERS_STAIR,Wreckers' Stair
@@ -1501,3 +1523,98 @@ HESSA_LOG_DONE_2,"I never did finish that night's entry. I was busy rowing."
 HESSA_LOG_DONE_3,"Here. For all that walking. I'll write a new page tonight."
 NARRATE_GOT_LOG_PURSE,Wren got 200 Glints.
 HESSA_LOG_EARLY,"Those are my pages! From the storm. Wherever did you find them all?"
+HESSA_WALK_1,"Wren. Sit a minute. I keep thinking about Lowe, out on the Point."
+HESSA_WALK_1B,"She stood by Vael all those years. I owe her a word for that."
+HESSA_WALK_2,"These old knees don't trust the rocks any more. Your lamp, though..."
+HESSA_WALK_2B,"Walk me out to Lullaby Point. Keep the light where I can see it."
+HESSA_WALK_AGAIN,"Lost me, did you? Never mind. Lamp up, and slow this time."
+HESSA_WALK_SHORE,"Forty years on this sand, and I've never once walked it to the Point."
+HESSA_WALK_SHORE_B,"Feel that? The whole bay's breathing. It comes up through my feet."
+HESSA_WALK_POOLS,"Vael used to lie on his belly here for hours. Said the pools hummed."
+HESSA_WALK_POOLS_B,"I told him it was only the wind. I'd tell him different now."
+HESSA_WALK_WRECK,"Nearly there. I can see her standing out on the Point. Go on."
+LOWE_WALK_1,"The old keeper, all the way out here? Has something happened?"
+HESSA_WALK_POINT_1,"Face me and talk slow, Lowe. My ears are gone. My eyes aren't."
+LOWE_WALK_2,"...You're the one he left. He never said a hard word about you."
+HESSA_WALK_POINT_2,"He should have. I stopped listening to him. You never did."
+HESSA_WALK_POINT_3,"You stood by my boy when I wouldn't. That's what I came to say."
+LOWE_WALK_3,"We took your bell. All seven of them, in the end."
+HESSA_WALK_POINT_4,"And this one rang them all back. We've each got something to mend."
+NARRATE_WALK_WATER,"The two of them stand a long while, watching the water breathe."
+HESSA_WALK_POINT_5,"Go on home, child. Lowe will walk me back. Won't you, Lowe?"
+LOWE_WALK_4,...Somebody has to.
+HESSA_WALK_POINT_6,"Oh, and take this. Oil money for the lamp. Don't argue with me."
+NARRATE_GOT_WALK_PURSE,Wren got 200 Glints.
+HESSA_POINT_STAY,"Go on, child. Lowe and I have a good deal of quiet to catch up on."
+HESSA_WALK_HOME_1,"Lowe walked me home. Talked the whole way, I think."
+HESSA_WALK_HOME_2,"Lucky I can't hear a word of it. Lucky I could see her face."
+LOWE_WALK_AFTER_1,"Your keeper comes out most evenings now. Brings a flask of tea."
+LOWE_WALK_AFTER_2,"We don't say his name much. We don't need to. Go on, little lamp."
+PELL_NIGHT_1,"Wren! Something out on the water rings a bell at night. Ding... ding."
+PELL_NIGHT_1B,"There's no wind, and no boats out. Corrin says it's drowned sailors."
+PELL_NIGHT_2,"Corrin says that about everything. And Corrin's nets keep tearing."
+PELL_NIGHT_2B,"Will you find out who it is? Mum won't let me out after dark."
+PELL_NIGHT_WAITING,"It rang again last night! Ding... ding. Did you find out who?"
+NARRATE_FOUND_SEAL_TRACK,"Small flipper prints in the wet sand, with a drag mark between them."
+NARRATE_FOUND_SEAL_TRACK_2,"They come up out of the surf and head south, toward the rocks."
+NARRATE_FOUND_SEAL_BONES,"A heap of fish bones by the rocks, picked clean."
+NARRATE_FOUND_SEAL_BONES_2,"Whoever ate here eats well, and messily. The prints go on west."
+NARRATE_FOUND_SEAL_NET,"A torn scrap of net, knotted the Saltmarrow way. It reeks of fish."
+NARRATE_FOUND_SEAL_NET_2,"Something dragged it in here, then went on, up into the dark."
+NARRATE_FOUND_SEAL_PUP,"A seal pup, curled up in the dark. Thin, and very much alone."
+NARRATE_FOUND_SEAL_PUP_2,"She sniffs Wren's lamp, then Wren's hand, and seems to decide."
+NARRATE_FOUND_SEAL_PUP_3,"She'll follow Wren's lamp home to the Shore, in her own good time."
+NARRATE_PUP_WITH_PELL,"Wren mimes a very small seal, flopping. Pell gets it at once."
+PELL_PUP_1,"A seal! She's been ringing the bell? Every night? All by herself?"
+PELL_PUP_2,"I bet the bell sounds like her mum calling. That's why she rings it."
+PELL_PUP_3,"Well, she's got us now. I'm calling her Ding. Mum'll say yes. Maybe."
+NARRATE_HAND_NET,"Wren hands Corrin the torn net. The pup peers round Wren's legs."
+CORRIN_PUP_1,"So that's my net thief. And my fish thief. And my drowned sailor."
+CORRIN_PUP_2,"...Fine. She can have the little ones. Don't tell anyone I'm soft."
+CORRIN_PUP_3,"Here. For a full night's sleep, at last. Worth every glint."
+NARRATE_GOT_PUP_PURSE,Wren got 150 Glints.
+NARRATE_PUP_HOME,"The seal pup rolls onto her back and waits for a belly scratch."
+NARRATE_PUP_DING,"Ding barks, rolls over, and waits. Pell's taught her that, clearly."
+GULLY_BOAT_1,"Funny thing. She's sound under all that sand. Keel's not even cracked."
+GULLY_BOAT_1B,"Patch her planks, pitch her seams, give her a sail... she'd float."
+GULLY_BOAT_2,"Dunstan for planks. Agna for pitch. Sorrel's got sailcloth to spare."
+GULLY_BOAT_2B,"And a lamp for her bow. Ask Hessa. She'll know the one."
+GULLY_BOAT_WAITING,"Planks, pitch, a sail and a lamp. Then we'll see if she floats."
+DUNSTAN_BOATFIX_1,"The little boat out on the Shelf? I always wondered whose she was."
+DUNSTAN_BOATFIX_2,"Ash planks, steamed to fit. I'll get them out to Gully on the Shelf."
+AGNA_BOATFIX_1,"Pitch for a boat? I've a pot of it left from tarring the forge roof."
+AGNA_BOATFIX_2,"And a new lamp hook. The old one won't hold a lamp much longer."
+SORREL_BOATFIX_1,"Sailcloth? I've an old spare kite in the loft, patched once too often."
+SORREL_BOATFIX_2,"Courier silk. Light as breath, and it still won't tear. Take it."
+NARRATE_WREN_SHOWS_LIST,"Wren holds out the list Gully scratched on a bit of driftwood."
+HESSA_BOATFIX_1,"Planks, pitch, a sail... and a lamp. Gully means to float her?"
+NARRATE_HESSA_FETCHES_LAMP,"Hessa comes back with a small brass lamp, dented and polished bright."
+HESSA_BOATFIX_2,"It hung on her bow the night I rowed out to her. I kept it lit, after."
+HESSA_BOATFIX_3,"Every night for twelve years. Take it to Gully. It's going home."
+NARRATE_HAND_BOAT_PARTS,"Wren sets the lamp down by the planks, the pitch and the folded silk."
+GULLY_BOAT_DONE_1,"That's the lot. Right, keeper. Sleeves up."
+NARRATE_BOAT_WORK,"Wren and Gully work till the planks sit tight and the seams are black."
+NARRATE_BOAT_FLOATS,"They drag her down to the water, and the sea lifts her. She floats."
+GULLY_BOAT_DONE_2,"Ha! Look at her! I'll row her round to Saltmarrow, to her own steps."
+GULLY_BOAT_AFTER,"She's at your steps now. Best salvage I ever let go of."
+NARRATE_BOAT_HOME,"At the harbour steps, a little lantern-boat rides the swell, lamp lit."
+HESSA_BOAT_HOME_1,"That lamp sat in my window all this while. Now look at it."
+HESSA_BOAT_HOME_2,"She's home, child. Mind you keep her lamp lit."
+WICK_ROUND_1,"Murmur and I race the round some nights. Want a go, keeper?"
+WICK_ROUND_1B,"Ring my dusk bell and every lantern in the fen goes out for it."
+WICK_ROUND_2,"Then light all five again, quick as you can. I'll keep the time."
+WICK_ROUND_2B,"A minute forty is good. Eighty seconds is mine. Gran did sixty-five."
+NARRATE_DUSK_BELL,"A little brass bell on a post, for calling the fen's lamps out."
+WICK_ROUND_100_1,"Under a minute forty! Murmur's going to sulk for a week. Here."
+NARRATE_GOT_ROUND_100_PURSE,Wren got 50 Glints.
+WICK_ROUND_80_1,"Under eighty! You beat my time, keeper. My own time!"
+WICK_ROUND_80_2,"Don't tell Murmur. Actually, do tell Murmur. Here."
+NARRATE_GOT_ROUND_80_PURSE,Wren got 100 Glints.
+WICK_ROUND_65_1,"Sixty-five. That's Gran's time. Nobody's done that since her."
+WICK_ROUND_65_2,"She left a purse for whoever matched her. It's yours. She'd be glad."
+NARRATE_GOT_ROUND_65_PURSE,Wren got 200 Glints.
+TOAST_ROUND_DONE,All five lit!
+TOAST_ROUND_100,"Under a minute forty!"
+TOAST_ROUND_80,Wick's time beaten!
+TOAST_ROUND_65,Gran's time!
+TOAST_ROUND_OFF,The round's off.

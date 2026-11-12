@@ -110,6 +110,7 @@ const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
 const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
+const DUSK_BELL_AT := Vector2(12 * 16 + 8, 5 * 16 + 12)
 ## Gully dozing beside the Lantern Wake's figurehead on Wreck Strand, and
 ## his strongbox out in the pool.
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
@@ -198,7 +199,24 @@ const FINDS := {
 	"log_windmere": [Vector2i(6, -3), Vector2i(20, 3)],
 	"log_frost": [Vector2i(1, -4), Vector2i(18, 5)],
 	"log_verge": [Vector2i(3, 4), Vector2i(12, 4)],
+	# Pell's night bell: a seal pup's trail south from the Shore to
+	# Smugglers' Cut, west into the Brine Cistern and up to a nook in the Sluice Gallery (Tide Hook, two
+	# crates). Each clue only shows once the one before is found (FIND_NEEDS).
+	"seal_track": [Vector2i(0, 0), Vector2i(5, 8)],
+	"seal_bones": [Vector2i(0, 1), Vector2i(14, 7)],
+	"seal_net": [Vector2i(-1, 1), Vector2i(16, 2)],
+	"seal_pup": [Vector2i(-2, 1), Vector2i(18, 2)],
 }
+## FINDS that only show once a flag is set: find id -> flag.
+const FIND_NEEDS := {
+	"seal_track": "pell_night_ask",
+	"seal_bones": "found_seal_track",
+	"seal_net": "found_seal_bones",
+	"seal_pup": "found_seal_net",
+}
+## Where the seal pup lives once Wren's found her: on the Shore, where her
+## trail began.
+const SEAL_PUP_HOME := [Vector2i(0, 0), Vector2i(5, 8)]
 ## Hessa's lighting day: Nettle's surprise party in Saltmarrow's square.
 ## Asking for it sets PARTY_FLAG (the scene plays); the scene sets
 ## PARTY_DONE_FLAG. Guests stand around Hessa at these tiles.
@@ -297,8 +315,38 @@ const VAEL_IN := [Vector2(12 * 16, 13 * 16 + 8), Vector2(12 * 16, 9 * 16 + 12), 
 const HOME_FROM_HESSA := Vector2(0, 22)
 ## Where Wren stops to watch, in any of these chambers.
 const WATCH_FROM := Vector2(11 * 16 + 8, 8 * 16 + 4)
+## Hessa's walk: after the ending she asks Wren to light her way out to
+## Lullaby Point, to say her piece to Lowe. She follows the lamp
+## (HessaWalker) by the Shore, the tidepools and the wreck, with a word at
+## each; on the Point the two of them talk.
+const WALK_FLAG := "hessa_walk"
+const WALK_DONE_FLAG := "hessa_walk_done"
+## A word at each place on the way (room: [flag, lines]).
+const WALK_BEATS := {
+	Vector2i(0, 0): ["hessa_walk_shore", ["HESSA_WALK_SHORE", "HESSA_WALK_SHORE_B"]],
+	Vector2i(1, 0): ["hessa_walk_pools", ["HESSA_WALK_POOLS", "HESSA_WALK_POOLS_B"]],
+	Vector2i(1, 1): ["hessa_walk_wreck", ["HESSA_WALK_WRECK"]],
+}
+## On the Point: Hessa beside Lowe, Wren just below them.
+const WALK_HESSA_AT := Vector2(14 * 16 + 8, 8 * 16 + 10)
+const WALK_WREN_AT := Vector2(15 * 16 + 8, 9 * 16 + 10)
+## The rooms of her walk: she only comes along between these.
+const WALK_ROUTE := [Vector2i(0, -1), Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 1), Vector2i(2, 1)]
+## Her own spot in Saltmarrow (the layout's "h").
+const HESSA_HOME := Vector2(18 * 16 + 8, 5 * 16 + 12)
+const WALK_GLINTS := 200
+## The lantern-boat raised: Gully floats her off the Ebb Shelf, and she's
+## moored in Saltmarrow's harbour with Hessa's old lamp at her bow.
+const BOAT_DONE_FLAG := "boat_done"
+const BOAT_HOME_FLAG := "seen_boat_home"
+const BOAT_HOME_AT := Vector2(13 * 16, 10 * 16)
 
 var game: Node
+## Where Hessa is on her walk: her room and her spot in it. She stays put
+## when Wren goes on without her.
+var walk_room := SALTMARROW
+var walk_at := Vector2.ZERO
+var _walker: HessaWalker
 
 
 func _ready() -> void:
@@ -309,9 +357,14 @@ func _ready() -> void:
 	Events.flag_changed.connect(_on_flag_changed)
 	Events.game_finished.connect(the_ending)
 	Events.boss_defeated.connect(_on_boss_defeated)
+	# Flown off by Mantle mid-walk: she makes her own way home.
+	Events.fast_travel_requested.connect(func(_coord: Vector2i) -> void: end_walk())
 
 
 func _on_game_started() -> void:
+	# A walk the game closed partway through: she made her own way home.
+	if GameState.has_flag(WALK_FLAG):
+		GameState.clear_flag(WALK_FLAG)
 	if GameState.play_opening:
 		GameState.play_opening = false
 		if not GameState.has_flag("seen_opening"):
@@ -333,8 +386,12 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_up_mural()
 	if not echo:
 		_put_up_journal(coord)
+	if GameState.has_flag(WALK_FLAG):
+		_walk_on(coord)
 	if coord == SALTMARROW and GameState.has_flag(TOBIN_HOME_FLAG):
 		_put_tobin_home()
+	if coord == SALTMARROW and GameState.has_flag(BOAT_DONE_FLAG):
+		_put_boat_home()
 	# A party that was asked for but never thrown (the game closed first).
 	if coord == SALTMARROW and GameState.has_flag(PARTY_FLAG) and not GameState.has_flag(PARTY_DONE_FLAG):
 		hessas_lighting_day.call_deferred()
@@ -359,6 +416,7 @@ func _on_room_entered(coord: Vector2i) -> void:
 	_put_survey_stake(coord)
 	_put_shed_scale(coord)
 	_put_find(coord)
+	_put_seal_pup(coord)
 	_put_signal_stone(coord)
 	if CALF_REST.has(coord):
 		_put_calf_skull(CALF_REST[coord])
@@ -409,6 +467,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		tobins_warning()
 	elif coord == SALTMARROW and GameState.has_flag(TOBIN_WARNED_FLAG) and not GameState.has_flag(TOBIN_HOME_FLAG) and not GameState.has_flag(ENDING_FLAG):
 		tobin_comes_home()
+	elif coord == SALTMARROW and GameState.has_flag(BOAT_DONE_FLAG) and not GameState.has_flag(BOAT_HOME_FLAG) and not GameState.has_flag(WALK_FLAG):
+		the_boat_comes_home()
 	elif coord == MAW_VAEL and choir_waits() and not echo:
 		vaels_choir()
 	elif lowe_waits(coord):
@@ -425,6 +485,18 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 				GameState.clear_flag.call_deferred(RACE_FLAG)
 			else:
 				sorrel_race()
+		return
+	if flag == WALK_FLAG:
+		if not GameState.has_flag(WALK_FLAG):
+			return
+		if Cutscene.active or GameState.room_coord != SALTMARROW:
+			GameState.clear_flag.call_deferred(WALK_FLAG)
+		else:
+			hessas_walk()
+		return
+	if flag == BOAT_DONE_FLAG:
+		if GameState.has_flag(BOAT_DONE_FLAG) and GameState.room_coord == EBB_SHELF:
+			_boat_leaves_shelf()
 		return
 	if flag == FERRY_FLAG:
 		if not GameState.has_flag(FERRY_FLAG):
@@ -792,6 +864,8 @@ func hessas_confession() -> void:
 func hessas_lighting_day() -> void:
 	if Cutscene.active or GameState.has_flag(PARTY_DONE_FLAG):
 		return
+	# Her own party: she's home for it, walk or no walk.
+	end_walk()
 	GameState.set_flag(PARTY_DONE_FLAG)
 	var scene := _scene()
 	# Nettle's "go and fetch her" opens just after the flag is set: let it
@@ -1118,6 +1192,11 @@ func _put_wick(coord: Vector2i) -> void:
 		var wick := Npc.new("wick")
 		wick.position = WICK_AT
 		room.add_child(wick)
+	# Wick's dusk bell, for the lamplighter's round, once the fen's lit.
+	if coord == FENMOUTH and GameState.has_flag("wick_gave_jar") and not room.get_children().any(func(c: Node) -> bool: return c is DuskBell):
+		var bell := DuskBell.new()
+		bell.position = DUSK_BELL_AT
+		room.add_child(bell)
 	if FenLantern.SPOTS.has(coord) and not room.get_children().any(func(c: Node) -> bool: return c is FenLantern):
 		var lantern := FenLantern.new()
 		lantern.room_coord = coord
@@ -1206,12 +1285,26 @@ func _put_find(coord: Vector2i) -> void:
 		var spot: Array = FINDS[id]
 		if spot[0] != coord or room == null or GameState.has_flag(QuestFind.flag_for(id)):
 			continue
+		if FIND_NEEDS.has(id) and not GameState.has_flag(FIND_NEEDS[id]):
+			continue
 		if room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id):
 			continue
 		var find := QuestFind.new()
 		find.id = id
 		find.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
 		room.add_child(find)
+
+
+## The seal pup at home on the Shore, once Wren's found her.
+func _put_seal_pup(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	if room == null or coord != SEAL_PUP_HOME[0] or not GameState.has_flag(QuestFind.flag_for("seal_pup")):
+		return
+	if room.get_children().any(func(c: Node) -> bool: return c is SealPup):
+		return
+	var pup := SealPup.new()
+	pup.position = Vector2(SEAL_PUP_HOME[1]) * 16.0 + Vector2(8, 14)
+	room.add_child(pup)
 
 
 ## An old signal stone on a far headland.
@@ -1340,6 +1433,12 @@ func _put_lantern_boat() -> void:
 		return
 	if _gully_on_the_shelf():
 		_put_npc("gully_ebb", GULLY_EBB_AT)
+	# Raised and gone home to Saltmarrow: only sand where she lay.
+	if GameState.has_flag(BOAT_DONE_FLAG):
+		for child in room.get_children():
+			if child is LanternBoat or (child is Prop and child.kind == "W"):
+				child.queue_free()
+		return
 	for child in room.get_children():
 		if child is LanternBoat:
 			return
@@ -1351,6 +1450,47 @@ func _put_lantern_boat() -> void:
 			child.queue_free()
 			room.add_child(boat)
 			return
+
+
+## Afloat at last: once Gully's said his piece, she's off round the point
+## to Saltmarrow, and only sand is left where she lay.
+func _boat_leaves_shelf() -> void:
+	var room: Node = game.current_room
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if not is_instance_valid(room) or room != game.current_room:
+		return
+	for child in room.get_children():
+		if child is LanternBoat or (child is Prop and child.kind == "W"):
+			child.queue_free()
+
+
+## Wren's lantern-boat at the harbour steps, once Gully has raised her.
+func _put_boat_home() -> void:
+	var room: Node = game.current_room
+	if room == null or room.get_children().any(func(c: Node) -> bool: return c is BoatHome):
+		return
+	var home := BoatHome.new()
+	home.position = BOAT_HOME_AT
+	room.add_child(home)
+
+
+## The first time home after Gully raised her: the lantern-boat rides at
+## the steps with Hessa's lamp lit on her bow, and Hessa has her say.
+func the_boat_comes_home() -> void:
+	GameState.set_flag(BOAT_HOME_FLAG)
+	var hessa := _find_npc("hessa")
+	var scene := _scene()
+	await scene.wait(0.6)
+	await scene.lamp(game.current_room.global_position + BOAT_HOME_AT + BoatHome.LAMP_AT, Cutscene.LAMP_HERE)
+	await scene.narrate(["NARRATE_BOAT_HOME"])
+	if hessa:
+		await scene.walk_around_to(hessa.global_position + HOME_FROM_HESSA)
+		scene.face(Vector2.UP)
+	await scene.speak("hessa", ["HESSA_BOAT_HOME_1", "HESSA_BOAT_HOME_2"])
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	scene.finish()
 
 
 ## Captain Sorrel and the far post of her old kite-post.
@@ -1914,6 +2054,145 @@ func bell_rung(bell: Tidebell) -> void:
 		the_old_one_turns(scene)
 	else:
 		scene.finish()
+
+
+## Hessa sets off: she leaves her spot by the lighthouse and follows Wren.
+func hessas_walk() -> void:
+	var room: Room = game.current_room
+	# Her words open just after the flag is set: let her finish them.
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if not is_instance_valid(room) or room != game.current_room:
+		GameState.clear_flag(WALK_FLAG)
+		return
+	var hessa := _find_npc("hessa")
+	walk_room = SALTMARROW
+	walk_at = hessa.position if hessa else game.player.position - room.position
+	if hessa:
+		hessa.queue_free()
+	_put_walker(room)
+
+
+func _put_walker(room: Room) -> void:
+	_walker = HessaWalker.new()
+	_walker.room = room
+	_walker.position = walk_at
+	room.add_child(_walker)
+
+
+## Wren comes into a room while Hessa is out walking. Close by at the
+## crossing, she comes too; left behind, she waits where she stood; and if
+## Wren has gone further than the next room (flown, or fallen), she makes
+## her own way home.
+func _walk_on(coord: Vector2i) -> void:
+	var room: Room = game.current_room
+	var carried := is_instance_valid(_walker) and _walker.near and coord != walk_room and WALK_ROUTE.has(coord) and WALK_ROUTE.has(walk_room)
+	if is_instance_valid(_walker):
+		walk_at = _walker.position
+		_walker.queue_free()
+	_walker = null
+	if carried:
+		walk_room = coord
+		walk_at = _behind_wren(room)
+	if coord != walk_room:
+		var apart := (coord - walk_room).abs()
+		if apart.x + apart.y > 1:
+			GameState.clear_flag(WALK_FLAG)
+			return
+	# Out walking, she isn't at home by the lighthouse.
+	if coord == SALTMARROW:
+		var hessa := _find_npc("hessa")
+		if hessa:
+			hessa.queue_free()
+	if coord != walk_room:
+		return
+	_put_walker(room)
+	if not carried:
+		return
+	if coord == LULLABY_POINT:
+		hessa_meets_lowe.call_deferred()
+	elif WALK_BEATS.has(coord) and not GameState.has_flag(WALK_BEATS[coord][0]):
+		_walk_beat.call_deferred(coord)
+
+
+## The walk's off: Hessa goes home (and, if Wren's in Saltmarrow, is back
+## at her spot by the lighthouse).
+func end_walk() -> void:
+	if not GameState.has_flag(WALK_FLAG):
+		return
+	GameState.clear_flag(WALK_FLAG)
+	if is_instance_valid(_walker):
+		_walker.queue_free()
+	_walker = null
+	if GameState.room_coord == SALTMARROW and game.current_room and _find_npc("hessa") == null:
+		_put_npc("hessa", HESSA_HOME)
+
+
+## Just inside the edge Wren came in by, a step behind them.
+func _behind_wren(room: Room) -> Vector2:
+	var local: Vector2 = game.player.global_position - room.global_position
+	var edges := [local.x, Room.SIZE.x - local.x, local.y, Room.SIZE.y - local.y]
+	var inward: Array[Vector2] = [Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP]
+	var nearest := 0
+	for i in range(1, 4):
+		if edges[i] < edges[nearest]:
+			nearest = i
+	return (local - inward[nearest] * 12.0).clamp(Vector2(6, 12), Room.SIZE - Vector2(6, 2))
+
+
+## A word from Hessa on the way, once she's caught up.
+func _walk_beat(coord: Vector2i) -> void:
+	if Cutscene.active or GameState.room_coord != coord or not GameState.has_flag(WALK_FLAG):
+		return
+	GameState.set_flag(WALK_BEATS[coord][0])
+	var scene := _scene()
+	await scene.wait(0.9)
+	if is_instance_valid(_walker):
+		await scene.lamp(_walker.global_position + Vector2(0, -14), Cutscene.LAMP_HERE)
+	await scene.speak("hessa", WALK_BEATS[coord][1])
+	scene.finish()
+
+
+## On Lullaby Point: Hessa says to Lowe what she came to say, and stays
+## with her. Lowe will walk her home.
+func hessa_meets_lowe() -> void:
+	if Cutscene.active or GameState.room_coord != LULLABY_POINT or not GameState.has_flag(WALK_FLAG):
+		return
+	var room: Room = game.current_room
+	var scene := _scene()
+	await scene.wait(0.4)
+	if is_instance_valid(_walker):
+		var tween := create_tween()
+		tween.tween_property(_walker, "position", WALK_HESSA_AT, _walker.position.distance_to(WALK_HESSA_AT) / HessaWalker.SPEED)
+		await scene.walk_around_to(room.global_position + WALK_WREN_AT)
+		if tween.is_running():
+			await tween.finished
+	scene.face(Vector2.UP)
+	await scene.speak("lowe", ["LOWE_WALK_1"])
+	await scene.speak("hessa", ["HESSA_WALK_POINT_1"])
+	await scene.speak("lowe", ["LOWE_WALK_2"])
+	await scene.speak("hessa", ["HESSA_WALK_POINT_2", "HESSA_WALK_POINT_3"])
+	await scene.speak("lowe", ["LOWE_WALK_3"])
+	await scene.speak("hessa", ["HESSA_WALK_POINT_4"])
+	await scene.narrate(["NARRATE_WALK_WATER"])
+	await scene.speak("hessa", ["HESSA_WALK_POINT_5"])
+	await scene.speak("lowe", ["LOWE_WALK_4"])
+	await scene.speak("hessa", ["HESSA_WALK_POINT_6"])
+	GameState.give_item("glint", WALK_GLINTS, false)
+	Audio.play_jingle("jingle_item")
+	await scene.narrate(["NARRATE_GOT_WALK_PURSE"])
+	GameState.clear_flag(WALK_FLAG)
+	GameState.set_flag(WALK_DONE_FLAG)
+	# She stays on the Point with Lowe while Wren's here.
+	if is_instance_valid(room) and room == game.current_room:
+		var at := WALK_HESSA_AT
+		if is_instance_valid(_walker):
+			at = _walker.position
+			_walker.queue_free()
+		_walker = null
+		_put_npc("hessa_point", at)
+	scene.finish()
 
 
 func _find_npc(kind: String) -> Npc:

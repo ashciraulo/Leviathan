@@ -56,8 +56,9 @@ ERRAND_TABLES = ("FINDS", "SHED_SCALES", "SIGNAL_STONES", "SURVEY_STAKES")
 
 # Flags set by a conversation when a side quest's round brings Wren to a
 # villager: the jam trade's hand-offs, Sorrel's three letters and the
-# invitations for Hessa's lighting day. Each is one more villager to walk to.
-DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party)_[a-z0-9_]+)"')
+# invitations for Hessa's lighting day and the parts for the lantern-boat
+# (and the walk back to Gully with them). Each is one more villager to walk to.
+DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party|boat)_[a-z0-9_]+)"')
 # Same prefixes, but no extra walk: Marga starts the trade (trade_jam) and
 # asks for the pie (party_marga_ask) where Wren already stands, and Ottilie
 # gives the rimefin along with her own invitation.
@@ -74,6 +75,14 @@ MINIGAMES = {
     # Coralie's echo game (EchoGame): rounds of about 30 s, tunes of 3 to
     # 12 notes; about 12 rounds on the way to twelve.
     "Coralie's echo game": 12 * 30.0,
+    # Wick's lamplighter's round (LamplighterRound): five lanterns over six
+    # fen rooms against the clock (about 30 s of pure movement); about five
+    # rounds of 90 s, ringing the bell between, to get under his gran's 65.
+    "Wick's lamplighter's round": 5 * 100.0,
+    # Not a minigame, but timed the same way: Hessa's walk out to Lullaby
+    # Point (HessaWalker), four rooms at her pace with a word in three of
+    # them, a few waits while Wren goes back for her, and the way home.
+    "Hessa's walk": 4 * 60.0,
 }
 
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")

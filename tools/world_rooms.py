@@ -209,7 +209,7 @@ def load_rooms():
 # Lantern, ice eyes only open to a frost arrow.
 GATE_TOOLS = {"braziers": "glowmoth_lantern", "eyes": "frostfang_bow"}
 # Plate rooms whose crate only the Tide Hook can drag out of its slot.
-PLATE_HOOK_ROOMS = {"room_4_1.tscn"}
+PLATE_HOOK_ROOMS = {"room_4_1.tscn", "room_-1_1.tscn"}
 
 
 # Regions whose "~" is lava: the Frostfang Bow can't freeze it, so it acts
@@ -539,13 +539,13 @@ def main():
     for coord in SEA_GLASS:
         if not any(c == coord for c, _ in glass):
             problems.append("SEA_GLASS lists %s but it has no sea-glass" % (coord,))
-    # Pearl shards (8, or a chest holding "pearl_shard"): at most twelve, the
+    # Pearl shards (8, or a chest holding "pearl_shard"): exactly twelve, the
     # loose ones within reach. (Chests are checked above.)
     shards = [(coord, (x, y)) for coord in sorted(rooms) for y in range(ROWS) for x in range(COLS)
               if rows_for(rooms[coord], final_items)[y][x] == "8"]
     placed = count_pearl_shards()
-    if placed > PEARL_SHARD_TOTAL:
-        problems.append("%d pearl shards, at most %d" % (placed, PEARL_SHARD_TOTAL))
+    if placed != PEARL_SHARD_TOTAL:
+        problems.append("%d pearl shards, not %d" % (placed, PEARL_SHARD_TOTAL))
     for coord, spot in shards:
         if not any((coord, spot) in st[3] for st in stages):
             problems.append("pearl shard %s %s is never reachable" % (coord, spot))

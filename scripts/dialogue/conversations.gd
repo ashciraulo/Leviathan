@@ -35,6 +35,8 @@ const LATER_PORTRAITS := {"murmur": Art.PORTRAIT_MURMUR_PLAIN}
 
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
+	# Hessa staying on Lullaby Point with Lowe, after her walk.
+	"hessa_point": ["NAME_HESSA", Art.PORTRAIT_HESSA],
 	"corrin": ["NAME_CORRIN", Art.PORTRAIT_CORRIN],
 	"pell": ["NAME_PELL", Art.PORTRAIT_PELL],
 	"nettle": ["NAME_NETTLE", Art.PORTRAIT_NETTLE],
@@ -88,6 +90,8 @@ const TALKS := {
 		{"if": ["lighting_day"], "unless": ["hessa_party_after"], "set": ["hessa_party_after"], "lines": ["HESSA_PARTY_AFTER"]},
 		# The little cap from the lantern-boat on the Ebb Shelf.
 		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
+		# The lamp off the lantern-boat's bow, kept lit twelve years (Gully's ask).
+		{"if": ["gully_boat_ask"], "unless": ["boat_lamp"], "set": ["boat_lamp"], "lines": [["", "NARRATE_WREN_SHOWS_LIST"], "HESSA_BOATFIX_1", ["", "NARRATE_HESSA_FETCHES_LAMP"], "HESSA_BOATFIX_2", "HESSA_BOATFIX_3"]},
 		# The keepers' round: once the Kiln's bell is rung, she sends Wren
 		# round the Tidestones; when every one is read, a new line is cut.
 		{"if": ["read_every_stone"], "unless": ["hessa_carved_wren"], "set": ["hessa_carved_wren"], "lines": ["HESSA_ROUND_DONE_1", "HESSA_ROUND_DONE_2", ["", "NARRATE_HESSA_CARVES"], "HESSA_ROUND_DONE_3"]},
@@ -100,6 +104,11 @@ const TALKS := {
 		# All six found before she asked.
 		{"if": ["seen_wayshell", "found_log_brinewood", "found_log_gloamfen", "found_log_cinder", "found_log_windmere", "found_log_frost", "found_log_verge"], "unless": ["hessa_log_ask"], "set": ["hessa_log_ask", "hessa_log_done"], "give": {"glint": 200}, "lines": [["", "NARRATE_HAND_PAGES"], "HESSA_LOG_EARLY", ["", "NARRATE_HESSA_READS"], "HESSA_LOG_DONE_2", "HESSA_LOG_DONE_3", ["", "NARRATE_GOT_LOG_PURSE"]]},
 		{"if": ["seen_wayshell", "old_one_turned"], "unless": ["hessa_log_ask"], "set": ["hessa_log_ask"], "lines": ["HESSA_LOG_1", "HESSA_LOG_1B", "HESSA_LOG_2"]},
+		# Her walk out to Lullaby Point, to have a word with Lowe; Wren lights
+		# the way (StoryDirector.hessas_walk). Asked once Wren has met Lowe there.
+		{"if": ["hessa_walk_done"], "unless": ["hessa_walk_home"], "set": ["hessa_walk_home"], "lines": ["HESSA_WALK_HOME_1", "HESSA_WALK_HOME_2"]},
+		{"if": ["seen_ending", "lowe_spoke"], "unless": ["hessa_walk_ask"], "set": ["hessa_walk_ask", "hessa_walk"], "lines": ["HESSA_WALK_1", "HESSA_WALK_1B", "HESSA_WALK_2", "HESSA_WALK_2B"]},
+		{"if": ["hessa_walk_ask"], "unless": ["hessa_walk_done"], "set": ["hessa_walk"], "lines": ["HESSA_WALK_AGAIN"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
 		# Once Wren has the Wayshell, Hessa always has a word on where the
 		# next bell is, for anyone who asks her.
@@ -122,9 +131,11 @@ const TALKS := {
 		{"if": ["met_hessa", "entered_hull"], "unless": ["heard_corrin_hull"], "set": ["heard_corrin_hull"], "lines": ["CORRIN_HULL_1", "CORRIN_HULL_2"]},
 		# Grandad's message bottles, washed back in by strange currents (QuestFind).
 		{"if": ["corrin_bottles_ask", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand"], "unless": ["corrin_bottles_done"], "set": ["corrin_bottles_done"], "give": {"glint": 120}, "lines": ["CORRIN_BOTTLES_DONE_1", "CORRIN_BOTTLES_DONE_2", "CORRIN_BOTTLES_DONE_3", ["", "NARRATE_GOT_BOTTLE_PURSE"]]},
-		# All three found before he asked.
+		# All three found before Corrin asked.
 		{"if": ["talked_corrin_quest", "found_bottle_shore", "found_bottle_pools", "found_bottle_strand"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask", "corrin_bottles_done"], "give": {"glint": 120}, "lines": [["", "NARRATE_HAND_BOTTLES"], "CORRIN_BOTTLES_EARLY", "CORRIN_BOTTLES_DONE_2", "CORRIN_BOTTLES_DONE_3", ["", "NARRATE_GOT_BOTTLE_PURSE"]]},
 		{"if": ["talked_corrin_quest", "seen_wayshell"], "unless": ["corrin_bottles_ask"], "set": ["corrin_bottles_ask"], "lines": ["CORRIN_BOTTLES_1", "CORRIN_BOTTLES_1B", "CORRIN_BOTTLES_2"]},
+		# Pell's night bell: the pup's been raiding Corrin's nets.
+		{"if": ["found_seal_pup"], "unless": ["corrin_pup_paid"], "set": ["corrin_pup_paid"], "give": {"glint": 150}, "lines": [["", "NARRATE_HAND_NET"], "CORRIN_PUP_1", "CORRIN_PUP_2", "CORRIN_PUP_3", ["", "NARRATE_GOT_PUP_PURSE"]]},
 		{"if": ["corrin_bottles_ask"], "unless": ["corrin_bottles_done"], "lines": ["CORRIN_BOTTLES_WAITING"]},
 		{"if": ["corrin_bottles_done"], "unless": ["corrin_bottles_after"], "set": ["corrin_bottles_after"], "lines": ["CORRIN_BOTTLES_AFTER"]},
 		{"if": ["talked_corrin_quest", "seen_ending"], "lines": ["CORRIN_END"]},
@@ -142,7 +153,12 @@ const TALKS := {
 		# His lucky shell, dropped by Brinewood's spring (QuestFind).
 		{"if": ["pell_shell_ask", "found_pell_shell"], "unless": ["pell_shell_done"], "set": ["pell_shell_done"], "lines": ["PELL_SHELL_DONE_1", "PELL_SHELL_DONE_2", ["", "NARRATE_GOT_PELL_SHELL"]]},
 		{"if": ["talked_pell_quest", "seen_wayshell"], "unless": ["pell_shell_ask"], "set": ["pell_shell_ask"], "lines": ["PELL_SHELL_1", "PELL_SHELL_1B", "PELL_SHELL_2"]},
+		# The night bell: a seal pup's trail (QuestFind seal_*), once Wren's
+		# back from the Rotting Hull.
+		{"if": ["pell_night_ask", "found_seal_pup"], "unless": ["pell_pup_told"], "set": ["pell_pup_told"], "lines": [["", "NARRATE_PUP_WITH_PELL"], "PELL_PUP_1", "PELL_PUP_2", "PELL_PUP_3"]},
+		{"if": ["heard_pell_bell", "talked_pell_quest"], "unless": ["pell_night_ask"], "set": ["pell_night_ask"], "lines": ["PELL_NIGHT_1", "PELL_NIGHT_1B", "PELL_NIGHT_2", "PELL_NIGHT_2B"]},
 		{"if": ["pell_shell_ask"], "unless": ["pell_shell_done"], "lines": ["PELL_SHELL_WAITING"]},
+		{"if": ["pell_night_ask"], "unless": ["found_seal_pup"], "lines": ["PELL_NIGHT_WAITING"]},
 		{"if": ["talked_pell_quest", "seen_ending"], "lines": ["PELL_END"]},
 		{"if": ["talked_pell_quest", "old_one_turned"], "lines": ["PELL_TURNED"]},
 		{"if": ["pell_gave_pearl"], "lines": ["PELL_CRAB_AGAIN"]},
@@ -184,6 +200,8 @@ const TALKS := {
 		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["lighting_ask", "met_agna"], "unless": ["party_agna"], "set": ["party_agna"], "lines": ["AGNA_PARTY_1", "AGNA_PARTY_2"]},
+		# Pitch and a new lamp hook for the lantern-boat (Gully's ask).
+		{"if": ["gully_boat_ask", "met_agna"], "unless": ["boat_pitch"], "set": ["boat_pitch"], "lines": ["AGNA_BOATFIX_1", "AGNA_BOATFIX_2"]},
 		{"if": ["bram_pot_cast", "met_agna"], "unless": ["agna_pot_told"], "set": ["agna_pot_told"], "lines": ["AGNA_POT_1", "AGNA_POT_2"]},
 		# The Old One's scales: six shed pieces from the puzzle caves (ShedScale)
 		# for a hand-bell, which goes to Nettle.
@@ -274,6 +292,8 @@ const TALKS := {
 		# The last singers: Ansel, her old sorter.
 		{"if": ["sorrel_asked", "ansel_met"], "unless": ["sorrel_ansel"], "set": ["sorrel_ansel"], "lines": ["SORREL_ANSEL_1", "SORREL_ANSEL_2"]},
 		{"if": ["lighting_ask", "sorrel_asked"], "unless": ["party_sorrel"], "set": ["party_sorrel"], "lines": ["SORREL_PARTY_1", "SORREL_PARTY_2"]},
+		# A sail for the lantern-boat, from an old spare kite (not mid-race).
+		{"if": ["gully_boat_ask", "sorrel_paid"], "unless": ["boat_sail", "sorrel_race"], "set": ["boat_sail"], "lines": ["SORREL_BOATFIX_1", "SORREL_BOATFIX_2"]},
 		# The jam trade: Wick's candles for kite cord, for Ferrin.
 		{"if": ["trade_candles", "sorrel_asked"], "unless": ["trade_line"], "set": ["trade_line"], "lines": [["", "NARRATE_HAND_CANDLES"], "SORREL_TRADE_1", "SORREL_TRADE_2", "SORREL_TRADE_2B", ["", "NARRATE_GOT_TRADE_LINE"]]},
 		# The post's last three letters, never sent when it shut.
@@ -297,8 +317,13 @@ const TALKS := {
 		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
 	],
 	# Sister Lowe, alone on Lullaby Point after the ending.
+	"hessa_point": [
+		{"lines": ["HESSA_POINT_STAY"]},
+	],
 	"lowe": [
 		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
+		# Once she's walked Hessa home from the Point (and Hessa has said so).
+		{"if": ["hessa_walk_done", "hessa_walk_home"], "unless": ["lowe_walk_after"], "set": ["lowe_walk_after"], "lines": ["LOWE_WALK_AFTER_1", "LOWE_WALK_AFTER_2"]},
 		# The last singers: four of the Choir who never went home.
 		{"if": ["lowe_singers_ask", "bram_home", "sela_home", "pim_home", "ansel_home"], "unless": ["lowe_singers_done"], "set": ["lowe_singers_done"], "give": {"glint": 300}, "lines": ["LOWE_SINGERS_DONE_1", "LOWE_SINGERS_DONE_2", ["", "NARRATE_LOWE_ROBE"], "LOWE_SINGERS_DONE_3", ["", "NARRATE_GOT_CHOIR_PURSE"]]},
 		# A garden at Lullaby Point: three stubborn plants (QuestFind).
@@ -418,6 +443,13 @@ const TALKS := {
 	# Gully on the Ebb Shelf with the tide held out, and the lantern-boat
 	# the ebb bared (LanternBoat).
 	"gully_ebb": [
+		# Raising the lantern-boat: planks, pitch, a sail and a lamp, from
+		# four friends along the coast (boat_*); then she floats, and goes
+		# home to Saltmarrow (StoryDirector.the_boat_comes_home).
+		{"if": ["gully_boat_ask", "boat_planks", "boat_pitch", "boat_sail", "boat_lamp"], "unless": ["boat_done"], "set": ["boat_done"], "lines": [["", "NARRATE_HAND_BOAT_PARTS"], "GULLY_BOAT_DONE_1", ["", "NARRATE_BOAT_WORK"], ["", "NARRATE_BOAT_FLOATS"], "GULLY_BOAT_DONE_2"]},
+		{"if": ["hessa_saw_cap", "seen_wayshell"], "unless": ["gully_boat_ask"], "set": ["gully_boat_ask"], "lines": ["GULLY_BOAT_1", "GULLY_BOAT_1B", "GULLY_BOAT_2", "GULLY_BOAT_2B"]},
+		{"if": ["gully_boat_ask"], "unless": ["boat_done"], "lines": ["GULLY_BOAT_WAITING"]},
+		{"if": ["boat_done"], "lines": ["GULLY_BOAT_AFTER"]},
 		{"if": ["found_wren_cap"], "lines": ["GULLY_EBB_AFTER"]},
 		{"if": ["gully_ebb_told"], "lines": ["GULLY_EBB_AGAIN"]},
 		{"set": ["gully_ebb_told"], "lines": ["GULLY_EBB_1", "GULLY_EBB_2", "GULLY_EBB_3", "GULLY_EBB_4"]},
@@ -492,6 +524,17 @@ const TALKS := {
 	"find_log_windmere": [{"set": ["found_log_windmere"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_WINDMERE"]}],
 	"find_log_frost": [{"set": ["found_log_frost"], "lines": ["NARRATE_FOUND_LOG", "NARRATE_LOG_FROST"]}],
 	"find_log_verge": [{"set": ["found_log_verge"], "lines": ["NARRATE_FOUND_LOG_SODDEN", "NARRATE_LOG_VERGE"]}],
+	"find_seal_track": [{"set": ["found_seal_track"], "lines": ["NARRATE_FOUND_SEAL_TRACK", "NARRATE_FOUND_SEAL_TRACK_2"]}],
+	"find_seal_bones": [{"set": ["found_seal_bones"], "lines": ["NARRATE_FOUND_SEAL_BONES", "NARRATE_FOUND_SEAL_BONES_2"]}],
+	"find_seal_net": [{"set": ["found_seal_net"], "lines": ["NARRATE_FOUND_SEAL_NET", "NARRATE_FOUND_SEAL_NET_2"]}],
+	"find_seal_pup": [{"set": ["found_seal_pup"], "lines": ["NARRATE_FOUND_SEAL_PUP", "NARRATE_FOUND_SEAL_PUP_2", "NARRATE_FOUND_SEAL_PUP_3"]}],
+	# Wick's dusk bell at Fenmouth, before Wick has explained it.
+	"dusk_bell": [{"lines": ["NARRATE_DUSK_BELL"]}],
+	# The pup at home on the Shore (SealPup).
+	"seal_pup": [
+		{"if": ["pell_pup_told"], "lines": ["NARRATE_PUP_DING"]},
+		{"lines": ["NARRATE_PUP_HOME"]},
+	],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
@@ -516,12 +559,19 @@ const TALKS := {
 	"wick": [
 		{"if": ["wick_asked", "pim_home"], "unless": ["wick_met_pim"], "set": ["wick_met_pim"], "lines": ["WICK_PIM"]},
 		{"if": ["lighting_ask", "wick_asked"], "unless": ["party_wick"], "set": ["party_wick"], "lines": ["WICK_PARTY_1", "WICK_PARTY_2"]},
+		# The lamplighter's round (LamplighterRound): a purse for each time
+		# beaten, in order.
+		{"if": ["wick_round_100"], "unless": ["wick_round_paid_100"], "set": ["wick_round_paid_100"], "give": {"glint": 50}, "lines": ["WICK_ROUND_100_1", ["", "NARRATE_GOT_ROUND_100_PURSE"]]},
+		{"if": ["wick_round_80", "wick_round_paid_100"], "unless": ["wick_round_paid_80"], "set": ["wick_round_paid_80"], "give": {"glint": 100}, "lines": ["WICK_ROUND_80_1", "WICK_ROUND_80_2", ["", "NARRATE_GOT_ROUND_80_PURSE"]]},
+		{"if": ["wick_round_65", "wick_round_paid_80"], "unless": ["wick_round_paid_65"], "set": ["wick_round_paid_65"], "give": {"glint": 200}, "lines": ["WICK_ROUND_65_1", "WICK_ROUND_65_2", ["", "NARRATE_GOT_ROUND_65_PURSE"]]},
 		# The jam trade: Marga's bramble jam for fen candles, for Sorrel.
 		{"if": ["trade_jam", "wick_asked"], "unless": ["trade_candles"], "set": ["trade_candles"], "lines": [["", "NARRATE_HAND_JAM"], "WICK_TRADE_1", "WICK_TRADE_2", "WICK_TRADE_2B", ["", "NARRATE_GOT_TRADE_CANDLES"]]},
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
 		# The Lampless Sink's four braziers, lit at last.
 		{"if": ["wick_gave_jar", "gate_5_3"], "unless": ["wick_saw_sink"], "set": ["wick_saw_sink"], "lines": ["WICK_SINK_DONE_1", "WICK_SINK_DONE_2"]},
+		# The lamplighter's round: told once, ahead of any waiting line.
+		{"if": ["wick_gave_jar", "old_one_turned"], "unless": ["wick_round_ask"], "set": ["wick_round_ask"], "lines": ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B"]},
 		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
 		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
 		{"if": ["wick_gave_jar"], "unless": ["wick_told_sink", "wick_saw_sink"], "set": ["wick_told_sink"], "lines": ["WICK_SINK_1", "WICK_SINK_1B"]},
@@ -562,6 +612,8 @@ const TALKS := {
 			"set": ["rope_promised"],
 			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
 		},
+		# New planks for the lantern-boat on the Ebb Shelf (Gully's ask).
+		{"if": ["gully_boat_ask"], "unless": ["boat_planks"], "set": ["boat_planks"], "lines": ["DUNSTAN_BOATFIX_1", "DUNSTAN_BOATFIX_2"]},
 		# A boat for Tobin, from the driftwood behind Barnacle Wall (QuestFind),
 		# once Wren has said hello to Tobin.
 		{"if": ["dunstan_boat_ask", "found_driftwood"], "unless": ["dunstan_boat_done"], "set": ["dunstan_boat_done"], "lines": [["", "NARRATE_HAND_DRIFTWOOD"], "DUNSTAN_BOAT_DONE_1", ["", "NARRATE_DUNSTAN_CARVES"], "DUNSTAN_BOAT_DONE_2", ["", "NARRATE_GOT_TOY_BOAT"]]},

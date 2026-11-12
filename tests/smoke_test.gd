@@ -26,6 +26,7 @@ func _ready() -> void:
 		_test_room_layouts()
 		_test_game_state()
 		_test_save_load()
+		await _test_old_saves()
 		_test_keys()
 		_test_items()
 		await _test_audio()
@@ -93,10 +94,14 @@ func _ready() -> void:
 		await _test_sorrel()
 		await _test_ottilie()
 		await _test_fishing_book()
+		await _test_seal_trail()
 		await _test_coralie()
 		await _test_echo_game()
 		_test_hessa_log()
 		await _test_lowe_after()
+		await _test_hessa_walk()
+		await _test_boat_raised()
+		await _test_wick_round()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -217,6 +222,45 @@ func _test_game_state() -> void:
 	_check(not GameState.can_hum(), "can't hum at full breath")
 	GameState.damage(99)
 	_check(GameState.is_dead() and GameState.bubbles == 0, "bubbles stop at zero")
+
+
+## Saves written by earlier releases (tests/old_saves, from each release's
+## playthrough) still load: every item is real, the gear worn is owned, the
+## breath matches the pearls and shards, and the game starts in their room.
+func _test_old_saves() -> void:
+	var dir := "res://tests/old_saves"
+	var files := Array(DirAccess.get_files_at(dir)).filter(func(f: String) -> bool: return f.ends_with(".json"))
+	_check(files.size() >= 3, "old saves to load (%d)" % files.size())
+	for file: String in files:
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join(file)))
+		if not parsed is Dictionary:
+			_check(false, "%s parses" % file)
+			continue
+		GameState.reset_new_game()
+		_check(SaveManager._write(TEST_SLOT, parsed) and SaveManager.load_game(TEST_SLOT), "%s loads" % file)
+		_check(not SaveManager.read_summary(TEST_SLOT).is_empty(), "%s shows on the file select" % file)
+		# Read from the file itself: loading quietly drops unknown items, so a
+		# renamed item would otherwise vanish from old saves unnoticed.
+		var saved: Dictionary = parsed["state"]
+		var bad := (saved.get("inventory", {}) as Dictionary).keys().filter(func(id: String) -> bool: return not Items.exists(id))
+		_check(bad.is_empty(), "%s: every item it holds still exists (%s)" % [file, bad])
+		var worn: Dictionary = saved.get("equipped", {})
+		for kind: String in worn:
+			_check(worn[kind] == "" or GameState.equipped_item(kind) == worn[kind], "%s: still wears its %s (%s)" % [file, kind, worn[kind]])
+		var breath := mini(GameState.START_BUBBLES + GameState.item_count("breath_pearl")
+			+ GameState.item_count("pearl_shard") / Items.SHARDS_PER_BUBBLE, GameState.MAX_BUBBLES)
+		_check(GameState.max_bubbles == breath, "%s: %d bubbles for its pearls" % [file, GameState.max_bubbles])
+		var room := GameState.checkpoint_room
+		_check(ResourceLoader.exists("res://rooms/room_%d_%d.tscn" % [room.x, room.y]), "%s: its room %s still exists" % [file, room])
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.6)
+		_check(game.current_room != null and is_instance_valid(game.player) and game.current_room.coord == room,
+			"%s: the game starts there" % file)
+		game.queue_free()
+		await _wait(0.1)
+	SaveManager.delete_save(TEST_SLOT)
+	GameState.reset_new_game()
 
 
 func _test_save_load() -> void:
@@ -6113,6 +6157,56 @@ func _test_overworld_secrets() -> void:
 	GameState.reset_new_game()
 	await _test_sea_glass()
 	await _test_pearl_shards()
+	await _test_progress()
+
+
+## The Progress tab's counts (Completion): every errand flag is one the game
+## sets, every room and dungeon belongs to a region, the totals match the
+## world, and finding things moves the numbers.
+func _test_progress() -> void:
+	var sources := ""
+	for path in ["res://scripts/dialogue/conversations.gd", "res://scripts/story/story_director.gd"]:
+		sources += FileAccess.get_file_as_string(path)
+	var ids := {}
+	for quest: Dictionary in Completion.QUESTS:
+		_check(not ids.has(quest["id"]), "errand %s is listed once" % quest["id"])
+		ids[quest["id"]] = true
+		_check(Completion.REGIONS.has(quest["region"]), "errand %s is in a region" % quest["id"])
+		for key in ["start", "done"]:
+			_check(sources.contains("\"%s\"" % quest[key]), "errand %s's %s flag %s is one the game uses" % [quest["id"], key, quest[key]])
+	for region: String in Completion.REGIONS:
+		var key := "REGION_" + region.to_upper()
+		_check(tr(key) != key, "%s has a name" % region)
+	var unplaced: Array = []
+	for coord: Vector2i in RoomInfo.all():
+		if not Completion.REGIONS.has(Completion.region_of(coord)):
+			unplaced.append(coord)
+	_check(unplaced.is_empty(), "every room, dungeons too, counts toward a region (%s)" % [unplaced])
+	_check(Completion.region_of(Vector2i(10, 10)) == "brinewood" and Completion.region_of(Vector2i(44, 10)) == "saltmarrow",
+		"a dungeon counts toward the region its door stands in")
+	GameState.reset_new_game()
+	var rows := Completion.tally()
+	var all := Completion.totals(rows)
+	_check(all["stones"][1] == Tidestone.CARVINGS.size(), "every carved Tidestone is counted (%d)" % all["stones"][1])
+	_check(all["shards"][1] <= PearlShard.TOTAL, "the shards counted are the ones placed (%d)" % all["shards"][1])
+	_check(all["glass"][1] > 0 and all["chests"][1] > 0 and all["done"][1] == Completion.QUESTS.size(), "sea-glass, chests and errands are all counted")
+	var nothing := true
+	for kind: String in Completion.KINDS:
+		nothing = nothing and all[kind][0] == 0
+	_check(nothing and not rows["saltmarrow"]["seen"], "a new file has found nothing and been nowhere")
+	var quest: Dictionary = Completion.QUESTS[0]
+	GameState.set_flag(quest["start"])
+	GameState.set_flag(Completion.QUESTS[1]["done"])
+	GameState.set_flag("tidestone_read_%d_%d" % [Tidestone.CARVINGS.keys()[0].x, Tidestone.CARVINGS.keys()[0].y])
+	GameState.mark_seen(Vector2i(0, -1))
+	rows = Completion.tally()
+	all = Completion.totals(rows)
+	_check(rows["saltmarrow"]["seen"] and rows[quest["region"]]["underway"][0] == 1 and all["underway"][0] == 1 and all["done"][0] == 1,
+		"an errand asked shows underway, one done shows done, and a room walked shows its region")
+	_check(all["stones"][0] == 1, "a carving read is counted")
+	GameState.set_flag(quest["done"])
+	_check(Completion.totals(Completion.tally())["underway"][0] == 0, "a finished errand stops being underway")
+	GameState.reset_new_game()
 
 
 ## Pearl shards: every fourth adds a breath bubble. Walking over one picks
@@ -6123,7 +6217,12 @@ func _test_pearl_shards() -> void:
 	var total := 0
 	for coord: Vector2i in RoomInfo.in_area(""):
 		total += "".join(RoomInfo.get_room(coord)["rows"]).count("8")
-	_check(total <= PearlShard.TOTAL, "no more than twelve pearl shards lie in the overworld (%d)" % total)
+	# Eleven lie loose; the twelfth is the Smugglers' Vault's prize.
+	var vault := (load("res://rooms/room_-2_0.tscn") as PackedScene).instantiate() as Room
+	if vault.chest_item == "pearl_shard":
+		total += 1
+	vault.free()
+	_check(total == PearlShard.TOTAL, "all twelve pearl shards are out in the world (%d)" % total)
 	GameState.reset_new_game()
 	GameState.give_item("pearl_shard", 3, false)
 	_check(GameState.max_bubbles == GameState.START_BUBBLES, "three shards aren't a bubble yet")
@@ -7425,6 +7524,66 @@ func _test_echo_game() -> void:
 	Conversations.talk("coralie")
 	_check(GameState.item_count("glint") == 50, "fifty glints")
 
+
+## Pell's night bell: after the Hull, Pell asks who rings a bell out on
+## the water at night. A trail of clues, each showing once the last is
+## found, leads to a seal pup, who comes home to the Shore. Pell names her; Corrin pays.
+func _test_seal_trail() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in ["met_hessa", "talked_pell_quest", "talked_corrin_quest", "heard_pell_hull", "heard_corrin_hull"]:
+		GameState.set_flag(flag)
+	_check(first.call("pell") == "PELL_AGAIN", "no night bell before the Hull's bell is back")
+	GameState.set_flag("heard_pell_bell")
+	_check(first.call("pell") == "PELL_NIGHT_1", "then Pell asks who rings a bell out on the water at night")
+	# No trail before Pell asks.
+	var track: Array = StoryDirector.FINDS["seal_track"]
+	var game: Node = await _stand_below(track[0], track[1])
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == "seal_track"), "no tracks before Pell asks")
+	game.queue_free()
+	await _wait(0.1)
+	Conversations.talk("pell")
+	_check(first.call("pell") == "PELL_NIGHT_WAITING", "Pell waits up")
+	# Each clue only once the one before is found.
+	var order := ["seal_track", "seal_bones", "seal_net", "seal_pup"]
+	for i in order.size():
+		var id: String = order[i]
+		_check(GameState.has_flag(StoryDirector.FIND_NEEDS[id]), "%s shows once %s" % [id, StoryDirector.FIND_NEEDS[id]])
+		if i + 1 < order.size():
+			_check(not GameState.has_flag(StoryDirector.FIND_NEEDS[order[i + 1]]), "and %s doesn't yet" % order[i + 1])
+		Conversations.talk("find_" + id)
+	_check(GameState.has_flag(QuestFind.flag_for("seal_pup")), "the pup found")
+	# She's at home on the Shore now.
+	var home: Array = StoryDirector.SEAL_PUP_HOME
+	game = await _stand_below(home[0], home[1])
+	var room: Room = game.current_room
+	_check(room.get_children().filter(func(c: Node) -> bool: return c is SealPup).size() == 1, "the seal pup lives on the Shore")
+	_check(home[1].y <= 8 and room.tile_at(home[1].x, home[1].y) == "." and room.tile_at(home[1].x, home[1].y + 1) == ".", "on dry sand, reachable from below")
+	_check(game.player.try_interact(), "Wren can say hello")
+	await _play_scene(game, 10.0)
+	game.queue_free()
+	await _wait(0.1)
+	_check(Conversations.branch_for("pell").get("lines").has("PELL_PUP_1"), "Pell meets her")
+	Conversations.talk("pell")
+	_check(first.call("pell") == "PELL_AGAIN" and first.call("seal_pup") == "NARRATE_PUP_DING", "and names her Ding")
+	var glints := GameState.item_count("glint")
+	_check(Conversations.branch_for("corrin").get("lines").has("CORRIN_PUP_1"), "Corrin meets the net thief")
+	Conversations.talk("corrin")
+	_check(GameState.item_count("glint") == glints + 150 and first.call("corrin") == "CORRIN_AGAIN", "and pays for a night's sleep, once")
+	# With Pell's shell errand open, the night bell still gets through.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "seen_wayshell", "pell_shell_ask"]:
+		GameState.set_flag(flag)
+	_check(first.call("pell") == "PELL_NIGHT_1", "the night bell asks ahead of the shell's waiting line")
+	Conversations.talk("pell")
+	GameState.set_flag(QuestFind.flag_for("seal_pup"))
+	_check(Conversations.branch_for("pell").get("lines").has("PELL_PUP_1"), "and the pup's hand-in too")
+	# And Corrin's bottles errand doesn't hold up the pup's pay.
+	for flag in ["talked_corrin_quest", "corrin_bottles_ask"]:
+		GameState.set_flag(flag)
+	_check(Conversations.branch_for("corrin").get("lines").has("CORRIN_PUP_1"), "Corrin's waiting for bottles doesn't hide the net thief")
+
+
 ## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a
 ## piece, and a little more when all twelve are hung.
 func _test_coralie() -> void:
@@ -7526,6 +7685,276 @@ func _test_lowe_after() -> void:
 	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_SINGERS_1", "then asks after her last singers")
 	game.queue_free()
 	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## Hessa's walk: after the ending she asks Wren to light her way out to
+## Lullaby Point. She follows the lamp, waits when Wren goes out of sight,
+## crosses only when close, and on the Point has her word with Lowe.
+func _test_hessa_walk() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG, StoryDirector.HEART_VISIT_FLAG, "hessa_log_ask"]:
+		GameState.set_flag(flag)
+	var first := func() -> String: return str(Conversations.branch_for("hessa").get("lines", [""])[0])
+	_check(first.call() == "HESSA_AFTER_END", "no walk before Wren has met Lowe on the Point")
+	GameState.set_flag("lowe_spoke")
+	_check(first.call() == "HESSA_WALK_1", "then Hessa asks Wren to light her way out to Lowe")
+	for line: String in ["HESSA_WALK_1", "HESSA_WALK_1B", "HESSA_WALK_2", "HESSA_WALK_2B", "HESSA_WALK_SHORE", "HESSA_WALK_POOLS_B", "HESSA_WALK_POINT_3", "LOWE_WALK_4", "HESSA_POINT_STAY", "LOWE_WALK_AFTER_2"]:
+		_check(tr(line).length() <= 70, "%s fits the box" % line)
+	var home := Vector2(18 * 16 + 8, 5 * 16 + 12)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, home + StoryDirector.HOME_FROM_HESSA)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var player: Player = game.player
+	player._invuln = 600.0
+	var director: StoryDirector = get_tree().get_first_node_in_group("story_director")
+	var room: Room = game.current_room
+	player.facing = Vector2.UP
+	await _wait(0.1)
+	player.try_interact()
+	await _play_scene(game, 6.0)
+	await _wait(0.2)
+	var walker := director._walker
+	_check(GameState.has_flag(StoryDirector.WALK_FLAG) and is_instance_valid(walker) and _find_kind(room, "hessa") == null, "she leaves her spot and follows")
+	# She follows Wren over open ground.
+	player.global_position = _tile_pos(room, Vector2i(14, 8))
+	var before := walker.global_position.distance_to(player.global_position)
+	await _wait(1.0)
+	_check(walker.global_position.distance_to(player.global_position) < before - 20.0, "she walks after the lamp")
+	# Out of sight, she stops and holds up her own lamp.
+	player.global_position = _tile_pos(room, Vector2i(2, 11))
+	walker.position = Vector2(21 * 16 + 8, 8 * 16 + 10)
+	await _wait(0.6)
+	var stood := walker.position
+	await _wait(0.5)
+	_check(walker.waiting and walker.position == stood, "too far: she waits for Wren to come back")
+	# Leave without her: she stays in the village.
+	player.global_position = _tile_pos(room, Vector2i(11, 12)) + Vector2(0, 12)
+	await _wait(0.8)
+	_check(game.current_room.coord == StoryDirector.SHORE and director._walker == null and director.walk_room == StoryDirector.SALTMARROW, "left behind, she waits at home")
+	player.global_position = _tile_pos(game.current_room, Vector2i(11, 0)) + Vector2(0, -24)
+	await _wait(0.8)
+	room = game.current_room
+	walker = director._walker
+	_check(room.coord == StoryDirector.SALTMARROW and is_instance_valid(walker) and walker.position.distance_to(stood) < 2.0 and _find_kind(room, "hessa") == null, "and she's still waiting where she stood")
+	# Now together, all the way out.
+	var route := [[Vector2i(11, 12), Vector2i.DOWN, Vector2(0, 6)], [Vector2i(23, 6), Vector2i.RIGHT, Vector2(6, 0)], [Vector2i(11, 12), Vector2i.DOWN, Vector2(0, 6)], [Vector2i(23, 9), Vector2i.RIGHT, Vector2(6, 0)]]
+	var beats := ["hessa_walk_shore", "hessa_walk_pools", "hessa_walk_wreck"]
+	for i in route.size():
+		room = game.current_room
+		player.global_position = _tile_pos(room, route[i][0])
+		director._walker.position = player.global_position - room.global_position - Vector2(route[i][1]) * 16.0
+		await _wait(0.1)
+		# Over the edge: the game slides on to the next room.
+		player.global_position += route[i][2] * 2.0
+		await _wait(0.8)
+		if i < beats.size():
+			await _play_scene(game, 6.0)
+			_check(is_instance_valid(director._walker) and GameState.has_flag(beats[i]), "she comes along and has a word (%s)" % beats[i])
+	room = game.current_room
+	var glints := GameState.item_count("glint")
+	var pages := await _play_scene(game, 20.0)
+	_check(room.coord == StoryDirector.LULLABY_POINT and pages >= 12, "on the Point, Hessa and Lowe talk (%d pages)" % pages)
+	_check(GameState.has_flag(StoryDirector.WALK_DONE_FLAG) and not GameState.has_flag(StoryDirector.WALK_FLAG) and GameState.item_count("glint") == glints + StoryDirector.WALK_GLINTS, "the walk's done, and she pays for the oil")
+	var stays := _find_kind(room, "hessa_point")
+	_check(stays != null and director._walker == null and Vector2i(stays.position / Room.TILE).y <= 8, "she stays on the Point with Lowe, above the box")
+	_check(Conversations.branch_for("hessa_point").get("lines") == ["HESSA_POINT_STAY"], "and sends Wren home")
+	_check(Conversations.branch_for("lowe").get("lines")[0] != "LOWE_WALK_AFTER_1", "Lowe keeps her evenings to herself for now")
+	_check(first.call() == "HESSA_WALK_HOME_1", "Hessa has a word about it, back home")
+	Conversations.talk("hessa")
+	_check(Conversations.branch_for("lowe").get("lines")[0] == "LOWE_WALK_AFTER_1", "and then so does Lowe")
+	game.queue_free()
+	await _wait(0.1)
+	# Gone further than the next room without her: she makes her own way home.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, StoryDirector.TOMB_BELL_FLAG, StoryDirector.ROWED_FLAG, StoryDirector.ENDING_FLAG, StoryDirector.DREAM_FLAG, StoryDirector.HEART_VISIT_FLAG, "hessa_log_ask", "lowe_spoke", "hessa_walk_ask"]:
+		GameState.set_flag(flag)
+	_check(first.call() == "HESSA_WALK_AGAIN", "asked again after a walk that came to nothing")
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, home + StoryDirector.HOME_FROM_HESSA)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	player = game.player
+	player._invuln = 600.0
+	director = get_tree().get_first_node_in_group("story_director")
+	Conversations.talk("hessa")
+	await _play_scene(game, 6.0)
+	_check(GameState.has_flag(StoryDirector.WALK_FLAG), "and she sets off again")
+	director._walker.position = Vector2(2 * 16 + 8, 8 * 16 + 10)
+	await _wait(0.1)
+	player.global_position = _tile_pos(game.current_room, Vector2i(11, 12)) + Vector2(0, 12)
+	await _wait(0.8)
+	player.global_position = _tile_pos(game.current_room, Vector2i(23, 6)) + Vector2(12, 0)
+	await _wait(0.8)
+	_check(not GameState.has_flag(StoryDirector.WALK_FLAG) and director._walker == null, "two rooms off without her: she's gone home")
+	# Off the route, she stays at the edge rather than wander off with Wren.
+	GameState.flags[StoryDirector.WALK_FLAG] = true
+	director.walk_room = Vector2i(1, 0)
+	director._walker = HessaWalker.new()
+	director._walker.near = true
+	director._walk_on(Vector2i(2, 0))
+	_check(director.walk_room == Vector2i(1, 0) and GameState.has_flag(StoryDirector.WALK_FLAG), "she won't be led off the way to the Point")
+	# Mantle flies Wren off: the walk's over.
+	director.end_walk()
+	_check(not GameState.has_flag(StoryDirector.WALK_FLAG), "flown off: she makes her own way home")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+
+
+## Raising the lantern-boat: once Wren has shown Hessa the cap, Gully
+## wants her afloat. Planks from Dunstan, pitch from Agna, a sail from
+## Sorrel and Hessa's lamp; then she floats, and rides at Saltmarrow's
+## steps with her lamp lit.
+func _test_boat_raised() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	var first := func(who: String) -> String:
+		var lines: Array = Conversations.branch_for(who).get("lines", [""])
+		return str(lines[0]) if lines[0] is String else str(lines[1])
+	for flag in ["met_hessa", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, "gully_asked", "gully_paid", "gully_ebb_told", "found_wren_cap", "hessa_saw_cap", "met_agna", "agna_gave_sword", "agna_scales_ask", "sorrel_asked", "sorrel_paid", "sorrel_dared_stacks", "hessa_log_ask", "hessa_round_ask"]:
+		GameState.set_flag(flag)
+	_check(first.call("gully_ebb") == "GULLY_EBB_AFTER", "no ask before the Wayshell")
+	GameState.set_flag("seen_wayshell")
+	_check(first.call("gully_ebb") == "GULLY_BOAT_1", "then Gully wants the lantern-boat afloat")
+	for who in ["dunstan", "agna", "sorrel", "hessa"]:
+		_check(not first.call(who).contains("BOATFIX"), "%s has nothing for the boat before Gully asks" % who)
+	Conversations.talk("gully_ebb")
+	_check(first.call("gully_ebb") == "GULLY_BOAT_WAITING", "and waits for the parts")
+	for part: Array in [["dunstan", "DUNSTAN_BOATFIX_1", "boat_planks"], ["agna", "AGNA_BOATFIX_1", "boat_pitch"], ["sorrel", "SORREL_BOATFIX_1", "boat_sail"], ["hessa", "HESSA_BOATFIX_1", "boat_lamp"]]:
+		_check(first.call("gully_ebb") == "GULLY_BOAT_WAITING", "not ready before %s" % part[2])
+		_check(first.call(part[0]) == part[1], "%s gives a hand" % part[0])
+		Conversations.talk(part[0])
+		_check(GameState.has_flag(part[2]) and first.call(part[0]) != part[1], "%s, once" % part[2])
+	for line: String in ["GULLY_BOAT_1", "GULLY_BOAT_1B", "DUNSTAN_BOATFIX_1", "HESSA_BOATFIX_2", "NARRATE_BOAT_WORK", "NARRATE_BOAT_FLOATS", "GULLY_BOAT_DONE_2", "NARRATE_BOAT_HOME", "HESSA_BOAT_HOME_2"]:
+		_check(tr(line).length() <= 70, "%s fits the box" % line)
+	_check(first.call("gully_ebb") == "GULLY_BOAT_DONE_1", "everything back to Gully")
+	Conversations.talk("gully_ebb")
+	_check(GameState.has_flag(StoryDirector.BOAT_DONE_FLAG) and first.call("gully_ebb") == "GULLY_BOAT_AFTER", "she floats, and Gully rows her home")
+	# Home at the harbour steps, lamp lit, and Hessa has her say.
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(18 * 16 + 8, 5 * 16 + 12) + StoryDirector.HOME_FROM_HESSA)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	var homes := room.get_children().filter(func(c: Node) -> bool: return c is BoatHome)
+	_check(homes.size() == 1, "the lantern-boat is moored at Saltmarrow")
+	var at := Vector2i(StoryDirector.BOAT_HOME_AT / Room.TILE)
+	_check(room.tile_at(at.x, at.y) == "~" and room.tile_at(at.x - 1, at.y) == "~" and room.tile_at(at.x, at.y - 1) == "~", "on the harbour water")
+	var pages := await _play_scene(game, 12.0)
+	_check(GameState.has_flag(StoryDirector.BOAT_HOME_FLAG) and pages == 3, "Hessa sees her home (%d pages)" % pages)
+	game.queue_free()
+	await _wait(0.1)
+	# And the Ebb Shelf has only sand where she lay.
+	GameState.set_flag(Tide.HELD_FLAG)
+	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	room = game.current_room
+	_check(_find_kind(room, "gully_ebb") != null and not room.get_children().any(func(c: Node) -> bool: return c is LanternBoat or (c is Prop and c.kind == "W" and not c.is_queued_for_deletion())), "the Shelf's wreck is gone, Gully's still there")
+	game.queue_free()
+	await _wait(0.1)
+	# Floated while Wren watches: she's gone from the sand at once.
+	GameState.clear_flag(StoryDirector.BOAT_DONE_FLAG)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	room = game.current_room
+	_check(room.get_children().any(func(c: Node) -> bool: return c is LanternBoat), "before she floats, she's in the sand")
+	GameState.set_flag(StoryDirector.BOAT_DONE_FLAG)
+	await _wait(0.2)
+	_check(not room.get_children().any(func(c: Node) -> bool: return c is LanternBoat and not c.is_queued_for_deletion()), "once Gully's floated her, she's gone from the Shelf")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+
+
+## Wick's lamplighter's round: ring the dusk bell and the fen's lanterns
+## go out for the round; light all five against the clock. The lanterns'
+## own flags stay as they were; each time beaten earns a purse, in order.
+func _test_wick_round() -> void:
+	GameState.reset_new_game()
+	var flags := ["wick_asked", "wick_gave_jar", "wick_told_sink", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG]
+	for coord: Vector2i in FenLantern.SPOTS:
+		flags.append(FenLantern.flag_for(coord))
+	for flag: String in flags:
+		GameState.set_flag(flag)
+	var first := func() -> String:
+		var lines: Array = Conversations.branch_for("wick").get("lines", [""])
+		return str(lines[0]) if lines[0] is String else str(lines[1])
+	_check(first.call() == "WICK_ROUND_1", "once the Old One's turned, Wick tells of the round")
+	for line: String in ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B", "WICK_ROUND_65_1", "WICK_ROUND_65_2", "NARRATE_DUSK_BELL"]:
+		_check(tr(line).length() <= 70, "%s fits the box" % line)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.DUSK_BELL_AT + Vector2(0, 18))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	game.player._invuln = 600.0
+	var room: Room = game.current_room
+	var bells := room.get_children().filter(func(c: Node) -> bool: return c is DuskBell)
+	_check(bells.size() == 1, "Wick's dusk bell stands at Fenmouth")
+	var tile := Vector2i(StoryDirector.DUSK_BELL_AT / Room.TILE)
+	_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "on open ground, above the box")
+	var bell: DuskBell = bells[0]
+	bell.interact()
+	await _close_dialogue(game)
+	_check(not LamplighterRound.running, "before Wick explains it, the bell's just a bell")
+	Conversations.talk("wick")
+	await _close_dialogue(game)
+	bell.interact()
+	_check(LamplighterRound.running and is_instance_valid(LamplighterRound.current), "rung, the round begins")
+	await _wait(0.5)
+	_check(LamplighterRound.current.elapsed > 0.3, "and the clock runs")
+	# Over to Glowcap Grove: its lantern is out for the round.
+	game.player.global_position = room.global_position + Vector2(-12, 5 * 16 + 8)
+	await _wait(0.8)
+	room = game.current_room
+	var lantern: FenLantern = room.get_children().filter(func(c: Node) -> bool: return c is FenLantern)[0]
+	_check(room.coord == Vector2i(3, 1) and LamplighterRound.running and not lantern.lit, "the next room's lantern is out for the round")
+	lantern.light()
+	_check(lantern.lit and LamplighterRound.lit.has(Vector2i(3, 1)), "and lights again for it")
+	# Back through Fenmouth and south off the fen: the round's off.
+	game.player.global_position = room.global_position + Vector2(Room.SIZE.x + 12, 5 * 16 + 8)
+	await _wait(0.8)
+	_check(game.current_room.coord == StoryDirector.FENMOUTH and LamplighterRound.running, "Fenmouth is part of the round")
+	game.player.global_position = game.current_room.global_position + Vector2(11 * 16 + 8, Room.SIZE.y + 12)
+	await _wait(0.8)
+	_check(not LamplighterRound.running and LamplighterRound.current == null, "off the fen, the round's off")
+	for coord: Vector2i in FenLantern.SPOTS:
+		_check(GameState.has_flag(FenLantern.flag_for(coord)), "lantern %s still lit for keeps" % coord)
+	# A fast round: all five in 60 seconds beats every time.
+	LamplighterRound.begin(game)
+	LamplighterRound.current.elapsed = 60.0
+	for coord: Vector2i in FenLantern.SPOTS:
+		LamplighterRound.lantern_lit(coord)
+	_check(not LamplighterRound.running and LamplighterRound.best() == 60, "all five: the time stands (%d)" % LamplighterRound.best())
+	for tier: int in LamplighterRound.TIERS:
+		_check(GameState.has_flag(LamplighterRound.tier_flag(tier)), "beat %d seconds" % tier)
+	var glints := GameState.item_count("glint")
+	for expect: Array in [["WICK_ROUND_100_1", 50], ["WICK_ROUND_80_1", 100], ["WICK_ROUND_65_1", 200]]:
+		_check(first.call() == expect[0], "Wick pays: %s" % expect[0])
+		Conversations.talk("wick")
+		glints += int(expect[1])
+	_check(GameState.item_count("glint") == glints and not first.call().begins_with("WICK_ROUND"), "every purse paid, once")
+	# A slower round doesn't spoil the best.
+	LamplighterRound.begin(game)
+	LamplighterRound.current.elapsed = 120.0
+	for coord: Vector2i in FenLantern.SPOTS:
+		LamplighterRound.lantern_lit(coord)
+	_check(LamplighterRound.best() == 60, "a slower round keeps the best")
+	await _wait(0.2)
+	game.queue_free()
+	await _wait(0.1)
+	_check(not LamplighterRound.running, "nothing left running")
 	GameState.reset_new_game()
 
 
@@ -7641,7 +8070,7 @@ func _test_errands() -> void:
 	talk.call("ottilie")
 	_check(GameState.item_count("glint") == glints + 100 and first.call("ottilie") == "OTTILIE_AFTER", "and thanks Wren")
 	# A lantern for Murmur's family.
-	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "murmur_met"]:
+	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "wick_round_ask", "murmur_met"]:
 		GameState.set_flag(flag)
 	_check(first.call("wick") == "WICK_MURMUR_1", "Wick wants a lantern for Murmur's family")
 	talk.call("wick")
@@ -8019,6 +8448,8 @@ func _test_small_finds() -> void:
 	for id: String in StoryDirector.FINDS:
 		var spot: Array = StoryDirector.FINDS[id]
 		var tile: Vector2i = spot[1]
+		if StoryDirector.FIND_NEEDS.has(id):
+			GameState.set_flag(StoryDirector.FIND_NEEDS[id])
 		var game: Node = await _stand_below(spot[0], tile)
 		var room: Room = game.current_room
 		_check(room.get_children().any(func(c: Node) -> bool: return c is QuestFind and (c as QuestFind).id == id), "%s lies in room %s" % [id, spot[0]])
@@ -8034,7 +8465,8 @@ func _test_small_finds() -> void:
 		await _wait(0.1)
 	GameState.reset_new_game()
 	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
-	for flag in ["met_hessa", "talked_corrin_quest", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "heard_corrin_hull"]:
+	# (Pell's night bell long since done: _test_seal_trail.)
+	for flag in ["met_hessa", "talked_corrin_quest", "talked_pell_quest", "heard_pell_bell", "heard_pell_hull", "heard_corrin_hull", "pell_night_ask", "found_seal_pup", "pell_pup_told", "corrin_pup_paid"]:
 		GameState.set_flag(flag)
 	_check(first.call("corrin") == "CORRIN_AGAIN" and first.call("pell") == "PELL_AGAIN", "no errands before the Wayshell")
 	GameState.set_flag("seen_wayshell")
@@ -8403,7 +8835,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "wick_round_ask", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
@@ -8691,6 +9123,54 @@ func _test_older_secrets() -> void:
 	_check(ribs.chest_item == "glint" and rib_rows[10][20] == "%" and rib_rows[10][21] == "." and rib_rows[10][22] == "C" and rib_rows[9].substr(21, 2) == "##" and rib_rows[11].substr(21, 2) == "##",
 		"Rib Hollow: a chest in a niche behind a bone barricade")
 	ribs.free()
+	# The Brine Cistern, Sluice Gallery and Smugglers' Vault: a cave run west
+	# of Smugglers' Cut. Two crates on two plates unbar the way on, boulders
+	# seal the gallery's far end, and the vault shuts Wren in with its crew.
+	GameState.reset_new_game()
+	var cut := Room.parse_layout(((load("res://rooms/room_0_1.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(cut[8][0] == "." and cut[9][0] == ".", "Smugglers' Cut opens west to the Brine Cistern")
+	var cistern: Room = (load("res://rooms/room_-1_1.tscn") as PackedScene).instantiate()
+	add_child(cistern)
+	await _wait(0.1)
+	var c_rows := Room.parse_layout(cistern.layout)
+	var c_bars := _child_of(cistern, Bars)
+	var c_crates := _child_of(cistern, Crate)
+	var c_plates := _child_of(cistern, PressurePlate)
+	_check(cistern.cave and cistern.gate == "plates" and c_bars.size() == 2 and c_crates.size() == 2 and c_plates.size() == 2
+		and c_rows[8][23] == "." and c_rows[9][23] == "." and c_rows[5][0] == "." and c_rows[6][0] == ".",
+		"the Brine Cistern: two crates, two plates, barred to the west")
+	# One crate sits at the dead end of a ledge, walled on three sides: only
+	# the Tide Hook drags it out. No hook posts, so nothing can strand Wren.
+	var dry := _walkable_from(c_rows, Vector2i(18, 8))
+	_check(dry.has(Vector2i(5, 5)) and dry.has(Vector2i(19, 3)) and c_rows[3][20] == "K" and c_rows[2][20] == "#" and c_rows[4][20] == "#" and c_rows[3][21] == "#"
+		and not "O" in "".join(c_rows), "the Cistern is one floor; its ledge crate is walled in on three sides")
+	(c_crates[0] as Crate).global_position = (c_plates[0] as Node2D).global_position
+	await _wait(0.2)
+	_check(not (c_bars[0] as Bars).is_open, "one crate isn't enough")
+	(c_crates[1] as Crate).global_position = (c_plates[1] as Node2D).global_position
+	await _wait(0.2)
+	_check((c_bars[0] as Bars).is_open and (c_bars[1] as Bars).is_open, "both plates down, the bars open")
+	cistern.queue_free()
+	GameState.reset_new_game()
+	var sluice := Room.parse_layout(((load("res://rooms/room_-2_1.tscn") as PackedScene).instantiate() as Room).layout)
+	var unbroken := sluice.duplicate()
+	unbroken[2] = unbroken[2].replace("Y", "#")
+	_check(sluice[5][23] == "." and sluice[6][23] == "." and sluice[2].substr(5, 2) == "YY" and sluice[1].substr(5, 2) == ".." and not _walkable_from(unbroken, Vector2i(18, 5)).has(Vector2i(5, 0)),
+		"the Sluice Gallery: boulders seal the way north")
+	var vault: Room = (load("res://rooms/room_-2_0.tscn") as PackedScene).instantiate()
+	add_child(vault)
+	await _wait(0.1)
+	var v_rows := Room.parse_layout(vault.layout)
+	var v_chests := _child_of(vault, Chest)
+	_check(vault.gate == "clear" and vault.chest_hidden and _child_of(vault, Bars).size() == 2 and v_chests.size() == 1 and not (v_chests[0] as Chest).visible
+		and v_rows[12][5] == "." and v_rows[12][6] == "." and v_rows[11].substr(5, 2) == "||", "the Smugglers' Vault: a hidden cache, bars that shut behind Wren")
+	var crew := 0
+	for child in vault.get_children():
+		if child is Enemy:
+			crew += 1
+	_check(crew >= 5, "the vault keeps a crew (%d)" % crew)
+	vault.queue_free()
+	GameState.reset_new_game()
 	# Three shoals out in deep water, walled by rocks so that no glide, even
 	# a steered one, can curve in: the Diver's Helm alone reaches them (the
 	# story thread leaves pearls on them).
