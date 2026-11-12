@@ -7,7 +7,8 @@ extends Node2D
 ## wind streaks over the heights and sand blowing over the dunes, ash and
 ## embers
 ## drifting up off Cinderreach's lava, and buzzards' shadows circling the
-## Ossuary, and the shadows of clouds sliding over the open country. It
+## Ossuary, the shadows of clouds sliding over the open country, sunlight
+## glinting on the water and leaves falling in Brinewood. It
 ## has no collisions and does no harm: it only draws. A room
 ## outside the dungeons adds one (see Room).
 
@@ -21,14 +22,14 @@ const LIZARD := preload("res://assets/ambient/lizard.png")
 
 ## How much of each kind of life a biome has.
 const LIFE := {
-	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2, "clouds": 2},
-	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3, "reeds": 10},
+	"saltmarrow": {"gulls": 3, "fish": 3, "crabs": 4, "gusts": 2, "clouds": 2, "glints": 6},
+	"brinewood": {"gulls": 1, "fish": 3, "butterflies": 5, "mist": 3, "reeds": 10, "leaves": 7},
 	"cinderreach": {"embers": 14, "ash": 40, "lizards": 2},
 	"gloamfen": {"fish": 2, "fireflies": 12, "mist": 4, "reeds": 12},
-	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5, "hares": 2, "reeds": 14, "clouds": 3},
-	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60, "hares": 2, "clouds": 1},
-	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2, "clouds": 2},
-	"ossuary": {"buzzards": 2, "gusts": 4, "lizards": 3, "clouds": 1},
+	"windmere": {"gulls": 4, "butterflies": 2, "gusts": 5, "hares": 2, "reeds": 14, "clouds": 3, "glints": 8},
+	"frostspine": {"gulls": 2, "fish": 2, "gusts": 3, "snow": 60, "hares": 2, "clouds": 1, "glints": 4},
+	"sunken_verge": {"gulls": 3, "fish": 2, "crabs": 3, "gusts": 2, "clouds": 2, "glints": 8},
+	"ossuary": {"buzzards": 2, "gusts": 4, "lizards": 3, "clouds": 1, "glints": 4},
 }
 ## Wind streak colours: sea air is white, the dunes blow sand.
 const GUST_COLOUR := {"ossuary": Color(0.7, 0.55, 0.36), "cinderreach": Color(0.75, 0.7, 0.68)}
@@ -79,6 +80,13 @@ var ash: Array[Dictionary] = []
 var gusts: Array[Dictionary] = []
 ## Shadows of clouds sliding over the open regions with the wind.
 var clouds: Array[Dictionary] = []
+## Sunlight catching the water: a pixel that flares into a little star and
+## goes out, here and there over open water.
+var glints: Array[Dictionary] = []
+const GLINT_TIME := 0.45
+## Leaves let go by the Brinewood's trees, tumbling down on the breeze.
+var leaves: Array[Dictionary] = []
+const LEAF_COLOURS := [Color("#a8cf5c"), Color("#d8bf4e"), Color("#dc8f3c")]
 ## Cloud shadow shapes (three, one above the other): soft-edged lumps,
 ## flat inside so they darken the ground evenly.
 const CLOUD := preload("res://assets/ambient/cloud.png")
@@ -106,10 +114,11 @@ func _ready() -> void:
 	_survey()
 	var life: Dictionary = LIFE.get(_room.biome if _room else "", {})
 	# Under a roof: nothing that needs the open sky (gulls, buzzards, wind,
+	# clouds, sunlight on the water, falling leaves,
 	# falling snow or ash).
 	if _room and _room.cave:
 		life = life.duplicate()
-		for key in ["gulls", "buzzards", "gusts", "snow", "ash", "butterflies", "clouds"]:
+		for key in ["gulls", "buzzards", "gusts", "snow", "ash", "butterflies", "clouds", "glints", "leaves"]:
 			life.erase(key)
 	for i in int(life.get("gulls", 0)):
 		gulls.append(_new_gull(true))
@@ -143,6 +152,11 @@ func _ready() -> void:
 		mist.append(_new_mist(true))
 	for i in int(life.get("gusts", 0)):
 		gusts.append(_new_gust(true))
+	if _water.size() >= 6:
+		for i in int(life.get("glints", 0)):
+			glints.append(_new_glint(true))
+	for i in int(life.get("leaves", 0)):
+		leaves.append(_new_leaf(true))
 	for i in int(life.get("clouds", 0)):
 		clouds.append(_new_cloud(true))
 	for i in int(life.get("ash", 0)):
@@ -236,6 +250,17 @@ func _new_mist(anywhere: bool) -> Dictionary:
 		"speed": _rnd.randf_range(4.0, 8.0), "clock": _rnd.randf() * TAU}
 
 
+## A glint waits a while, then flares on a water tile away from its edges.
+func _new_glint(anywhere: bool) -> Dictionary:
+	return {"pos": _pick(_water).floor(), "age": 0.0, "wait": _rnd.randf_range(0.0, 3.0) if anywhere else _rnd.randf_range(0.8, 3.5)}
+
+
+## A leaf drifting down from above the screen, swinging as it falls.
+func _new_leaf(anywhere: bool) -> Dictionary:
+	return {"pos": Vector2(_rnd.randf_range(-20.0, Room.SIZE.x), _rnd.randf_range(0.0, Room.SIZE.y) if anywhere else -6.0),
+		"fall": _rnd.randf_range(9.0, 15.0), "clock": _rnd.randf() * TAU, "colour": _rnd.randi_range(0, LEAF_COLOURS.size() - 1)}
+
+
 ## A cloud's shadow, coming in from the windward side (or anywhere, at first).
 func _new_cloud(anywhere: bool) -> Dictionary:
 	var x := _rnd.randf_range(-CLOUD_CELL.x * 0.5, Room.SIZE.x) if anywhere else -CLOUD_CELL.x - _rnd.randf_range(0.0, 160.0)
@@ -308,6 +333,18 @@ func _process(delta: float) -> void:
 		m["pos"] = (m["pos"] as Vector2) + Vector2(float(m["speed"]) * delta, 0.0)
 		if (m["pos"] as Vector2).x - (m["size"] as Vector2).x > Room.SIZE.x:
 			m.merge(_new_mist(false), true)
+	for g in glints:
+		if float(g["wait"]) > 0.0:
+			g["wait"] = float(g["wait"]) - delta
+		else:
+			g["age"] = float(g["age"]) + delta
+			if float(g["age"]) > GLINT_TIME:
+				g.merge(_new_glint(false), true)
+	for l in leaves:
+		l["clock"] = float(l["clock"]) + delta
+		l["pos"] = (l["pos"] as Vector2) + Vector2(5.0 + sin(float(l["clock"]) * 1.6) * 12.0, float(l["fall"])) * delta
+		if (l["pos"] as Vector2).y > Room.SIZE.y + 4.0 or (l["pos"] as Vector2).x > Room.SIZE.x + 4.0:
+			l.merge(_new_leaf(false), true)
 	for c in clouds:
 		c["pos"] = (c["pos"] as Vector2) + CLOUD_SPEED * float(c["speed"]) * delta
 		if (c["pos"] as Vector2).x > Room.SIZE.x + 8.0:
@@ -466,7 +503,7 @@ func _move_flutter(b: Dictionary, delta: float) -> void:
 # Drawing
 # --------------------------------------------------------------------------
 
-## Under everything that stands: fish, crabs, the splashes and the shadows
+## Under everything that stands: fish, glints on the water, crabs, the splashes and the shadows
 ## of things in the air.
 func _draw_low() -> void:
 	for f in fish:
@@ -475,6 +512,21 @@ func _draw_low() -> void:
 		var to: Vector2 = f["to"]
 		var flip := to.x < pos.x
 		_blit(_low, FISH, Vector2i(12, 5), Vector2i(frame, 0), pos, flip, Color.WHITE)
+	for g in glints:
+		if float(g["wait"]) > 0.0:
+			continue
+		# A pixel, then a little cross, then a pixel again.
+		var t := float(g["age"]) / GLINT_TIME
+		var at: Vector2 = g["pos"]
+		var white := Color(1, 1, 1, 0.9)
+		_low.draw_rect(Rect2(at, Vector2.ONE), white)
+		if t > 0.25 and t < 0.75:
+			var arm := 2.0 if t > 0.4 and t < 0.6 else 1.0
+			var faint := Color(0.85, 0.95, 1.0, 0.6)
+			_low.draw_rect(Rect2(at - Vector2(arm, 0), Vector2(arm, 1)), faint)
+			_low.draw_rect(Rect2(at + Vector2(1, 0), Vector2(arm, 1)), faint)
+			_low.draw_rect(Rect2(at - Vector2(0, arm), Vector2(1, arm)), faint)
+			_low.draw_rect(Rect2(at + Vector2(0, 1), Vector2(1, arm)), faint)
 	for s in splashes:
 		var frame := mini(int(float(s["age"]) / 0.2), 2)
 		_blit(_low, SPLASH, Vector2i(12, 8), Vector2i(frame, 0), (s["pos"] as Vector2) + Vector2(0, -2), false, Color.WHITE)
@@ -535,7 +587,7 @@ func _draw_reeds() -> void:
 				_low.draw_rect(Rect2(tip.floor() + Vector2(-1, 0), Vector2(2, 3)), head)
 
 
-## Over everything: cloud shadows, gulls, butterflies, fireflies and embers.
+## Over everything: cloud shadows, falling leaves, gulls, butterflies, fireflies and embers.
 func _draw_high() -> void:
 	for c in clouds:
 		_high.draw_texture_rect_region(CLOUD, Rect2((c["pos"] as Vector2).round(), CLOUD_CELL),
@@ -559,6 +611,18 @@ func _draw_high() -> void:
 		var tint: Color = GUST_COLOUR.get(_room.biome if _room else "", Color.WHITE)
 		_high.draw_rect(Rect2(start, Vector2(length, 1)), Color(tint, alpha))
 		_high.draw_rect(Rect2(start + Vector2(length * 0.3, -2).floor(), Vector2(length * 0.4, 1).floor()), Color(tint, alpha * 0.6))
+	for l in leaves:
+		# A little leaf that turns edge-on and back as it tumbles, with a
+		# faint shadow on the ground below so it reads against the grass.
+		var at := (l["pos"] as Vector2).floor()
+		var colour: Color = LEAF_COLOURS[int(l["colour"])]
+		var flat := sin(float(l["clock"]) * 3.0) > -0.3
+		_high.draw_rect(Rect2(at + Vector2(1, 5), Vector2(2, 1)), Color(0.08, 0.1, 0.06, 0.3))
+		if flat:
+			_high.draw_rect(Rect2(at, Vector2(3, 1)), colour)
+			_high.draw_rect(Rect2(at + Vector2(1, 1), Vector2(2, 1)), colour.darkened(0.25))
+		else:
+			_high.draw_rect(Rect2(at + Vector2(1, 0), Vector2(1, 2)), colour.darkened(0.15))
 	for a in ash:
 		var grey := float(a["shade"])
 		var at := (a["pos"] as Vector2).floor()
