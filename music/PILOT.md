@@ -145,15 +145,32 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   tail also smears bar 36's A ring over the first pass's bar 5; harp key 50 sits ~2 dB low (velocity can't fix it).
 
 ## Market Day, the village (2026-11-12)
-- **Template:** `templates\saltmarrow_template8.flp` as it is. `maps/place_village.json` puts the "mandolin" strum on
-  the nylon guitar (Ash's folk palette has no mandolin; Analog Lab has no acoustic one), the whistle on the Meadow Flute,
-  and perc_hand on the frame drum; `maps/place_village_fix.json` sends perc key 61 to the drum a third up and key 62 to
-  the shaker channel. Re-stage the template from the PC before building: an older staged copy still named bass_a2
-  "bass_up". Project files: `projects\place_village_v1..v3.flp` (v3 is final).
+- **Template:** `templates\saltmarrow_template8.flp` as it is. `maps/place_village.json` puts the strum on the nylon
+  guitar (Ash's folk palette has no mandolin; Analog Lab has no acoustic one, so the part is now named "guitar"), the
+  whistle on the Meadow Flute, and perc_hand on the frame drum; `maps/place_village_fix.json` sends perc key 61 to the
+  drum a third up and key 62 to the shaker channel. Re-stage the template from the PC before building: an older staged
+  copy still named bass_a2 "bass_up". Project files: `projects\place_village_v1..v5.flp` (v5 is final).
 - **The Diamond bass under F2:** G1, A1 and C2 read 15-39 c flat on their strongest partial in the v1 gate. The cue's
-  bass moved up to F2..G3, the range Saltmarrow measured, and uses Saltmarrow's fix map unchanged.
-- **Ample Guitar:** about 0.3 dB per velocity step; open G3 (key 55) is ~5 dB hot and gets -4.5 dB in the fix map. The
-  gate's chord-tone tuning read +11 c on short strums (0.25 s notes, windows overlapping the next strum); solo notes
-  in the B section read in tune.
-- **Seam:** the loop's last up-strum rings 0.9 beats instead of 0.45, so the render no longer drops >12 dB at the loop end.
-- v3: every stem on its target, -20.01 LUFS, true peak -5.0 dBTP, seam step 5.9 dB, finalize clean.
+  bass moved up to F2..G3, the range Saltmarrow measured, and uses Saltmarrow's fix map. F#3 (key 54) has two
+  fundamentals (-53 c and +16 c): the Bm fifth takes D3 instead.
+- **Ample Guitar chokes close voicings:** G3-B3-D4 put B3 and D4 on one string, so the B died in ~30 ms and every G
+  chord sounded as a bare fifth (review v3, MAJOR 1; the stem gate can't hear it). The A sections use open-guitar shapes
+  (`STRUM_SHAPES`). About 0.3 dB per velocity step; open G3 (key 55) is hot and gets -7.5 dB in the fix map.
+- **Brightness:** v3's 2-6 kHz share was -19.7 dB (shaker about half). v5: shaker cut at 5 kHz and 3 dB lower, guitar
+  cut at 3.5 kHz: -23 dB. The frame drum rang at 113/141 Hz over the bass: -4 dB bell at 120 Hz.
+- **Seam:** the loop's last up-strum rings 0.9 beats. finalize.py's loop-end check now fails a fall >12 dB only when
+  the 400 ms after the loop end is also >24 dB under the body: staccato cues fall 12-16 dB in their own ring, a real cut
+  (title v1) falls 26 dB to near silence.
+- v5: stems on target (guitar 1 dB under), -20.16 LUFS, true peak -3.9 dBTP, finalize clean.
+
+## Marlo's Stall, the shop (2026-11-12)
+- **Template:** `templates\shop_template.flp` = saltmarrow_template8 with the Emulator II Clarinet on flute_wood and the
+  Emulator II Marimba on reed_concertina (Analog Lab search). No brush samples in FL's packs, so the shaker plays the
+  brushed-snare line (`maps/place_shop.json`, key 38 -> shaker key 60).
+- **Clarinet tuning:** every key read +17 c; the channel PITCH knob at -17 (fix map "pitch") puts it in tune, so
+  Analog Lab follows FL's pitch bend like Kontakt does.
+- **Walking bass:** kept to F2..G3; a root too high to walk up through its chord walks down (root, fifth below,
+  third below).
+- **Bright samples:** both Emulator II presets keep a -17 dB 2-6 kHz share even with 24 dB/oct cuts at 2.2/2.5 kHz.
+- v3: stems on target, -20.05 LUFS, true peak -6.2 dBTP, finalize clean. Bass D3 (key 50) reads -12 c on its
+  strongest partial.

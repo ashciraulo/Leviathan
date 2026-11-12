@@ -40,14 +40,6 @@
    "bass_g3": -2.5
   }
  },
- "mandolin": {
-  "db_per_vel": 0.3,
-  "keys": {
-   "55": {
-    "db": -4.5
-   }
-  }
- },
  "perc_hand": {
   "db_per_vel": 0.3,
   "keys": {
@@ -60,6 +52,14 @@
    "62": {
     "channel": "shaker",
     "play": 60
+   }
+  }
+ },
+ "guitar": {
+  "db_per_vel": 0.3,
+  "keys": {
+   "55": {
+    "db": -7.5
    }
   }
  }

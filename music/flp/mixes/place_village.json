@@ -30,7 +30,7 @@
     }
    ]
   },
-  "mandolin": {
+  "guitar": {
    "insert": 6,
    "target": -30.0,
    "eq": [
@@ -41,7 +41,7 @@
     },
     {
      "shape": "highcut",
-     "freq": 4500,
+     "freq": 3500,
      "db_oct": 12
     }
    ]
@@ -72,6 +72,12 @@
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 120,
+     "gain": -4,
+     "q": 1.0
+    },
+    {
      "shape": "highshelf",
      "freq": 8000,
      "gain": -6
@@ -80,7 +86,7 @@
   },
   "shaker": {
    "insert": 7,
-   "target": -41.0,
+   "target": -44.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -89,7 +95,7 @@
     },
     {
      "shape": "highcut",
-     "freq": 7000,
+     "freq": 5000,
      "db_oct": 12
     }
    ]
@@ -102,5 +108,5 @@
    "db_oct": 12
   }
  ],
- "notes": "Market Day. Built on saltmarrow_template8 (Diamond bass on insert 3). mandolin plays on the nylon guitar (Ash's folk palette has nylon guitar, no mandolin), whistle on the Meadow Flute. perc_hand key 60 = frame drum, 61 = frame drum played a third higher, 62 = shaker (maps/place_village_fix.json). Targets: gated short-term LUFS per stem, 2 dB under Saltmarrow for a -20 LUFS place cue."
+ "notes": "Market Day. Built on saltmarrow_template8 (Diamond bass on insert 3). the strum is a nylon guitar part (Ash's folk palette has nylon guitar, no mandolin), whistle on the Meadow Flute. perc_hand key 60 = frame drum, 61 = frame drum played a third higher, 62 = shaker (maps/place_village_fix.json). Targets: gated short-term LUFS per stem, 2 dB under Saltmarrow for a -20 LUFS place cue. Review v3: shaker high cut 5 kHz and target -3 dB, guitar high cut 3.5 kHz (2-6 kHz share), frame drum -4 dB bell at 120 Hz (its 113/141 Hz ring doubled the bass)."
 }

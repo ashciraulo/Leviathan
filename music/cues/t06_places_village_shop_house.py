@@ -1,7 +1,7 @@
 """Three small places: place_village, place_shop, place_house.
 
 Market Day (place_village): G major, 4/4 at 108, 32 bars, A 8 | A' 8 | B 8 |
-  A'' 8. Mandolin-like pluck strums eighths, tin whistle tune, upright bass,
+  A'' 8. Nylon guitar strums eighths, tin whistle tune, upright bass,
   light hand percussion. B turns lullaby phrase 2 (D C A G, falling) upside
   down and into major: G A C D, rising.
 Marlo's Stall (place_shop): Bb major, 4/4 at 112, swung eighths (62%),
@@ -37,7 +37,7 @@ def low_root(sym, lowest):
 
 # ---------------------------------------------------------------- village
 song = Song("place_village")
-mando = song.part("mandolin", program=25, vel=64)
+mando = song.part("guitar", program=24, vel=64)
 whistle = song.part("whistle", program=78, vel=70)
 bass = song.part("bass_upright", program=32, vel=82)
 perc = song.part("perc_hand", program=0, vel=60)
@@ -57,6 +57,7 @@ TUNE_A3 = "B4:1 D5:1 G5:2 | E5:1 D5:1 C5:2 | B4:1 A4:0.5 B4:0.5 D5:2 | A4:3 r:1 
           "E5:1 G5:1 E5:1 C5:1 | D5:1.5 C5:0.5 A4:1 F#4:1 | G4:4 | r:2 D5:2"
 for start, text in ((0, TUNE_A), (8, TUNE_A2), (16, TUNE_B), (24, TUNE_A3)):
     whistle.line(song.bar(start), bars(text), legato=0.9)
+STRUM_SHAPES = {"G": [50, 55, 59], "C": [52, 55, 60], "D": [54, 57, 62], "Em": [52, 55, 59], "Am": [52, 57, 60]}
 for b, sym in enumerate(CH):
     t = song.bar(b)
     tones = (voicing(sym, 55, 65) or [55])[-3:]
@@ -64,6 +65,10 @@ for b, sym in enumerate(CH):
         tones = [tones[0] - 12 if tones[0] - 12 >= 55 else tones[-1]] + tones
     tones = sorted(tones)  # kept under the whistle's lowest note
     sec = b // 8
+    if sec != 2:
+        # Open-guitar shapes: G3-B3-D4 put B3 and D4 on one string of the sampled guitar,
+        # so one choked the other and the G chord sounded as a bare fifth (review v3, MAJOR 1).
+        tones = STRUM_SHAPES.get(sym, tones)
     if sec in (0, 3):  # strum: down on 1 and 3, light ups between
         for s, v in ((0, 70), (1, 46), (1.5, 52), (2, 66), (3, 46), (3.5, 52)):
             # The loop's last strum rings on across the seam instead of stopping short.
@@ -84,6 +89,8 @@ for b, sym in enumerate(CH):
     cpc, _ = chord(sym)
     want = (cpc + 7) % 12 if (cpc + 7) % 12 != root % 12 else cpc
     fifth = min((m for m in range(root - 9, 56) if m % 12 == want), key=lambda m: abs(m - root - 4))
+    if fifth == 54:  # the Diamond F#3 sample has two fundamentals (-53 c and +16 c): take the chord's third
+        fifth = 50
     if sec == 2:
         bass.note(t, 1.9, root, 80)
         bass.note(t + 2, 1.9, fifth, 70)
@@ -98,7 +105,7 @@ for i, p in enumerate(song.parts):
 song.save()
 if GATE:
     from gate_midi import check
-    for problem in check(song, CH, melody=("whistle",), comp=("mandolin",)):
+    for problem in check(song, CH, melody=("whistle",), comp=("guitar",)):
         print("GATE village:", problem)
 
 # ------------------------------------------------------------------- shop
@@ -138,12 +145,19 @@ for start, text in ((1, "Bb4:1.5 D5:0.5 F5:2 | G5:1 F5:0.5 D5:0.5 Bb4:2 | C5:1.5
 for b, sym in enumerate(CH):
     t = song.bar(b)
     tones = voicing(sym, 53, 70)[:4]
+    last = b == len(CH) - 1  # the loop's last bar rings on across the seam instead of stopping short
     for s in (0.5, 1.5, 2.5, 3.5) if b % 2 else (0, 1.5, 2.5):
-        mar.chord(t + sw(s), 0.35, tones, 58 if s else 64)
-    root = low_root(sym, 34)
-    line = [root, root + 4 if "m" not in sym else root + 3, root + 7, root + 9 if "m" not in sym else root + 10]
+        mar.chord(t + sw(s), 1.0 if last and s == 3.5 else 0.35, tones, 58 if s else 64)
+    # F2..E3 and never above G3: the sampled Diamond bass's measured range (see place_village).
+    # A root too high to walk up through its chord walks down through it instead.
+    root = low_root(sym, 41)
+    third = 3 if "m" in sym.replace("maj", "") else 4
+    line = [root, root + third, root + 7, root + 9 if third == 4 else root + 10]
+    if line[-1] > 55:
+        low3 = root - 12 + third if root - 12 + third >= 41 else root + third
+        line = [root, root - 5, low3, root - 5]
     for k in range(4):  # a walking bass, but stepping, not swinging jazz
-        bass.note(t + k, 0.8, line[k] if b % 2 == 0 else line[3 - k], 84 if k == 0 else 70)
+        bass.note(t + k, 1.0 if last and k == 3 else 0.8, line[k] if b % 2 == 0 else line[3 - k], 84 if k == 0 else 70)
     for s, v in ((1, 46), (3, 50), (sw(3.5), 32)):
         snare.note(t + s, 0.2, 38, v)
 for i, p in enumerate(song.parts):

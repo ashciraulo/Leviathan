@@ -11,9 +11,9 @@
  "loop": true,
  "parts": [
   {
-   "name": "mandolin",
-   "notes": 432,
-   "low": 55,
+   "name": "guitar",
+   "notes": 480,
+   "low": 50,
    "high": 64
   },
   {
