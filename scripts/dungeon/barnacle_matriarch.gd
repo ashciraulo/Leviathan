@@ -300,8 +300,9 @@ func _update_sprite() -> void:
 			frame = FRAME_DEAD
 	_sprite.frame = frame
 	_sprite.flip_h = false
+	var breath := 0.0
 	if mode == Mode.STALK and velocity.length() <= 1.0:
-		_breathe(1.6)
+		breath = _breathe(1.6)
 	# Tell: a gold glow while she winds up.
 	if mode in [Mode.WINDUP, Mode.SPIT_WINDUP]:
 		_jitter(_timer)
@@ -309,7 +310,7 @@ func _update_sprite() -> void:
 	elif mode != Mode.INTRO:
 		_sprite.modulate = Color.WHITE
 	# Plates ride with the body: up when she rears, shaking with her.
-	var lift := -4.0 if mode == Mode.WINDUP else (2.0 if mode == Mode.EXPOSED else 0.0)
+	var lift := breath + (-4.0 if mode == Mode.WINDUP else (2.0 if mode == Mode.EXPOSED else 0.0))
 	var shake := _sprite.position.x - _sprite_origin.x
 	for i in _plates.size():
 		_plates[i].position = PLATE_SPOTS[i] + Vector2(shake, lift)
