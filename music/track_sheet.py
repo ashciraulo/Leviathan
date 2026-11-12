@@ -109,7 +109,7 @@ CUES = [
         "Curious, tiptoeing, a little spooky but safe.", "explore", 3),
     cue("region_brinewood", "Under the Mangrove", "Brinewood, the mangrove forest", "E dorian", 100, "4/4", 56, 0,
         "A 16 | B 8 | A' 16 | C 8 (drums drop out) | A tag 8",
-        ["marimba", "kalimba-like mallet", "wooden flute", "hand drums", "fretless bass", "warm pad"],
+        ["marimba", "kalimba-like mallet", "wooden flute", "hand drums", "upright bass", "warm pad"],
         "Phrase 3's opening rise as the marimba's hook.",
         "Green, damp, busy with life. Gently rhythmic and curious.", "explore", 3),
     cue("dungeon_hull", "The Rotting Hull", "The Rotting Hull (dungeon 1, Point Bell)", "D dorian", 52, "6/8", 48, 0,

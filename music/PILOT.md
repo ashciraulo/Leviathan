@@ -190,3 +190,33 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Review v3 PASS.** Open MINOR: Soft Cello's octave-up layer sits ~+10 c, so its held notes beat at 1.2-1.5 Hz
   (bars 13-24); lower that layer in Analog Lab or the cello 2-3 dB. The gate only checks wobble on struck parts:
   extend it to sustained ones. Village v6 review: PASS with no MINORs.
+
+## Under the Mangrove, Brinewood (2026-11-12)
+- **Template:** `templates\brinewood_template.flp`: the Emulator II Marimba on reed_concertina (marimba, -12), kalimba
+  on guitar_nylon (-12), the Diamond bass, frame drum for the low stroke and Analog Lab "Conga 1" on a new drum_high
+  channel (insert shaker) for the high and slap strokes (keys 60 and 64).
+- **E2 under the tonic:** the Diamond bass has no clean E2, so key 40 plays the F2 sample on a `bass_a2` clone whose
+  PITCH knob takes it down a semitone (gate reads -13 c: two alternating samples either side; inaudible at 82 Hz).
+- **A soft root over the loop end:** a bass stop on the last beat made finalize flag "FL cut the tail".
+- **Review v3 FAIL -> v6 PASS.** Open MINORs: 2-6 kHz share -21.1 (a -6 dB bell at 2.8 kHz on drum_high, marimba
+  2.5 kHz bell to -5.5); the low drum stroke sits level with the bass on downbeats (drum_hand target -33). The conga's
+  slap is the high sample a third up, about 0.115 dB per velocity step.
+
+## The Rotting Hull, dungeon 1 (2026-11-12)
+- **Template:** `templates\hull_template.flp`: Soft Cello on flute, Emulator II Clarinet on choir_pad (PITCH -7),
+  12 Low Strings on strings_low and bell_tower (both +12: it sounds an octave low), Rom2A 30-BLOCK on bell_marrow for
+  the creaks, the frame drum on sub_breath (key 36 plays 53).
+- **12 Low Strings and Soft Cello ignore velocity:** a sway or an accent has to come from voices (full chord on beat
+  1, two notes on beat 2) or from volume automation, never from velocity.
+- **Review v5 FAIL -> v7 PASS.** Open MINORs: the drum still sits +2.5 dB over the bass root on downbeats (target -38
+  or a deeper 70 Hz cut, shorter ring); the sway is only +0.5 dB in the master in A and B (one voice on beat 2); the
+  tuned creaks put D4/F4 against A chords in bars 47-48 (use key 52 on A bars); Soft Cello's B2 is 3.5 dB hot (hold G2
+  or a clone channel at -3.5 dB). The loop seam steps up 4.9 LU.
+
+## Cellar Steps, the cellar (2026-11-12)
+- **Template:** `templates\cellar_template2.flp`, channels named by part. Lush Pizzicato was inharmonic; Analog Lab
+  "C-8 Pizzicato" replaced it. It has no release and cuts dead at the note-off, so every pluck rings just past the
+  next one (gate: 57 of 139 cut in v2, none in v4). The tom plays key 52 for written 45.
+- **The loop:** bars 30-31 stop short, so bar 32 has an E3 bassoon pickup and a tom on 4-and; without it the seam
+  stepped 16.6 dB.
+- v4: gate PASS, stems on target, -18.22 LUFS, true peak -3.4 dBTP, seam step 0.4 dB.

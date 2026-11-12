@@ -41,14 +41,14 @@ def section(b):
 
 slow1 = phrase_items(0, transpose=-12, beat=1.5)  # A F G A on cello, 3 bars
 # A: phrase 1, an answer, phrase 1 again, a different answer that turns home.
-cello.line(song.bar(0), slow1 + seq("E3:3 C3:3", E), legato=0.96)
+cello.line(song.bar(0), slow1 + seq("E3:3 C3:3", E), vel=76, legato=0.96)  # softer entry: the loop seam (v4 +7.4 dB)
 cello.line(song.bar(4), seq("F3:4 E3:2 | D3:3 G3:3 | A3:5 r:1 | E3:6".replace("|", ""), E), vel=76, legato=0.96)
 cello.line(song.bar(8), slow1 + seq("G3:3 E3:3", E), legato=0.96)
 cello.line(song.bar(12), seq("F3:4 D3:2 | A3:3 F3:3 | G3:3 Bb3:3 | C#4:6".replace("|", ""), E), vel=78, legato=0.96)
 # B: the cello holds long notes under the clarinet's tune.
-for b in range(16, 28, 2):
-    tones = voicing(CHORDS[b], 48, 60)
-    cello.note(song.bar(b), song.bar_q * 2 * 0.97, tones[0], 62)
+# One bar at a time and under the clarinet (review v5: a held D3 buried the tune and rubbed the chords).
+for b, p in zip(range(16, 28), seq("A2:1 G2:1 A2:1 A2:1 Bb2:1 A2:1 B2:1 B2:1 A2:1 A2:1 Bb2:1 C#3:1")):
+    cello.note(song.bar(b), song.bar_q * 0.97, p[0], 62)
 clarinet.line(song.bar(16), seq("""
 A3:3 C4:3 | G3:4 E3:2 | F3:2 A3:1 D4:3 | C4:6 |
 D4:3 F4:2 D4:1 | C4:4 A3:2 | B3:3 D4:3 | G3:6 |
@@ -61,12 +61,20 @@ cello.line(song.bar(36), seq("D4:4 F4:2 | D4:3 Bb3:3 | A3:6 | E3:5 r:1".replace(
 
 # Low strings sway: each bar swells in on beat 1 and eases on beat 2.
 for b, sym in enumerate(CHORDS):
-    if section(b) == "BRIDGE":
+    if section(b) == "BRIDGE" and b < 44:
         continue
     tones = voicing(sym, 41, 57)[:3]
+    # 12 Low Strings ignores velocity (review v5), so the sway is built from voices: the bar leans in
+    # with the full chord and eases out to its lower two notes; A' adds the octave on top.
+    if section(b) == "BRIDGE":  # the strings creep back in under the last four bars, one voice at a time
+        n = b - 43
+        strings.chord(song.bar(b), 3 * E * 0.98, tones[:min(n, 3)], 40)
+        strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones[:min(n, 2)], 34)
+        continue
     full = section(b) == "A2"
-    strings.chord(song.bar(b), 3 * E * 0.98, tones, 54 if full else 46)
-    strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones, 40 if full else 34)
+    lean_in = tones + ([tones[0] + 12] if full else [])
+    strings.chord(song.bar(b), 3 * E * 0.98, lean_in, 54 if full else 46)
+    strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones[:2], 40 if full else 34)
 
 # Harp: a single high drip now and then (water through the planks).
 for b, sym in enumerate(CHORDS):
@@ -75,15 +83,18 @@ for b, sym in enumerate(CHORDS):
         harp.note(song.bar(b) + 5 * E, 1.5, top[(b // 3) % len(top)], 44)
 
 # Creaks: slow off-beat knocks; denser in the bridge.
+# Two octaves down and on irregular eighths (review v5: a fixed E6 tok every bar read as a click).
+import random  # noqa: E402
+rng = random.Random(55)
 for b in range(song.bars):
-    hits = [(2 * E, 46)] if b % 2 else [(5 * E, 40)]
-    if section(b) == "BRIDGE":
-        hits = [(E, 52), (2 * E, 40), (4 * E, 48)]
-    for s, v in hits:
-        creak.note(song.bar(b) + s, E * 0.5, 76, v)
+    count = 3 if section(b) == "BRIDGE" else rng.choice((0, 1, 1, 2))
+    for s in sorted(rng.sample(range(1, 6), count)):
+        creak.note(song.bar(b) + s * E, E * 0.5, rng.choice((50, 52, 53)), rng.choice((40, 46, 52)))
 
 # Deep drum on every downbeat, a softer second hit in A' and the bridge.
 for b in range(song.bars):
+    if section(b) == "B" and b % 2 or section(b) == "A" and b % 4 == 3:
+        continue  # some downbeats left empty (review v5: a boom on all 48 read as a thump)
     drum.note(song.bar(b), E, 36, 84)
     if section(b) in ("A2", "BRIDGE"):
         drum.note(song.bar(b) + 3 * E, E, 36, 58)
@@ -93,7 +104,7 @@ for b, sym in enumerate(CHORDS):
     root = 26 + (bass_of(sym) - 2) % 12  # D1..C#2 -> keep in 31..48
     root = root + 12 if root < 31 else root
     if section(b) == "BRIDGE":
-        bass.line(song.bar(b), seq(["D2:6", "D2:3 F2:3", "G2:6", "F2:3 E2:3", "Bb1:6", "C2:6", "A1:6", "C#2:3 E2:3"][b - 40], E),
+        bass.line(song.bar(b), seq(["D2:6", "D2:3 F2:3", "G2:6", "F2:3 E2:3", "Bb1:6", "D2:6", "A1:6", "C#2:3 E2:3"][b - 40], E),
                   vel=70, legato=0.96)
     elif b % 2 == 0:
         bass.note(song.bar(b), song.bar_q * (2 if CHORDS[b + 1] == sym else 1) * 0.97, root, 72)

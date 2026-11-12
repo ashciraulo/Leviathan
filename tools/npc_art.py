@@ -400,7 +400,7 @@ def ide_frames():
 # --------------------------------------------------------------------------
 # Liesl, of the Sunken Verge: a plum headscarf, a green knit shawl over a
 # dusk-coloured dress, a canvas apron, and her broom. Every low tide she
-# walks out to her great-grandmother's drowned door and sweeps the step.
+# walks out to her long-ago gran's drowned door and sweeps the step.
 # --------------------------------------------------------------------------
 LIESL = [
     "................",

@@ -26,9 +26,12 @@ const TEST_SLOT := 2
 const WALKABLE := ".:P=,cbswmegqakxMU&+dt"
 ## Seconds a leg may go without getting closer before it counts as a snag.
 const STALL := 1.2
+## Falls tried per room (spread across the room's edges of gaps and lava).
+const FALL_TRIES := 6
 
 var _failures := PackedStringArray()
 var _legs := 0
+var _falls := 0
 var _game: Node
 var _layouts := {}
 ## Where the enemies stood as the room opened, before the walker cleared them.
@@ -55,7 +58,7 @@ func _ready() -> void:
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "walkerbackup")
 	if _failures.is_empty():
-		print("WALKER PASSED (%d rooms, %d legs)" % [rooms.size(), _legs])
+		print("WALKER PASSED (%d rooms, %d legs, %d falls)" % [rooms.size(), _legs, _falls])
 		get_tree().quit(0)
 	else:
 		print("WALKER FAILED: %d snags in %d legs" % [_failures.size(), _legs])
@@ -123,6 +126,7 @@ func _walk_room(coord: Vector2i, dungeon: String) -> void:
 	await get_tree().physics_frame
 	_check_floor(room, dungeon, walk)
 	_check_entrances(room, dungeon, walk)
+	await _check_falls(room, dungeon, walk)
 	var targets := _targets(room, walk)
 	if OS.get_environment("WALK_TRACE") != "":
 		print("  %s %s: %d targets %s" % [dungeon, coord, targets.size(), targets])
@@ -288,6 +292,76 @@ func _walk(room: Room, dungeon: String, path: Array[Vector2i]) -> bool:
 	_release()
 	if OS.get_environment("WALK_TRACE") != "":
 		print("  %s %s: walked %s -> %s (%d tiles), ended %s" % [dungeon, room.coord, path[0], path[-1], path.size(), player.global_position - room.global_position])
+	return true
+
+
+## Falls: Wren walks off the edge into a gap or a lava pool from up to
+## FALL_TRIES spots around the room, and must climb back out onto solid
+## floor (not into the drop again, not into a wall) and walk on from there.
+## Returns false if Wren ended up out of the room (the room is gone).
+func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> bool:
+	var lips: Array = []
+	for at: Vector2i in walk:
+		for d: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var t := room.raw_tile(at.x + d.x, at.y + d.y)
+			if t in ["_", "^"] and not (room.falls_through and t == "_"):
+				# Wren needs a tile of run-up behind them.
+				if walk.has(at - d):
+					lips.append([at, d])
+				break
+	if lips.is_empty():
+		return true
+	lips.sort_custom(func(a: Array, b: Array) -> bool: return a[0].y * 100 + a[0].x < b[0].y * 100 + b[0].x)
+	var step := maxi(1, lips.size() / FALL_TRIES)
+	var player: Player = _game.player
+	var fell_here := 0
+	for k in range(0, lips.size(), step):
+		var from: Vector2i = lips[k][0]
+		var dir: Vector2i = lips[k][1]
+		_hold_breath()
+		_keep_safe()
+		player.velocity = Vector2.ZERO
+		# A tile back, then a moment standing there so the floor is remembered.
+		player.global_position = _foot(room, from - dir)
+		await _wait(0.6)
+		_steer(Vector2(dir) * 16.0)
+		var fell := false
+		var waited := 0.0
+		while waited < 2.0 and not fell:
+			await get_tree().physics_frame
+			waited += get_physics_process_delta_time()
+			fell = player.state == Player.State.FALL
+		_release()
+		if not fell:
+			# Something in the way (a crate, closed bars, a ledge): not a fall.
+			continue
+		_falls += 1
+		fell_here += 1
+		waited = 0.0
+		while waited < 4.0 and player.state == Player.State.FALL:
+			await get_tree().physics_frame
+			waited += get_physics_process_delta_time()
+		await _wait(0.3)
+		var where := "%s %s: fell in at %s going %s" % [dungeon, room.coord, from, dir]
+		if _game.current_room != room:
+			_fail("%s, and came back in another room" % where)
+			await _goto(room.coord)
+			return false
+		var tile := Vector2i(((player.global_position - room.global_position) / Room.TILE).floor())
+		if player.state == Player.State.FALL:
+			_fail("%s, and is still falling" % where)
+		elif room.raw_tile(tile.x, tile.y) in ["_", "^"]:
+			_fail("%s, and came back on the drop at %s" % [where, tile])
+		else:
+			var free := 0
+			for d: Vector2 in [Vector2(4, 0), Vector2(-4, 0), Vector2(0, 4), Vector2(0, -4)]:
+				if not player.test_move(player.global_transform, d):
+					free += 1
+			if free < 2:
+				_fail("%s, and came back wedged at %s (%d of 4 ways open)" % [where, tile, free])
+	# Every try blocked would mean the check checked nothing.
+	if fell_here == 0:
+		_fail("%s %s: Wren couldn't walk into any of its %d drops" % [dungeon, room.coord, lips.size()])
 	return true
 
 
