@@ -35,8 +35,8 @@ const BOARD := Color("#4a78a8")
 const BOARD_DARK := Color("#34587e")
 
 ## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
-## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*", "log_*" or
-## "seal_*".
+## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*", "log_*",
+## "seal_*" or "gran_*".
 var id := ""
 var _time := 0.0
 
@@ -160,6 +160,22 @@ func _draw() -> void:
 		draw_rect(Rect2(3, -8, 4, 3), Palette.OUTLINE)
 	elif id == "seal_pup":
 		SealPup.draw_pup(self, _time, true)
+	elif id == "gran_candle":
+		# A pewter candlestick on its side, green with salt.
+		draw_rect(Rect2(-7, -5, 14, 5), Palette.OUTLINE)
+		draw_rect(Rect2(-6, -4, 3, 3), GranTable.PEWTER_DARK)
+		draw_rect(Rect2(-3, -3, 8, 1), GranTable.PEWTER)
+		draw_rect(Rect2(2, -3, 2, 1), GLASS_DARK)
+		draw_rect(Rect2(5, -4, 2, 3), GranTable.WAX)
+	elif id == "gran_salt":
+		# A little pewter fish, its back pierced with holes.
+		draw_rect(Rect2(-6, -6, 10, 5), Palette.OUTLINE)
+		draw_rect(Rect2(4, -7, 3, 7), Palette.OUTLINE)
+		draw_rect(Rect2(-5, -5, 8, 3), GranTable.PEWTER)
+		draw_rect(Rect2(5, -6, 1, 5), GranTable.PEWTER_DARK)
+		for x in [-3, -1, 1]:
+			draw_rect(Rect2(x, -5, 1, 1), GranTable.PEWTER_DARK)
+		draw_rect(Rect2(-4, -4, 1, 1), Palette.OUTLINE)
 	elif id == "nameboard":
 		# A long blue board with a few salt-eaten white letters.
 		draw_rect(Rect2(-11, -7, 22, 7), Palette.OUTLINE)

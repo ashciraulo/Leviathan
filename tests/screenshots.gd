@@ -101,6 +101,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=gran_supper: supper at Gran's table.
+	if OS.get_environment("SHOTS_ONLY") == "gran_supper":
+		game.queue_free()
+		await _supper_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=wick_round: the lamplighter's round under way.
 	if OS.get_environment("SHOTS_ONLY") == "wick_round":
 		game.queue_free()
@@ -410,6 +419,7 @@ func _ready() -> void:
 				await _walk_shots()
 				await _boat_home_shot()
 				await _wick_round_shot()
+				await _supper_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2400,6 +2410,36 @@ func _wick_round_shot() -> void:
 	await _wait(0.3)
 	await _capture("quest_29_wick_round")
 	round.stop()
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Supper at Gran's table in Drowned Lane: Liesl, Ide's bread, Gran's
+## candle lit and her place at the head left empty.
+func _supper_shot() -> void:
+	await _wait(0.2)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+	for flag in ["liesl_asked", "liesl_bell_hung", StoryDirector.TURNED_FLAG, "tidebell_belfry", "read_grotto_marks", "liesl_heard_marks", "liesl_table_ask", "table_cup", "found_gran_candle", "found_gran_salt", StoryDirector.SUPPER_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, StoryDirector.LIESL_AT + Vector2(-14, 0))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	var box := _dialogue_box(game)
+	var shot := false
+	for i in 300:
+		if DialogueBox.is_open:
+			var table: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+			if not shot and not table.is_empty() and (table[0] as GranTable).candle_lit:
+				shot = true
+				await _wait(1.6)
+				await _capture("quest_30_gran_supper")
+			box.advance()
+			box.advance()
+		await _wait(0.15)
+		if not Cutscene.active and not DialogueBox.is_open and shot:
+			break
 	game.queue_free()
 	await _wait(0.2)
 

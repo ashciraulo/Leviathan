@@ -58,7 +58,7 @@ ERRAND_TABLES = ("FINDS", "SHED_SCALES", "SIGNAL_STONES", "SURVEY_STAKES")
 # villager: the jam trade's hand-offs, Sorrel's three letters and the
 # invitations for Hessa's lighting day and the parts for the lantern-boat
 # (and the walk back to Gully with them). Each is one more villager to walk to.
-DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party|boat)_[a-z0-9_]+)"')
+DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party|boat|table)_[a-z0-9_]+)"')
 # Same prefixes, but no extra walk: Marga starts the trade (trade_jam) and
 # asks for the pie (party_marga_ask) where Wren already stands, and Ottilie
 # gives the rimefin along with her own invitation.

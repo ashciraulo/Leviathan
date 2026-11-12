@@ -1618,3 +1618,36 @@ TOAST_ROUND_100,"Under a minute forty!"
 TOAST_ROUND_80,Wick's time beaten!
 TOAST_ROUND_65,Gran's time!
 TOAST_ROUND_OFF,The round's off.
+LIESL_TABLE_1,"I went to set Gran's place, like I said. Then I just stood there."
+LIESL_TABLE_1B,"Not one thing of hers to set it with. The sea took the lot that night."
+LIESL_TABLE_2,"Her blue cup. Her candlestick. A little pewter salt cellar, a fish."
+LIESL_TABLE_2B,"Mum said Gran would talk to that fish. Told it all the village news."
+LIESL_TABLE_3,"The sea keeps odd things, keeper. If any of hers turns up..."
+LIESL_TABLE_3B,"Ide's dragged these waters all her life. She might know where to look."
+LIESL_TABLE_WAITING,"A blue cup, a candlestick, a salt fish. I've laid the plates already."
+LIESL_TABLE_DONE_1,"Her cup. Her candlestick. And there's the fish. Hello, you."
+LIESL_TABLE_DONE_2,"Come and sit, keeper. A table's not set till there's someone at it."
+NARRATE_HAND_GRAN_THINGS,"Wren sets the cup, the candlestick and the salt fish in Liesl's hands."
+NARRATE_GRAN_TABLE,"Liesl lays four places. The one at the head she leaves empty."
+LIESL_SUPPER_1,"That's Gran's. Three hundred years she's been waiting on her supper."
+NARRATE_IDE_COMES,Ide comes down the lane with a loaf under her arm.
+IDE_SUPPER_1,"Liesl said to bring bread. She didn't say it was a proper do."
+IDE_SUPPER_2,"Is that my bailing cup? Well. It looks better on a table."
+LIESL_SUPPER_2,"Would you light her candle, keeper? It ought to be your lamp."
+NARRATE_GRAN_CANDLE,Wren lifts the lamp to the wick. Gran's candle takes.
+NARRATE_GRAN_BELL,"Out by the drowned cottage, the little door bell rings once."
+LIESL_SUPPER_BELL,"Did you hear that? She's come up the lane. She knows."
+LIESL_SUPPER_NO_BELL,"Listen to the sea. Quiet as anything. I think she knows."
+LIESL_SUPPER_3,"Gran kept her housekeeping under the hearth. I found it last spring."
+LIESL_SUPPER_4,"It's yours. She'd have paid anyone who brought her cup home."
+NARRATE_GOT_SUPPER_PURSE,Wren got 150 Glints.
+IDE_SUPPER_3,"I'll leave you the bread. Patience wants her bailing. With a bucket."
+LIESL_TABLE_AFTER,"I lay her place every night now. The fish gets all the news."
+IDE_CUP_1,"Liesl's gran's things? She's asked all along the shore. A blue cup?"
+IDE_CUP_2,"I've bailed Patience with a blue cup since I was nine. Out of my nets."
+IDE_CUP_3,"Here. Take it to her, and tell her I'll bring bread."
+NARRATE_GOT_GRAN_CUP,Wren got Gran's blue cup.
+NARRATE_FOUND_GRAN_CANDLE,"A pewter candlestick, green with salt, a stub of wax still in it."
+NARRATE_FOUND_GRAN_CANDLE_2,"The sea carried it all the way round to the wrack. Liesl will know it."
+NARRATE_FOUND_GRAN_SALT,"A little pewter fish, its back pierced with holes. Salt still in it."
+NARRATE_FOUND_GRAN_SALT_2,"It's been listening to the sea for three hundred years."

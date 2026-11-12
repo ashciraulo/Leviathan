@@ -102,6 +102,7 @@ func _ready() -> void:
 		await _test_hessa_walk()
 		await _test_boat_raised()
 		await _test_wick_round()
+		await _test_gran_table()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -8439,6 +8440,82 @@ func _test_nettle_signals() -> void:
 	_check(first.call("nettle") == "NETTLE_NEARLY", "bell and signals: nearly a keeper, even after the turn")
 	Conversations.talk("nettle")
 	_check(first.call("nettle") == "NETTLE_TURNED", "once")
+	GameState.reset_new_game()
+
+
+## Gran's table: once Liesl knows Gran lived, she asks for Gran's things.
+## Ide has the cup; the candlestick and salt fish are finds. Handing them
+## over plays supper in Drowned Lane.
+func _test_gran_table() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var ide_first := func() -> String: return str(Conversations.branch_for("ide").get("lines", [""])[0])
+	for flag in ["liesl_asked", StoryDirector.TURNED_FLAG, "tidebell_belfry", "met_ide_ferry"]:
+		GameState.set_flag(flag)
+	_check(first.call("liesl") == "LIESL_WAITING" and ide_first.call() != "IDE_CUP_1", "no table before Liesl hears of the grotto marks")
+	GameState.set_flag("read_grotto_marks")
+	_check(first.call("liesl") == "LIESL_MARKS_1", "the marks first")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_TABLE_1", "then Liesl asks for Gran's things")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_TABLE_WAITING", "and waits")
+	for id in ["gran_candle", "gran_salt"]:
+		_check(StoryDirector.FIND_NEEDS[id] == "liesl_table_ask", "%s only once she's asked" % id)
+	_check(ide_first.call() == "IDE_CUP_1", "Ide has the blue cup")
+	Conversations.talk("ide")
+	_check(GameState.has_flag("table_cup") and ide_first.call() != "IDE_CUP_1", "and hands it over, once")
+	Conversations.talk("find_gran_candle")
+	_check(first.call("liesl") == "LIESL_TABLE_WAITING", "two of three isn't a table")
+	Conversations.talk("find_gran_salt")
+	GameState.set_flag("liesl_bell_hung")
+	# The table stands in the lane, bare, until supper.
+	var talk_at := StoryDirector.LIESL_AT + Vector2(-14, 0)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tables: Array = room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+	_check(tables.size() == 1 and not (tables[0] as GranTable).set_out, "Liesl's laid the plates")
+	var at := Vector2i(StoryDirector.GRAN_TABLE_AT / 16.0)
+	_check(room.tile_at(at.x, at.y) == "." and room.tile_at(at.x - 1, at.y) == "." and room.tile_at(at.x, at.y - 1) == ".", "the table stands on the lane's dry ground")
+	for spot: Vector2 in [StoryDirector.WREN_SUPPER_AT, StoryDirector.IDE_SUPPER_AT, StoryDirector.LIESL_SUPPER_AT]:
+		var cell := Vector2i(spot / 16.0)
+		_check(cell.y <= 8 and room.tile_at(cell.x, cell.y) == ".", "supper places on the floor (%s)" % cell)
+	var glints := GameState.item_count("glint")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.SUPPER_DONE_FLAG) and pages >= 12, "supper with Gran's things (%d pages)" % pages)
+	_check(GameState.item_count("glint") == glints + StoryDirector.SUPPER_GLINTS, "Gran's housekeeping for Wren")
+	var table: GranTable = tables[0]
+	_check(table.set_out and table.candle_lit and table.bread, "cup, candle lit, fish and Ide's bread")
+	await _wait(4.0)
+	_check(_find_kind(room, "ide") == null, "Ide goes back up the lane to her boat")
+	_check(first.call("liesl") == "LIESL_TABLE_AFTER", "Liesl lays Gran's place every night now")
+	game.queue_free()
+	await _wait(0.2)
+	# Back again: the table's still set, and supper doesn't play twice.
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	tables = game.current_room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+	_check(tables.size() == 1 and (tables[0] as GranTable).candle_lit and not Cutscene.active, "her table stays set")
+	game.queue_free()
+	await _wait(0.2)
+	# A supper the game closed partway through plays on the way back in
+	# (this time without the door bell hung, so Liesl's own words instead).
+	GameState.clear_flag(StoryDirector.SUPPER_DONE_FLAG)
+	GameState.clear_flag("liesl_bell_hung")
+	glints = GameState.item_count("glint")
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.SUPPER_DONE_FLAG) and GameState.item_count("glint") == glints + StoryDirector.SUPPER_GLINTS, "an unfinished supper picks up again")
+	game.queue_free()
+	await _wait(0.2)
 	GameState.reset_new_game()
 
 

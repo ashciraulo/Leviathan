@@ -228,6 +228,9 @@ const TALKS := {
 	# Belfry's bell rings wrong under the channel. Asking sets ide_ferry,
 	# and StoryDirector rows Wren over.
 	"ide": [
+		# Gran's blue cup, for Liesl's table: Ide's bailed her boat with it
+		# for years. (Handing it over is all; she rows Wren next time.)
+		{"if": ["liesl_table_ask"], "unless": ["table_cup"], "set": ["table_cup"], "lines": ["IDE_CUP_1", "IDE_CUP_2", "IDE_CUP_3", ["", "NARRATE_GOT_GRAN_CUP"]]},
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
 		# The jam trade ends here: Ferrin's chart of the far shores.
@@ -248,7 +251,13 @@ const TALKS := {
 		{"if": ["wick_murmur_ask", "liesl_asked"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
 		# The Ebb Grotto's flood marks: a Liesl, three hundred years back.
 		{"if": ["read_grotto_marks", "liesl_asked"], "unless": ["liesl_heard_marks"], "set": ["liesl_heard_marks"], "lines": ["LIESL_MARKS_1", "LIESL_MARKS_1B", "LIESL_MARKS_2", "LIESL_MARKS_3"]},
+		# Gran's table: her cup (Ide has it), candlestick and salt fish
+		# (QuestFind), then supper in the lane (StoryDirector.grans_supper).
+		{"if": ["liesl_table_ask", "table_cup", "found_gran_candle", "found_gran_salt"], "unless": ["gran_supper"], "set": ["gran_supper"], "lines": [["", "NARRATE_HAND_GRAN_THINGS"], "LIESL_TABLE_DONE_1", "LIESL_TABLE_DONE_2"]},
+		{"if": ["liesl_heard_marks"], "unless": ["liesl_table_ask"], "set": ["liesl_table_ask"], "lines": ["LIESL_TABLE_1", "LIESL_TABLE_1B", "LIESL_TABLE_2", "LIESL_TABLE_2B", "LIESL_TABLE_3", "LIESL_TABLE_3B"]},
+		{"if": ["liesl_table_ask"], "unless": ["gran_supper"], "lines": ["LIESL_TABLE_WAITING"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
+		{"if": ["gran_supper_done"], "lines": ["LIESL_TABLE_AFTER"]},
 		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
 		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
@@ -536,6 +545,8 @@ const TALKS := {
 		{"lines": ["NARRATE_PUP_HOME"]},
 	],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
+	"find_gran_candle": [{"set": ["found_gran_candle"], "lines": ["NARRATE_FOUND_GRAN_CANDLE", "NARRATE_FOUND_GRAN_CANDLE_2"]}],
+	"find_gran_salt": [{"set": ["found_gran_salt"], "lines": ["NARRATE_FOUND_GRAN_SALT", "NARRATE_FOUND_GRAN_SALT_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.
