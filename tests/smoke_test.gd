@@ -7194,6 +7194,14 @@ func _test_fishing_book() -> void:
 		if i < FishingHole.GREY_PULLS - 1:
 			_check(hole.state == FishingHole.State.WAITING and not GameState.has_flag("caught_grey"), "and dives again")
 	_check(GameState.has_flag("caught_grey"), "the Old Grey landed in three pulls")
+	# Walking off mid-cast loses the run too.
+	GameState.set_flag(FishingHole.STREAK_FLAG, 4)
+	cast.call("rimefin", 0)
+	game.player.global_position += Vector2(0, -FishingHole.LEAVE - 10)
+	await _wait(0.1)
+	_check(hole.state == FishingHole.State.IDLE and int(GameState.flags.get(FishingHole.STREAK_FLAG, 0)) == 0, "walking off from a cast ends the run")
+	game.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	await _wait(0.1)
 	# Runs: five, then ten, without a loss.
 	GameState.set_flag(FishingHole.STREAK_FLAG, 0)
 	for i in 10:
@@ -7210,7 +7218,7 @@ func _test_fishing_book() -> void:
 	var glints := GameState.item_count("glint")
 	var expect := [["OTTILIE_GREY_1", 250], ["OTTILIE_PERCH_1", 40], ["OTTILIE_EEL_1", 40], ["OTTILIE_STREAK_10_1", 200]]
 	for e: Array in expect:
-		_check(Conversations.branch_for("ottilie").get("lines")[0] == e[0], "Ottilie: %s" % e[0])
+		_check(Conversations.branch_for("ottilie").get("lines").has(e[0]), "Ottilie: %s" % e[0])
 		Conversations.talk("ottilie")
 		glints += int(e[1])
 	_check(GameState.item_count("glint") == glints, "she pays for each (%d)" % GameState.item_count("glint"))
@@ -7224,6 +7232,10 @@ func _test_fishing_book() -> void:
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_BOOK_WAITING", "until the Old Grey's in, she's watching the float")
 	GameState.set_flag("fish_streak_5")
 	_check(Conversations.branch_for("ottilie").get("lines")[0] == "OTTILIE_STREAK_5_1", "five in a row has its own prize")
+	GameState.set_flag("caught_grey")
+	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4B"), "the Old Grey before the reunion: she wishes she could tell Hessa")
+	GameState.set_flag("ottilie_reunion")
+	_check(Conversations.branch_for("ottilie").get("lines").has("OTTILIE_GREY_4"), "after it, she'll collect on their old bet")
 
 
 ## Coralie on Saltmarrow Shore takes sea-glass for her chime, 25 glints a

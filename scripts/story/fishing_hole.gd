@@ -73,6 +73,7 @@ var _splash := 0.0
 ## A landed fish leaping out and flopping on the snow: 0 when there isn't one.
 var _leap := 0.0
 var _leap_to := Vector2.ZERO
+var _leap_kind := "rimefin"
 
 
 func _ready() -> void:
@@ -161,8 +162,10 @@ func interact() -> void:
 
 func _land() -> void:
 	state = State.IDLE
-	# It leaps out onto the snow, Ottilie's side of the hole.
-	_leap_to = Vector2(-22, 2)
+	# It leaps out onto the snow, Ottilie's side of the hole. The Old Grey
+	# only shows himself, and goes back in.
+	_leap_kind = species
+	_leap_to = Vector2.ZERO if species == GREY else Vector2(-22, 2)
 	_leap = 1.0
 	Audio.play_sfx("splash", global_position, 1.2)
 	if not GameState.has_flag(DONE_FLAG):
@@ -183,8 +186,10 @@ func _land() -> void:
 	for n: int in STREAKS:
 		if streak == n and not GameState.has_flag("fish_streak_%d" % n):
 			GameState.set_flag("fish_streak_%d" % n)
-			toast = "TOAST_FISH_STREAK_%d" % n
 			milestone = true
+			# A first catch keeps its own toast; the run's prize still waits.
+			if not first:
+				toast = "TOAST_FISH_STREAK_%d" % n
 	Events.toast.emit(toast)
 	if first or milestone:
 		Audio.play_jingle("jingle_secret")
@@ -211,7 +216,8 @@ func _process(delta: float) -> void:
 				nibbles -= 1
 				state = State.NIBBLE
 				_nibble = NIBBLE_TIME
-				Audio.play_sfx("bubble_pop", global_position, 1.6)
+				# Its own little plip, so it isn't mistaken for a lost fish.
+				Audio.play_sfx("text_blip", global_position, 0.6)
 			elif bite_in <= 0.0:
 				state = State.BITE
 				_window = window_for(species)
@@ -229,6 +235,9 @@ func _process(delta: float) -> void:
 	if state != State.IDLE:
 		var wren := Lantern.player(get_tree())
 		if wren == null or wren.global_position.distance_to(global_position) > LEAVE:
+			# Walking off from a cast counts as losing it, run and all.
+			if book_open():
+				GameState.set_flag(STREAK_FLAG, 0)
 			state = State.IDLE
 	queue_redraw()
 
@@ -249,9 +258,10 @@ func _draw() -> void:
 		var bob := roundf(sin(_time * 3.0) * 0.6)
 		_draw_float(Vector2(0, -3 + bob), false)
 	elif state == State.NIBBLE:
-		# Dipped, but the red still shows: not yet.
+		# Dipped, but the red still shows: not yet. A small ring, no splash.
 		_draw_float(Vector2(0, -1), false)
-		draw_arc(Vector2(0, -2), 2.0, 0.0, TAU, 10, Color(1, 1, 1, 0.5), 1.0)
+		var ring := (NIBBLE_TIME - _nibble) / NIBBLE_TIME
+		draw_arc(Vector2(0, -2), 2.0 + ring * 4.0, 0.0, TAU, 12, Color(1, 1, 1, 0.8 - ring * 0.6), 1.0)
 	elif state == State.BITE:
 		_draw_float(Vector2(0, -2), true)
 	if _splash > 0.0:
@@ -266,7 +276,7 @@ func _draw() -> void:
 		var t := minf((1.0 - _leap) * 1.6, 1.0)
 		var at := _leap_to * t + Vector2(0, -3 - sin(t * PI) * 22.0)
 		var flap := sin(_time * 30.0) * 0.4
-		var look: Array = LOOKS.get(species, LOOKS["rimefin"])
+		var look: Array = LOOKS.get(_leap_kind, LOOKS["rimefin"])
 		var size: float = look[2]
 		draw_set_transform(at, flap + PI, Vector2(1.5, 1.5) * size)
 		var long: float = look[3]
