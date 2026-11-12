@@ -1683,3 +1683,14 @@ MURMUR_CHAPEL_5,"Old Verge coins. They'd want the keeper who brought the song ho
 NARRATE_GOT_SONG_PURSE,Wren got 150 Glints.
 MURMUR_CHAPEL_6,"I'll go back to the fen. I've a lantern to sing to."
 MURMUR_SONG_GO,"When you're ready, keeper. In the chapel, where the Reeds sang it."
+DACE_SONG_1,"The bone-readers had a song for Rib Hollow, child. Struck on the ribs."
+DACE_SONG_1B,"The five along the north wall. Each one rings its own note."
+DACE_SONG_2,"It goes: the deepest first. Climb to the middle. Step down one."
+DACE_SONG_2B,"Then the highest. Then home again, to the deepest."
+DACE_SONG_3,"Ring it right and the hollow sings it back. I'd hear that once more."
+DACE_SONG_WAITING,"Deepest, the middle, down one, the highest, home. Listen to them."
+DACE_SONG_DONE_1,"I heard it from here, child. Through the sand. The hollow sang."
+DACE_SONG_DONE_2,"Sixty years since I last heard it. The readers left this for singers."
+NARRATE_GOT_RIB_PURSE,Wren got 200 Glints.
+NARRATE_RIB_SONG_1,"The hollow takes up the song. Rib after rib, the old bones ring it back."
+NARRATE_RIB_SONG_2,"Far below the dunes, something vast hums along, half asleep."

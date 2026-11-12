@@ -655,61 +655,6 @@ def gully_frames():
     return [idle, breathe, talk]
 
 
-def calf_skull():
-    """The Old One's lost calf (the Calf's Rest, south of Gloamfen): a small
-    whale skull, side on, sunk to the jaw in the fen. A rounded braincase,
-    a short blunt snout with no teeth to speak of, one empty eye, moss and
-    reeds grown over it, and three tiny fen-lights resting on the bone.
-    40x28, foot row 26."""
-    w, h = 40, 28
-    c = [["."] * w for _ in range(h)]
-
-    def ell(cx, cy, rx, ry, ch):
-        for y in range(h):
-            for x in range(w):
-                if ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1.0:
-                    c[y][x] = ch
-
-    # Braincase, then the short snout running out to the left.
-    ell(25.0, 15.0, 12.0, 11.0, "6")
-    for x in range(4, 26):
-        t = (x - 4) / 21.0
-        top = int(round(15 - t * t * 10))
-        for y in range(top, 23):
-            c[y][x] = "6"
-    ell(5.5, 18.0, 3.0, 4.5, "6")                    # the blunt nose
-    # The jaw line, sunk at the water.
-    for x in range(4, 26):
-        c[21][x] = "-"
-    # Eye socket and blowhole.
-    ell(27.0, 12.0, 4.0, 3.5, "e")
-    # Cracks.
-    for i, (x, y) in enumerate([(33, 7), (34, 8), (34, 9), (35, 10)]):
-        c[y][x] = "-"
-    # Moss over the crown and down the side.
-    for x in range(16, 34):
-        for y in range(3, 9):
-            if c[y][x] == "6" and ((x * 7 + y * 3) % 5 < 2 or y < 6):
-                c[y][x] = "m"
-    for (x, y) in [(36, 13), (36, 14), (35, 15), (17, 10), (18, 10)]:
-        if c[y][x] == "6":
-            c[y][x] = "m"
-    # Sunk in fen moss to the jaw, the moss ragged at its edges, and reeds.
-    for x in range(2, w - 2):
-        top = 22 + (1 if (x * 5) % 7 < 3 else 0)
-        bottom = 26 - (1 if x < 5 or x > w - 6 or (x * 3) % 5 == 0 else 0)
-        for y in range(top, bottom):
-            c[y][x] = "X"
-    for x0, top in [(1, 14), (2, 16), (37, 15), (38, 17)]:
-        for y in range(top, 24):
-            c[y][x0] = "X"
-    # Three fen-lights, resting.
-    for (x, y) in [(22, 3), (11, 13), (31, 19)]:
-        c[y][x] = "N"
-        c[y][x + 1] = "N"
-    return ["".join(r) for r in c]
-
-
 def figurehead():
     """The Lantern Wake's figurehead, 24x40, washed up and planted upright in
     the sand at a lean: a keeper carved holding her lamp high, eyes shut,

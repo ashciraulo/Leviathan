@@ -101,6 +101,25 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=calf_skull: the calf's skull at the Calf's Rest, with
+	# Murmur's robe on it.
+	if OS.get_environment("SHOTS_ONLY") == "calf_skull":
+		game.queue_free()
+		await _calf_skull_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=rib_song: Rib Hollow's ribs ringing for Dace's song.
+	if OS.get_environment("SHOTS_ONLY") == "rib_song":
+		game.queue_free()
+		await _rib_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=reeds_song: Murmur sings in the Drowned Chapel.
 	if OS.get_environment("SHOTS_ONLY") == "reeds_song":
 		game.queue_free()
@@ -474,6 +493,8 @@ func _ready() -> void:
 				await _wick_round_shot()
 				await _supper_shot()
 				await _reeds_shot()
+				await _rib_shot()
+				await _calf_skull_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2479,6 +2500,53 @@ func _wick_round_shot() -> void:
 	await _wait(0.3)
 	await _capture("quest_29_wick_round")
 	round.stop()
+	game.queue_free()
+	await _wait(0.2)
+
+
+## The calf's skull at the Calf's Rest (drawn like its kin on the dunes),
+## Murmur's grey robe folded on its crest.
+func _calf_skull_shot() -> void:
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in ["found_calf_rest", "murmur_left_robe"]:
+		GameState.set_flag(flag)
+	var tile: Vector2i = StoryDirector.CALF_REST[Vector2i(7, 3)]
+	GameState.set_checkpoint(Vector2i(7, 3), Vector2(tile) * 16.0 + Vector2(8, 34))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	game.player.facing = Vector2.UP
+	await _wait(1.6)
+	await _capture("quest_33_calf_skull")
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Dace's song on Rib Hollow's ribs: two notes struck, their rings of light
+## spreading (deep wide, high small).
+func _rib_shot() -> void:
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in [StoryDirector.ENDING_FLAG, "dace_sat", RibChime.ASK_FLAG]:
+		GameState.set_flag(flag)
+	var tile: Vector2i = StoryDirector.RIB_TILES[0]
+	GameState.set_checkpoint(StoryDirector.RIB_HOLLOW, Vector2(tile) * 16.0 + Vector2(8, 30))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var ribs: Array = game.current_room.get_children().filter(func(c: Node) -> bool: return c is RibChime)
+	ribs.sort_custom(func(a: RibChime, b: RibChime) -> bool: return a.index < b.index)
+	(ribs[1] as RibChime).ring()
+	await _wait(0.3)
+	game.player.facing = Vector2.UP
+	game.player.try_interact()
+	await _wait(0.25)
+	await _capture("quest_32_rib_song")
 	game.queue_free()
 	await _wait(0.2)
 

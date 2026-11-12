@@ -29,7 +29,8 @@ func _process(delta: float) -> void:
 
 
 func _draw_robe() -> void:
-	var at := Vector2(-1, -23)
+	# Draped over the rim of the crest, at the back of the skull.
+	var at := Vector2(-28, -38)
 	_robe.draw_rect(Rect2(at - Vector2(1, 1), Vector2(14, 6)), Palette.OUTLINE)
 	_robe.draw_rect(Rect2(at, Vector2(12, 4)), Color("#9aa2bc"))
 	_robe.draw_rect(Rect2(at, Vector2(12, 1)), Color("#c4cad8"))

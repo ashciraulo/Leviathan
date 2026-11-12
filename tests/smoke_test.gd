@@ -106,6 +106,7 @@ func _ready() -> void:
 		await _test_gran_table()
 		await _test_pad_tour()
 		await _test_reeds_song()
+		await _test_rib_song()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -8517,7 +8518,7 @@ func _test_challenge_talk() -> void:
 	var steps := [
 		["sorrel", ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid"], "SORREL_STACKS_1", "chest_7_-4_20_2", "SORREL_STACKS_DONE_1", "SORREL_AFTER"],
 		["wick", ["wick_asked", "fen_lanterns_lit", "wick_gave_jar"], "WICK_SINK_1", "gate_5_3", "WICK_SINK_DONE_1", "WICK_AFTER"],
-		["dace", ["dace_sat"], "DACE_RING_1", "gate_8_2", "DACE_RING_DONE_1", "DACE_AGAIN"],
+		["dace", ["dace_sat", RibChime.ASK_FLAG, RibChime.SUNG_FLAG, "dace_song_paid"], "DACE_RING_1", "gate_8_2", "DACE_RING_DONE_1", "DACE_AGAIN"],
 	]
 	for step: Array in steps:
 		GameState.reset_new_game()
@@ -8946,6 +8947,72 @@ func _test_reeds_song() -> void:
 	_check(_find_kind(game.current_room, "murmur") != null, "Murmur's back in the fen")
 	game.queue_free()
 	await _wait(0.2)
+	GameState.reset_new_game()
+
+
+## Dace's bone-readers' song: after the ending, the five ribs along Rib
+## Hollow's north wall ring; struck in the song's order the hollow sings.
+func _test_rib_song() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in [StoryDirector.ENDING_FLAG, "dace_sat", "dace_told_ring", "dace_saw_ring"]:
+		GameState.set_flag(flag)
+	_check(first.call("dace") == "DACE_SONG_1", "Dace tells of the bone-readers' song")
+	# No ribs ring before Dace asks.
+	var game: Node = await _stand_below(StoryDirector.RIB_HOLLOW, StoryDirector.RIB_TILES[0])
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is RibChime), "the ribs are quiet before Dace asks")
+	game.queue_free()
+	await _wait(0.1)
+	Conversations.talk("dace")
+	_check(first.call("dace") == "DACE_SONG_WAITING", "and waits to hear it")
+	game = await _stand_below(StoryDirector.RIB_HOLLOW, StoryDirector.RIB_TILES[0])
+	var room: Room = game.current_room
+	var ribs: Array = room.get_children().filter(func(c: Node) -> bool: return c is RibChime)
+	_check(ribs.size() == 5, "five ribs ring")
+	for tile: Vector2i in StoryDirector.RIB_TILES:
+		_check(room.tile_at(tile.x, tile.y) == "U" and room.tile_at(tile.x, tile.y + 1) == ".", "a rib at %s, with floor before it" % tile)
+	# The deepest is not the first, and the song's notes climb as it says.
+	var pitches: Array = RibChime.PITCHES
+	_check(pitches[RibChime.SONG[0]] == pitches.min() and pitches[RibChime.SONG[3]] == pitches.max(), "deepest first, the highest fourth")
+	var sorted := pitches.duplicate()
+	sorted.sort()
+	_check(pitches[RibChime.SONG[1]] == sorted[2] and pitches[RibChime.SONG[2]] == sorted[1] and RibChime.SONG[4] == RibChime.SONG[0], "the middle, down one, home")
+	var strike := func(i: int) -> bool:
+		var tile: Vector2i = StoryDirector.RIB_TILES[i]
+		game.player.global_position = room.global_position + Vector2(tile) * 16.0 + Vector2(8, 30)
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		return game.player.try_interact()
+	# West to east is wrong.
+	for i in 5:
+		_check(await strike.call(i), "Wren strikes rib %d" % i)
+	_check(not GameState.has_flag(RibChime.SUNG_FLAG), "west to east isn't the song")
+	# A wrong note partway, then the song.
+	for i in [1, 0, 4]:
+		await strike.call(i)
+	_check(RibChime.heard.is_empty(), "a wrong note forgets the start")
+	# The deepest again partway starts the song over from that note.
+	for i in [1, 0, 1]:
+		await strike.call(i)
+	_check(RibChime.heard == [1], "the deepest starts it over")
+	for i: int in RibChime.SONG.slice(1):
+		await strike.call(i)
+	_check(GameState.has_flag(RibChime.SUNG_FLAG), "the song, struck right")
+	var chimes := get_tree().get_nodes_in_group("rib_chimes")
+	_check(chimes.size() == 5 and not chimes.any(func(r: Node) -> bool: return r.is_in_group("interactable")), "sung, there's nothing left to strike")
+	_check(chimes.all(func(r: Node) -> bool: return r.process_mode == Node.PROCESS_MODE_ALWAYS), "the ribs ring on through the narration")
+	var pages := await _play_scene(game, 20.0)
+	_check(pages >= 2 and not Cutscene.active, "the hollow sings it back (%d pages)" % pages)
+	game.queue_free()
+	await _wait(0.1)
+	game = await _stand_below(StoryDirector.RIB_HOLLOW, StoryDirector.RIB_TILES[0])
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is RibChime) and not Cutscene.active, "once sung, the ribs are quiet again")
+	game.queue_free()
+	await _wait(0.1)
+	var glints := GameState.item_count("glint")
+	_check(first.call("dace") == "DACE_SONG_DONE_1", "Dace heard it")
+	Conversations.talk("dace")
+	_check(GameState.item_count("glint") == glints + 200 and first.call("dace") == "DACE_AGAIN", "and pays, once")
 	GameState.reset_new_game()
 
 
