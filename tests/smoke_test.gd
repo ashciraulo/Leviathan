@@ -8518,9 +8518,11 @@ func _test_older_secrets() -> void:
 	_check(cistern.cave and cistern.gate == "plates" and c_bars.size() == 2 and c_crates.size() == 2 and c_plates.size() == 2
 		and c_rows[8][23] == "." and c_rows[9][23] == "." and c_rows[5][0] == "." and c_rows[6][0] == ".",
 		"the Brine Cistern: two crates, two plates, barred to the west")
+	# One crate sits at the dead end of a ledge, walled on three sides: only
+	# the Tide Hook drags it out. No hook posts, so nothing can strand Wren.
 	var dry := _walkable_from(c_rows, Vector2i(18, 8))
-	_check(not dry.has(Vector2i(5, 5)), "its water splits it: the west bank needs the hook, the bow or the cloak")
-	_check(c_rows[5][8] == "O" and c_rows[5][9] == "." and c_rows[6][16] == "O" and c_rows[6][15] == ".", "a hook post on each bank, with floor to land on before it")
+	_check(dry.has(Vector2i(5, 5)) and dry.has(Vector2i(19, 3)) and c_rows[3][20] == "K" and c_rows[2][20] == "#" and c_rows[4][20] == "#" and c_rows[3][21] == "#"
+		and not "O" in "".join(c_rows), "the Cistern is one floor; its ledge crate is walled in on three sides")
 	(c_crates[0] as Crate).global_position = (c_plates[0] as Node2D).global_position
 	await _wait(0.2)
 	_check(not (c_bars[0] as Bars).is_open, "one crate isn't enough")
@@ -8531,8 +8533,8 @@ func _test_older_secrets() -> void:
 	GameState.reset_new_game()
 	var sluice := Room.parse_layout(((load("res://rooms/room_-2_1.tscn") as PackedScene).instantiate() as Room).layout)
 	var unbroken := sluice.duplicate()
-	unbroken[1] = unbroken[1].replace("Y", "#")
-	_check(sluice[5][23] == "." and sluice[6][23] == "." and sluice[1].substr(5, 2) == "YY" and not _walkable_from(unbroken, Vector2i(18, 5)).has(Vector2i(5, 0)),
+	unbroken[2] = unbroken[2].replace("Y", "#")
+	_check(sluice[5][23] == "." and sluice[6][23] == "." and sluice[2].substr(5, 2) == "YY" and sluice[1].substr(5, 2) == ".." and not _walkable_from(unbroken, Vector2i(18, 5)).has(Vector2i(5, 0)),
 		"the Sluice Gallery: boulders seal the way north")
 	var vault: Room = (load("res://rooms/room_-2_0.tscn") as PackedScene).instantiate()
 	add_child(vault)
