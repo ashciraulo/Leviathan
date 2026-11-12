@@ -74,6 +74,20 @@ def read_png(path):
     return width, height, rows
 
 
+def f32(x):
+    """x rounded to a 32-bit float, as Godot's Color holds it."""
+    return struct.unpack("<f", struct.pack("<f", x))[0]
+
+
+def luminance(r, g, b):
+    """Color.get_luminance() as Godot works it out, in 32-bit floats, so a
+    colour right on a threshold lands on the same side as in the game."""
+    weights = (f32(0.2126), f32(0.7152), f32(0.0722))
+    total = f32(weights[0] * f32(r / 255.0))
+    total = f32(total + f32(weights[1] * f32(g / 255.0)))
+    return f32(total + f32(weights[2] * f32(b / 255.0)))
+
+
 def body_colour(path):
     """The colour most of the sheet's body is, as Enemy.body_colour finds it:
     the first of the most common, reading row by row."""
@@ -85,9 +99,9 @@ def body_colour(path):
     for row in rows:
         for x in range(width):
             r, g, b, a = row[x * 4:x * 4 + 4]
-            if a / 255.0 < MIN_ALPHA:
+            if f32(a / 255.0) < MIN_ALPHA:
                 continue
-            luma = 0.2126 * r / 255.0 + 0.7152 * g / 255.0 + 0.0722 * b / 255.0
+            luma = luminance(r, g, b)
             if luma < MIN_LUMA or luma > MAX_LUMA:
                 continue
             key = (r, g, b, a)

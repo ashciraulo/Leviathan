@@ -117,15 +117,27 @@ func _ready() -> void:
 ## Fells the room's boss as its last blow would, then measures the frames
 ## while it goes down. Prints a row with the area "<dungeon>-defeat".
 func _measure_defeat(coord: Vector2i, dungeon: String) -> void:
-	var boss := get_tree().get_first_node_in_group("boss") as Enemy
-	if boss == null or boss.dying:
-		return
+	var boss := get_tree().get_first_node_in_group("boss")
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
 		player._invuln = 600.0
-	boss.hp = 0
-	Feel.final_blow(boss.get_parent(), boss.global_position)
-	boss._die()
+	# Each falls the way its own last blow fells it: Vael doesn't die, he
+	# stops and listens; the Heart doesn't fall, it sleeps (with the credits
+	# kept from rolling, so the tour goes on).
+	var keep_credits := DreamingHeart.roll_credits
+	if boss is CantorVael and not (boss as Enemy).dying:
+		(boss as Enemy).hp = 0
+		Feel.final_blow(boss.get_parent(), boss.global_position)
+		(boss as CantorVael)._listen()
+	elif boss is DreamingHeart and (boss as DreamingHeart).mode != DreamingHeart.Mode.SLEEP:
+		DreamingHeart.roll_credits = false
+		(boss as DreamingHeart)._sleep()
+	elif boss is Enemy and not (boss as Enemy).dying:
+		(boss as Enemy).hp = 0
+		Feel.final_blow(boss.get_parent(), boss.global_position)
+		(boss as Enemy)._die()
+	else:
+		return
 	var total := 0.0
 	var worst := 0.0
 	var calls := 0.0
@@ -142,6 +154,7 @@ func _measure_defeat(coord: Vector2i, dungeon: String) -> void:
 	print("WEB PERF ROW %d,%d %s-defeat %.2f %.2f %.0f %d %d" % [coord.x, coord.y, dungeon,
 			total / DEFEAT_FRAMES, worst, calls / DEFEAT_FRAMES, _lights(), get_tree().get_node_count()])
 	Feel.reset()
+	DreamingHeart.roll_credits = keep_credits
 
 
 ## A room's first visit can open a dialogue, which pauses the game until a
