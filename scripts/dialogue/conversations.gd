@@ -35,6 +35,8 @@ const LATER_PORTRAITS := {"murmur": Art.PORTRAIT_MURMUR_PLAIN}
 
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
+	# Hessa staying on Lullaby Point with Lowe, after her walk.
+	"hessa_point": ["NAME_HESSA", Art.PORTRAIT_HESSA],
 	"corrin": ["NAME_CORRIN", Art.PORTRAIT_CORRIN],
 	"pell": ["NAME_PELL", Art.PORTRAIT_PELL],
 	"nettle": ["NAME_NETTLE", Art.PORTRAIT_NETTLE],
@@ -100,6 +102,11 @@ const TALKS := {
 		# All six found before she asked.
 		{"if": ["seen_wayshell", "found_log_brinewood", "found_log_gloamfen", "found_log_cinder", "found_log_windmere", "found_log_frost", "found_log_verge"], "unless": ["hessa_log_ask"], "set": ["hessa_log_ask", "hessa_log_done"], "give": {"glint": 200}, "lines": [["", "NARRATE_HAND_PAGES"], "HESSA_LOG_EARLY", ["", "NARRATE_HESSA_READS"], "HESSA_LOG_DONE_2", "HESSA_LOG_DONE_3", ["", "NARRATE_GOT_LOG_PURSE"]]},
 		{"if": ["seen_wayshell", "old_one_turned"], "unless": ["hessa_log_ask"], "set": ["hessa_log_ask"], "lines": ["HESSA_LOG_1", "HESSA_LOG_1B", "HESSA_LOG_2"]},
+		# Her walk out to Lullaby Point, to have a word with Lowe; Wren lights
+		# the way (StoryDirector.hessas_walk). Asked once Wren has met Lowe there.
+		{"if": ["hessa_walk_done"], "unless": ["hessa_walk_home"], "set": ["hessa_walk_home"], "lines": ["HESSA_WALK_HOME_1", "HESSA_WALK_HOME_2"]},
+		{"if": ["seen_ending", "lowe_spoke"], "unless": ["hessa_walk_ask"], "set": ["hessa_walk_ask", "hessa_walk"], "lines": ["HESSA_WALK_1", "HESSA_WALK_1B", "HESSA_WALK_2", "HESSA_WALK_2B"]},
+		{"if": ["hessa_walk_ask"], "unless": ["hessa_walk_done"], "set": ["hessa_walk"], "lines": ["HESSA_WALK_AGAIN"]},
 		{"if": ["seen_ending"], "lines": ["HESSA_AFTER_END"]},
 		# Once Wren has the Wayshell, Hessa always has a word on where the
 		# next bell is, for anyone who asks her.
@@ -297,8 +304,13 @@ const TALKS := {
 		{"set": ["sorrel_asked"], "lines": ["SORREL_1", "SORREL_1B", "SORREL_2", "SORREL_2B", "SORREL_3"]},
 	],
 	# Sister Lowe, alone on Lullaby Point after the ending.
+	"hessa_point": [
+		{"lines": ["HESSA_POINT_STAY"]},
+	],
 	"lowe": [
 		{"unless": ["lowe_spoke"], "set": ["lowe_spoke"], "lines": ["LOWE_END_1", "LOWE_END_2", "LOWE_END_3", "LOWE_END_4"]},
+		# Once she's walked Hessa home from the Point.
+		{"if": ["hessa_walk_done"], "unless": ["lowe_walk_after"], "set": ["lowe_walk_after"], "lines": ["LOWE_WALK_AFTER_1", "LOWE_WALK_AFTER_2"]},
 		# The last singers: four of the Choir who never went home.
 		{"if": ["lowe_singers_ask", "bram_home", "sela_home", "pim_home", "ansel_home"], "unless": ["lowe_singers_done"], "set": ["lowe_singers_done"], "give": {"glint": 300}, "lines": ["LOWE_SINGERS_DONE_1", "LOWE_SINGERS_DONE_2", ["", "NARRATE_LOWE_ROBE"], "LOWE_SINGERS_DONE_3", ["", "NARRATE_GOT_CHOIR_PURSE"]]},
 		# A garden at Lullaby Point: three stubborn plants (QuestFind).

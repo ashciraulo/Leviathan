@@ -20,6 +20,8 @@ const LETTERS := {
 ## they wander left and right of where they stand (0 = they stay put).
 const KINDS := {
 	"hessa": {"texture": Art.HESSA, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
+	# Hessa staying on Lullaby Point with Lowe after her walk (StoryDirector).
+	"hessa_point": {"texture": Art.HESSA, "frames": 3, "near": 2, "talk": 2, "wander": 0.0},
 	"corrin": {"texture": Art.VILLAGER_CORRIN, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	"pell": {"texture": Art.VILLAGER_PELL, "frames": 5, "near": 0, "talk": 2, "wander": 28.0},
 	"marga": {"texture": Art.VILLAGER_MARGA, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},

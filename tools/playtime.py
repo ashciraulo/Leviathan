@@ -74,6 +74,10 @@ MINIGAMES = {
     # Coralie's echo game (EchoGame): rounds of about 30 s, tunes of 3 to
     # 12 notes; about 12 rounds on the way to twelve.
     "Coralie's echo game": 12 * 30.0,
+    # Not a minigame, but timed the same way: Hessa's walk out to Lullaby
+    # Point (HessaWalker), four rooms at her pace with a word in three of
+    # them, a few waits while Wren goes back for her, and the way home.
+    "Hessa's walk": 4 * 60.0,
 }
 
 OVERWORLD_ENEMIES = set("csbmweqtgdA0a")
