@@ -889,7 +889,8 @@ func _draw_front() -> void:
 ## The water closing round Wren as they swim: it hides their legs.
 func _draw_waterline() -> void:
 	var cut := -_swim_depth * 0.5 - 1.0
-	var water := Color("#1c4a5c")
+	var room := _room_now()
+	var water := room.deep_colour() if room else Color("#1c4a5c")
 	_front.draw_rect(Rect2(-9, cut, 18, _swim_depth + 6.0), water)
 	var bob := sin(_anim_time * 9.0 + _state_time * 3.0) * 1.0
 	_front.draw_line(Vector2(-9, cut + bob * 0.3), Vector2(9, cut - bob * 0.3), Color(0.75, 0.92, 0.95, 0.8), 1.0)

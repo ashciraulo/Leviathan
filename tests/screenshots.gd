@@ -57,6 +57,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=atlas: every overworld screen, native size, HUD hidden
+	# (screenshots/atlas/<x>_<y>.png), to stitch into one map of the world.
+	if OS.get_environment("SHOTS_ONLY") == "atlas":
+		await _atlas_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=motion: a few seconds of frames from one screen per
 	# region (screenshots/motion/<name>_NN.png), for judging what moves.
 	if OS.get_environment("SHOTS_ONLY") == "motion":
@@ -3658,3 +3667,34 @@ func _motion_shots(game: Node) -> void:
 			image.save_png(dir.path_join("%s_%02d.png" % [shot[1], i]))
 			await _wait(0.1)
 		print("Saved motion %s" % shot[1])
+
+
+func _atlas_shots(game: Node) -> void:
+	var dir := _out_dir.path_join("atlas")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var coords: Array = RoomInfo.all().keys().filter(func(c: Vector2i) -> bool: return str(RoomInfo.get_room(c).get("dungeon", "")) == "")
+	coords.sort()
+	for coord: Vector2i in coords:
+		var rows: PackedStringArray = RoomInfo.rows_now(coord)
+		var best := Vector2i(-1, -1)
+		var best_d := 1e9
+		for y in rows.size():
+			for x in rows[y].length():
+				if rows[y][x] == ".":
+					var d := Vector2(x - 12, y - 7).length()
+					if d < best_d:
+						best_d = d
+						best = Vector2i(x, y)
+		if best.x < 0:
+			continue
+		GameState.set_checkpoint(coord, Vector2(best.x * Room.TILE + 8, best.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		await _wait(1.0)
+		for layer in game.find_children("*", "CanvasLayer", true, false):
+			(layer as CanvasLayer).visible = false
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join("%d_%d.png" % [coord.x, coord.y]))
+		for layer in game.find_children("*", "CanvasLayer", true, false):
+			(layer as CanvasLayer).visible = true
+	print("Saved atlas (%d screens)" % coords.size())
