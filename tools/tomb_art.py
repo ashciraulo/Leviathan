@@ -56,39 +56,47 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """Packed sand over flagstones. One even sand on every variant (no
-    lighter tile to checker the floor), scattered grit, now and then the
-    edge of a buried flagstone showing through in a short broken line, and
-    a chip of bone here and there."""
+    """Old square flagstones, one to a tile, so their joints run straight
+    across the whole barrow floor. Each stone is worn soft at the edges,
+    and sand has drifted into one of its corners, burying the joint there;
+    the corner differs from tile to tile."""
     rnd = random.Random(6100 + seed)
-    base = SAND[2]
-    px = blank(base)
-    for _ in range(14):
-        x, y = rnd.randrange(T), rnd.randrange(T)
-        px[y][x] = rnd.choice((SAND[1], SAND[1], SAND[3], SAND[3], SAND[0]))
-    # Soft drifts: a few lighter, wind-laid streaks.
-    for _ in range(2):
-        y = rnd.randrange(2, T - 2)
-        x0 = rnd.randrange(0, 10)
-        for x in range(x0, min(T, x0 + rnd.randrange(3, 6))):
-            if px[y][x] == base:
-                px[y][x] = SAND[1]
-    # A buried flagstone's edge, half covered: a broken line, an L at most.
-    if seed in (0, 2):
-        y = rnd.randrange(4, 12)
-        x0, x1 = rnd.randrange(1, 5), rnd.randrange(9, 15)
-        for x in range(x0, x1):
-            if rnd.random() < 0.75:
+    px = blank(SAND[2])
+    for y in range(T):
+        for x in range(T):
+            if y == 0 or x == 0:
                 px[y][x] = SAND[4]
-                if px[y + 1][x] == base:
-                    px[y + 1][x] = SAND[1]
-        if seed == 2:
-            for yy in range(y - rnd.randrange(2, 4), y):
-                px[yy][x0] = SAND[4]
-    if seed == 3:
-        for (x, y) in ((5, 6), (6, 6), (7, 7), (11, 11)):
-            px[y][x] = BONE[1]
-        px[7][6] = BONE[3]
+            elif y == 1 or x == 1:
+                px[y][x] = SAND[1]
+            elif y == T - 1 or x == T - 1:
+                px[y][x] = SAND[3]
+    # Wear: a few pits and a hairline crack.
+    for _ in range(4):
+        x, y = rnd.randrange(3, T - 2), rnd.randrange(3, T - 2)
+        px[y][x] = SAND[3]
+    x, y = rnd.randrange(4, 11), rnd.randrange(4, 11)
+    for _ in range(4):
+        px[y][x] = SAND[4]
+        x += rnd.choice((1, 1, 0))
+        y += rnd.choice((1, 0, -1))
+        if not (2 <= x < T - 1 and 2 <= y < T - 1):
+            break
+    # A drift of sand banked into one corner, over the joint.
+    corner = [(0, 0), (T, 0), (0, T), (T, T)][seed]
+    cx, cy = corner
+    r = rnd.uniform(8.0, 10.0)
+    for y in range(T):
+        for x in range(T):
+            d = ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2) ** 0.5 / r
+            if d < 0.65:
+                px[y][x] = SAND[0] if d < 0.4 else SAND[1]
+            elif d < 1.0 and (x * 3 + y * 5) % 4 < (2 if d < 0.82 else 1):
+                px[y][x] = SAND[1]
+    # Grit blown across the stone.
+    for _ in range(5):
+        x, y = rnd.randrange(2, T - 1), rnd.randrange(2, T - 1)
+        if px[y][x] == SAND[2]:
+            px[y][x] = rnd.choice((SAND[1], SAND[4]))
     return px
 
 

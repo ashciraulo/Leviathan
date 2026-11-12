@@ -48,25 +48,35 @@ def blank(color=CLEAR):
 
 
 def floor_tile(seed):
-    """The palate: soft ridged flesh, now and then a glowing vein. The
-    ridges are gentle waves with a period of one tile, so they run unbroken
-    from tile to tile across the whole floor instead of stepping like brick."""
+    """The palate: broad soft ridges of flesh, one to a tile, lit along
+    their upper slope and shadowed down into the trough before the next,
+    with wet glints on the crests and pores in the flesh between. The ridge
+    is a wave that repeats every tile across, so it runs unbroken over the
+    whole floor instead of stepping like brick."""
     rnd = random.Random(7100 + seed)
     px = blank(GUM[2])
+    shade = {0: GUM[4], 1: GUM[3], 2: GUM[1], 3: GUM[1], 4: GUM[0], 14: GUM[3], 15: GUM[3]}
     for y in range(T):
         for x in range(T):
-            ridge = (y + int(round(1.5 * math.sin(x * math.pi / 8)))) % 8
-            if ridge == 0:
-                px[y][x] = GUM[3]
-            elif ridge == 1:
-                px[y][x] = GUM[1]
-    for _ in range(4):
-        px[rnd.randrange(T)][rnd.randrange(T)] = GUM[4]
+            a = x * math.pi / 8
+            r = (y + int(round(1.4 * math.sin(a) + 0.6 * math.sin(2 * a + 1.0)))) % T
+            if r in shade:
+                px[y][x] = shade[r]
+                if r == 4 and (x + seed * 5) % 4:
+                    px[y][x] = GUM[1]
+            if r == 3 and (x * 5 + seed * 3) % 13 == 0:
+                px[y][x] = hex_color("#F8D0D4")     # a wet glint on the crest
+    # Pores and soft mottling in the flesh between ridges.
+    for _ in range(6):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        if px[y][x] == GUM[2]:
+            px[y][x] = rnd.choice((GUM[3], GUM[3], GUM[1]))
     if seed == 3:
-        # A short fold in the flesh.
-        for x in range(4, 11):
-            px[9][x] = GUM[4]
-            px[8][x] = GUM[1]
+        # A short crease in the flesh.
+        for x in range(5, 10):
+            if px[10][x] == GUM[2]:
+                px[10][x] = GUM[4]
+                px[9][x] = GUM[1]
     return px
 
 
