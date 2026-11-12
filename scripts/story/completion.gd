@@ -35,6 +35,7 @@ const QUESTS := [
 	# Brinewood
 	{"id": "gully_strongbox", "region": "brinewood", "start": "gully_asked", "done": "gully_paid"},
 	{"id": "gully_lanterns", "region": "brinewood", "start": "gully_lanterns_ask", "done": "gully_lanterns_done"},
+	{"id": "lantern_boat", "region": "brinewood", "start": "gully_boat_ask", "done": "boat_done"},
 	# Cinderreach
 	{"id": "agna_scales", "region": "cinderreach", "start": "agna_scales_ask", "done": "agna_bell_cast"},
 	{"id": "bram_chimes", "region": "cinderreach", "start": "bram_chimes_ask", "done": "bram_pot_cast"},
@@ -42,6 +43,7 @@ const QUESTS := [
 	{"id": "wick_jar", "region": "gloamfen", "start": "wick_asked", "done": "wick_gave_jar"},
 	{"id": "murmur_lantern", "region": "gloamfen", "start": "wick_murmur_ask", "done": "murmur_lantern_lit"},
 	{"id": "lampless_sink", "region": "gloamfen", "start": "wick_told_sink", "done": "wick_saw_sink"},
+	{"id": "reeds_song", "region": "gloamfen", "start": "murmur_song_ask", "done": "reed_song_done"},
 	# Windmere Heights
 	{"id": "sorrel_race", "region": "windmere", "start": "sorrel_asked", "done": "sorrel_paid"},
 	{"id": "sorrel_letters", "region": "windmere", "start": "sorrel_letters", "done": "sorrel_letters_paid"},
@@ -53,8 +55,10 @@ const QUESTS := [
 	# Sunken Verge
 	{"id": "liesl_bell", "region": "sunken_verge", "start": "liesl_asked", "done": "liesl_bell_hung"},
 	{"id": "ide_board", "region": "sunken_verge", "start": "ide_board_ask", "done": "ide_board_done"},
+	{"id": "grans_table", "region": "sunken_verge", "start": "liesl_table_ask", "done": "gran_supper_done"},
 	# Ossuary Dunes
 	{"id": "bone_ring", "region": "ossuary", "start": "dace_told_ring", "done": "dace_saw_ring"},
+	{"id": "rib_song", "region": "ossuary", "start": "dace_song_ask", "done": "dace_song_paid"},
 ]
 
 const KINDS := ["underway", "done", "shards", "stones", "glass", "chests"]

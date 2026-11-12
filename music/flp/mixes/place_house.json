@@ -1,0 +1,78 @@
+{
+ "cue": "place_house",
+ "lufs": -20.0,
+ "parts": {
+  "musicbox": {
+   "insert": 4,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 250,
+     "db_oct": 12
+    },
+    {
+     "shape": "highshelf",
+     "freq": 2500,
+     "gain": 6.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 12000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "box_shine": {
+   "insert": 1,
+   "target": -42.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 1200,
+     "db_oct": 12
+    }
+   ]
+  },
+  "piano_felt": {
+   "insert": 5,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "cello": {
+   "insert": 2,
+   "target": -32.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "notes": "Lamplight. templates\\house_template2.flp = lullaby_template with Analog Lab I Felt It (felt piano) on the old harp channel and Soft Cello on the old choir_oo channel (Sad Day Cello scattered 22 c and jumped 3 dB note to note); the music box is the lullaby's 23 Celesta with the Full Range Glockenspiel shine (box_shine doubles each pluck and rings past the next one)."
+}

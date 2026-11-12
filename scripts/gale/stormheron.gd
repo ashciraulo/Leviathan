@@ -258,13 +258,14 @@ func _die() -> void:
 	_sprite.frame = FRAME_GROUNDED
 	Audio.play_sfx("heron_cry", global_position, 0.6)
 	for i in 4:
-		_flash = 0.1
+		_shudder_flash(0.1)
 		Feel.shake(2.0)
 		await get_tree().create_timer(0.25).timeout
 		if not is_inside_tree():
 			return
 	# The storm breaks, and it lifts away on the last of the wind.
 	_sprite.frame = FRAME_FLY
+	_dissolve()
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "position", position + Vector2(60.0 * _facing, -150), 1.6).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(self, "modulate:a", 0.0, 1.6)

@@ -58,7 +58,7 @@ ERRAND_TABLES = ("FINDS", "SHED_SCALES", "SIGNAL_STONES", "SURVEY_STAKES")
 # villager: the jam trade's hand-offs, Sorrel's three letters and the
 # invitations for Hessa's lighting day and the parts for the lantern-boat
 # (and the walk back to Gully with them). Each is one more villager to walk to.
-DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party|boat)_[a-z0-9_]+)"')
+DELIVERY_FLAG = re.compile(r'"((?:trade|letter|party|boat|table|song)_[a-z0-9_]+)"')
 # Same prefixes, but no extra walk: Marga starts the trade (trade_jam) and
 # asks for the pie (party_marga_ask) where Wren already stands, and Ottilie
 # gives the rimefin along with her own invitation.
@@ -79,6 +79,10 @@ MINIGAMES = {
     # fen rooms against the clock (about 30 s of pure movement); about five
     # rounds of 90 s, ringing the bell between, to get under his gran's 65.
     "Wick's lamplighter's round": 5 * 100.0,
+    # Dace's bone-readers' song (RibChime): the walk out to Rib Hollow from
+    # the Tomb (about 90 s), then working five notes out by ear and a few
+    # tries at the order (about 2 minutes).
+    "Dace's song on the ribs": 90.0 + 120.0,
     # Not a minigame, but timed the same way: Hessa's walk out to Lullaby
     # Point (HessaWalker), four rooms at her pace with a word in three of
     # them, a few waits while Wren goes back for her, and the way home.

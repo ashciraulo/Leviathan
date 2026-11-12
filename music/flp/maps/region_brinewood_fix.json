@@ -1,0 +1,76 @@
+{
+ "bass_upright": {
+  "vel_cap": 112,
+  "db_per_vel": 0.097,
+  "keys": {
+   "41": {
+    "db": -1.5
+   },
+   "52": {
+    "db": -2.3
+   },
+   "53": {
+    "db": -1.0
+   },
+   "43": {
+    "channel": "bass_soft"
+   },
+   "46": {
+    "channel": "bass_soft"
+   },
+   "47": {
+    "channel": "bass_soft",
+    "db": 1.6
+   },
+   "45": {
+    "channel": "bass_a2",
+    "play": 46
+   },
+   "55": {
+    "channel": "bass_g3",
+    "play": 53
+   },
+   "42": {
+    "channel": "bass_soft"
+   },
+   "40": {
+    "channel": "bass_a2",
+    "play": 41,
+    "db": 1.9
+   }
+  },
+  "pitch": {
+   "bass_a2": -108,
+   "bass_g3": 200
+  },
+  "volume_db": {
+   "bass_soft": -5.0,
+   "bass_a2": -5.0,
+   "bass_g3": -2.5
+  }
+ },
+ "drum_hand": {
+  "db_per_vel": 0.3,
+  "keys": {
+   "41": {
+    "play": 54
+   },
+   "50": {
+    "channel": "drum_high",
+    "play": 60
+   },
+   "52": {
+    "channel": "drum_high",
+    "play": 64
+   }
+  }
+ },
+ "marimba": {
+  "db_per_vel": 0.125,
+  "keys": {
+   "52": {
+    "db": -4.35
+   }
+  }
+ }
+}

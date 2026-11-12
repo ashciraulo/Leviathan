@@ -35,6 +35,7 @@ FLAT = {
     "!": "#FFFFFF",
     "_": "#200810",
     "*": "#8AF0E0",
+    "-": "#7A3444",   # the ridge between a leech's rings
 }
 
 GUM = [hex_color(c) for c in ("#D88890", "#C87480", "#B8606A", "#A0505C", "#86404E", "#5A2434")]
@@ -272,51 +273,63 @@ def gumleech(pose):
     with glowing spots down its back and a round mouth ringed with tiny
     teeth. It swims under the flood. 16x16, four poses:
     swim (only its back above the water), rise (reared, mouth open),
-    bite (lunging flat out), stranded (left on the drained floor, flopped)."""
+    bite (lunging flat out), stranded (left on the drained floor, flopped).
+
+    Gum-pink flesh with dark ridges between its rings, so it reads as a
+    leech and not a bone; the mouth an ivory ring of teeth round a dark
+    hole; the glowing spots the Maw's own cyan."""
     c = canvas(16, 16)
+
+    def ridges(xs, y0, y1):
+        for x in xs:
+            for y in range(y0, y1 + 1):
+                if c[y][x] == "f":
+                    c[y][x] = "-"
+
+    def mouth(cx, cy, r):
+        fill_ellipse(c, cx, cy, r + 0.9, r + 0.9, "t")
+        fill_ellipse(c, cx, cy, r, r, "_")
+
     if pose == "swim":
-        # A low hump breaking the surface, two spots showing.
-        fill_ellipse(c, 7.5, 12, 5.5, 2.0, "t")
-        for x in range(3, 13):
-            put(c, x, 13, ".")
-        put(c, 6, 11, "n")
-        put(c, 9, 11, "n")
+        # A ridged hump breaking the surface, spots glowing.
+        fill_ellipse(c, 7.5, 12, 6.0, 2.6, "f")
+        for x in range(1, 15):
+            put(c, x, 14, ".")
+        ridges((4, 7, 10), 10, 13)
+        put(c, 5, 10, "n")
+        put(c, 8, 10, "n")
+        put(c, 11, 11, "n")
         return rows_of(c)
     if pose == "rise":
         # Reared up out of the water, the mouth a ring of teeth facing Wren.
-        for y in range(3, 14):
-            t = (y - 3) / 10.0
-            half = 2.5 + 2.0 * t
+        for y in range(3, 15):
+            t = (y - 3) / 11.0
+            half = 3.0 + 2.4 * t
             for x in range(int(8 - half), int(8 + half + 0.5)):
-                put(c, x, y, "t")
-        fill_ellipse(c, 7.5, 4.5, 3.2, 2.4, "h")
-        fill_ellipse(c, 7.5, 4.5, 1.8, 1.2, "_")
-        for y in (7, 10, 12):
+                put(c, x, y, "f")
+        for y in (7, 10, 13):
             for x in range(16):
-                if c[y][x] == "t" and x % 3 == 0:
-                    c[y][x] = "f"
+                if c[y][x] == "f":
+                    c[y][x] = "-"
+        mouth(7.5, 4.5, 1.9)
         put(c, 5, 8, "n")
         put(c, 10, 9, "n")
+        put(c, 6, 11, "n")
         return rows_of(c)
     if pose == "bite":
         # Stretched out flat along the floor, mouth wide at the front.
-        fill_ellipse(c, 8, 10, 7.2, 3.0, "t")
-        fill_ellipse(c, 12.5, 10, 2.6, 2.6, "h")
-        fill_ellipse(c, 12.8, 10, 1.4, 1.4, "_")
-        for x in range(2, 11, 3):
-            put(c, x, 8, "f")
-            put(c, x, 12, "f")
+        fill_ellipse(c, 7.5, 10, 7.0, 3.2, "f")
+        ridges((3, 6, 9), 7, 13)
+        mouth(12.5, 10, 1.8)
         for x in (4, 7, 10):
-            put(c, x, 9, "n")
+            put(c, x, 8, "n")
         return rows_of(c)
     # Stranded: flopped on its side on the wet floor, curled, spots dim.
-    fill_ellipse(c, 8, 11, 6.5, 2.6, "t")
-    fill_ellipse(c, 3.5, 10, 2.0, 2.0, "h")
-    put(c, 3, 10, "_")
-    for x in range(5, 14, 3):
-        put(c, x, 9, "f")
-    put(c, 8, 13, "f")
-    put(c, 11, 13, "f")
+    fill_ellipse(c, 8.5, 11, 6.5, 2.8, "f")
+    ridges((7, 10, 13), 9, 13)
+    mouth(3.5, 10, 1.3)
+    for x in (8, 11):
+        put(c, x, 9, "g")
     return rows_of(c)
 
 

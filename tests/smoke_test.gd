@@ -31,6 +31,7 @@ func _ready() -> void:
 		_test_items()
 		await _test_audio()
 		_test_text_fit()
+		_test_talks_reachable()
 		await _test_menus()
 		await _test_play()
 		await _test_talk_and_dungeon()
@@ -46,6 +47,7 @@ func _ready() -> void:
 		await _test_echoes_dungeon()
 		await _test_foes_dungeon()
 		await _test_qa_dungeon()
+		await _test_air_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -102,6 +104,10 @@ func _ready() -> void:
 		await _test_hessa_walk()
 		await _test_boat_raised()
 		await _test_wick_round()
+		await _test_gran_table()
+		await _test_pad_tour()
+		await _test_reeds_song()
+		await _test_rib_song()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -1196,8 +1202,67 @@ func _test_play() -> void:
 	bog.hp = 1
 	bog.take_hit(1, Vector2.RIGHT)
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
-	await _wait(0.5)
+	var bits: Array = room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.SHARDS)
+	_check(bits.size() == 1 and bits[0].tint != HitSpark.DUST and bits[0].tint.a > 0.5, "and bits of it fly, in its own colour (%s)" % (bits[0].tint if bits.size() == 1 else "none"))
+	# Those colours come from a table worked out from the PNGs (no GPU read
+	# when a foe falls): it must match what reading each sheet finds.
+	var wrong_colours: Array = []
+	for path: String in BodyColours.COLOURS:
+		var probe := Scuttler.new()
+		probe._sprite = Sprite2D.new()
+		probe._sprite.texture = load(path)
+		var table := probe.body_colour()
+		var counted := Enemy.count_body_colour(probe._sprite.texture)
+		if not table.is_equal_approx(counted):
+			wrong_colours.append("%s %s vs %s" % [path.get_file(), table, counted])
+		probe._sprite.free()
+		probe.free()
+	_check(wrong_colours.is_empty() and BodyColours.COLOURS.size() > 20, "every sheet's body colour matches its pixels %s" % [wrong_colours])
+	await _wait(0.6)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
+	# A beaten boss's last light lifts off it as it fades.
+	var lifter := Scuttler.new()
+	lifter.ai_enabled = false
+	lifter.position = Vector2(150, row_y)
+	room.add_child(lifter)
+	await _wait(0.05)
+	lifter._dissolve()
+	_check(room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.RISE).size() == 2, "a fading boss sends up two waves of light")
+	lifter.queue_free()
+	await _wait(2.1)
+	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "and they lift away")
+	# A beaten boss's death shudder pulses white each beat; with flashes
+	# turned off it pulses once and then only shakes (no strobe).
+	var shudderer := Scuttler.new()
+	shudderer.ai_enabled = false
+	shudderer.position = Vector2(150, row_y)
+	room.add_child(shudderer)
+	var keep_flashes := Settings.flashes
+	var pulses := [0, 0]
+	for setting in 2:
+		Settings.flashes = setting == 0
+		shudderer._shudder_flashed = false
+		for beat in 6:
+			shudderer._flash = 0.0
+			shudderer._shudder_flash(0.1)
+			if shudderer._flash > 0.0:
+				pulses[setting] += 1
+	Settings.flashes = keep_flashes
+	_check(pulses[0] == 6 and pulses[1] == 1, "a death shudder strobes only with flashes on (%d on, %d off)" % pulses)
+	# Its last light flickers only with flashes on.
+	var steady := HitSpark.spawn(room, Vector2(150, row_y), HitSpark.Kind.RISE)
+	var gaps := [0, 0]
+	for setting in 2:
+		Settings.flashes = setting == 0
+		for step in 10:
+			steady._time = 0.4 + step * 0.05
+			for i in 24:
+				if steady._flickered_out(i):
+					gaps[setting] += 1
+	Settings.flashes = keep_flashes
+	steady.queue_free()
+	shudderer.queue_free()
+	_check(gaps[0] > 0 and gaps[1] == 0, "a boss's last light flickers only with flashes on (%d on, %d off)" % gaps)
 	# A landed blow squashes a foe flat for a moment, then it springs back.
 	var squashee := Scuttler.new()
 	squashee.ai_enabled = false
@@ -1428,6 +1493,107 @@ func _test_play() -> void:
 	_check(game.player != null and game.player.state != Player.State.DEAD, "Wren is back on their feet")
 	game.queue_free()
 	await _wait(0.1)
+
+
+## Running out of breath mid-boss-fight, in every dungeon: the game over
+## screen comes up, waking brings Wren back at the dungeon's checkpoint with
+## time running and the dungeon's own music, and the boss is there to fight
+## again (not left dying, dead or missing) when Wren walks back in.
+## BGO_ONLY=<id> (an EchoTrial.BOSSES id) runs one boss. Not in the full
+## run (near CI's time limit): CI runs it on its own with --fixed-fps 60.
+func _test_boss_game_over_dungeon() -> void:
+	Cutscene.fast = true
+	for id: String in EchoTrial.BOSSES:
+		if OS.get_environment("BGO_ONLY") != "" and OS.get_environment("BGO_ONLY") != id:
+			continue
+		var boss_room: Vector2i = EchoTrial.BOSSES[id][0]
+		var dungeon := "maw" if id == "vael" else id
+		# The last Tidestone Wren would have woken on the way: the dungeon's
+		# own, else the one outside its door, else Saltmarrow's.
+		var entry := Vector2i(boss_room.x, 10)
+		var probe := (load("res://rooms/room_%d_%d.tscn" % [entry.x, entry.y]) as PackedScene).instantiate() as Room
+		var outside := probe.door_to
+		probe.free()
+		for stone_room: Vector2i in [entry, outside, Tidestone.SALTMARROW_STONE]:
+			if not RoomInfo.get_room(stone_room).get("stones", []).is_empty():
+				entry = stone_room
+				break
+		GameState.reset_new_game()
+		GameState.set_checkpoint(entry, RoomInfo.stone_landing(entry))
+		SaveManager.save_game()
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.5)
+		await _play_scene(game, 10.0)
+		var room := await _goto(game, boss_room, EchoTrial.ENTRY_TILE)
+		await _wait(0.5)
+		await _play_scene(game, 25.0)
+		# Into the fight: the entrance and its veil over (Wren kept unhurt
+		# meanwhile, so no blow knocks them out of the room).
+		var fight_wait := 0.0
+		while fight_wait < 30.0 and (fight_wait < 5.0 or game.busy or Cutscene.active):
+			if game.player:
+				game.player._invuln = 1.0
+			await _wait(0.1)
+			fight_wait += 0.1
+			if DialogueBox.is_open:
+				await _close_dialogue(game)
+		var label := "%s: dying to its boss" % dungeon
+		var bosses := get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room != null and room.is_ancestor_of(b))
+		_check(room != null and room.coord == boss_room and bosses.size() == 1, "%s: the fight is on (%s, %d bosses)" % [label, room.coord if room else null, bosses.size()])
+		var player: Player = game.player
+		player._invuln = 0.0
+		GameState.bubbles = 1
+		player.take_damage(1, player.global_position + Vector2(10, 0))
+		var over: GameOverScreen = null
+		for i in 60:
+			await _wait(0.1)
+			for child in game.get_children():
+				if child is GameOverScreen:
+					over = child
+			if over:
+				break
+		_check(over != null, "%s shows the game over screen" % label)
+		if over == null:
+			game.queue_free()
+			await _wait(0.1)
+			continue
+		while over._time < GameOverScreen.INPUT_DELAY + 0.05:
+			await _wait(0.05)
+		over.chosen.emit(true)
+		for i in 60:
+			await _wait(0.1)
+			if game.player != null and not game.busy:
+				break
+		await _play_scene(game, 10.0)
+		await _wait(0.5)
+		_check(game.current_room != null and game.current_room.coord == entry, "%s: Wren wakes at the checkpoint (%s)" % [label, game.current_room.coord if game.current_room else null])
+		_check(is_equal_approx(Engine.time_scale, 1.0) and not get_tree().paused and not Cutscene.active,
+			"%s: time runs again (scale %.2f, paused %s, scene %s)" % [label, Engine.time_scale, get_tree().paused, Cutscene.active])
+		_check(Audio.music_cue == Audio.music_for_room(game.current_room.biome, game.current_room.dungeon, game.current_room.music) if game.current_room else false,
+			"%s: the boss theme gives way to the room's own music (%s)" % [label, Audio.music_cue])
+		player = game.player
+		Input.action_press("move_right")
+		await _wait(0.3)
+		Input.action_release("move_right")
+		Input.action_press("move_left")
+		await _wait(0.3)
+		Input.action_release("move_left")
+		_check(player.state != Player.State.DEAD and not player.frozen and not player.in_cutscene and GameState.bubbles == GameState.max_bubbles,
+			"%s: Wren is up with full breath and free to move (state %d, frozen %s, scene %s, bubbles %d of %d)" % [label, player.state, player.frozen, player.in_cutscene, GameState.bubbles, GameState.max_bubbles])
+		# Back in: the boss is there again, whole.
+		room = await _goto(game, boss_room, EchoTrial.ENTRY_TILE)
+		await _wait(0.5)
+		await _play_scene(game, 25.0)
+		bosses = get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room != null and room.is_ancestor_of(b))
+		_check(bosses.size() == 1 and not (bosses[0] is Enemy and (bosses[0] as Enemy).dying),
+			"%s: walking back in, the boss is there to fight again (%d)" % [label, bosses.size()])
+		game.queue_free()
+		await _wait(0.1)
+	Cutscene.fast = false
+	get_tree().paused = false
+	SaveManager.delete_save()
+	GameState.reset_new_game()
 
 
 func _count_projectiles(room: Room) -> int:
@@ -3511,6 +3677,60 @@ func _test_qa_dungeon() -> void:
 	await _wait(0.1)
 
 
+## Every dungeon's air has something in it; the overworld has none of it.
+func _test_air_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(10, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	game.player._invuln = 600.0
+	var firsts := {"hull": Vector2i(10, 10), "kiln": Vector2i(21, 10), "mire": Vector2i(25, 10), "gale": Vector2i(28, 10),
+		"glacier": Vector2i(32, 10), "belfry": Vector2i(36, 10), "tomb": Vector2i(40, 10), "maw": Vector2i(44, 10)}
+	for dungeon: String in firsts:
+		var room := await _goto(game, firsts[dungeon], Vector2i(11, 10))
+		var air := room.get_node_or_null("Air") as DungeonAir
+		_check(air != null, "%s: the air has something in it" % dungeon)
+		if air == null:
+			continue
+		var specks: int = air._motes.size() + air._falls.size() + air._rises.size() + air._rain.size() + air._drips.size() + air._trickles.size()
+		_check(specks >= 3, "%s: %d specks in the air" % [dungeon, specks])
+		_check(air.z_index < Darkness.Z, "%s: under the Mire's dark, so it can't light it" % dungeon)
+	var kiln := await _goto(game, Vector2i(21, 10), Vector2i(11, 10))
+	_check(not (kiln.get_node("Air") as DungeonAir)._rises.is_empty(), "embers lift off the Kiln's lava")
+	var belfry := await _goto(game, Vector2i(36, 10), Vector2i(11, 11))
+	var bubbles: DungeonAir = belfry.get_node("Air")
+	_check(not bubbles._rises.is_empty() and not bubbles._drips.is_empty(), "the Belfry drips and bubbles")
+	# The drips run their whole course: gather, fall, ring, and again.
+	var landed := false
+	var deadline := Time.get_ticks_msec() + 6000
+	while Time.get_ticks_msec() < deadline and not landed:
+		for d in bubbles._drips:
+			landed = landed or d.ring >= 0.0
+		await _wait(0.1)
+	_check(landed, "a drip lands on the floor with a ring")
+	# In the Tomb, nothing in the air comes near a hidden bone wall's seam,
+	# whose leaking dust is the only sign of it.
+	var seam_room := await _goto(game, Vector2i(40, 8), Vector2i(11, 10))
+	var seam_air: DungeonAir = seam_room.get_node("Air")
+	_check(not seam_air._seams.is_empty(), "the Tomb's air knows where its hidden walls are")
+	var near := false
+	for tile in seam_air._roof:
+		near = near or not seam_air._clear_of_seams(Vector2(tile * Room.TILE))
+	_check(not near, "and no sand trickles near one")
+	var outside := await _goto(game, Vector2i(1, 1), Vector2i(11, 6))
+	_check(outside.get_node_or_null("Air") == null, "the overworld has its own life instead")
+	# High contrast: the air steps back.
+	var was := Settings.high_contrast
+	Settings.high_contrast = true
+	var hull := await _goto(game, Vector2i(10, 10), Vector2i(11, 10))
+	_check(is_equal_approx((hull.get_node("Air") as DungeonAir)._fade, DungeonAir.CONTRAST_FADE), "with high contrast on, the air fades back")
+	Settings.high_contrast = was
+	game.queue_free()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
 ## Wren looses a frost arrow from a tile, facing a way, and waits for it.
 func _shoot(room: Room, player: Player, tile: Vector2i, facing: Vector2) -> void:
 	player.global_position = _tile_pos(room, tile)
@@ -5155,7 +5375,7 @@ func _test_ossuary() -> void:
 	tangle.free()
 	_check(_walkable_from(swum, Vector2i(11, 12)).has(Vector2i(0, 9)) and _walkable_from(shore, Vector2i(11, 1)).has(Vector2i(23, 9)), "the Diver's Helm swims the strait from Tangle Shore into the dunes")
 	var rise: Room = (load("res://rooms/room_9_0.tscn") as PackedScene).instantiate()
-	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[6][12] == "D", "the beast skull's throat leads into the Marrow Tomb")
+	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[7][16] == "D", "the hollow in the whale skull's side leads into the Marrow Tomb")
 	rise.free()
 
 	GameState.reset_new_game()
@@ -6731,7 +6951,7 @@ func _test_journal() -> void:
 func _test_tobin() -> void:
 	Cutscene.fast = true
 	GameState.reset_new_game()
-	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(12 * Room.TILE + 8, 7 * Room.TILE + 10))
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(16 * Room.TILE + 8, 8 * Room.TILE + 10))
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.4)
@@ -6890,7 +7110,7 @@ func _test_wick() -> void:
 	await _wait(0.1)
 
 
-## Liesl in Drowned Lane, and her great-grandmother's door bell out on
+## Liesl in Drowned Lane, and her long-ago gran's door bell out on
 ## Belfry Square's flats, there to find only at low tide.
 func _test_liesl() -> void:
 	GameState.reset_new_game()
@@ -6906,7 +7126,7 @@ func _test_liesl() -> void:
 	await _wait(0.05)
 	game.player.try_interact()
 	var pages := await _play_scene(game, 10.0)
-	_check(pages >= 2 and GameState.has_flag("liesl_asked"), "she asks after her great-grandmother's door bell (%d pages)" % pages)
+	_check(pages >= 2 and GameState.has_flag("liesl_asked"), "she asks after her gran's door bell (%d pages)" % pages)
 	game.queue_free()
 	await _wait(0.1)
 	# Out on Belfry Square's flats: the bell is there only while the tide's out.
@@ -7834,7 +8054,7 @@ func _test_boat_raised() -> void:
 		_check(first.call(part[0]) == part[1], "%s gives a hand" % part[0])
 		Conversations.talk(part[0])
 		_check(GameState.has_flag(part[2]) and first.call(part[0]) != part[1], "%s, once" % part[2])
-	for line: String in ["GULLY_BOAT_1", "GULLY_BOAT_1B", "DUNSTAN_BOATFIX_1", "HESSA_BOATFIX_2", "NARRATE_BOAT_WORK", "NARRATE_BOAT_FLOATS", "GULLY_BOAT_DONE_2", "NARRATE_BOAT_HOME", "HESSA_BOAT_HOME_2"]:
+	for line: String in ["GULLY_BOAT_1", "GULLY_BOAT_1B", "DUNSTAN_BOATFIX_1", "HESSA_BOATFIX_2", "NARRATE_BOAT_WORK", "NARRATE_BOAT_FLOATS", "GULLY_BOAT_DONE_2", "HESSA_BOAT_HOME_2"]:
 		_check(tr(line).length() <= 70, "%s fits the box" % line)
 	_check(first.call("gully_ebb") == "GULLY_BOAT_DONE_1", "everything back to Gully")
 	Conversations.talk("gully_ebb")
@@ -7851,7 +8071,7 @@ func _test_boat_raised() -> void:
 	var at := Vector2i(StoryDirector.BOAT_HOME_AT / Room.TILE)
 	_check(room.tile_at(at.x, at.y) == "~" and room.tile_at(at.x - 1, at.y) == "~" and room.tile_at(at.x, at.y - 1) == "~", "on the harbour water")
 	var pages := await _play_scene(game, 12.0)
-	_check(GameState.has_flag(StoryDirector.BOAT_HOME_FLAG) and pages == 3, "Hessa sees her home (%d pages)" % pages)
+	_check(GameState.has_flag(StoryDirector.BOAT_HOME_FLAG) and pages == 2, "Hessa sees her home (%d pages)" % pages)
 	game.queue_free()
 	await _wait(0.1)
 	# And the Ebb Shelf has only sand where she lay.
@@ -7879,6 +8099,248 @@ func _test_boat_raised() -> void:
 	Cutscene.fast = false
 	GameState.reset_new_game()
 
+
+## A whole pass on a gamepad, with real pad events: the title, the pause
+## menu's every tab, remapping, the minigames and the glyphs in the text.
+func _test_pad_tour() -> void:
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	var had_settings := FileAccess.file_exists(settings_path)
+	var old_settings := FileAccess.get_file_as_string(settings_path) if had_settings else ""
+	Settings.reset_controls()
+	# Whatever ran before may have left the game paused or an action held.
+	get_tree().paused = false
+	for held: String in Settings.REMAPPABLE:
+		Input.action_release(held)
+	# The title: the D-pad and the stick move between buttons, A picks, B backs out.
+	var title: Control = (load("res://scenes/title.tscn") as PackedScene).instantiate()
+	add_child(title)
+	var until := Time.get_ticks_msec() + 8000
+	while get_viewport().gui_get_focus_owner() == null and Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+	(title._menu.get_child(1) as Button).grab_focus()
+	await _pad_tap(JOY_BUTTON_DPAD_DOWN)
+	var after_dpad := get_viewport().gui_get_focus_owner()
+	_check(after_dpad == title._menu.get_child(2), "the D-pad moves down the title menu")
+	await _stick_tap(JOY_AXIS_LEFT_Y, -1.0)
+	_check(get_viewport().gui_get_focus_owner() == title._menu.get_child(1), "and the stick moves back up")
+	_check(Settings.using_pad, "pad presses switch the prompts to the pad")
+	await _pad_tap(JOY_BUTTON_A)
+	_check(title._page == title._files, "A opens Journeys on the title")
+	await _pad_tap(JOY_BUTTON_B)
+	_check(title._page == null, "B goes back to the title menu")
+	title._leaving = true
+	title.queue_free()
+	await get_tree().process_frame
+	# The pause menu: Start opens it, the triggers and LB go round every tab.
+	GameState.reset_new_game()
+	GameState.set_checkpoint(StoryDirector.STILL_COVE, StoryDirector.FISHING_HOLE_AT + Vector2(0, -18))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	game.player._invuln = 600.0
+	var menu: PauseMenu = game.get_node("PauseMenu") if game.has_node("PauseMenu") else null
+	if menu == null:
+		for child in game.get_children():
+			if child is PauseMenu:
+				menu = child
+	_check(menu != null, "the game has a pause menu")
+	if menu == null:
+		game.queue_free()
+		_restore_pad_settings(had_settings, old_settings)
+		return
+	await _pad_tap(JOY_BUTTON_START)
+	_check(menu.visible and menu.current == PauseMenu.Tab.SATCHEL, "Start opens the pause menu on the Satchel")
+	var visited := [menu.current]
+	for i in PauseMenu.TABS.size():
+		await _stick_tap(JOY_AXIS_TRIGGER_RIGHT, 1.0)
+		visited.append(menu.current)
+	_check(visited == [0, 1, 2, 3, 4, 0], "RT goes through every tab, Progress too, and round (%s)" % [visited])
+	await _pad_tap(JOY_BUTTON_LEFT_SHOULDER)
+	_check(menu.current == PauseMenu.Tab.JOURNEY, "LB goes back a tab")
+	await _stick_tap(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	_check(menu.current == PauseMenu.Tab.OPTIONS, "and so does LT")
+	# On a pad, no page's hint names a keyboard key.
+	var compared := 0
+	for tab in PauseMenu.TABS.size():
+		menu.show_tab(tab)
+		var page: MenuPage = menu._pages[tab]
+		Settings.using_pad = false
+		var keys_hint := page.hint()
+		Settings.using_pad = true
+		var pad_hint := page.hint()
+		for action: String in Settings.REMAPPABLE:
+			var key := MenuKit.keyboard_name(action)
+			var word := RegEx.create_from_string("(^|[^A-Za-z])%s([^A-Za-z]|$)" % key)
+			if word.search(keys_hint) != null:
+				compared += 1
+				_check(word.search(pad_hint) == null, "%s's hint shows no keyboard key on a pad: %s" % [PauseMenu.TABS[tab], pad_hint])
+	_check(compared > 0, "some page hints name keys to compare")
+	_check(_pad_names_ok(), "every action has a pad button with a name")
+	await _pad_tap(JOY_BUTTON_B)
+	_check(not menu.visible, "B closes the pause menu")
+	# Remapping on a pad: the cursor starts on the pad column, and a pad button
+	# rebinds the button even from the keyboard column.
+	var controls := ControlsPage.new()
+	add_child(controls)
+	controls.on_open()
+	_check(controls._column == 1, "on a pad, remapping starts in the gamepad column")
+	var action: String = Settings.REMAPPABLE[controls._row]
+	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	_check(controls._waiting, "A waits for the new button")
+	controls.handle_input(_pad_event(JOY_BUTTON_RIGHT_STICK))
+	_check(not controls._waiting and ControlsPage.pad_text(action) == MenuKit.pad_key("PAD_BUTTON_%d" % JOY_BUTTON_RIGHT_STICK), "a pad button rebinds it")
+	controls._column = 0
+	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	controls.handle_input(_pad_event(JOY_BUTTON_LEFT_STICK))
+	_check(not controls._waiting and controls._column == 1 and ControlsPage.pad_text(action) == MenuKit.pad_key("PAD_BUTTON_%d" % JOY_BUTTON_LEFT_STICK), "picked on the keyboard column, a pad button still rebinds the button")
+	controls.handle_input(_pad_event(JOY_BUTTON_A))
+	_check(not OS.get_keycode_string(KEY_ESCAPE) in controls.hint(), "on a pad, waiting says Start cancels, not Escape: " + controls.hint())
+	controls.handle_input(_pad_event(JOY_BUTTON_START))
+	_check(not controls._waiting, "Start cancels waiting for a button")
+	controls.queue_free()
+	Settings.reset_controls()
+	Settings.save_settings()
+	# The left stick walks Wren.
+	var from: Vector2 = game.player.global_position
+	_stick(JOY_AXIS_LEFT_X, -1.0)
+	await _wait(0.3)
+	_stick(JOY_AXIS_LEFT_X, 0.0)
+	_check(game.player.global_position.x < from.x - 4, "the left stick walks Wren")
+	# Ice fishing: A casts.
+	var room: Room = game.current_room
+	var hole := room.get_children().filter(func(c: Node) -> bool: return c is FishingHole)[0] as FishingHole
+	GameState.set_flag("ottilie_asked")
+	game.player.global_position = room.global_position + StoryDirector.FISHING_HOLE_AT + Vector2(0, -18)
+	game.player.facing = Vector2.DOWN
+	await _wait(0.1)
+	await _pad_tap(JOY_BUTTON_A)
+	_check(hole.state == FishingHole.State.WAITING, "A casts at the fishing hole")
+	game.queue_free()
+	await _wait(0.1)
+	# The echo game: A strikes Coralie's chime.
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "coralie_asked", "coralie_chime_done", EchoGame.ASK_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.SHORE, StoryDirector.CHIME_AT + Vector2(0, 18))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	room = game.current_room
+	var echo := room.get_children().filter(func(c: Node) -> bool: return c is EchoGame)[0] as EchoGame
+	game.player.global_position = room.global_position + StoryDirector.CHIME_AT + Vector2(0, 18)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	await _pad_tap(JOY_BUTTON_A)
+	_check(echo.state == EchoGame.State.SHOW, "A strikes the chime and starts the echo game")
+	game.queue_free()
+	await _wait(0.1)
+	# Wick's round: A rings the dusk bell.
+	GameState.reset_new_game()
+	var flags := ["wick_asked", "wick_gave_jar", "wick_told_sink", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG, LamplighterRound.ASK_FLAG]
+	for coord: Vector2i in FenLantern.SPOTS:
+		flags.append(FenLantern.flag_for(coord))
+	for flag: String in flags:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.DUSK_BELL_AT + Vector2(0, 18))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	game.player._invuln = 600.0
+	game.player.global_position = game.current_room.global_position + StoryDirector.DUSK_BELL_AT + Vector2(0, 18)
+	game.player.facing = Vector2.UP
+	await _wait(0.1)
+	await _pad_tap(JOY_BUTTON_A)
+	_check(LamplighterRound.running, "A rings Wick's dusk bell and starts the round")
+	if is_instance_valid(LamplighterRound.current):
+		LamplighterRound.current.stop()
+	game.queue_free()
+	await _wait(0.1)
+	# Every line that names a control names a pad button, in every pad style.
+	var csv := FileAccess.open("res://locale/strings.csv", FileAccess.READ)
+	var with_tokens: Array[String] = []
+	while not csv.eof_reached():
+		var row := csv.get_csv_line()
+		if row.size() > 1 and "{" in row[1]:
+			with_tokens.append(row[0])
+	_check(not with_tokens.is_empty(), "some lines name controls")
+	Settings.using_pad = true
+	for style: String in ["xbox", "playstation", "nintendo"]:
+		Settings.pad_style = style
+		_check(_pad_names_ok(), "every action has a named %s button" % style)
+		var either := tr("ITEM_KEYS_EITHER") % [MenuKit.pad_name("item_1"), MenuKit.pad_name("item_2")]
+		for key: String in with_tokens:
+			var expected := tr(key).replace("{key}", either)
+			for act: String in Settings.REMAPPABLE:
+				expected = expected.replace("{%s}" % act, MenuKit.pad_name(act))
+			var text := MenuKit.fill_keys(tr(key))
+			_check(text == expected and not "{" in text, "%s names %s buttons: %s" % [key, style, text])
+	_restore_pad_settings(had_settings, old_settings)
+
+
+## Puts the settings file and the pad state back after the pad tour.
+func _restore_pad_settings(had_settings: bool, old_settings: String) -> void:
+	var settings_path := ProjectSettings.globalize_path(Settings.PATH)
+	Settings.pad_style = "xbox"
+	Settings.using_pad = false
+	Settings._pad_device = -1
+	if had_settings:
+		var file := FileAccess.open(settings_path, FileAccess.WRITE)
+		file.store_string(old_settings)
+		file.close()
+	else:
+		DirAccess.remove_absolute(settings_path)
+	Settings.load_settings()
+	Settings.apply()
+
+
+## Every action has a gamepad button, and the button has a name.
+func _pad_names_ok() -> bool:
+	for action: String in Settings.REMAPPABLE:
+		var named := false
+		for event in InputMap.action_get_events(action):
+			var key := ""
+			if event is InputEventJoypadButton:
+				key = MenuKit.pad_key("PAD_SHORT_%d" % event.button_index)
+			elif event is InputEventJoypadMotion:
+				key = MenuKit.pad_key("PAD_SHORT_AXIS_%d" % event.axis)
+			if key != "":
+				named = tr(key) != key
+				break
+		if not named:
+			return false
+	return true
+
+
+## A pad button pressed and let go, the way a pad sends it.
+func _pad_tap(button: JoyButton) -> void:
+	Input.parse_input_event(_pad_event(button))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var up := _pad_event(button)
+	up.pressed = false
+	Input.parse_input_event(up)
+	await get_tree().physics_frame
+	await get_tree().process_frame
+
+
+func _stick(axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.axis = axis
+	event.axis_value = value
+	Input.parse_input_event(event)
+
+
+## A stick (or trigger) pushed and let back.
+func _stick_tap(axis: JoyAxis, value: float) -> void:
+	_stick(axis, value)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_stick(axis, 0.0)
+	await get_tree().physics_frame
+	await get_tree().process_frame
 
 ## Wick's lamplighter's round: ring the dusk bell and the fen's lanterns
 ## go out for the round; light all five against the clock. The lanterns'
@@ -8085,7 +8547,7 @@ func _test_errands() -> void:
 	talk.call("wick")
 	_check(first.call("murmur") == "MURMUR_LANTERN_1", "Murmur finds it")
 	talk.call("murmur")
-	_check(first.call("murmur") == "MURMUR_TURNED", "and still feels the turn afterwards")
+	_check(first.call("murmur") == "MURMUR_SONG_1", "and afterwards, the turn has Murmur thinking of the Reeds' song")
 	GameState.clear_flag(StoryDirector.TURNED_FLAG)
 	_check(first.call("murmur") == "MURMUR_LANTERN_AGAIN", "before the turn, Murmur keeps the lantern lit")
 	GameState.reset_new_game()
@@ -8161,7 +8623,7 @@ func _test_challenge_talk() -> void:
 	var steps := [
 		["sorrel", ["sorrel_asked", "sorrel_raced", "sorrel_won", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid"], "SORREL_STACKS_1", "chest_7_-4_20_2", "SORREL_STACKS_DONE_1", "SORREL_AFTER"],
 		["wick", ["wick_asked", "fen_lanterns_lit", "wick_gave_jar"], "WICK_SINK_1", "gate_5_3", "WICK_SINK_DONE_1", "WICK_AFTER"],
-		["dace", ["dace_sat"], "DACE_RING_1", "gate_8_2", "DACE_RING_DONE_1", "DACE_AGAIN"],
+		["dace", ["dace_sat", RibChime.ASK_FLAG, RibChime.SUNG_FLAG, "dace_song_paid"], "DACE_RING_1", "gate_8_2", "DACE_RING_DONE_1", "DACE_AGAIN"],
 	]
 	for step: Array in steps:
 		GameState.reset_new_game()
@@ -8443,6 +8905,251 @@ func _test_nettle_signals() -> void:
 	Conversations.talk("nettle")
 	_check(first.call("nettle") == "NETTLE_TURNED", "once")
 	GameState.reset_new_game()
+
+
+## Gran's table: once Liesl knows Gran lived, she asks for Gran's things.
+## Ide has the cup; the candlestick and salt fish are finds. Handing them
+## over plays supper in Drowned Lane.
+func _test_gran_table() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var ide_first := func() -> String: return str(Conversations.branch_for("ide").get("lines", [""])[0])
+	for flag in ["liesl_asked", StoryDirector.TURNED_FLAG, "tidebell_belfry", "met_ide_ferry"]:
+		GameState.set_flag(flag)
+	_check(first.call("liesl") == "LIESL_WAITING" and ide_first.call() != "IDE_CUP_1", "no table before Liesl hears of the grotto marks")
+	GameState.set_flag("read_grotto_marks")
+	_check(first.call("liesl") == "LIESL_MARKS_1", "the marks first")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_WAITING", "no table while her door bell's still lost")
+	GameState.set_flag("found_doorbell")
+	_check(first.call("liesl") == "LIESL_BELL_1", "the bell's hand-in isn't hidden")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_TABLE_1", "then Liesl asks for Gran's things")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_TABLE_WAITING", "and waits")
+	for id in ["gran_candle", "gran_salt"]:
+		_check(StoryDirector.FIND_NEEDS[id] == "liesl_table_ask", "%s only once she's asked" % id)
+	GameState.clear_flag("met_ide_ferry")
+	_check(ide_first.call() == "IDE_FERRY_1", "meeting Ide comes before the cup")
+	GameState.set_flag("met_ide_ferry")
+	_check(ide_first.call() == "IDE_CUP_1", "Ide has the blue cup")
+	Conversations.talk("ide")
+	_check(GameState.has_flag("table_cup") and ide_first.call() != "IDE_CUP_1", "and hands it over, once")
+	Conversations.talk("find_gran_candle")
+	_check(first.call("liesl") == "LIESL_TABLE_WAITING", "two of three isn't a table")
+	Conversations.talk("find_gran_salt")
+	# The table stands in the lane, bare, until supper.
+	var talk_at := StoryDirector.LIESL_AT + Vector2(-14, 0)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tables: Array = room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+	_check(tables.size() == 1 and not (tables[0] as GranTable).set_out, "Liesl's laid the plates")
+	var at := Vector2i(StoryDirector.GRAN_TABLE_AT / 16.0)
+	_check(room.tile_at(at.x, at.y) == "." and room.tile_at(at.x - 1, at.y) == "." and room.tile_at(at.x, at.y - 1) == ".", "the table stands on the lane's dry ground")
+	for spot: Vector2 in [StoryDirector.WREN_SUPPER_AT, StoryDirector.IDE_SUPPER_AT, StoryDirector.LIESL_SUPPER_AT]:
+		var cell := Vector2i(spot / 16.0)
+		_check(cell.y <= 8 and room.tile_at(cell.x, cell.y) == ".", "supper places on the floor (%s)" % cell)
+	var glints := GameState.item_count("glint")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.SUPPER_DONE_FLAG) and pages >= 8, "supper with Gran's things (%d pages)" % pages)
+	_check(GameState.item_count("glint") == glints + StoryDirector.SUPPER_GLINTS, "Gran's housekeeping for Wren")
+	var table: GranTable = tables[0]
+	_check(table.set_out and table.candle_lit and table.bread, "cup, candle lit, fish and Ide's bread")
+	_check(_find_kind(room, "ide") == null and not Cutscene.active, "Ide's gone back up the lane to her boat by the scene's end")
+	_check(first.call("liesl") == "LIESL_TABLE_AFTER", "Liesl lays Gran's place every night now")
+	game.queue_free()
+	await _wait(0.2)
+	# Back again: the table's still set, and supper doesn't play twice.
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	tables = game.current_room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+	_check(tables.size() == 1 and (tables[0] as GranTable).candle_lit and not Cutscene.active, "her table stays set")
+	game.queue_free()
+	await _wait(0.2)
+	# A supper the game closed partway through plays on the way back in,
+	# Wren coming in from the far end of the lane.
+	GameState.clear_flag(StoryDirector.SUPPER_DONE_FLAG)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, Vector2(21 * 16 + 8, 2 * 16 + 10))
+	glints = GameState.item_count("glint")
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.SUPPER_DONE_FLAG) and GameState.item_count("glint") == glints + StoryDirector.SUPPER_GLINTS, "an unfinished supper picks up again")
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_SUPPER_AT) < 6.0, "and Wren finds their way round to the table")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+
+
+## The Reeds' song: after the turn, Murmur asks for the family's hymn
+## pages (the Drowned Chapel, the Wreck Vault, Liesl), then sings it in the
+## chapel.
+func _test_reeds_song() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in [StoryDirector.CALF_FLAG, "murmur_met", "murmur_lantern_lit", "murmur_saw_lantern", "liesl_asked"]:
+		GameState.set_flag(flag)
+	_check(first.call("murmur") == "MURMUR_LANTERN_AGAIN", "no song before the turn")
+	GameState.set_flag(StoryDirector.TURNED_FLAG)
+	_check(first.call("murmur") == "MURMUR_SONG_1", "then Murmur asks after the Reeds' song")
+	Conversations.talk("murmur")
+	_check(first.call("murmur") == "MURMUR_SONG_WAITING", "and waits")
+	for id in ["hymn_chapel", "hymn_vault"]:
+		_check(StoryDirector.FIND_NEEDS[id] == "murmur_song_ask", "%s only once Murmur's asked" % id)
+	_check(first.call("liesl") == "LIESL_HYMN_1", "Liesl has her gran's page")
+	Conversations.talk("liesl")
+	_check(GameState.has_flag("song_liesl") and first.call("liesl") != "LIESL_HYMN_1", "and hands it over, once")
+	Conversations.talk("find_hymn_chapel")
+	_check(first.call("murmur") == "MURMUR_SONG_WAITING", "two pages aren't the song")
+	Conversations.talk("find_hymn_vault")
+	_check(first.call("murmur") == "NARRATE_HAND_HYMNS" or (Conversations.branch_for("murmur").get("lines") as Array).has("MURMUR_SONG_DONE_1"), "all three: Murmur can read it")
+	Conversations.talk("murmur")
+	_check(GameState.has_flag(StoryDirector.REED_FLAG) and first.call("murmur") == "MURMUR_SONG_GO", "and goes to the chapel to sing it")
+	# Not in the fen while waiting in the chapel.
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT + Vector2(0, 20))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "murmur") == null, "Murmur's gone from the fen")
+	game.queue_free()
+	await _wait(0.2)
+	# Into the chapel by its south door: the song.
+	GameState.set_checkpoint(StoryDirector.DROWNED_CHAPEL, Vector2(9 * 16 + 8, 10 * 16 + 8))
+	var glints := GameState.item_count("glint")
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	var room: Room = game.current_room
+	for spot: Vector2 in [StoryDirector.MURMUR_CHAPEL_AT, StoryDirector.WREN_CHAPEL_AT]:
+		var cell := Vector2i(spot / 16.0)
+		_check(cell.y <= 8 and room.tile_at(cell.x, cell.y) == ".", "chapel places on the floor (%s)" % cell)
+	var pages := await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.REED_DONE_FLAG) and pages >= 8, "Murmur sings the Reeds' song (%d pages)" % pages)
+	_check(GameState.item_count("glint") == glints + StoryDirector.REED_GLINTS, "the Reed pew box for Wren")
+	_check(game.player.global_position.distance_to(room.global_position + StoryDirector.WREN_CHAPEL_AT) < 6.0, "Wren stands to listen")
+	_check(_find_kind(room, "murmur") == null and not Cutscene.active, "and Murmur heads home by the scene's end")
+	_check(first.call("murmur") == "MURMUR_SONG_AFTER", "Murmur sings it to the lantern now")
+	game.queue_free()
+	await _wait(0.2)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "murmur") == null and not Cutscene.active, "the song plays once")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.MURMUR_FEN_AT + Vector2(0, 20))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(_find_kind(game.current_room, "murmur") != null, "Murmur's back in the fen")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+
+
+## Dace's bone-readers' song: after the ending, the five ribs along Rib
+## Hollow's north wall ring; struck in the song's order the hollow sings.
+func _test_rib_song() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	for flag in [StoryDirector.ENDING_FLAG, "dace_sat", "dace_told_ring", "dace_saw_ring"]:
+		GameState.set_flag(flag)
+	_check(first.call("dace") == "DACE_SONG_1", "Dace tells of the bone-readers' song")
+	# No ribs ring before Dace asks.
+	var game: Node = await _stand_below(StoryDirector.RIB_HOLLOW, StoryDirector.RIB_TILES[0])
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is RibChime), "the ribs are quiet before Dace asks")
+	game.queue_free()
+	await _wait(0.1)
+	Conversations.talk("dace")
+	_check(first.call("dace") == "DACE_SONG_WAITING", "and waits to hear it")
+	game = await _stand_below(StoryDirector.RIB_HOLLOW, StoryDirector.RIB_TILES[0])
+	var room: Room = game.current_room
+	var ribs: Array = room.get_children().filter(func(c: Node) -> bool: return c is RibChime)
+	_check(ribs.size() == 5, "five ribs ring")
+	for tile: Vector2i in StoryDirector.RIB_TILES:
+		_check(room.tile_at(tile.x, tile.y) == "U" and room.tile_at(tile.x, tile.y + 1) == ".", "a rib at %s, with floor before it" % tile)
+	# The deepest is not the first, and the song's notes climb as it says.
+	var pitches: Array = RibChime.PITCHES
+	_check(pitches[RibChime.SONG[0]] == pitches.min() and pitches[RibChime.SONG[3]] == pitches.max(), "deepest first, the highest fourth")
+	var sorted := pitches.duplicate()
+	sorted.sort()
+	_check(pitches[RibChime.SONG[1]] == sorted[2] and pitches[RibChime.SONG[2]] == sorted[1] and RibChime.SONG[4] == RibChime.SONG[0], "the middle, down one, home")
+	var strike := func(i: int) -> bool:
+		var tile: Vector2i = StoryDirector.RIB_TILES[i]
+		game.player.global_position = room.global_position + Vector2(tile) * 16.0 + Vector2(8, 30)
+		game.player.facing = Vector2.UP
+		await _wait(0.05)
+		return game.player.try_interact()
+	# West to east is wrong.
+	for i in 5:
+		_check(await strike.call(i), "Wren strikes rib %d" % i)
+	_check(not GameState.has_flag(RibChime.SUNG_FLAG), "west to east isn't the song")
+	# A wrong note partway, then the song.
+	for i in [1, 0, 4]:
+		await strike.call(i)
+	_check(RibChime.heard.is_empty(), "a wrong note forgets the start")
+	# The deepest again partway starts the song over from that note.
+	for i in [1, 0, 1]:
+		await strike.call(i)
+	_check(RibChime.heard == [1], "the deepest starts it over")
+	for i: int in RibChime.SONG.slice(1):
+		await strike.call(i)
+	_check(GameState.has_flag(RibChime.SUNG_FLAG), "the song, struck right")
+	var chimes := get_tree().get_nodes_in_group("rib_chimes")
+	_check(chimes.size() == 5 and not chimes.any(func(r: Node) -> bool: return r.is_in_group("interactable")), "sung, there's nothing left to strike")
+	_check(chimes.all(func(r: Node) -> bool: return r.process_mode == Node.PROCESS_MODE_ALWAYS), "the ribs ring on through the narration")
+	var pages := await _play_scene(game, 20.0)
+	_check(pages >= 1 and not Cutscene.active, "the hollow sings it back (%d pages)" % pages)
+	game.queue_free()
+	await _wait(0.1)
+	game = await _stand_below(StoryDirector.RIB_HOLLOW, StoryDirector.RIB_TILES[0])
+	_check(not game.current_room.get_children().any(func(c: Node) -> bool: return c is RibChime) and not Cutscene.active, "once sung, the ribs are quiet again")
+	game.queue_free()
+	await _wait(0.1)
+	var glints := GameState.item_count("glint")
+	_check(first.call("dace") == "DACE_SONG_DONE_1", "Dace heard it")
+	Conversations.talk("dace")
+	_check(GameState.item_count("glint") == glints + 200 and first.call("dace") == "DACE_AGAIN", "and pays, once")
+	GameState.reset_new_game()
+
+
+## No talk branch is hidden for good behind an earlier one: a branch that
+## never switches itself off (sets none of its own "unless" flags) and asks
+## for no more than a later branch does would win every time, so the later
+## one could never be heard (a quest that can't be finished).
+func _test_talks_reachable() -> void:
+	var hidden: Array = []
+	for speaker: String in Conversations.TALKS:
+		var talks: Array = Conversations.TALKS[speaker]
+		for i in talks.size():
+			var later: Dictionary = talks[i]
+			for j in i:
+				var early: Dictionary = talks[j]
+				if early.has("reaches") or early.has("trade"):
+					continue
+				var once := false
+				for flag: String in early.get("set", []):
+					if flag in early.get("unless", []):
+						once = true
+				if once:
+					continue
+				var covers := true
+				for key: String in ["if", "unless", "has"]:
+					for flag: String in early.get(key, []):
+						if not flag in later.get(key, []):
+							covers = false
+				if covers:
+					hidden.append("%s #%d behind #%d" % [speaker, i, j])
+					break
+	_check(hidden.is_empty(), "every talk branch can be reached %s" % [hidden])
 
 
 ## Small errands: Corrin's bottles, Pell's shell, Dunstan's driftwood.

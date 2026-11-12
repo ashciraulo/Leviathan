@@ -241,7 +241,7 @@ func _die() -> void:
 	_sprite.frame = 3
 	Audio.play_sfx("regent_roar", global_position, 0.5)
 	for i in 5:
-		_flash = 0.1
+		_shudder_flash(0.1)
 		Feel.shake(2.0)
 		KilnDebris.burst(get_parent(), global_position + Vector2(randf_range(-16, 16), randf_range(-50, -10)), 5, TombSprites.BONE_SHARD)
 		await get_tree().create_timer(0.25).timeout
@@ -249,6 +249,7 @@ func _die() -> void:
 			return
 	# He falls apart into a heap of old bones, and the light goes out.
 	Audio.play_sfx("boss_fall", global_position, 0.8)
+	_dissolve()
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.3, 0.2), 1.0)
 	tween.tween_property(self, "modulate:a", 0.0, 1.2)

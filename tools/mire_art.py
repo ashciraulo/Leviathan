@@ -41,6 +41,7 @@ FLAT = {
     "`": "#8FE3C8",   # mint glow
     "|": "#F56FAD",   # pink glow
     "_": "#0C0A12",   # the dark inside things
+    "'": "#8A7CB8",   # a shade's cold rim
 }
 
 # --------------------------------------------------------------------------
@@ -351,24 +352,47 @@ def brazier(lit):
 
 def shade(frame):
     """A Shade: a low smear of living dark with two pale eyes. Exposed by the
-    lantern, it rears up, shrinking from the light. 16x16, foot 14."""
+    lantern, it rears up, shrinking from the light. 16x16, foot 14.
+
+    Dark on dark by nature, so it carries its own edge: a cold violet rim
+    along its top, wisps licking up off it, and eyes two pixels wide."""
     c = canvas(16, 16)
+
+    def rim():
+        # The top pixel of every column catches a little violet light.
+        for x in range(16):
+            for y in range(16):
+                if c[y][x] == ";":
+                    if (x + frame) % 3 != 2:
+                        c[y][x] = "'"
+                    break
+
     if frame in (0, 1):
         sway = frame
         fill_ellipse(c, 7.5, 11.0, 7.0, 3.5, ";")
-        fill_ellipse(c, 7.5 + sway, 8.5, 4.0, 3.0, ";")
+        fill_ellipse(c, 7.5 + sway, 8.5, 4.2, 3.2, ";")
+        # Wisps licking up off its back.
+        for (x, h) in ((3, 2 + sway), (12, 3 - sway), (8 + sway, 2)):
+            line(c, x, 9 - h, x, 9, ";")
+        # Its trailing hem.
         for x in range(1, 15, 3):
             put(c, x + sway, 14, ";")
-        put(c, 6 + sway, 8, ":")
-        put(c, 9 + sway, 8, ":")
+        rim()
+        for ex in (5, 9):
+            put(c, ex + sway, 8, ":")
+            put(c, ex + 1 + sway, 8, ":")
+        put(c, 5 + sway, 9, "_")
+        put(c, 10 + sway, 9, "_")
     else:
         fill_ellipse(c, 7.5, 9.0, 5.0, 5.5, ";")
         fill_ellipse(c, 7.5, 13.0, 6.5, 1.8, ";")
-        line(c, 2, 4, 4, 8, ";")
-        line(c, 13, 4, 11, 8, ";")
-        put(c, 6, 7, "~")
-        put(c, 9, 7, "~")
-        fill_rect(c, 6, 10, 4, 1, "_")
+        line(c, 2, 3, 4, 8, ";")
+        line(c, 13, 3, 11, 8, ";")
+        rim()
+        for ex in (5, 9):
+            put(c, ex, 7, "~")
+            put(c, ex + 1, 7, "~")
+        fill_rect(c, 6, 10, 4, 2, "_")
     return rows_of(c)
 
 

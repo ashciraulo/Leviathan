@@ -384,7 +384,7 @@ func _die() -> void:
 	_sprite.modulate.a = 1.0
 	# It shudders, cools to stone, and crumbles.
 	for i in 8:
-		_flash = 0.08
+		_shudder_flash(0.08)
 		Feel.shake(3.0)
 		await get_tree().create_timer(0.16).timeout
 		if not is_inside_tree():
@@ -394,6 +394,7 @@ func _die() -> void:
 	if not is_inside_tree():
 		return
 	KilnDebris.burst(get_parent(), global_position + Vector2(0, -10), 14)
+	_dissolve()
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.2, 0.3), 0.5)
 	tween.tween_property(self, "modulate:a", 0.0, 0.5)

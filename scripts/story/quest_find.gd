@@ -35,8 +35,8 @@ const BOARD := Color("#4a78a8")
 const BOARD_DARK := Color("#34587e")
 
 ## A StoryDirector.FINDS key: "bottle_*", "pell_shell", "driftwood",
-## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*", "log_*" or
-## "seal_*".
+## "chime_*", "pearl_*", "nameboard", "lantern_*", "seed_*", "log_*",
+## "seal_*", "gran_*" or "hymn_*".
 var id := ""
 var _time := 0.0
 
@@ -129,6 +129,15 @@ func _draw() -> void:
 		draw_circle(Vector2(0, -3), 3.0, BULB)
 		draw_line(Vector2(-1, -6), Vector2(-3, -11), LEAF)
 		draw_line(Vector2(1, -6), Vector2(2, -10), LEAF)
+	elif id.begins_with("hymn_"):
+		# A hymn page: staves ruled across it, a note or two still showing.
+		draw_rect(Rect2(-6, -9, 12, 9), Palette.OUTLINE)
+		draw_rect(Rect2(-5, -8, 10, 7), PAPER)
+		for y in [-7, -4]:
+			draw_line(Vector2(-4, y), Vector2(4, y), Color(0.35, 0.3, 0.3, 0.6))
+			draw_line(Vector2(-4, y + 1), Vector2(4, y + 1), Color(0.35, 0.3, 0.3, 0.6))
+		for p in [Vector2(-3, -8), Vector2(0, -7), Vector2(2, -4), Vector2(-2, -5)]:
+			draw_rect(Rect2(p, Vector2(1, 1)), Palette.OUTLINE)
 	elif id.begins_with("log_"):
 		# A loose logbook page, curled at one corner, close-written.
 		draw_rect(Rect2(-6, -9, 12, 9), Palette.OUTLINE)
@@ -160,6 +169,22 @@ func _draw() -> void:
 		draw_rect(Rect2(3, -8, 4, 3), Palette.OUTLINE)
 	elif id == "seal_pup":
 		SealPup.draw_pup(self, _time, true)
+	elif id == "gran_candle":
+		# A pewter candlestick on its side, green with salt.
+		draw_rect(Rect2(-7, -5, 14, 5), Palette.OUTLINE)
+		draw_rect(Rect2(-6, -4, 3, 3), GranTable.PEWTER_DARK)
+		draw_rect(Rect2(-3, -3, 8, 1), GranTable.PEWTER)
+		draw_rect(Rect2(2, -3, 2, 1), GLASS_DARK)
+		draw_rect(Rect2(5, -4, 2, 3), GranTable.WAX)
+	elif id == "gran_salt":
+		# A little pewter fish, its back pierced with holes.
+		draw_rect(Rect2(-6, -6, 10, 5), Palette.OUTLINE)
+		draw_rect(Rect2(4, -7, 3, 7), Palette.OUTLINE)
+		draw_rect(Rect2(-5, -5, 8, 3), GranTable.PEWTER)
+		draw_rect(Rect2(5, -6, 1, 5), GranTable.PEWTER_DARK)
+		for x in [-3, -1, 1]:
+			draw_rect(Rect2(x, -5, 1, 1), GranTable.PEWTER_DARK)
+		draw_rect(Rect2(-4, -4, 1, 1), Palette.OUTLINE)
 	elif id == "nameboard":
 		# A long blue board with a few salt-eaten white letters.
 		draw_rect(Rect2(-11, -7, 22, 7), Palette.OUTLINE)

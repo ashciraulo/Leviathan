@@ -122,6 +122,7 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 	# Every room: it builds, its scenes play, its chests open.
 	var boss_room := Vector2i(-999, -999)
 	var chests := 0
+	var chest_rooms: Array[Vector2i] = []
 	var way_out := false
 	for coord: Vector2i in _rooms_of(id):
 		room = await _goto(coord)
@@ -131,6 +132,8 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 			continue
 		for chest in _all(room, Chest):
 			chests += 1
+			if not chest_rooms.has(coord):
+				chest_rooms.append(coord)
 			chest.interact()
 			_check(chest.opened, "%s: the chest in %s opens" % [id, coord])
 			# Its item's line comes up a moment later: read it through.
@@ -142,6 +145,19 @@ func _dungeon(id: String, entry: Vector2i, item: String) -> bool:
 		if not get_tree().get_nodes_in_group("boss").filter(func(b: Node) -> bool: return room.is_ancestor_of(b)).is_empty():
 			boss_room = coord
 	_check(way_out, "%s: its entry room has a doorway back out" % id)
+	# Saved and loaded mid-dungeon, in a chest room (chests open, keys and
+	# map in hand, boss still to come): everything comes back, and an
+	# opened chest stays open.
+	if chest_rooms.size() > 0:
+		room = await _goto(chest_rooms[0])
+		await _play_scene(20.0)
+		_keep_safe()
+		await _save_and_reload("the middle of " + id)
+		_keep_safe()
+		room = _game.current_room
+		var reopened := _all(room, Chest)
+		_check(not reopened.is_empty() and reopened.all(func(c: Chest) -> bool: return c.opened),
+			"%s: after loading, the chests in %s are still open" % [id, chest_rooms[0]])
 	_check(chests >= 3, "%s: it has chests (%d)" % [id, chests])
 	_check(GameState.has_dungeon_item(id, "big_key"), "%s: its big key is in a chest" % id)
 	if item != "":
@@ -630,9 +646,10 @@ func _open_tile(coord: Vector2i) -> Vector2i:
 	var rows := Room.parse_layout(_rooms[coord][2]) if _rooms.has(coord) else PackedStringArray()
 	var best := Vector2i(Room.COLS / 2, Room.ROWS / 2)
 	var best_d := INF
+	var under := _under_big_props(rows)
 	for y in rows.size():
 		for x in rows[y].length():
-			if rows[y][x] != ".":
+			if rows[y][x] != "." or under.has(Vector2i(x, y)):
 				continue
 			# Not a lone islet tile (a brazier's perch in a pond): Wren is set
 			# down where they can walk on.
@@ -648,6 +665,26 @@ func _open_tile(coord: Vector2i) -> Vector2i:
 				best_d = d
 				best = Vector2i(x, y)
 	return best
+
+
+## Tiles a big prop (the whale skull, its jaw) lies on: its footprint
+## covers floor that the layout still shows as sand.
+func _under_big_props(rows: PackedStringArray) -> Dictionary:
+	var under := {}
+	for y in rows.size():
+		for x in rows[y].length():
+			var letter := rows[y][x]
+			if not Prop.is_prop(letter) or not Prop.KINDS[letter][2] is Array:
+				continue
+			var anchor := Vector2(x * Room.TILE + 8, y * Room.TILE + 12)
+			for rect: Rect2 in Prop.KINDS[letter][2]:
+				var area := Rect2(rect.position + anchor, rect.size)
+				for ty in range(int(area.position.y) / Room.TILE, int(area.end.y) / Room.TILE + 1):
+					for tx in range(int(area.position.x) / Room.TILE, int(area.end.x) / Room.TILE + 1):
+						var tile := Rect2(tx * Room.TILE, ty * Room.TILE, Room.TILE, Room.TILE)
+						if tile.intersects(area):
+							under[Vector2i(tx, ty)] = true
+	return under
 
 
 func _all(room: Node, type: Variant) -> Array:

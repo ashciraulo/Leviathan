@@ -1,0 +1,90 @@
+{
+ "cue": "place_shop",
+ "lufs": -20.0,
+ "parts": {
+  "bass_upright": {
+   "insert": 3,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 72,
+     "gain": -3.0,
+     "q": 1.4
+    },
+    {
+     "shape": "bell",
+     "freq": 110,
+     "gain": -3.5,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "marimba": {
+   "insert": 4,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 24
+    }
+   ]
+  },
+  "clarinet": {
+   "insert": 2,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2200,
+     "db_oct": 24
+    }
+   ]
+  },
+  "drum_brush": {
+   "insert": 7,
+   "target": -42.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "notes": "Marlo's Stall. shop_template = saltmarrow_template8 with the Emulator II Clarinet on flute_wood and the Emulator II Marimba on reed_concertina (Analog Lab). The brushed snare is played by the shaker (no brush samples in FL's packs): key 38 -> shaker key 60 (maps/place_shop_fix.json). The Emulator II Clarinet sounds +17 c sharp on every key, so its channel PITCH is -17 (place_shop_fix.json). Both Emulator II presets are bright (2-6 kHz share -13 dB per stem), so their high cuts are 24 dB/oct. Review v3 MAJOR: the Emulator II Marimba sounds an octave above written, so maps/place_shop_transpose.json takes it down 12; bass Gb2 (key 42) is 6 dB hot and goes to bass_soft."
+}

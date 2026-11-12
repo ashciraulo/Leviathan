@@ -18,6 +18,9 @@ const SETTLE_SECONDS := 1.5
 ## to lift, so the room is measured (and pictured) as it's played.
 const VEIL_WAIT_SECONDS := 12.0
 const FRAMES := 90
+## Frames measured from a boss's fall: its shudder, fade and last light
+## take about three seconds.
+const DEFEAT_FRAMES := 180
 ## A boss room is measured mid-fight: Wren can't be hurt, and the boss gets
 ## this long to get going (its entrance over, its attacks flying) first.
 const BOSS_FIGHT_SECONDS := 6.0
@@ -93,6 +96,11 @@ func _ready() -> void:
 		print("WEB PERF ROW %d,%d %s %.2f %.2f %.0f %d %d" % [coord.x, coord.y,
 				dungeon if dungeon != "" else "overworld", total / FRAMES, worst,
 				calls / FRAMES, _lights(), get_tree().get_node_count()])
+		# The moment a boss falls is the busiest few seconds a boss room has
+		# (the final blow's star, the shudder, its last light rising, the
+		# aftermath): measured as a row of its own.
+		if boss_room:
+			await _measure_defeat(coord, dungeon)
 		# Pictures after the timing, so taking one doesn't count as a slow frame.
 		if shot != "":
 			print("WEB PERF SHOT %s" % shot)
@@ -104,6 +112,49 @@ func _ready() -> void:
 		await get_tree().process_frame
 	SaveManager.delete_save()
 	print("WEB PERF DONE")
+
+
+## Fells the room's boss as its last blow would, then measures the frames
+## while it goes down. Prints a row with the area "<dungeon>-defeat".
+func _measure_defeat(coord: Vector2i, dungeon: String) -> void:
+	var boss := get_tree().get_first_node_in_group("boss")
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player:
+		player._invuln = 600.0
+	# Each falls the way its own last blow fells it: Vael doesn't die, he
+	# stops and listens; the Heart doesn't fall, it sleeps (with the credits
+	# kept from rolling, so the tour goes on).
+	var keep_credits := DreamingHeart.roll_credits
+	if boss is CantorVael and not (boss as Enemy).dying:
+		(boss as Enemy).hp = 0
+		Feel.final_blow(boss.get_parent(), boss.global_position)
+		(boss as CantorVael)._listen()
+	elif boss is DreamingHeart and (boss as DreamingHeart).mode != DreamingHeart.Mode.SLEEP:
+		DreamingHeart.roll_credits = false
+		(boss as DreamingHeart)._sleep()
+	elif boss is Enemy and not (boss as Enemy).dying:
+		(boss as Enemy).hp = 0
+		Feel.final_blow(boss.get_parent(), boss.global_position)
+		(boss as Enemy)._die()
+	else:
+		return
+	var total := 0.0
+	var worst := 0.0
+	var calls := 0.0
+	var last := Time.get_ticks_usec()
+	for i in DEFEAT_FRAMES:
+		await get_tree().process_frame
+		_skip_talk()
+		var now := Time.get_ticks_usec()
+		var cost := (now - last) / 1000.0
+		last = now
+		total += cost
+		worst = maxf(worst, cost)
+		calls += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+	print("WEB PERF ROW %d,%d %s-defeat %.2f %.2f %.0f %d %d" % [coord.x, coord.y, dungeon,
+			total / DEFEAT_FRAMES, worst, calls / DEFEAT_FRAMES, _lights(), get_tree().get_node_count()])
+	Feel.reset()
+	DreamingHeart.roll_credits = keep_credits
 
 
 ## A room's first visit can open a dialogue, which pauses the game until a

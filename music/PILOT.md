@@ -143,3 +143,80 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   Open MINORs (v2): Sustained Bells at the written octave would read more distant than +12 (the gate's L/R reading on
   its strike is noise); 12 Low Strings' +22 c layer beats at ~0.9 Hz; Simple Ohh's D4 beats at 3.6 Hz; the folded
   tail also smears bar 36's A ring over the first pass's bar 5; harp key 50 sits ~2 dB low (velocity can't fix it).
+
+## Market Day, the village (2026-11-12)
+- **Template:** `templates\saltmarrow_template8.flp` as it is. `maps/place_village.json` puts the strum on the nylon
+  guitar (Ash's folk palette has no mandolin; Analog Lab has no acoustic one, so the part is now named "guitar"), the
+  whistle on the Meadow Flute, and perc_hand on the frame drum; `maps/place_village_fix.json` sends perc key 61 to the
+  drum a third up and key 62 to the shaker channel. Re-stage the template from the PC before building: an older staged
+  copy still named bass_a2 "bass_up". Project files: `projects\place_village_v1..v5.flp` (v5 is final).
+- **The Diamond bass under F2:** G1, A1 and C2 read 15-39 c flat on their strongest partial in the v1 gate. The cue's
+  bass moved up to F2..G3, the range Saltmarrow measured, and uses Saltmarrow's fix map. F#3 (key 54) has two
+  fundamentals (-53 c and +16 c): the Bm fifth takes D3 instead.
+- **Ample Guitar chokes close voicings:** G3-B3-D4 put B3 and D4 on one string, so the B died in ~30 ms and every G
+  chord sounded as a bare fifth (review v3, MAJOR 1; the stem gate can't hear it). The A sections use open-guitar shapes
+  (`STRUM_SHAPES`). About 0.3 dB per velocity step; open G3 (key 55) is hot and gets -7.5 dB in the fix map.
+- **Brightness:** v3's 2-6 kHz share was -19.7 dB (shaker about half). v5: shaker cut at 5 kHz and 3 dB lower, guitar
+  cut at 3.5 kHz: -23 dB. The frame drum rang at 113/141 Hz over the bass: -4 dB bell at 120 Hz.
+- **Seam:** the loop's last up-strum rings 0.9 beats. finalize.py's loop-end check now fails a fall >12 dB only when
+  the 400 ms after the loop end is also >12 dB under the body's quietest 400 ms (reviewer's rule): staccato cues fall
+  12-16 dB in their own ring but stay within 0-8 dB of their quietest moment; the title v1 cut sat 25 dB under it.
+- **Review v5 PASS**; v6 takes its two MINORs (shaker -47, frame drum -33: stem_balance had raised the drum's gain to
+  undo its 120 Hz bell, bringing its attack back). v6: -20.23 LUFS, true peak -3.5 dBTP, 2-6 kHz share -24 dB.
+
+## Marlo's Stall, the shop (2026-11-12)
+- **Template:** `templates\shop_template.flp` = saltmarrow_template8 with the Emulator II Clarinet on flute_wood and the
+  Emulator II Marimba on reed_concertina (Analog Lab search). No brush samples in FL's packs, so the shaker plays the
+  brushed-snare line (`maps/place_shop.json`, key 38 -> shaker key 60).
+- **Clarinet tuning:** every key read +17 c; the channel PITCH knob at -17 (fix map "pitch") puts it in tune, so
+  Analog Lab follows FL's pitch bend like Kontakt does.
+- **Walking bass:** kept to F2..G3; a root too high to walk up through its chord walks down (root, fifth below,
+  third below).
+- **Bright samples:** both Emulator II presets keep a -17 dB 2-6 kHz share even with 24 dB/oct cuts at 2.2/2.5 kHz.
+- **Review v3 FAIL -> v5:** the Emulator II Marimba sounds an octave above written (the gate missed it: the marimba
+  never plays alone), so it sat on the clarinet's notes; `maps/place_shop_transpose.json` takes it down 12. Odd bars
+  walked back from the sixth, so Bb bars opened on G: every bar now starts on its root. Bass Gb2 (+6 dB hot) goes to
+  bass_soft. The shaker reads as a dry backbeat tick rather than brushes (MINOR, no brush samples).
+- v5: stems on target, -20.18 LUFS, true peak -7.1 dBTP. Bass D3 (key 50) reads -12 c (reviewer: inaudible in a walk).
+- **Review v5 PASS.** Open MINORs: the marimba reads -7.5 c at the written octave (+1 c an octave up): channel PITCH
+  about +7; 2-6 kHz share -18.3 dB (shaker -2 dB); the brushes could gain body from the frame drum ~12 dB under on 2 and 4.
+
+## Lamplight, inside homes (2026-11-12)
+- **Template:** `templates\house_template2.flp` = lullaby_template with I Felt It (felt piano) on the old harp channel
+  and Soft Cello on the old choir_oo channel. Sad Day Cello (Augmented Strings) failed the gate: 22 c note scatter and
+  3 dB jumps at equal velocity. The music box and its glockenspiel shine are the lullaby's; the generator doubles the
+  box into `box_shine` and lets each glock note ring to the next one +1 beat (its note-offs cut 14 of 39 dead).
+- v3: gate PASS, stems on target (box -27, piano -29, cello -32, shine -42), -19.82 LUFS, true peak -8.3 dBTP.
+- **Review v3 PASS.** Open MINOR: Soft Cello's octave-up layer sits ~+10 c, so its held notes beat at 1.2-1.5 Hz
+  (bars 13-24); lower that layer in Analog Lab or the cello 2-3 dB. The gate only checks wobble on struck parts:
+  extend it to sustained ones. Village v6 review: PASS with no MINORs.
+
+## Under the Mangrove, Brinewood (2026-11-12)
+- **Template:** `templates\brinewood_template.flp`: the Emulator II Marimba on reed_concertina (marimba, -12), kalimba
+  on guitar_nylon (-12), the Diamond bass, frame drum for the low stroke and Analog Lab "Conga 1" on a new drum_high
+  channel (insert shaker) for the high and slap strokes (keys 60 and 64).
+- **E2 under the tonic:** the Diamond bass has no clean E2, so key 40 plays the F2 sample on a `bass_a2` clone whose
+  PITCH knob takes it down a semitone (gate reads -13 c: two alternating samples either side; inaudible at 82 Hz).
+- **A soft root over the loop end:** a bass stop on the last beat made finalize flag "FL cut the tail".
+- **Review v3 FAIL -> v6 PASS.** Open MINORs: 2-6 kHz share -21.1 (a -6 dB bell at 2.8 kHz on drum_high, marimba
+  2.5 kHz bell to -5.5); the low drum stroke sits level with the bass on downbeats (drum_hand target -33). The conga's
+  slap is the high sample a third up, about 0.115 dB per velocity step.
+
+## The Rotting Hull, dungeon 1 (2026-11-12)
+- **Template:** `templates\hull_template.flp`: Soft Cello on flute, Emulator II Clarinet on choir_pad (PITCH -7),
+  12 Low Strings on strings_low and bell_tower (both +12: it sounds an octave low), Rom2A 30-BLOCK on bell_marrow for
+  the creaks, the frame drum on sub_breath (key 36 plays 53).
+- **12 Low Strings and Soft Cello ignore velocity:** a sway or an accent has to come from voices (full chord on beat
+  1, two notes on beat 2) or from volume automation, never from velocity.
+- **Review v5 FAIL -> v7 PASS.** Open MINORs: the drum still sits +2.5 dB over the bass root on downbeats (target -38
+  or a deeper 70 Hz cut, shorter ring); the sway is only +0.5 dB in the master in A and B (one voice on beat 2); the
+  tuned creaks put D4/F4 against A chords in bars 47-48 (use key 52 on A bars); Soft Cello's B2 is 3.5 dB hot (hold G2
+  or a clone channel at -3.5 dB). The loop seam steps up 4.9 LU.
+
+## Cellar Steps, the cellar (2026-11-12)
+- **Template:** `templates\cellar_template2.flp`, channels named by part. Lush Pizzicato was inharmonic; Analog Lab
+  "C-8 Pizzicato" replaced it. It has no release and cuts dead at the note-off, so every pluck rings just past the
+  next one (gate: 57 of 139 cut in v2, none in v4). The tom plays key 52 for written 45.
+- **The loop:** bars 30-31 stop short, so bar 32 has an E3 bassoon pickup and a tom on 4-and; without it the seam
+  stepped 16.6 dB.
+- v4: gate PASS, stems on target, -18.22 LUFS, true peak -3.4 dBTP, seam step 0.4 dB.

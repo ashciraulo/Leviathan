@@ -230,6 +230,9 @@ const TALKS := {
 	"ide": [
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		# Gran's blue cup, for Liesl's table: Ide's bailed her boat with it
+		# for years. (Handing it over is all; she rows Wren next time.)
+		{"if": ["liesl_table_ask", "met_ide_ferry"], "unless": ["table_cup"], "set": ["table_cup"], "lines": ["IDE_CUP_1", "IDE_CUP_2", "IDE_CUP_3", ["", "NARRATE_GOT_GRAN_CUP"]]},
 		# The jam trade ends here: Ferrin's chart of the far shores.
 		{"if": ["trade_chart"], "unless": ["trade_done"], "set": ["trade_done", "ide_ferry"], "give": {"glint": 200}, "lines": [["", "NARRATE_HAND_CHART"], "IDE_TRADE_1", "IDE_TRADE_2", "IDE_TRADE_3", ["", "NARRATE_GOT_TRADE_PURSE"]]},
 		# Her boat's lost nameboard (QuestFind). Every branch still rows Wren over.
@@ -241,14 +244,23 @@ const TALKS := {
 		{"if": ["seen_ending"], "set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_END"]},
 		{"set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_FERRY_AGAIN"]},
 	],
-	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
+	# Liesl in Drowned Lane, and her long-ago gran's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
 	"liesl": [
 		{"if": ["sorrel_letters", "liesl_asked"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
 		{"if": ["wick_murmur_ask", "liesl_asked"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
+		# Gran's hymn page, for Murmur's song.
+		{"if": ["murmur_song_ask", "liesl_asked"], "unless": ["song_liesl"], "set": ["song_liesl"], "lines": ["LIESL_HYMN_1", "LIESL_HYMN_1B", "LIESL_HYMN_2", ["", "NARRATE_GOT_HYMN_LIESL"]]},
 		# The Ebb Grotto's flood marks: a Liesl, three hundred years back.
 		{"if": ["read_grotto_marks", "liesl_asked"], "unless": ["liesl_heard_marks"], "set": ["liesl_heard_marks"], "lines": ["LIESL_MARKS_1", "LIESL_MARKS_1B", "LIESL_MARKS_2", "LIESL_MARKS_3"]},
+		# Gran's table: her cup (Ide has it), candlestick and salt fish
+		# (QuestFind), then supper in the lane (StoryDirector.grans_supper).
+		# Only once her door bell's home, so the bell's hand-in is never hidden.
+		{"if": ["liesl_table_ask", "table_cup", "found_gran_candle", "found_gran_salt"], "unless": ["gran_supper"], "set": ["gran_supper"], "lines": [["", "NARRATE_HAND_GRAN_THINGS"], "LIESL_TABLE_DONE_1", "LIESL_TABLE_DONE_2"]},
+		{"if": ["liesl_heard_marks", "liesl_bell_hung"], "unless": ["liesl_table_ask"], "set": ["liesl_table_ask"], "lines": ["LIESL_TABLE_1", "LIESL_TABLE_1B", "LIESL_TABLE_2", "LIESL_TABLE_2B", "LIESL_TABLE_3", "LIESL_TABLE_3B"]},
+		{"if": ["liesl_table_ask"], "unless": ["gran_supper"], "lines": ["LIESL_TABLE_WAITING"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
+		{"if": ["gran_supper_done"], "lines": ["LIESL_TABLE_AFTER"]},
 		{"if": ["liesl_bell_hung", "tidebell_belfry"], "lines": ["LIESL_VERGE", "LIESL_VERGE_2"]},
 		{"if": ["liesl_bell_hung"], "lines": ["LIESL_AFTER"]},
 		{"if": ["found_doorbell"], "set": ["liesl_bell_hung"], "give": {"glint": 50}, "lines": ["LIESL_BELL_1", "LIESL_BELL_2", "LIESL_BELL_3", ["", "NARRATE_GOT_VERGE_COINS"]]},
@@ -342,10 +354,17 @@ const TALKS := {
 		{"unless": ["murmur_met"], "set": ["murmur_met"], "lines": ["MURMUR_FEN_1", "MURMUR_FEN_2", "MURMUR_FEN_3"]},
 		# The Reed family's lantern, lit at last (Wick, Liesl and Wren).
 		{"if": ["murmur_lantern_lit"], "unless": ["murmur_saw_lantern"], "set": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_1", "MURMUR_LANTERN_2", "MURMUR_LANTERN_3"]},
+		# The Reeds' song: hymn pages from the Drowned Chapel, the Wreck Vault
+		# and Liesl, then Murmur sings it in the chapel (StoryDirector).
+		{"if": ["murmur_song_ask", "found_hymn_chapel", "found_hymn_vault", "song_liesl"], "unless": ["reed_song"], "set": ["reed_song"], "lines": [["", "NARRATE_HAND_HYMNS"], "MURMUR_SONG_DONE_1", "MURMUR_SONG_DONE_2", "MURMUR_SONG_DONE_3"]},
+		{"if": ["murmur_saw_lantern", "old_one_turned"], "unless": ["murmur_song_ask"], "set": ["murmur_song_ask"], "lines": ["MURMUR_SONG_1", "MURMUR_SONG_1B", "MURMUR_SONG_2", "MURMUR_SONG_2B", "MURMUR_SONG_3"]},
 		# The Calf's Rest: Wren has found the little skull in the far fen.
 		{"if": ["found_calf_rest", "seen_ending"], "unless": ["murmur_left_robe"], "set": ["murmur_left_robe"], "lines": ["MURMUR_REST_1", "MURMUR_REST_2", "MURMUR_REST_3"]},
 		{"if": ["found_calf_rest"], "unless": ["seen_ending", "murmur_heard_rest"], "set": ["murmur_heard_rest"], "lines": ["MURMUR_REST_EARLY"]},
+		{"if": ["murmur_song_ask"], "unless": ["reed_song"], "lines": ["MURMUR_SONG_WAITING"]},
+		{"if": ["reed_song"], "unless": ["reed_song_done"], "lines": ["MURMUR_SONG_GO"]},
 		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
+		{"if": ["reed_song_done"], "lines": ["MURMUR_SONG_AFTER"]},
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
 		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
 		{"lines": ["MURMUR_AGAIN"]},
@@ -397,6 +416,10 @@ const TALKS := {
 		# The Bone Ring, where the bone-readers' young proved their nerve.
 		{"if": ["gate_8_2"], "unless": ["dace_saw_ring"], "set": ["dace_saw_ring"], "lines": ["DACE_RING_DONE_1", "DACE_RING_DONE_2"]},
 		{"unless": ["dace_told_ring", "dace_saw_ring"], "set": ["dace_told_ring"], "lines": ["DACE_RING_1", "DACE_RING_1B"]},
+		# The bone-readers' song, struck on Rib Hollow's ribs (RibChime).
+		{"if": ["dace_song_sung"], "unless": ["dace_song_paid"], "set": ["dace_song_paid"], "give": {"glint": 200}, "lines": ["DACE_SONG_DONE_1", "DACE_SONG_DONE_2", ["", "NARRATE_GOT_RIB_PURSE"]]},
+		{"unless": ["dace_song_ask"], "set": ["dace_song_ask"], "lines": ["DACE_SONG_1", "DACE_SONG_1B", "DACE_SONG_2", "DACE_SONG_2B", "DACE_SONG_3"]},
+		{"if": ["dace_song_ask"], "unless": ["dace_song_sung"], "lines": ["DACE_SONG_WAITING"]},
 		{"lines": ["DACE_AGAIN"]},
 	],
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime
@@ -536,6 +559,10 @@ const TALKS := {
 		{"lines": ["NARRATE_PUP_HOME"]},
 	],
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
+	"find_gran_candle": [{"set": ["found_gran_candle"], "lines": ["NARRATE_FOUND_GRAN_CANDLE", "NARRATE_FOUND_GRAN_CANDLE_2"]}],
+	"find_gran_salt": [{"set": ["found_gran_salt"], "lines": ["NARRATE_FOUND_GRAN_SALT", "NARRATE_FOUND_GRAN_SALT_2"]}],
+	"find_hymn_chapel": [{"set": ["found_hymn_chapel"], "lines": ["NARRATE_FOUND_HYMN_CHAPEL", "NARRATE_FOUND_HYMN_CHAPEL_2"]}],
+	"find_hymn_vault": [{"set": ["found_hymn_vault"], "lines": ["NARRATE_FOUND_HYMN_VAULT", "NARRATE_FOUND_HYMN_VAULT_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.

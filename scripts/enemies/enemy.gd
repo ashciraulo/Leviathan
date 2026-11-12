@@ -39,6 +39,8 @@ var dying := false
 var _stun := 0.0
 var _knockback := Vector2.ZERO
 var _flash := 0.0
+## Set once a death shudder has pulsed (see _shudder_flash).
+var _shudder_flashed := false
 var _hurtbox: Area2D
 var _contact: DamageArea
 var _sprite: Sprite2D
@@ -290,6 +292,9 @@ func _die() -> void:
 	dying = true
 	if not is_in_group("boss"):
 		HitSpark.spawn(get_parent(), global_position, HitSpark.Kind.FALL)
+		var shards := HitSpark.spawn(get_parent(), global_position + _spark_offset() * 0.5, HitSpark.Kind.SHARDS)
+		if shards:
+			shards.tint = body_colour() * _sprite.self_modulate
 	Audio.play_sfx("enemy_die", global_position)
 	if elite:
 		Audio.play_sfx("boss_fall", global_position, 1.6)
@@ -304,10 +309,83 @@ func _die() -> void:
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(1.6, 0.3), 0.2)
-	tween.tween_property(self, "modulate:a", 0.0, 0.2)
-	tween.chain().tween_callback(queue_free)
+	# A white pop as the last blow lands, a swell, then it flattens away.
+	Art.set_flash(_sprite, 1.0)
+	var base := scale
+	var tween := create_tween()
+	tween.tween_property(self, "scale", base * Vector2(1.2, 1.2), 0.06)
+	tween.tween_callback(func() -> void: Art.set_flash(_sprite, 0.0))
+	tween.tween_property(self, "scale", base * Vector2(1.6, 0.3), 0.16)
+	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.16)
+	tween.tween_callback(queue_free)
+
+
+## One white pulse of a beaten boss's death shudder. With flashes turned
+## off only the first pulse shows: the shudder keeps its shake, not a strobe.
+func _shudder_flash(time: float) -> void:
+	if Settings.flashes or not _shudder_flashed:
+		_flash = time
+	_shudder_flashed = true
+
+
+## A beaten boss's last light lifting off it as it fades: two waves of
+## pale specks across its body.
+func _dissolve() -> void:
+	var parent := get_parent()
+	if parent == null or _sprite == null:
+		return
+	var box := _sprite.get_global_transform() * _sprite.get_rect()
+	var at := Vector2(box.get_center().x, box.end.y - box.size.y * 0.3)
+	for wave in 2:
+		var rise := HitSpark.spawn(parent, at + Vector2(0, -wave * box.size.y * 0.25), HitSpark.Kind.RISE)
+		if rise:
+			rise.spread = box.size.x * 0.7
+			rise._seed += 7919 * wave
+			rise._time = -0.35 * wave
+
+
+## The colour most of this foe's body is (outline and eyes aside), across
+## its sheet, for the bits of it that fly when it falls. Worked out once per
+## sprite sheet.
+static var _body_colours := {}
+
+
+func body_colour() -> Color:
+	var texture := _sprite.texture if _sprite else null
+	if texture == null:
+		return HitSpark.DUST
+	# Worked out ahead of time from the PNGs (tools/body_colours.py): reading a
+	# texture back from the GPU stalls the web build for a quarter second.
+	if BodyColours.COLOURS.has(texture.resource_path):
+		return Color.hex(BodyColours.COLOURS[texture.resource_path])
+	var key := texture.get_rid()
+	if not _body_colours.has(key):
+		_body_colours[key] = count_body_colour(texture)
+	return _body_colours[key]
+
+
+## Reads a sheet's pixels for its body colour: the most common colour,
+## clear pixels, outlines, eyes and glints aside (tools/body_colours.py
+## does the same from the PNG).
+static func count_body_colour(texture: Texture2D) -> Color:
+	var counts := {}
+	var image := texture.get_image()
+	if image:
+		# Every frame: a burrower's first frame is only the ground it hides in.
+		for y in image.get_height():
+			for x in image.get_width():
+				var c := image.get_pixel(x, y)
+				# Skip clear pixels, outlines and eyes, and glints.
+				if c.a < 0.5 or c.get_luminance() < 0.18 or c.get_luminance() > 0.92:
+					continue
+				counts[c] = int(counts.get(c, 0)) + 1
+	var best := HitSpark.DUST
+	var most := 0
+	for c in counts:
+		if counts[c] > most:
+			most = counts[c]
+			best = c
+	return best
 
 
 ## Override: return this enemy's sprite (see Art.sprite()).

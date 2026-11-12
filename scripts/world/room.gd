@@ -21,7 +21,8 @@ extends Node2D
 ##          Z  drowned cottage   B  the Drowned Belfry
 ##          p  the Old One's back (walkable)   N  the Old One's lip (the Maw)
 ##          S  sinking sand (drags Wren to its middle; see SinkField)
-##          A  Dunejaw (burrows, spouts, bites)   U  great rib   F  beast skull (fossil)
+##          A  Dunejaw (burrows, spouts, bites)   U  great rib   F  whale skull (its side hollow, 4 right, is the door)
+##          9  whale's lower jaw   (  a smaller whale skull
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)
@@ -224,7 +225,7 @@ const BIOMES := {
 		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
 		"water": "bitter_sea_%d", "water_edge": "salt_crust_%s_%d", "damp": "sandshade_%s",
 		"wet_deco": "thornbush_%d", "dry_deco": "bone_shards_%d",
-		"floor_overlay": ["sanddrift_%d", 7], "door": "exit_glow",
+		"floor_overlay": ["sanddrift_%d", 7],
 	},
 	"hull": {
 		"wall_deco": "hull",
@@ -393,6 +394,11 @@ func _build() -> void:
 		var sink := SinkField.new()
 		sink.name = "SinkField"
 		add_child(sink)
+	# Dust, embers, snow and the like hanging in a dungeon's air.
+	if DungeonAir.AIR.has(dungeon):
+		var air := DungeonAir.new()
+		air.name = "Air"
+		add_child(air)
 	# Gulls, fish, crabs and the like, on the overworld only.
 	if dungeon == "":
 		var life := Ambience.new()
