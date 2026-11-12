@@ -18,7 +18,7 @@
   },
   {
    "name": "timpani",
-   "notes": 52,
+   "notes": 80,
    "low": 36,
    "high": 46
   },
@@ -42,9 +42,9 @@
   },
   {
    "name": "choir",
-   "notes": 24,
+   "notes": 52,
    "low": 60,
-   "high": 71
+   "high": 79
   }
  ]
 }

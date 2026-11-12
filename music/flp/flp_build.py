@@ -72,7 +72,9 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
     can go to a clone with a lower VOL knob, "volume_db": {"bass_soft": -5}.
     A sample that is inharmonic (its partials disagree, so no retune fixes it):
     "play": 46 sends the neighbouring key to the clone, whose PITCH knob moves
-    it to the written note."""
+    it to the written note.
+    A preset with a slow attack: "advance_s": 0.05 plays the part that much early
+    (loops only: a note before 0 wraps to the loop end)."""
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
     flp = flp_raw.Flp.load(template)
     names = channel_names(template)
@@ -95,6 +97,14 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
         shift = t.get(part_name, t.get(name, 0)) if part_name == name else t.get(part_name, 0) + t.get(name, 0)
         part_notes = midi_notes(os.path.join(MUSIC, "midi", cue, part_name + ".mid"), scale)
         fix = (fixes or {}).get(part_name, {})
+        if fix.get("advance_s"):
+            # A preset with a slow attack (Staccato Blend peaks ~120 ms in) plays early so its swell lands on the
+            # beat (miniboss review v4). A note pushed before 0 wraps to the loop end; finalize folds it back.
+            adv = round(fix["advance_s"] * meta["qbpm"] / 60 * flp.ppq)
+            loop = round(meta["end_q"] * flp.ppq)
+            if any(st < adv for st, *_ in part_notes) and not (meta["loop"] and not meta["intro_q"]):
+                raise SystemExit(f"{part_name}: advance_s pushes a note before 0 and the cue does not loop from 0")
+            part_notes = [(st - adv if st >= adv else st - adv + loop, ln, k, v) for st, ln, k, v in part_notes]
         for start, length, key, vel in part_notes:
             # FL velocity runs 0-128 with 100 as default; MIDI 127 maps to 128.
             v = vel * 128 / 127

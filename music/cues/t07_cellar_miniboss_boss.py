@@ -117,11 +117,12 @@ CH = A + B
 for b, sym in enumerate(CH):
     t = song.bar(b)
     root = low_root(sym, 38)
-    fig = [root, root, root + 12, root, root + 7, root, root + 12, root + 10 if "m" in sym else root + 11]
+    # The last eighth is the flat seventh on every chord (review v2 NOTE 2: C#3 on the D bars left G minor).
+    fig = [root, root, root + 12, root, root + 7, root, root + 12, root + 10]
     if b >= 8:
         fig = [root, root + 7, root + 12, root + 7] * 2
     for k, p in enumerate(fig):
-        low.note(t + k * 0.5, 0.28, p, 92 if k % 4 == 0 else 72)
+        low.note(t + k * 0.5, 0.28, p, 110 if k % 4 == 0 else 72)  # Staccato Blend gives ~0.16 dB/step (review v4)
     for s, p, v in ((0, 45, 96), (1, 47, 70), (1.5, 47, 64), (2, 45, 88), (3, 48, 72), (3.5, 50, 80)):
         tom.note(t + s, 0.25, p, v)
     if b % 2 == 0:  # the stab: D C Bb (phrase 4's head), or its answer
@@ -168,16 +169,22 @@ for b, sym in enumerate(CH):
         continue
     pat = [(0, 36, 108), (0.75, 38, 70), (1.5, 36, 90), (2, 38, 96), (3, 36, 84), (3.5, 38, 78)]
     if sec == "C" and b >= 32:
-        pat = [(k * 0.25, 38, 60 + (b - 32) * 12 + k * 2) for k in range(16)]
+        pat = [(k * 0.25, 38, 60 + ((b - 32) * 16 + k) * 2) for k in range(16)]  # one ramp over both bars (review v7)
     for s, p, v in pat:
         drums.note(t + s, 0.2, p, min(127, v))
     if sec != "C":
         timp.note(t, 0.8, root, 84)
+    elif b < 32:  # C: timpani answer the drums on 1 and 3, so the section has a pitch above 150 Hz (review v9)
+        timp.note(t, 0.8, root, 80)
+        timp.note(t + 2, 0.8, root, 70)
+    else:  # the build: a timpani roll on G that swells with the drums
+        for k in range(8):
+            timp.note(t + k * 0.5, 0.45, low_root("G", 36), 64 + ((b - 32) * 8 + k) * 4)
     # Ostinato: sixteenths on the root with a rising turn; silent in C.
     if sec != "C":
-        fig = [0, 0, 12, 0, 7, 0, 12, 8 if "m" in sym or sym in ("Ab", "Db") else 7] * 2
+        fig = [0, 0, 12, 0, 7, 0, 12, 8 if "m" in sym else 7] * 2  # review v7: +8 on Ab/Db gave E and A
         for k, iv in enumerate(fig):
-            ost.note(t + k * 0.25, 0.18, 48 + (bass_of(sym) - 48) % 12 + iv, 84 if k % 4 == 0 else 66)
+            ost.note(t + k * 0.25, 0.18, 48 + (bass_of(sym) - 48) % 12 + iv, 104 if k % 4 == 0 else 66)
 for b in range(2, 18, 2):  # A: brass answers the ostinato
     sym = CH[b]
     tones = voicing(sym, 55, 70)
@@ -191,6 +198,10 @@ lowbrass.line(song.bar(32), [(43, 8)], vel=80)  # under the build
 horns.line(song.bar(34), bars(
     "C5:3 Eb5:1 | Bb4:4 | Ab4:2 C5:2 | G4:4 | C5:2 Eb5:1 F5:1 | G5:3 Eb5:1 | F5:2 Ab4:2 | B4:4 | "
     "C5:2 Eb5:2 | D5:3 F5:1 | D5:2 Bb4:2 | C5:4 | Ab4:2 C5:2 | Eb5:2 C5:2 | D5:3 B4:1 | G4:4"), legato=0.92)
+# The trumpet sample is a one-shot that dies after ~408/f0 s (review v7 MAJOR 2): the choir doubles the melody
+# softly so the long phrase endings keep sounding.
+for t_, ln, p, _v in [n for n in horns.notes if song.bar(34) - 1e-6 <= n[0] < song.bar(50)]:
+    choir.note(t_, ln, p, 74)
 for b in range(34, 50):
     lowbrass.note(song.bar(b), 3.9, low_root(CH[b], 34), 74)
 for b in range(50, 56):  # A': ostinato returns with brass hits, G pedal to the loop
@@ -198,4 +209,4 @@ for b in range(50, 56):  # A': ostinato returns with brass hits, G pedal to the 
 for i, p in enumerate(song.parts):
     p.humanize(seed=1100 + i, time_q=0.006)
 song.save()
-gate(song, CH, ("horns",), ("choir",), "boss")
+gate(song, CH, ("horns",), (), "boss")  # the choir doubles the D melody, so it is not comping

@@ -1,0 +1,61 @@
+{
+ "cue": "miniboss",
+ "lufs": -17.0,
+ "parts": {
+  "brass_stab": {
+   "insert": 6,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2000,
+     "gain": 3.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "strings_staccato": {
+   "insert": 5,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_toms": {
+   "insert": 3,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Teeth in the Dark (miniboss). templates\\boss_template3.flp (shared with the boss; Staccato Blend Time macro at 0): Analog Lab \"Trumpfal\" (a Fairlight CMI trumpet sample) on horns_brass (insert 6) for the stabs, Analog Lab \"Staccato Blend\" (Augmented Strings) on strings_ostinato (insert 5), the FL tom sampler on drum_taiko (insert 3). Review v2: Dirty Bronze was octave-low with a synth pitch fall, and 12 Low Strings could not play short eighths."
+}

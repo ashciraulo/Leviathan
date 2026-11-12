@@ -1,0 +1,115 @@
+{
+ "cue": "boss",
+ "lufs": -17.0,
+ "parts": {
+  "strings_ostinato": {
+   "insert": 5,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "horns_brass": {
+   "insert": 6,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2000,
+     "gain": 1.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "brass_low": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 30,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_taiko": {
+   "insert": 3,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": 8.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "timpani": {
+   "insert": 1,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir": {
+   "insert": 4,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Wake Not the Deep (boss). templates\\boss_template3.flp (channels named by part; Staccato Blend Time macro at 0): Gong & Timpani (Emulator II) on bassoon (insert 1, +1: it sounds about a semitone flat), Ah Voice (Augmented Voices) on choir_pad (insert 4), Staccato Blend on strings_pizz (insert 5, the sixteenth ostinato), Trumpfal (CMI trumpet) on aud6 (insert 6, horns), 12 Low Strings on strings_low (insert 8, +12) for the held low line, the FL tom sampler on drum_tom (insert 3) for the taiko. Dirty Bronze is out (miniboss review v2: octave-low layer and a synth pitch fall). Taiko keys 36/38 play 47/50 (review v7: they sounded C1/D1, all sub); the choir doubles the D melody because Trumpfal is a one-shot."
+}
