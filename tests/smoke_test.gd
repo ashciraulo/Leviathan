@@ -6123,7 +6123,12 @@ func _test_pearl_shards() -> void:
 	var total := 0
 	for coord: Vector2i in RoomInfo.in_area(""):
 		total += "".join(RoomInfo.get_room(coord)["rows"]).count("8")
-	_check(total <= PearlShard.TOTAL, "no more than twelve pearl shards lie in the overworld (%d)" % total)
+	# Eleven lie loose; the twelfth is the Smugglers' Vault's prize.
+	var vault := (load("res://rooms/room_-2_0.tscn") as PackedScene).instantiate() as Room
+	if vault.chest_item == "pearl_shard":
+		total += 1
+	vault.free()
+	_check(total == PearlShard.TOTAL, "all twelve pearl shards are out in the world (%d)" % total)
 	GameState.reset_new_game()
 	GameState.give_item("pearl_shard", 3, false)
 	_check(GameState.max_bubbles == GameState.START_BUBBLES, "three shards aren't a bubble yet")

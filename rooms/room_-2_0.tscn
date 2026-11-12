@@ -8,8 +8,7 @@ name_key = "ROOM_SMUGGLERS_VAULT"
 cave = true
 gate = "clear"
 chest_hidden = true
-chest_item = "glint"
-chest_count = 200
+chest_item = "pearl_shard"
 layout = "########################
 ########################
 ####..............######
