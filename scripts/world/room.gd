@@ -177,12 +177,14 @@ const WATER_FRAME_TIME := 0.6
 ## animation frame; %s is a side (top, bottom, left, right).
 const BIOMES := {
 	"saltmarrow": {
+		"shore": "shore_saltmarrow_%s_%d",
 		"floor": "sand_%d", "wall_top": "cliff_top_%d", "wall_face": "cliff_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "shell_%d", "dry_deco": "grass_%d", "floor_overlay": ["ripple_%d", 7],
 		"water_overlay": ["tidepool_%d", 5],
 	},
 	"brinewood": {
+		"shore": "shore_brinewood_%s_%d",
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
 		"water": "bog_%d", "water_edge": "bank_%s_%d", "damp": "mire_%s",
 		"wet_deco": "reeds_%d", "dry_deco": "fern_%d",
@@ -197,18 +199,21 @@ const BIOMES := {
 		"floor_overlay": ["shimmer_%d", 7], "door": "exit_glow",
 	},
 	"gloamfen": {
+		"shore": "shore_gloamfen_%s_%d",
 		"floor": "fen_%d", "wall_top": "canopy_top_%d", "wall_face": "root_face_%d",
 		"water": "gloom_%d", "water_edge": "reed_%s_%d", "damp": "mirk_%s",
 		"wet_deco": "glowcap_%d", "dry_deco": "frond_%d",
 		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s", "door": "exit_glow",
 	},
 	"windmere": {
+		"shore": "shore_windmere_%s_%d",
 		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
 		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
 		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d", "gap": "galesky",
 		"floor_overlay": ["gust_%d", 9], "door": "exit_glow",
 	},
 	"frostspine": {
+		"shore": "shore_frostspine_%s_%d",
 		"floor": "snow_%d", "wall_top": "glacier_top_%d", "wall_face": "glacier_face_%d",
 		"water": "floe_sea_%d", "water_edge": "shelf_%s_%d", "damp": "drift_%s",
 		"wet_deco": "ice_shards_%d", "dry_deco": "frost_rock_%d",
@@ -216,6 +221,7 @@ const BIOMES := {
 		"gap": "crevasse",
 	},
 	"sunken_verge": {
+		"shore": "shore_sunken_verge_%s_%d",
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
 		"water": "shallows_%d", "water_edge": "tideline_%s_%d", "damp": "seep_%s",
 		"wet_deco": "wrack_%d", "dry_deco": "cockle_%d",
@@ -223,6 +229,7 @@ const BIOMES := {
 		"tidal_block": ["flat_block_%d", 2], "tidal_edge": "flat_edge_%s", "seabed": "seabed_%d", "door": "exit_glow",
 	},
 	"ossuary": {
+		"shore": "shore_ossuary_%s_%d",
 		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
 		"water": "bitter_sea_%d", "water_edge": "salt_crust_%s_%d", "damp": "sandshade_%s",
 		"wet_deco": "thornbush_%d", "dry_deco": "bone_shards_%d",
@@ -930,6 +937,19 @@ func _draw_ground_piece(piece: Node2D, rect: Rect2i) -> void:
 	_chunk = null
 
 
+## Open ground a pool's corner can round off into: plain floor, not water,
+## wall, a drop or the screen's edge.
+func _shore_ground(x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= COLS or y >= ROWS:
+		return false
+	var t := _tile_at(x, y)
+	# Only ground drawn as the region's plain floor: not ice, tide flats, the
+	# sea bed, sinking sand or the Old One's back, nor a find lying on ice.
+	if t in ["~", ":", "v", "Q", "#", "_", "^", "I", "x", "r", "d", ";", "S", "p"] or _frozen.has(Vector2i(x, y)):
+		return false
+	return not (t in ["*", "8"] and _tile_at(x - 1, y) == "x" and _tile_at(x + 1, y) == "x")
+
+
 func _draw_tile(tile_name: String, x: int, y: int) -> void:
 	if not _chunk_rect.has_point(Vector2i(x, y)):
 		return
@@ -991,6 +1011,12 @@ func _draw_ground() -> void:
 					# Boardwalks sit on the water, so no bank line against them.
 					if not _tile_at(x + side[1], y + side[2]) in ["~", ":", "v", "Q"]:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
+				# A corner jutting into open ground rounds off.
+				if tile == "~" and tiles.has("shore"):
+					for corner in [["tl", -1, -1], ["tr", 1, -1], ["bl", -1, 1], ["br", 1, 1]]:
+						if _shore_ground(x + corner[1], y) and _shore_ground(x, y + corner[2]) \
+								and _shore_ground(x + corner[1], y + corner[2]):
+							_draw_tile(tiles["shore"] % [corner[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
 				# Sea-glass or a pearl shard out on the ice lies on ice.
