@@ -31,9 +31,10 @@ permissions:
   contents: read
 
 concurrency:
-  # A release run by hand never cancels (or is cancelled by) a push's build.
-  group: build-${{ github.ref }}-${{ github.event_name }}
-  cancel-in-progress: true
+  # A release run by hand never cancels (or is cancelled by) a push's build,
+  # and runs on main are never cancelled, so every merge keeps its result.
+  group: build-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   export:
