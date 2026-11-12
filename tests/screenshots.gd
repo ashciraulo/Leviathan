@@ -3593,6 +3593,7 @@ func _env_shots(game: Node) -> void:
 		[Vector2i(2, 2), "env_wrack_shore", Vector2i(3, 8)],
 		[Vector2i(7, 1), "env_sinksand_basin", Vector2i(11, 1)],
 		[Vector2i(7, 0), "env_bleached_strand", Vector2i(11, 11)],
+		[Vector2i(10, 1), "env_sinksand_ring", Vector2i(11, 1)],
 	]
 	for shot: Array in shots:
 		var tile: Vector2i = shot[2]

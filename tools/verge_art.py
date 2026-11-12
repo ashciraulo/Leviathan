@@ -70,6 +70,65 @@ def flat_tile(seed):
     return px
 
 
+# The flats are drawn from one 32px block (2x2 tiles, picked by position),
+# so the ebb ridges run on unbroken from tile to tile.
+FLAT_BLOCK = 2
+
+
+def flat_block():
+    """Tide flat ridges over a whole block: long ripples that bend gently,
+    periodic over the block so it tiles with no seam, with sky caught in
+    the troughs, worm casts and shell grit."""
+    size = FLAT_BLOCK * T
+    tau = 2 * math.pi
+    rnd = random.Random(5222)
+    px = [[FLAT_SAND[3]] * size for _ in range(size)]
+    for y in range(size):
+        for x in range(size):
+            bend = 1.3 * math.sin(tau * y / size) + 0.7 * math.sin(tau * (x + 2 * y) / size + 0.8)
+            v = math.sin(tau * (3 * x + y) / size + bend)
+            if v > 0.82:
+                px[y][x] = FLAT_SAND[2]
+            elif v < -0.9:
+                px[y][x] = FLAT_SAND[4]
+    for _ in range(9):
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        if px[y][x] == FLAT_SAND[3]:
+            px[y][x] = FLAT_SAND[1]
+            px[y][(x + 1) % size] = FLAT_SAND[0]
+    for _ in range(2):
+        cx, cy = rnd.randrange(size), rnd.randrange(size)
+        for (dx, dy) in ((0, 0), (1, 0), (1, 1), (0, 1), (-1, 1)):
+            px[(cy + dy) % size][(cx + dx) % size] = FLAT_SAND[4] if (dx, dy) == (0, 0) else FLAT_SAND[2]
+    for _ in range(4):
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        px[y][x] = SHELL[1]
+    return px
+
+
+def flat_block_tile(q):
+    block = flat_block()
+    ox, oy = (q % FLAT_BLOCK) * T, (q // FLAT_BLOCK) * T
+    return [row[ox:ox + T] for row in block[oy:oy + T]]
+
+
+def flat_edge(side, seed):
+    """Damp silt on the dry side of a tide flat's edge (drawn over the silt
+    tile, on the side the flat lies): the sand darkens toward the flat in a
+    ragged band, so the flat doesn't end on a ruler-straight line."""
+    rnd = random.Random(5260 + seed)
+    px = blank()
+    for i in range(T):
+        d = 3 + (1 if math.sin(i * 1.3 + seed) > 0.3 else 0) + (1 if rnd.random() < 0.2 else 0)
+        for k in range(d):
+            if k == d - 1 and rnd.random() < 0.5:
+                continue
+            c = FLAT_SAND[3] if k == 0 else (SILT[4] if k < d - 1 else SILT[3])
+            x, y = {"bottom": (i, T - 1 - k), "top": (i, k), "right": (T - 1 - k, i), "left": (k, i)}[side]
+            px[y][x] = c
+    return px
+
+
 SEABED = [hex_color(c) for c in ("#8A9690", "#6E7A74", "#58625C", "#48504A", "#363C38", "#262A28")]
 ANEMONE = [hex_color(c) for c in ("#E89A8A", "#C46A62", "#8E4646")]
 
@@ -279,6 +338,10 @@ TILES = [
     ("silt_0", lambda: silt_tile(0)), ("silt_1", lambda: silt_tile(1)),
     ("silt_2", lambda: silt_tile(2)), ("silt_3", lambda: silt_tile(3)),
     ("flat_0", lambda: flat_tile(0)), ("flat_1", lambda: flat_tile(1)),
+    ("flat_block_0", lambda: flat_block_tile(0)), ("flat_block_1", lambda: flat_block_tile(1)),
+    ("flat_block_2", lambda: flat_block_tile(2)), ("flat_block_3", lambda: flat_block_tile(3)),
+    ("flat_edge_top", lambda: flat_edge("top", 1)), ("flat_edge_bottom", lambda: flat_edge("bottom", 2)),
+    ("flat_edge_left", lambda: flat_edge("left", 3)), ("flat_edge_right", lambda: flat_edge("right", 4)),
     ("seawall_top_0", lambda: seawall_top(0)), ("seawall_top_1", lambda: seawall_top(1)),
     ("seawall_face_0", lambda: seawall_face(0)), ("seawall_face_1", lambda: seawall_face(1)),
     ("shallows_0", lambda: shallows(0)), ("shallows_1", lambda: shallows(1)),
