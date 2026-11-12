@@ -8,9 +8,9 @@ extends Node2D
 ## With flashes turned off the bright core is
 ## left out and everything is dimmer.
 
-enum Kind { HIT, BLOCK, FALL, FINAL, WEAR }
+enum Kind { HIT, BLOCK, FALL, FINAL, WEAR, SHARDS, RISE }
 
-const LIFE := {Kind.HIT: 0.14, Kind.BLOCK: 0.22, Kind.FALL: 0.38, Kind.FINAL: 0.7, Kind.WEAR: 0.9}
+const LIFE := {Kind.HIT: 0.14, Kind.BLOCK: 0.22, Kind.FALL: 0.38, Kind.FINAL: 0.7, Kind.WEAR: 0.9, Kind.SHARDS: 0.55, Kind.RISE: 1.6}
 const HIT_CORE := Color("#fff6d8")
 const HIT_EDGE := Color("#ffd27a")
 const BLOCK_SPARK := Color("#cfe8ff")
@@ -22,6 +22,10 @@ const RIM := Color("#2b1d2e")
 var kind := Kind.HIT
 ## The way the blow travelled (BLOCK sparks fly back against it).
 var direction := Vector2.RIGHT
+## SHARDS: the fallen foe's own colour. RISE: how wide a body the specks
+## lift off (px).
+var tint := Color.WHITE
+var spread := 24.0
 var _time := 0.0
 var _seed := 0
 
@@ -35,6 +39,9 @@ static func spawn(parent: Node, at: Vector2, what: Kind, dir: Vector2 = Vector2.
 	spark.direction = dir.normalized() if dir.length() > 0.01 else Vector2.RIGHT
 	parent.add_child(spark)
 	spark.global_position = at.round()
+	# Seeded by where it lands (not where it was added), so no two bursts
+	# in a room look alike.
+	spark._seed = absi(int(spark.global_position.x * 7.0 + spark.global_position.y * 13.0))
 	return spark
 
 
@@ -66,6 +73,42 @@ func _draw() -> void:
 			_draw_final(t, dim)
 		Kind.WEAR:
 			_draw_wear(t, dim)
+		Kind.SHARDS:
+			_draw_shards(t, dim)
+		Kind.RISE:
+			_draw_rise(t, dim)
+
+
+func _draw_shards(t: float, dim: float) -> void:
+	# Bits of the foe itself, flung up and out, tumbling back to the floor.
+	var fade := (1.0 - t * t) * dim
+	for i in 6:
+		var angle := -PI * (0.12 + 0.76 * float(i) / 5.0) + float((_seed + i * 13) % 7 - 3) * 0.06
+		var speed := 34.0 + float((_seed + i * 7) % 5) * 7.0
+		var at := Vector2(cos(angle), sin(angle)) * speed * _time + Vector2(0, 150.0 * _time * _time)
+		# They land on the floor, a little below where the foe stood.
+		at.y = minf(at.y, 4.0 + float(i % 3))
+		var size := Vector2(2, 2) if i % 3 != 0 else Vector2(3, 2)
+		draw_rect(Rect2(at.round(), size).grow(1.0), Color(RIM, fade * 0.7))
+		draw_rect(Rect2(at.round(), size), Color(tint, fade))
+
+
+func _draw_rise(t: float, dim: float) -> void:
+	# A beaten boss's last light: pale specks lifting off its body and away,
+	# flickering as they go.
+	for i in 24:
+		var lag := float(i % 8) * 0.06
+		var u := clampf((t - lag) / (1.0 - lag), 0.0, 1.0)
+		if u <= 0.0 or u >= 1.0:
+			continue
+		var x := (float((_seed + i * 37) % 100) / 100.0 - 0.5) * spread
+		var at := Vector2(x + sin(u * 6.0 + float(i)) * 3.0, -u * 46.0 - float(i % 4) * 4.0)
+		if (int(_time * 20.0) + i) % 5 == 0:
+			continue
+		var a := minf(u / 0.15, 1.0) * (1.0 - u) * dim
+		var size := 2.0 if i % 2 == 0 else 1.0
+		draw_rect(Rect2(at.round(), Vector2(size, size)).grow(1.0), Color(HIT_EDGE, a * 0.5))
+		draw_rect(Rect2(at.round(), Vector2(size, size)), Color(HIT_CORE, a))
 
 
 func _draw_hit(t: float, dim: float) -> void:

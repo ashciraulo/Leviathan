@@ -266,6 +266,7 @@ func _die() -> void:
 		_flash = 0.08
 		Feel.shake(3.0)
 		await get_tree().create_timer(0.16).timeout
+	_dissolve()
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.3, 0.2), 0.6)
 	tween.tween_property(self, "modulate:a", 0.0, 0.6)

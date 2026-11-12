@@ -46,6 +46,7 @@ func _ready() -> void:
 		await _test_echoes_dungeon()
 		await _test_foes_dungeon()
 		await _test_qa_dungeon()
+		await _test_air_dungeon()
 		await _test_villagers()
 		await _test_story()
 		await _test_brinewood_pearl()
@@ -102,6 +103,7 @@ func _ready() -> void:
 		await _test_hessa_walk()
 		await _test_boat_raised()
 		await _test_wick_round()
+		await _test_gran_table()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -1196,8 +1198,21 @@ func _test_play() -> void:
 	bog.hp = 1
 	bog.take_hit(1, Vector2.RIGHT)
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
-	await _wait(0.5)
+	var bits: Array = room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.SHARDS)
+	_check(bits.size() == 1 and bits[0].tint != HitSpark.DUST and bits[0].tint.a > 0.5, "and bits of it fly, in its own colour (%s)" % (bits[0].tint if bits.size() == 1 else "none"))
+	await _wait(0.6)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
+	# A beaten boss's last light lifts off it as it fades.
+	var lifter := Scuttler.new()
+	lifter.ai_enabled = false
+	lifter.position = Vector2(150, row_y)
+	room.add_child(lifter)
+	await _wait(0.05)
+	lifter._dissolve()
+	_check(room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.RISE).size() == 2, "a fading boss sends up two waves of light")
+	lifter.queue_free()
+	await _wait(2.1)
+	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "and they lift away")
 	# A landed blow squashes a foe flat for a moment, then it springs back.
 	var squashee := Scuttler.new()
 	squashee.ai_enabled = false
@@ -3506,6 +3521,60 @@ func _test_qa_dungeon() -> void:
 	await get_tree().process_frame
 	_check(camera.offset == Vector2.ZERO, "a pause settles the screen shake (%s)" % camera.offset)
 	get_tree().paused = false
+	game.queue_free()
+	GameState.reset_new_game()
+	await _wait(0.1)
+
+
+## Every dungeon's air has something in it; the overworld has none of it.
+func _test_air_dungeon() -> void:
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(10, 10), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	game.player._invuln = 600.0
+	var firsts := {"hull": Vector2i(10, 10), "kiln": Vector2i(21, 10), "mire": Vector2i(25, 10), "gale": Vector2i(28, 10),
+		"glacier": Vector2i(32, 10), "belfry": Vector2i(36, 10), "tomb": Vector2i(40, 10), "maw": Vector2i(44, 10)}
+	for dungeon: String in firsts:
+		var room := await _goto(game, firsts[dungeon], Vector2i(11, 10))
+		var air := room.get_node_or_null("Air") as DungeonAir
+		_check(air != null, "%s: the air has something in it" % dungeon)
+		if air == null:
+			continue
+		var specks: int = air._motes.size() + air._falls.size() + air._rises.size() + air._rain.size() + air._drips.size() + air._trickles.size()
+		_check(specks >= 3, "%s: %d specks in the air" % [dungeon, specks])
+		_check(air.z_index < Darkness.Z, "%s: under the Mire's dark, so it can't light it" % dungeon)
+	var kiln := await _goto(game, Vector2i(21, 10), Vector2i(11, 10))
+	_check(not (kiln.get_node("Air") as DungeonAir)._rises.is_empty(), "embers lift off the Kiln's lava")
+	var belfry := await _goto(game, Vector2i(36, 10), Vector2i(11, 11))
+	var bubbles: DungeonAir = belfry.get_node("Air")
+	_check(not bubbles._rises.is_empty() and not bubbles._drips.is_empty(), "the Belfry drips and bubbles")
+	# The drips run their whole course: gather, fall, ring, and again.
+	var landed := false
+	var deadline := Time.get_ticks_msec() + 6000
+	while Time.get_ticks_msec() < deadline and not landed:
+		for d in bubbles._drips:
+			landed = landed or d.ring >= 0.0
+		await _wait(0.1)
+	_check(landed, "a drip lands on the floor with a ring")
+	# In the Tomb, nothing in the air comes near a hidden bone wall's seam,
+	# whose leaking dust is the only sign of it.
+	var seam_room := await _goto(game, Vector2i(40, 8), Vector2i(11, 10))
+	var seam_air: DungeonAir = seam_room.get_node("Air")
+	_check(not seam_air._seams.is_empty(), "the Tomb's air knows where its hidden walls are")
+	var near := false
+	for tile in seam_air._roof:
+		near = near or not seam_air._clear_of_seams(Vector2(tile * Room.TILE))
+	_check(not near, "and no sand trickles near one")
+	var outside := await _goto(game, Vector2i(1, 1), Vector2i(11, 6))
+	_check(outside.get_node_or_null("Air") == null, "the overworld has its own life instead")
+	# High contrast: the air steps back.
+	var was := Settings.high_contrast
+	Settings.high_contrast = true
+	var hull := await _goto(game, Vector2i(10, 10), Vector2i(11, 10))
+	_check(is_equal_approx((hull.get_node("Air") as DungeonAir)._fade, DungeonAir.CONTRAST_FADE), "with high contrast on, the air fades back")
+	Settings.high_contrast = was
 	game.queue_free()
 	GameState.reset_new_game()
 	await _wait(0.1)
@@ -8442,6 +8511,88 @@ func _test_nettle_signals() -> void:
 	GameState.reset_new_game()
 
 
+## Gran's table: once Liesl knows Gran lived, she asks for Gran's things.
+## Ide has the cup; the candlestick and salt fish are finds. Handing them
+## over plays supper in Drowned Lane.
+func _test_gran_table() -> void:
+	GameState.reset_new_game()
+	var first := func(who: String) -> String: return str(Conversations.branch_for(who).get("lines", [""])[0])
+	var ide_first := func() -> String: return str(Conversations.branch_for("ide").get("lines", [""])[0])
+	for flag in ["liesl_asked", StoryDirector.TURNED_FLAG, "tidebell_belfry", "met_ide_ferry"]:
+		GameState.set_flag(flag)
+	_check(first.call("liesl") == "LIESL_WAITING" and ide_first.call() != "IDE_CUP_1", "no table before Liesl hears of the grotto marks")
+	GameState.set_flag("read_grotto_marks")
+	_check(first.call("liesl") == "LIESL_MARKS_1", "the marks first")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_WAITING", "no table while her door bell's still lost")
+	GameState.set_flag("found_doorbell")
+	_check(first.call("liesl") == "LIESL_BELL_1", "the bell's hand-in isn't hidden")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_TABLE_1", "then Liesl asks for Gran's things")
+	Conversations.talk("liesl")
+	_check(first.call("liesl") == "LIESL_TABLE_WAITING", "and waits")
+	for id in ["gran_candle", "gran_salt"]:
+		_check(StoryDirector.FIND_NEEDS[id] == "liesl_table_ask", "%s only once she's asked" % id)
+	GameState.clear_flag("met_ide_ferry")
+	_check(ide_first.call() == "IDE_FERRY_1", "meeting Ide comes before the cup")
+	GameState.set_flag("met_ide_ferry")
+	_check(ide_first.call() == "IDE_CUP_1", "Ide has the blue cup")
+	Conversations.talk("ide")
+	_check(GameState.has_flag("table_cup") and ide_first.call() != "IDE_CUP_1", "and hands it over, once")
+	Conversations.talk("find_gran_candle")
+	_check(first.call("liesl") == "LIESL_TABLE_WAITING", "two of three isn't a table")
+	Conversations.talk("find_gran_salt")
+	# The table stands in the lane, bare, until supper.
+	var talk_at := StoryDirector.LIESL_AT + Vector2(-14, 0)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, talk_at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var room: Room = game.current_room
+	var tables: Array = room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+	_check(tables.size() == 1 and not (tables[0] as GranTable).set_out, "Liesl's laid the plates")
+	var at := Vector2i(StoryDirector.GRAN_TABLE_AT / 16.0)
+	_check(room.tile_at(at.x, at.y) == "." and room.tile_at(at.x - 1, at.y) == "." and room.tile_at(at.x, at.y - 1) == ".", "the table stands on the lane's dry ground")
+	for spot: Vector2 in [StoryDirector.WREN_SUPPER_AT, StoryDirector.IDE_SUPPER_AT, StoryDirector.LIESL_SUPPER_AT]:
+		var cell := Vector2i(spot / 16.0)
+		_check(cell.y <= 8 and room.tile_at(cell.x, cell.y) == ".", "supper places on the floor (%s)" % cell)
+	var glints := GameState.item_count("glint")
+	game.player.facing = Vector2.RIGHT
+	await _wait(0.05)
+	game.player.try_interact()
+	var pages := await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.SUPPER_DONE_FLAG) and pages >= 12, "supper with Gran's things (%d pages)" % pages)
+	_check(GameState.item_count("glint") == glints + StoryDirector.SUPPER_GLINTS, "Gran's housekeeping for Wren")
+	var table: GranTable = tables[0]
+	_check(table.set_out and table.candle_lit and table.bread, "cup, candle lit, fish and Ide's bread")
+	_check(_find_kind(room, "ide") == null and not Cutscene.active, "Ide's gone back up the lane to her boat by the scene's end")
+	_check(first.call("liesl") == "LIESL_TABLE_AFTER", "Liesl lays Gran's place every night now")
+	game.queue_free()
+	await _wait(0.2)
+	# Back again: the table's still set, and supper doesn't play twice.
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	tables = game.current_room.get_children().filter(func(c: Node) -> bool: return c is GranTable)
+	_check(tables.size() == 1 and (tables[0] as GranTable).candle_lit and not Cutscene.active, "her table stays set")
+	game.queue_free()
+	await _wait(0.2)
+	# A supper the game closed partway through plays on the way back in,
+	# Wren coming in from the far end of the lane.
+	GameState.clear_flag(StoryDirector.SUPPER_DONE_FLAG)
+	GameState.set_checkpoint(StoryDirector.DROWNED_LANE, Vector2(21 * 16 + 8, 2 * 16 + 10))
+	glints = GameState.item_count("glint")
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	await _play_scene(game, 40.0)
+	_check(GameState.has_flag(StoryDirector.SUPPER_DONE_FLAG) and GameState.item_count("glint") == glints + StoryDirector.SUPPER_GLINTS, "an unfinished supper picks up again")
+	_check(game.player.global_position.distance_to(game.current_room.global_position + StoryDirector.WREN_SUPPER_AT) < 6.0, "and Wren finds their way round to the table")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+
+
 ## Small errands: Corrin's bottles, Pell's shell, Dunstan's driftwood.
 func _test_small_finds() -> void:
 	GameState.reset_new_game()
@@ -9185,6 +9336,52 @@ func _test_older_secrets() -> void:
 		_check(swim_rows[at.y][at.x] == "." and swim_rows[at.y + 1][at.x] == "." and swim_rows[at.y - 1][at.x] == "#" and ways >= 1,
 			"room %s has a rock-sheltered shoal at %s, open to deep water" % [shoal[0], at])
 		probe.free()
+	# The Kelp Stair, Drowned Chapel and Wreck Vault: a cave run under the
+	# Verge, south of Wreckers' Stair. Deep water only the Diver's Helm
+	# crosses, two eyes for the bow, and a vault that shuts Wren in.
+	GameState.reset_new_game()
+	var wreckers := Room.parse_layout(((load("res://rooms/room_2_4.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(wreckers[12].substr(14, 2) == "..", "Wreckers' Stair opens south to the Kelp Stair")
+	var stair: Room = (load("res://rooms/room_2_5.tscn") as PackedScene).instantiate()
+	var s_rows := Room.parse_layout(stair.layout)
+	var band := true
+	for y in range(5, 10):
+		for x in range(5, 22):
+			band = band and s_rows[y][x] == "Q"
+	var north_side := _walkable_from(s_rows, Vector2i(14, 1))
+	_check(stair.cave and stair.biome == "sunken_verge" and band and s_rows[0].substr(14, 2) == ".." and s_rows[10][23] == "." and s_rows[11][23] == "."
+		and not north_side.has(Vector2i(10, 10)), "the Kelp Stair: five rows of deep water between the stair and the way on")
+	stair.free()
+	var chapel: Room = (load("res://rooms/room_3_5.tscn") as PackedScene).instantiate()
+	add_child(chapel)
+	await _wait(0.2)
+	var ch_rows := Room.parse_layout(chapel.layout)
+	var ch_eyes: Array = _child_of(chapel, IceEye)
+	var ch_bars := _child_of(chapel, Bars)
+	_check(chapel.cave and chapel.biome == "sunken_verge" and chapel.gate == "eyes" and ch_eyes.size() == 2 and ch_bars.size() == 2 and not (ch_bars[0] as Bars).is_open
+		and ch_rows[10][0] == "." and ch_rows[11][0] == "." and ch_rows[12].substr(9, 2) == "..", "the Drowned Chapel: two eyes bar the way down")
+	(ch_eyes[0] as IceEye).arrow_hit(Vector2.UP)
+	await _wait(0.3)
+	_check(not (ch_bars[0] as Bars).is_open, "one eye isn't enough")
+	(ch_eyes[1] as IceEye).arrow_hit(Vector2.UP)
+	await _wait(0.4)
+	_check((ch_bars[0] as Bars).is_open and (ch_bars[1] as Bars).is_open, "both eyes open, the bars lift")
+	chapel.queue_free()
+	GameState.reset_new_game()
+	var wreck: Room = (load("res://rooms/room_3_6.tscn") as PackedScene).instantiate()
+	add_child(wreck)
+	await _wait(0.1)
+	var w_rows := Room.parse_layout(wreck.layout)
+	var w_chests := _child_of(wreck, Chest)
+	var w_crew := 0
+	for child in wreck.get_children():
+		if child is Enemy:
+			w_crew += 1
+	_check(wreck.cave and wreck.biome == "sunken_verge" and wreck.gate == "clear" and wreck.chest_hidden and _child_of(wreck, Bars).size() == 2 and w_chests.size() == 1 and not (w_chests[0] as Chest).visible
+		and w_rows[0].substr(9, 2) == ".." and w_rows[1].substr(9, 2) == "||" and w_crew >= 5, "the Wreck Vault: a hidden cache, a crew of %d, bars that shut behind Wren" % w_crew)
+	wreck.queue_free()
+	GameState.reset_new_game()
+
 
 
 ## One short trial cave per region: a single puzzle and a glint cache.

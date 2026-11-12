@@ -54,8 +54,10 @@ const WEAR_EVERY := 0.85
 var _wear_timer := 0.0
 ## Stars over a boss's head while the sword can hurt it (see is_boss_open).
 var _daze_stars: DazeStars
-## Cache for _art_top, by frame.
-var _art_tops := {}
+## Cache for _art_top: "texture path|hframes|vframes" -> {frame: top}.
+## Shared by every enemy, because reading a texture's pixels back from the
+## GPU is slow (a quarter-second freeze on the web build).
+static var _art_tops := {}
 
 
 func _ready() -> void:
@@ -89,6 +91,9 @@ func _ready() -> void:
 	add_child(_sprite)
 	_sprite_origin = _sprite.position
 	_sprite_base_scale = _sprite.scale
+	# A boss's daze stars need the top of its art: read that now, while the
+	# room is still sliding or fading in, not mid-fight.
+	_warm_art_tops.call_deferred()
 	if elite:
 		scale = Vector2.ONE * ELITE_SCALE
 		_sprite.self_modulate = ELITE_TINT
@@ -201,17 +206,33 @@ func _update_daze_stars() -> void:
 ## How far down the sprite's current frame its first drawn row is (frames
 ## often leave empty room above, for a raised head or a leap).
 func _art_top() -> float:
-	var key := _sprite.frame
+	return float(_frame_tops().get(_sprite.frame, 0.0))
+
+
+## The first row with any colour in each frame of the sprite's sheet, worked
+## out once per sheet from a single read of its pixels.
+func _frame_tops() -> Dictionary:
+	var texture := _sprite.texture
+	if texture == null:
+		return {}
+	var key := "%s|%d|%d" % [texture.resource_path if texture.resource_path != "" else str(texture.get_rid()),
+		_sprite.hframes, _sprite.vframes]
 	if _art_tops.has(key):
 		return _art_tops[key]
-	var top := 0.0
-	var image := _sprite.texture.get_image() if _sprite.texture else null
+	var tops := {}
+	var image := texture.get_image()
 	if image:
 		var size := Vector2i(image.get_width() / _sprite.hframes, image.get_height() / _sprite.vframes)
-		var at := Vector2i(key % _sprite.hframes, key / _sprite.hframes) * size
-		top = float(image.get_region(Rect2i(at, size)).get_used_rect().position.y)
-	_art_tops[key] = top
-	return top
+		for frame in _sprite.hframes * _sprite.vframes:
+			var at := Vector2i(frame % _sprite.hframes, frame / _sprite.hframes) * size
+			tops[frame] = float(image.get_region(Rect2i(at, size)).get_used_rect().position.y)
+	_art_tops[key] = tops
+	return tops
+
+
+func _warm_art_tops() -> void:
+	if is_inside_tree() and is_in_group("boss") and _sprite:
+		_frame_tops()
 
 
 ## Override to false for a boss whose wear already shows another way.
@@ -269,6 +290,9 @@ func _die() -> void:
 	dying = true
 	if not is_in_group("boss"):
 		HitSpark.spawn(get_parent(), global_position, HitSpark.Kind.FALL)
+		var shards := HitSpark.spawn(get_parent(), global_position + _spark_offset() * 0.5, HitSpark.Kind.SHARDS)
+		if shards:
+			shards.tint = body_colour() * _sprite.self_modulate
 	Audio.play_sfx("enemy_die", global_position)
 	if elite:
 		Audio.play_sfx("boss_fall", global_position, 1.6)
@@ -283,10 +307,65 @@ func _die() -> void:
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(1.6, 0.3), 0.2)
-	tween.tween_property(self, "modulate:a", 0.0, 0.2)
-	tween.chain().tween_callback(queue_free)
+	# A white pop as the last blow lands, a swell, then it flattens away.
+	Art.set_flash(_sprite, 1.0)
+	var base := scale
+	var tween := create_tween()
+	tween.tween_property(self, "scale", base * Vector2(1.2, 1.2), 0.06)
+	tween.tween_callback(func() -> void: Art.set_flash(_sprite, 0.0))
+	tween.tween_property(self, "scale", base * Vector2(1.6, 0.3), 0.16)
+	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.16)
+	tween.tween_callback(queue_free)
+
+
+## A beaten boss's last light lifting off it as it fades: two waves of
+## pale specks across its body.
+func _dissolve() -> void:
+	var parent := get_parent()
+	if parent == null or _sprite == null:
+		return
+	var box := _sprite.get_global_transform() * _sprite.get_rect()
+	var at := Vector2(box.get_center().x, box.end.y - box.size.y * 0.3)
+	for wave in 2:
+		var rise := HitSpark.spawn(parent, at + Vector2(0, -wave * box.size.y * 0.25), HitSpark.Kind.RISE)
+		if rise:
+			rise.spread = box.size.x * 0.7
+			rise._seed += 7919 * wave
+			rise._time = -0.35 * wave
+
+
+## The colour most of this foe's body is (outline and eyes aside), across
+## its sheet, for the bits of it that fly when it falls. Worked out once per
+## sprite sheet.
+static var _body_colours := {}
+
+
+func body_colour() -> Color:
+	var texture := _sprite.texture if _sprite else null
+	if texture == null:
+		return HitSpark.DUST
+	var key := texture.get_rid()
+	if _body_colours.has(key):
+		return _body_colours[key]
+	var counts := {}
+	var image := texture.get_image()
+	if image:
+		# Every frame: a burrower's first frame is only the ground it hides in.
+		for y in image.get_height():
+			for x in image.get_width():
+				var c := image.get_pixel(x, y)
+				# Skip clear pixels, outlines and eyes, and glints.
+				if c.a < 0.5 or c.get_luminance() < 0.18 or c.get_luminance() > 0.92:
+					continue
+				counts[c] = int(counts.get(c, 0)) + 1
+	var best := HitSpark.DUST
+	var most := 0
+	for c in counts:
+		if counts[c] > most:
+			most = counts[c]
+			best = c
+	_body_colours[key] = best
+	return best
 
 
 ## Override: return this enemy's sprite (see Art.sprite()).

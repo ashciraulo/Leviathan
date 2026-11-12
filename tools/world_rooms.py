@@ -514,6 +514,10 @@ def main():
             for x in list(range(0, 11)) + list(range(20, COLS)):
                 if rows[y][x] in "C*Tn8":
                     problems.append("screen %s: '%s' at (%d,%d) sits under the HUD" % (coord, rows[y][x], x, y))
+                # Eye switches too: a player hunting the last eye shouldn't
+                # find it behind the bubbles.
+                if rows[y][x] == "E":
+                    problems.append("screen %s: an eye at (%d,%d) sits under the HUD" % (coord, x, y))
     # Every signpost in a room reads the room's one sign_key: one per room.
     for coord in sorted(rooms):
         if sum(r.count("n") for r in rows_for(rooms[coord], final_items)) > 1:

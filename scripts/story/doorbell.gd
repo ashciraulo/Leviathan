@@ -50,6 +50,12 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## Rings once, as if someone's come home (Gran's supper).
+func ring() -> void:
+	_swing = 1.4
+	Audio.play_sfx("bell_ring", global_position, 2.4)
+
+
 func interact() -> void:
 	if hung or not visible:
 		return

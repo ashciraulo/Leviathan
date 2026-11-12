@@ -37,6 +37,10 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
+	# Read every room's summary now, behind the black fade, rather than in
+	# the middle of play (the first save at a Tidestone or the first look at
+	# the map would otherwise stall a frame for it, worst on the web build).
+	RoomInfo.all()
 	camera = GameCamera.new()
 	add_child(camera)
 	camera.make_current()
