@@ -317,6 +317,7 @@ func _update_sprite() -> void:
 			_sprite.frame = FRAME_FLY
 		_:
 			_sprite.frame = FRAME_PERCH
+			_breathe(1.3)
 	_sprite.flip_h = _facing < 0.0
 	# Perched, it stands on the rod's tip, high above the floor.
 	if mode in [Mode.PERCH, Mode.FLARE, Mode.STORM, Mode.CROUCH]:
