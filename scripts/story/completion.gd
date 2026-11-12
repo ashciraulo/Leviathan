@@ -164,17 +164,9 @@ static func _build() -> void:
 
 ## The tiles holding this letter in a room's layout or its alt_layout.
 static func _both_layouts(info: Dictionary, letter: String) -> Array[Vector2i]:
-	var out := _tiles(info["rows"], letter)
-	for tile in _tiles(info["alt_rows"], letter):
+	var out := RoomInfo.tiles_of(info["rows"], letter)
+	for tile in RoomInfo.tiles_of(info["alt_rows"], letter):
 		if not out.has(tile):
 			out.append(tile)
 	return out
 
-
-static func _tiles(rows: PackedStringArray, letter: String) -> Array[Vector2i]:
-	var out: Array[Vector2i] = []
-	for y in rows.size():
-		for x in rows[y].length():
-			if rows[y][x] == letter:
-				out.append(Vector2i(x, y))
-	return out
