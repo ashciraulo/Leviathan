@@ -269,6 +269,9 @@ func _die() -> void:
 	dying = true
 	if not is_in_group("boss"):
 		HitSpark.spawn(get_parent(), global_position, HitSpark.Kind.FALL)
+		var shards := HitSpark.spawn(get_parent(), global_position + _spark_offset() * 0.5, HitSpark.Kind.SHARDS)
+		if shards:
+			shards.tint = body_colour() * _sprite.self_modulate
 	Audio.play_sfx("enemy_die", global_position)
 	if elite:
 		Audio.play_sfx("boss_fall", global_position, 1.6)
@@ -283,10 +286,65 @@ func _die() -> void:
 	_contact.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitorable", false)
 	set_deferred("collision_layer", 0)
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(1.6, 0.3), 0.2)
-	tween.tween_property(self, "modulate:a", 0.0, 0.2)
-	tween.chain().tween_callback(queue_free)
+	# A white pop as the last blow lands, a swell, then it flattens away.
+	Art.set_flash(_sprite, 1.0)
+	var base := scale
+	var tween := create_tween()
+	tween.tween_property(self, "scale", base * Vector2(1.2, 1.2), 0.06)
+	tween.tween_callback(func() -> void: Art.set_flash(_sprite, 0.0))
+	tween.tween_property(self, "scale", base * Vector2(1.6, 0.3), 0.16)
+	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.16)
+	tween.tween_callback(queue_free)
+
+
+## A beaten boss's last light lifting off it as it fades: two waves of
+## pale specks across its body.
+func _dissolve() -> void:
+	var parent := get_parent()
+	if parent == null or _sprite == null:
+		return
+	var box := _sprite.get_global_transform() * _sprite.get_rect()
+	var at := Vector2(box.get_center().x, box.end.y - box.size.y * 0.3)
+	for wave in 2:
+		var rise := HitSpark.spawn(parent, at + Vector2(0, -wave * box.size.y * 0.25), HitSpark.Kind.RISE)
+		if rise:
+			rise.spread = box.size.x * 0.7
+			rise._seed += 7919 * wave
+			rise._time = -0.35 * wave
+
+
+## The colour most of this foe's body is (outline and eyes aside), across
+## its sheet, for the bits of it that fly when it falls. Worked out once per
+## sprite sheet.
+static var _body_colours := {}
+
+
+func body_colour() -> Color:
+	var texture := _sprite.texture if _sprite else null
+	if texture == null:
+		return HitSpark.DUST
+	var key := texture.get_rid()
+	if _body_colours.has(key):
+		return _body_colours[key]
+	var counts := {}
+	var image := texture.get_image()
+	if image:
+		# Every frame: a burrower's first frame is only the ground it hides in.
+		for y in image.get_height():
+			for x in image.get_width():
+				var c := image.get_pixel(x, y)
+				# Skip clear pixels, outlines and eyes, and glints.
+				if c.a < 0.5 or c.get_luminance() < 0.18 or c.get_luminance() > 0.92:
+					continue
+				counts[c] = int(counts.get(c, 0)) + 1
+	var best := HitSpark.DUST
+	var most := 0
+	for c in counts:
+		if counts[c] > most:
+			most = counts[c]
+			best = c
+	_body_colours[key] = best
+	return best
 
 
 ## Override: return this enemy's sprite (see Art.sprite()).

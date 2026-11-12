@@ -265,6 +265,7 @@ func _die() -> void:
 			return
 	# The storm breaks, and it lifts away on the last of the wind.
 	_sprite.frame = FRAME_FLY
+	_dissolve()
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "position", position + Vector2(60.0 * _facing, -150), 1.6).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(self, "modulate:a", 0.0, 1.6)

@@ -345,6 +345,7 @@ func _die() -> void:
 	# It sinks for the last time, and the holes freeze over behind it.
 	Audio.play_sfx("boss_fall", global_position, 0.7)
 	_sprite.frame = FRAME_UNDER
+	_dissolve()
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "position", position + Vector2(0, 10), 1.4)
 	tween.tween_property(self, "modulate:a", 0.0, 1.4)
