@@ -36,7 +36,7 @@
   },
   "drum_tom": {
    "insert": 3,
-   "target": -33.0,
+   "target": -39.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -80,5 +80,5 @@
    "db_oct": 12
   }
  ],
- "notes": "Cellar Steps. Built on cellar_template2 (hull_template with Emulator II Bassoon on insert 1 and Analog Lab C-8 Pizzicato (OB-Xa) on insert 5; v1 had Lush Pizzicato, whose granular layers read 13-35 c off on six keys); tom = the frame-drum sampler on insert 3, key 45 played at 52; harp = Analog Harp)."
+ "notes": "Cellar Steps. Built on cellar_template2 (hull_template with Emulator II Bassoon on insert 1 and Analog Lab C-8 Pizzicato (OB-Xa) on insert 5; v1 had Lush Pizzicato, whose granular layers read 13-35 c off on six keys); tom = the frame-drum sampler on insert 3, key 45 played at 52; harp = Analog Harp). v5 (review v4): strings_pizz is Analog Lab Pizzi Bass (Augmented Strings, a sampled pizz that decays; it sounds an octave low, so the part is +12); the tom plays 48 for written 45 (settles near A1 instead of falling to C#2) at -39."
 }

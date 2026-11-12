@@ -12,9 +12,9 @@
  "parts": [
   {
    "name": "strings_pizz",
-   "notes": 139,
+   "notes": 138,
    "low": 45,
-   "high": 67
+   "high": 68
   },
   {
    "name": "bassoon",
@@ -30,8 +30,8 @@
   },
   {
    "name": "harp",
-   "notes": 18,
-   "low": 69,
+   "notes": 22,
+   "low": 57,
    "high": 80
   }
  ]
