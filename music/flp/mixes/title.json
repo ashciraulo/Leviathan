@@ -1,0 +1,106 @@
+{
+ "cue": "title",
+ "lufs": -17.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "notes": "Ambient title, D aeolian 3/4 at 66. bell_tower = Analog Lab Sustained Bells built +12, so it rings at the written pitch class an octave up (D4-A4): at the written octave its partials sit 8 c sharp with the left channel 9 c under the right (title v9 gate), so it stays at the in-tune octave and gets its distance from a 1.8 kHz low-pass and a lower level instead; harp = Analog Harp; strings_low = 12 Low Strings (+12, the preset sounds an octave low); choir_pad = Simple Ohh; flute = Meadow Flute; sub_breath = Simple Sine (Clean) (Synclavier V) with Amp Env Offset attack and release at 1.0, so each 4-bar note breathes in over ~11 s and out over ~6 s (v1/v2 held a flat sine that stopped dead). Presets gated with gate_stems. Strings breathe by voices (2 to 5) on the 8-bar cycle; the sub doubles itself an octave up so the breath carries on small speakers.",
+ "parts": {
+  "harp": {
+   "insert": 2,
+   "target": -29.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "strings_low": {
+   "insert": 8,
+   "target": -23.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "flute": {
+   "insert": 1,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 250,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_pad": {
+   "insert": 4,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "sub_breath": {
+   "insert": 3,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "highcut",
+     "freq": 120,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_tower": {
+   "insert": 5,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 1800,
+     "db_oct": 12
+    }
+   ]
+  }
+ }
+}
