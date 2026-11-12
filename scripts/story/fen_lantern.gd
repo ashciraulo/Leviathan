@@ -53,9 +53,20 @@ func _ready() -> void:
 		_light = Glow.make(48.0, GLOW, 0.9)
 		_light.position = Vector2(4, -20)
 		add_child(_light)
-	if GameState.has_flag(flag_for(room_coord)):
-		lit = true
+	add_to_group("fen_lanterns")
+	_sync()
+
+
+## Lit as kept (its flag), or as lit this round while Wick's round is on.
+func _sync() -> void:
+	lit = LamplighterRound.lit.has(room_coord) if LamplighterRound.running else GameState.has_flag(flag_for(room_coord))
 	_show()
+
+
+## Every lantern in the room: a round has begun or ended.
+static func refresh_all(tree: SceneTree) -> void:
+	for node in tree.get_nodes_in_group("fen_lanterns"):
+		(node as FenLantern)._sync()
 
 
 func _physics_process(_delta: float) -> void:
@@ -71,6 +82,11 @@ func light() -> void:
 		return
 	lit = true
 	_catch = 0.6
+	if LamplighterRound.running:
+		Audio.play_sfx("brazier_catch", global_position, 1.3)
+		_show()
+		LamplighterRound.lantern_lit(room_coord)
+		return
 	GameState.set_flag(flag_for(room_coord))
 	Audio.play_sfx("brazier_catch", global_position, 1.3)
 	if lit_count() >= SPOTS.size():

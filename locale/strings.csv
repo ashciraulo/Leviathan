@@ -1581,3 +1581,21 @@ GULLY_BOAT_AFTER,"She's at your steps now. Best salvage I ever let go of."
 NARRATE_BOAT_HOME,"At the harbour steps, a little lantern-boat rides the swell, lamp lit."
 HESSA_BOAT_HOME_1,"That lamp sat in my window all this while. Now look at it."
 HESSA_BOAT_HOME_2,"She's home, child. Mind you keep her lamp lit."
+WICK_ROUND_1,"Murmur and I race the round some nights. Want a go, keeper?"
+WICK_ROUND_1B,"Ring my dusk bell and every lantern in the fen goes out for it."
+WICK_ROUND_2,"Then light all five again, quick as you can. I'll keep the time."
+WICK_ROUND_2B,"Four minutes is good. Three is mine. Two and a quarter was Gran's."
+NARRATE_DUSK_BELL,"A little brass bell on a post, for calling the fen's lamps out."
+WICK_ROUND_240_1,"Under four minutes! Murmur's going to sulk for a week. Here."
+NARRATE_GOT_ROUND_240_PURSE,Wren got 50 Glints.
+WICK_ROUND_180_1,"Under three. That's my time! You've tied me, keeper."
+WICK_ROUND_180_2,"Don't tell Murmur. Actually, do tell Murmur. Here."
+NARRATE_GOT_ROUND_180_PURSE,Wren got 100 Glints.
+WICK_ROUND_135_1,"Two and a quarter. That's Gran's time. Nobody's done that since her."
+WICK_ROUND_135_2,"She left a purse for whoever matched her. It's yours. She'd be glad."
+NARRATE_GOT_ROUND_135_PURSE,Wren got 200 Glints.
+TOAST_ROUND_DONE,All five lit!
+TOAST_ROUND_240,Under four minutes!
+TOAST_ROUND_180,Wick's time beaten!
+TOAST_ROUND_135,Gran's time!
+TOAST_ROUND_OFF,The round's off.
