@@ -8015,7 +8015,7 @@ func _test_errands() -> void:
 	talk.call("ottilie")
 	_check(GameState.item_count("glint") == glints + 100 and first.call("ottilie") == "OTTILIE_AFTER", "and thanks Wren")
 	# A lantern for Murmur's family.
-	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "murmur_met"]:
+	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "wick_round_ask", "murmur_met"]:
 		GameState.set_flag(flag)
 	_check(first.call("wick") == "WICK_MURMUR_1", "Wick wants a lantern for Murmur's family")
 	talk.call("wick")
@@ -8780,7 +8780,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "wick_round_ask", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")
