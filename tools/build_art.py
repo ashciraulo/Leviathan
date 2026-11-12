@@ -28,6 +28,11 @@ import zlib
 import brinewood_art
 import hull_art
 import npc_art
+import whale_bones_art
+
+# The calf at the Calf's Rest: the dune skull's bones, small and sunk in
+# the fen (whale_bones_art.calf_skull); its foot row goes to Prop.KINDS.
+CALF_SKULL, CALF_SKULL_FOOT = whale_bones_art.calf_skull()
 import hull_dungeon_art
 import kiln_art
 import cinderreach_art
@@ -683,7 +688,7 @@ def build_props():
         "journal_ice": sheet([[lit(npc_art.journal_ice(), 3)]], 16, 20),
         "rowboat": sheet([[lit(npc_art.rowboat(), 5)]], 36, 16),
         "figurehead": sheet([[lit(npc_art.figurehead(), 6)]], 24, 40),
-        "calf_skull": sheet([[lit(npc_art.calf_skull(), 22)]], 40, 28),
+        "calf_skull": sheet([[CALF_SKULL]], len(CALF_SKULL[0]), len(CALF_SKULL)),
         "barrel": sheet([[lit(BARREL, 12)]], 16, 14),
         "fence": sheet([[lit(FENCE, 13)]], 16, 14),
         "sign": sheet([[lit(SIGN, 14)]], 16, 14),
