@@ -243,3 +243,17 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Open MINORs (v7):** the strings' front is still a ramp; the trumpet has no bite in its first 30 ms (2-6 kHz share
   -24.7 dB); toms glide and have no attack above 150 Hz; strings lean 5.6 dB left and the brass is mono and dry;
   the even bars sag 3-4 dB.
+
+## Hunger of the Deep, the boss (2026-11-12)
+- **Template:** `templates\boss_template3.flp`. Ostinato = Staccato Blend (Time 0, `"advance_s": 0.04`, ~0.07
+  dB/step on sixteenths, per-key trims in `maps/boss_fix.json`); horns = Trumpfal; brass_low = 12 Low Strings (+12,
+  held notes only); timpani = Emulator II "Gong & Timpani" (+1); taiko keys 36/38 play 47/50; choir = Ah Voice, which
+  ignores velocity (level only through channel gain).
+- **Form:** section C drops to timpani on the root (beats 1 and 3) under the choir; bars 32-33 build with a snare
+  ramp and a G timpani roll; in D the choir doubles the trumpet melody (bars 34-49) so the long notes don't fade.
+- v10: review PASS (0 MAJOR, 6 MINOR). -16.59 LUFS, TP -2.39 dBTP, seam step -0.41 dB.
+- **Open MINORs (v10):** above 150 Hz the build rises only +3.8 dB (cap the taiko ramp near vel 105, add more on
+  top in bar 34); D bars 35, 42, 46 dip 11-14 dB at the choir hand-off (double on its own choir clone +2-3 dB, or drop
+  the ostinato octaves there); trumpet 2-6 kHz still ~5 dB hotter in D (take +0.9 dB on horns per stem_balance); the
+  taiko needs a stick layer for 2-6 kHz; the C timpani read as F/Eb above 150 Hz on small speakers (narrow cut near
+  700 Hz); ostinato low keys ~26 ms late.
