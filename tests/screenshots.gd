@@ -1213,11 +1213,17 @@ func _mire_shots(game: Node) -> void:
 	await _wait(0.6)
 	await _capture("82_congregation_heart_bare")
 	if boss:
-		while is_instance_valid(boss) and boss.hp > 0:
+		# One hit a frame: a blocked hit (the heart not bare yet) only comes
+		# right on a later frame, and a loop that never yields floods the
+		# message queue with redraws until Godot crashes.
+		var tries := 600
+		while is_instance_valid(boss) and boss.hp > 0 and tries > 0:
+			tries -= 1
 			boss._stun = 0.0
 			for wisp: Dictionary in boss.wisps:
 				wisp["home"] = false
 			boss.take_hit(1, Vector2.UP)
+			await get_tree().physics_frame
 	await _wait(1.2)
 	await _capture("83_congregation_released")
 	# The calf in the lights, with Murmur.
