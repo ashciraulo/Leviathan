@@ -94,6 +94,14 @@ static func draw_marker(canvas: CanvasItem, marker: Marker, center: Vector2) -> 
 		Rect2(int(marker) * 8, 0, 8, 8))
 
 
+## Tests only: when audit is on, keys drawn with no text of their own and
+## text cut short to fit its box are noted here (the key or text, and the
+## width it had to fit).
+static var audit := false
+static var missing_keys := {}
+static var cut_texts := {}
+
+
 ## Text in Tide at its native size. Translates key first. Text wider than
 ## max_width (or than width, when that's given) is cut short with "..",
 ## so a long translation never spills out of its box.
@@ -110,7 +118,12 @@ static func draw_text(canvas: CanvasItem, text: String, pos: Vector2, color: Col
 ## caller already translated or built (hints, "~ Resume ~", times), shown
 ## as it is.
 static func text_of(canvas: CanvasItem, text: String) -> String:
-	return canvas.tr(text) if _is_key(text) else text
+	if not _is_key(text):
+		return text
+	var shown := canvas.tr(text)
+	if audit and shown == text:
+		missing_keys[text] = true
+	return shown
 
 
 static func _is_key(text: String) -> bool:
@@ -128,6 +141,8 @@ static func fit(canvas: CanvasItem, text: String, max_width: float) -> String:
 	var full := text_of(canvas, text)
 	if font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, UI.FONT_SIZE).x <= max_width:
 		return full
+	if audit:
+		cut_texts[text] = max_width
 	var cut := full
 	while cut.length() > 1:
 		cut = cut.left(-1)
@@ -148,6 +163,8 @@ static func draw_wrapped(canvas: CanvasItem, text: String, pos: Vector2, width: 
 	var shown := text_of(canvas, text)
 	# Too long for max_lines: drop words from the end and finish with "..".
 	if _lines(shown, width) > max_lines:
+		if audit:
+			cut_texts[text] = width
 		var words := shown.split(" ")
 		if words.size() > 1:
 			while words.size() > 1:

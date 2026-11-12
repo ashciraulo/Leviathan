@@ -174,7 +174,7 @@ OPT_INSTANT,Instant
 OPT_LARGE_TEXT,Large text
 OPT_LARGE_TEXT_DESC,Doubles the size of messages and sound captions.
 OPT_CAPTIONS,Sound captions
-OPT_CAPTIONS_DESC,"Show a caption for important sounds, like a hidden bell or an enemy winding up. An arrow points to sounds from one side."
+OPT_CAPTIONS_DESC,"Captions for key sounds, like a hidden bell or a foe winding up, and which side they came from."
 OPT_COLOR_FILTER,Colour filter
 OPT_COLOR_FILTER_DESC,"Shifts colours so they stay apart for red, green or blue colour blindness."
 OPT_PROTAN,Protan
