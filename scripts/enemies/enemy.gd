@@ -54,8 +54,10 @@ const WEAR_EVERY := 0.85
 var _wear_timer := 0.0
 ## Stars over a boss's head while the sword can hurt it (see is_boss_open).
 var _daze_stars: DazeStars
-## Cache for _art_top, by frame.
-var _art_tops := {}
+## Cache for _art_top: "texture path|hframes|vframes" -> {frame: top}.
+## Shared by every enemy, because reading a texture's pixels back from the
+## GPU is slow (a quarter-second freeze on the web build).
+static var _art_tops := {}
 
 
 func _ready() -> void:
@@ -89,6 +91,9 @@ func _ready() -> void:
 	add_child(_sprite)
 	_sprite_origin = _sprite.position
 	_sprite_base_scale = _sprite.scale
+	# A boss's daze stars need the top of its art: read that now, while the
+	# room is still sliding or fading in, not mid-fight.
+	_warm_art_tops.call_deferred()
 	if elite:
 		scale = Vector2.ONE * ELITE_SCALE
 		_sprite.self_modulate = ELITE_TINT
@@ -201,17 +206,33 @@ func _update_daze_stars() -> void:
 ## How far down the sprite's current frame its first drawn row is (frames
 ## often leave empty room above, for a raised head or a leap).
 func _art_top() -> float:
-	var key := _sprite.frame
+	return float(_frame_tops().get(_sprite.frame, 0.0))
+
+
+## The first row with any colour in each frame of the sprite's sheet, worked
+## out once per sheet from a single read of its pixels.
+func _frame_tops() -> Dictionary:
+	var texture := _sprite.texture
+	if texture == null:
+		return {}
+	var key := "%s|%d|%d" % [texture.resource_path if texture.resource_path != "" else str(texture.get_rid()),
+		_sprite.hframes, _sprite.vframes]
 	if _art_tops.has(key):
 		return _art_tops[key]
-	var top := 0.0
-	var image := _sprite.texture.get_image() if _sprite.texture else null
+	var tops := {}
+	var image := texture.get_image()
 	if image:
 		var size := Vector2i(image.get_width() / _sprite.hframes, image.get_height() / _sprite.vframes)
-		var at := Vector2i(key % _sprite.hframes, key / _sprite.hframes) * size
-		top = float(image.get_region(Rect2i(at, size)).get_used_rect().position.y)
-	_art_tops[key] = top
-	return top
+		for frame in _sprite.hframes * _sprite.vframes:
+			var at := Vector2i(frame % _sprite.hframes, frame / _sprite.hframes) * size
+			tops[frame] = float(image.get_region(Rect2i(at, size)).get_used_rect().position.y)
+	_art_tops[key] = tops
+	return tops
+
+
+func _warm_art_tops() -> void:
+	if is_inside_tree() and is_in_group("boss") and _sprite:
+		_frame_tops()
 
 
 ## Override to false for a boss whose wear already shows another way.
