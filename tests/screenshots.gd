@@ -2916,7 +2916,7 @@ func _gully_shots() -> void:
 	await _wait(0.2)
 
 
-## Liesl in Drowned Lane, her great-grandmother's door bell glinting on
+## Liesl in Drowned Lane, her long-ago gran's door bell glinting on
 ## Belfry Square's flats at low tide, and the bell hung back by the door.
 func _liesl_shots() -> void:
 	GameState.reset_new_game()

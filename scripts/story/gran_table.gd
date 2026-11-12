@@ -1,6 +1,6 @@
 class_name GranTable
 extends StaticBody2D
-## Liesl's table in Drowned Lane, laid for her great-grandmother
+## Liesl's table in Drowned Lane, laid for her long-ago gran
 ## (StoryDirector.grans_supper). While Liesl waits it is four bare plates;
 ## set, it carries Gran's blue cup, her pewter candlestick and her little
 ## salt fish, a loaf of Ide's bread, and the candle Wren lit.
