@@ -16,6 +16,7 @@ var _frame := 0
 var _game: Node
 ## Steer Wren toward the nearest enemy and swing when close.
 var _auto_fight := false
+var _failed := false
 var _swing_cooldown := 0.0
 ## Refill breath every frame, so a clip never ends in a game over. (Not
 ## invulnerability: that makes Wren blink the whole clip.)
@@ -35,8 +36,11 @@ func _ready() -> void:
 		push_error("CLIP must be one of %s" % [CLIPS])
 		get_tree().quit(1)
 		return
-	_out_dir = ProjectSettings.globalize_path("res://").path_join("clips").path_join(clip)
+	var root := ProjectSettings.globalize_path("res://").path_join("clips")
+	_out_dir = root.path_join(clip)
 	DirAccess.make_dir_recursive_absolute(_out_dir)
+	# Keep the frames out of the editor's imports and every export.
+	FileAccess.open(root.path_join(".gdignore"), FileAccess.WRITE)
 	SaveManager.current_slot = TEST_SLOT
 	SaveManager.set_aside(TEST_SLOT, "testbackup")
 	SaveManager.delete_save()
@@ -48,9 +52,12 @@ func _ready() -> void:
 	_recording = false
 	_auto_fight = false
 	_steer(Vector2.ZERO)
-	print("Clip %s: %d frames" % [clip, _frame])
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "testbackup")
+	if _failed:
+		get_tree().quit(1)
+		return
+	print("Clip %s: %d frames" % [clip, _frame])
 	get_tree().quit(0)
 
 
@@ -97,7 +104,10 @@ func _clip_glide() -> void:
 	await _jump(Vector2i(29, 9), Vector2i(4, 6))
 	_game.player.facing = Vector2.RIGHT
 	await _record(0.6)
-	_game.player.use_item("kite_cloak")
+	if not _game.player.use_item("kite_cloak"):
+		push_error("glide clip: the Kite Cloak didn't open")
+		_failed = true
+		return
 	_steer(Vector2.RIGHT)
 	await _wait(3.0)
 	_steer(Vector2.ZERO)
@@ -174,7 +184,7 @@ func _fight_step(delta: float) -> void:
 		_steer(to.normalized())
 		return
 	_steer(Vector2.ZERO)
-	if _swing_cooldown <= 0.0:
+	if _swing_cooldown <= 0.0 and not player.frozen and player.state in [Player.State.MOVE, Player.State.ATTACK]:
 		player.facing = Vector2(signf(to.x), 0) if absf(to.x) > absf(to.y) else Vector2(0, signf(to.y))
 		player.start_attack()
 		_swing_cooldown = 0.4
