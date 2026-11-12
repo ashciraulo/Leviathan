@@ -91,7 +91,7 @@ const TALKS := {
 		# The little cap from the lantern-boat on the Ebb Shelf.
 		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
 		# The lamp off the lantern-boat's bow, kept lit twelve years (Gully's ask).
-		{"if": ["gully_boat_ask"], "unless": ["boat_lamp"], "set": ["boat_lamp"], "lines": ["HESSA_BOATFIX_1", ["", "NARRATE_HESSA_FETCHES_LAMP"], "HESSA_BOATFIX_2", "HESSA_BOATFIX_3"]},
+		{"if": ["gully_boat_ask"], "unless": ["boat_lamp"], "set": ["boat_lamp"], "lines": [["", "NARRATE_WREN_SHOWS_LIST"], "HESSA_BOATFIX_1", ["", "NARRATE_HESSA_FETCHES_LAMP"], "HESSA_BOATFIX_2", "HESSA_BOATFIX_3"]},
 		# The keepers' round: once the Kiln's bell is rung, she sends Wren
 		# round the Tidestones; when every one is read, a new line is cut.
 		{"if": ["read_every_stone"], "unless": ["hessa_carved_wren"], "set": ["hessa_carved_wren"], "lines": ["HESSA_ROUND_DONE_1", "HESSA_ROUND_DONE_2", ["", "NARRATE_HESSA_CARVES"], "HESSA_ROUND_DONE_3"]},
@@ -292,8 +292,8 @@ const TALKS := {
 		# The last singers: Ansel, her old sorter.
 		{"if": ["sorrel_asked", "ansel_met"], "unless": ["sorrel_ansel"], "set": ["sorrel_ansel"], "lines": ["SORREL_ANSEL_1", "SORREL_ANSEL_2"]},
 		{"if": ["lighting_ask", "sorrel_asked"], "unless": ["party_sorrel"], "set": ["party_sorrel"], "lines": ["SORREL_PARTY_1", "SORREL_PARTY_2"]},
-		# A sail for the lantern-boat, cut from her last courier kite.
-		{"if": ["gully_boat_ask", "sorrel_asked"], "unless": ["boat_sail"], "set": ["boat_sail"], "lines": ["SORREL_BOATFIX_1", "SORREL_BOATFIX_2"]},
+		# A sail for the lantern-boat, from an old spare kite (not mid-race).
+		{"if": ["gully_boat_ask", "sorrel_paid"], "unless": ["boat_sail", "sorrel_race"], "set": ["boat_sail"], "lines": ["SORREL_BOATFIX_1", "SORREL_BOATFIX_2"]},
 		# The jam trade: Wick's candles for kite cord, for Ferrin.
 		{"if": ["trade_candles", "sorrel_asked"], "unless": ["trade_line"], "set": ["trade_line"], "lines": [["", "NARRATE_HAND_CANDLES"], "SORREL_TRADE_1", "SORREL_TRADE_2", "SORREL_TRADE_2B", ["", "NARRATE_GOT_TRADE_LINE"]]},
 		# The post's last three letters, never sent when it shut.

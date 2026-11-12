@@ -493,6 +493,10 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		else:
 			hessas_walk()
 		return
+	if flag == BOAT_DONE_FLAG:
+		if GameState.has_flag(BOAT_DONE_FLAG) and GameState.room_coord == EBB_SHELF:
+			_boat_leaves_shelf()
+		return
 	if flag == FERRY_FLAG:
 		if not GameState.has_flag(FERRY_FLAG):
 			return
@@ -1440,6 +1444,20 @@ func _put_lantern_boat() -> void:
 			child.queue_free()
 			room.add_child(boat)
 			return
+
+
+## Afloat at last: once Gully's said his piece, she's off round the point
+## to Saltmarrow, and only sand is left where she lay.
+func _boat_leaves_shelf() -> void:
+	var room: Node = game.current_room
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if not is_instance_valid(room) or room != game.current_room:
+		return
+	for child in room.get_children():
+		if child is LanternBoat or (child is Prop and child.kind == "W"):
+			child.queue_free()
 
 
 ## Wren's lantern-boat at the harbour steps, once Gully has raised her.

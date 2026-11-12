@@ -7805,6 +7805,18 @@ func _test_boat_raised() -> void:
 	_check(_find_kind(room, "gully_ebb") != null and not room.get_children().any(func(c: Node) -> bool: return c is LanternBoat or (c is Prop and c.kind == "W" and not c.is_queued_for_deletion())), "the Shelf's wreck is gone, Gully's still there")
 	game.queue_free()
 	await _wait(0.1)
+	# Floated while Wren watches: she's gone from the sand at once.
+	GameState.clear_flag(StoryDirector.BOAT_DONE_FLAG)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	room = game.current_room
+	_check(room.get_children().any(func(c: Node) -> bool: return c is LanternBoat), "before she floats, she's in the sand")
+	GameState.set_flag(StoryDirector.BOAT_DONE_FLAG)
+	await _wait(0.2)
+	_check(not room.get_children().any(func(c: Node) -> bool: return c is LanternBoat and not c.is_queued_for_deletion()), "once Gully's floated her, she's gone from the Shelf")
+	game.queue_free()
+	await _wait(0.1)
 	Cutscene.fast = false
 	GameState.reset_new_game()
 
