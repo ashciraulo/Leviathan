@@ -53,6 +53,8 @@ const ICE_DRIFT := 45.0
 const AIR_MASK := (1 << (Layers.WORLD - 1)) | (1 << (Layers.GRATE - 1))
 ## Swimming in deep water is slower.
 const SWIM_SPEED := 58.0
+## How far off line (pixels) Wren may be and still ease round a corner.
+const CORNER_SLIP := 5
 
 var state := State.MOVE
 ## Seconds since a swing was pressed while Wren couldn't swing yet; INF when
@@ -251,6 +253,7 @@ func _move_state() -> void:
 		velocity = velocity.limit_length(SPEED).move_toward(direction * SPEED, grip * get_physics_process_delta_time())
 	else:
 		velocity = direction * SPEED
+		velocity += _corner_slip(direction)
 	if direction != Vector2.ZERO:
 		_update_facing(direction)
 	if in_cutscene or DialogueBox.recently_closed() or ShopMenu.recently_closed():
@@ -765,6 +768,30 @@ func _hum_requested() -> bool:
 
 
 ## Analog or digital input, snapped to 8 directions at a constant speed.
+## Walking straight into the very corner of something solid (a tree's
+## trunk, a rock, the end of a wall) eases Wren round it, as long as no
+## more than CORNER_SLIP pixels of them overlap it: a pixel's misalignment
+## never stops them dead. Crates and other movers are left alone, so
+## pushing still pushes.
+func _corner_slip(direction: Vector2) -> Vector2:
+	# (Input comes snapped to eight angles, so "straight" is near, not exact.)
+	if direction == Vector2.ZERO or (absf(direction.x) > 0.01 and absf(direction.y) > 0.01):
+		return Vector2.ZERO
+	direction = direction.round()
+	var step := direction * SPEED * get_physics_process_delta_time()
+	var hit := move_and_collide(step, true)
+	if hit == null or not (hit.get_collider() is StaticBody2D):
+		return Vector2.ZERO
+	var side := Vector2(direction.y, direction.x).abs()
+	for shift in range(1, CORNER_SLIP + 1):
+		for sign_ in [1.0, -1.0]:
+			var offset: Vector2 = side * shift * sign_
+			var moved := global_transform.translated(offset)
+			if not test_move(global_transform, offset) and not test_move(moved, step):
+				return side * sign_ * SPEED
+	return Vector2.ZERO
+
+
 func _input_direction() -> Vector2:
 	if in_cutscene:
 		return script_move

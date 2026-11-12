@@ -23,7 +23,9 @@ extends Node
 const TEST_SLOT := 2
 ## Layout letters Wren can walk over (floor, plates, and the enemies the
 ## walker clears away).
-const WALKABLE := ".:P=,cbswmegqakxMU&+dt"
+var walkable_letters := ".:P=,cbswmegqakxMU&+dt"
+## What the summary line calls this walk.
+var label := "WALKER"
 ## Seconds a leg may go without getting closer before it counts as a snag.
 const STALL := 1.2
 ## Falls tried per room (spread across the room's edges of gaps and lava).
@@ -49,23 +51,26 @@ func _ready() -> void:
 	await _read_through(20.0)
 	Events.room_entered.connect(_note_enemies)
 	var only := OS.get_environment("WALK_ONLY")
-	var rooms := _dungeon_rooms()
+	var rooms := _rooms_to_walk()
 	_check_exits(rooms)
 	for coord: Vector2i in rooms:
 		if only != "" and rooms[coord] != only:
 			continue
 		await _walk_room(coord, rooms[coord])
+	await _extra_checks(rooms)
 	SaveManager.delete_save()
 	SaveManager.restore_aside(TEST_SLOT, "walkerbackup")
 	if _failures.is_empty():
-		print("WALKER PASSED (%d rooms, %d legs, %d falls)" % [rooms.size(), _legs, _falls])
+		print("%s PASSED (%d rooms, %d legs, %d falls)" % [label, rooms.size(), _legs, _falls])
 		get_tree().quit(0)
 	else:
-		print("WALKER FAILED: %d snags in %d legs" % [_failures.size(), _legs])
+		print("%s FAILED: %d snags in %d legs" % [label, _failures.size(), _legs])
 		get_tree().quit(1)
 
 
-func _dungeon_rooms() -> Dictionary:
+## Room coord -> the name its snags are reported under. Fills _layouts
+## for every room, so exits can look next door.
+func _rooms_to_walk() -> Dictionary:
 	var out := {}
 	var names := Array(DirAccess.get_files_at("res://rooms/"))
 	names.sort()
@@ -77,10 +82,23 @@ func _dungeon_rooms() -> Dictionary:
 		var parts := name.trim_prefix("room_").trim_suffix(".tscn").split("_")
 		var coord := Vector2i(int(parts[0]), int(parts[1]))
 		_layouts[coord] = Room.parse_layout(room.layout)
-		if room.dungeon != "":
-			out[coord] = room.dungeon
+		if _wants(room):
+			out[coord] = _name_for(room)
 		room.free()
 	return out
+
+
+func _wants(room: Room) -> bool:
+	return room.dungeon != ""
+
+
+func _name_for(room: Room) -> String:
+	return room.dungeon
+
+
+## Anything more a walk checks once every room is walked.
+func _extra_checks(_rooms: Dictionary) -> void:
+	pass
 
 
 ## Every gap in a dungeon room's border leads somewhere: into a room next
@@ -153,7 +171,7 @@ func _walkable(room: Room) -> Dictionary:
 			var t := room.raw_tile(x, y)
 			if t == "," and flooded:
 				continue
-			if WALKABLE.contains(t):
+			if walkable_letters.contains(t):
 				out[Vector2i(x, y)] = true
 	return out
 
@@ -276,6 +294,9 @@ func _walk(room: Room, dungeon: String, path: Array[Vector2i]) -> bool:
 			best = INF
 			since = 0.0
 			continue
+		if DialogueBox.is_open:
+			_advance_dialogue()
+			since = 0.0
 		_steer(d)
 		await get_tree().physics_frame
 		var left := (target - player.global_position).length()
@@ -287,6 +308,9 @@ func _walk(room: Room, dungeon: String, path: Array[Vector2i]) -> bool:
 			if since > STALL:
 				_release()
 				var at := Vector2i(((player.global_position - room.global_position) / Room.TILE).floor())
+				if OS.get_environment("WALK_TRACE") != "":
+					var hit := player.move_and_collide(d.normalized() * 2.0, true)
+					print("  stuck at %s, against %s" % [player.global_position - room.global_position, _describe(hit.get_collider()) if hit else "nothing"])
 				_fail("%s %s: stuck at tile %s heading for %s (leg %s -> %s)" % [dungeon, room.coord, at, path[i], path[0], path[-1]])
 				return true
 	_release()
@@ -328,12 +352,20 @@ func _check_falls(room: Room, dungeon: String, walk: Dictionary) -> bool:
 		var fell := false
 		var waited := 0.0
 		while waited < 2.0 and not fell:
+			# A word from someone nearby (the overworld's story beats) holds
+			# Wren still: read through it.
+			if DialogueBox.is_open:
+				_advance_dialogue()
+				_steer(Vector2(dir) * 16.0)
 			await get_tree().physics_frame
 			waited += get_physics_process_delta_time()
 			fell = player.state == Player.State.FALL
 		_release()
 		if not fell:
 			# Something in the way (a crate, closed bars, a ledge): not a fall.
+			if OS.get_environment("WALK_TRACE") != "":
+				var hit := player.move_and_collide(Vector2(dir) * 2.0, true)
+				print("  no fall from %s going %s: at %s, against %s, dlg %s cut %s vel %s in %s" % [from, dir, player.global_position - room.global_position, _describe(hit.get_collider()) if hit else "nothing", DialogueBox.is_open, Cutscene.active, player.velocity, player._input_direction()])
 			continue
 		_falls += 1
 		fell_here += 1
