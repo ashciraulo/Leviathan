@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/place_shop.ogg-602a9d22483f1d5ce73d5b15ee7e9d
 [params]
 
 loop=false
-loop_offset=0.0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

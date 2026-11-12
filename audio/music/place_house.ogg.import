@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/place_house.ogg-d1ab9a4a9d9b34da6af6ee9056b7e
 [params]
 
 loop=false
-loop_offset=0.0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/place_village.ogg-b19d22567a8dc6be3277fe31348
 [params]
 
 loop=false
-loop_offset=0.0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4
