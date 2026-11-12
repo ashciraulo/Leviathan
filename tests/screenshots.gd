@@ -131,6 +131,18 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=skull: the great whale skull on Skull Rise, and its jaw in
+	# Whalefall Steps.
+	if OS.get_environment("SHOTS_ONLY") == "skull":
+		await _room_shots(game, {
+			Vector2i(9, 0): ["skull_rise", Vector2i(14, 10)],
+			Vector2i(10, 0): ["whalefall_steps", Vector2i(13, 10)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=thin_screens: the optional screens off the thinner regions.
 	if OS.get_environment("SHOTS_ONLY") == "thin_screens":
 		await _room_shots(game, {

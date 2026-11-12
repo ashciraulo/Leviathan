@@ -293,12 +293,14 @@ def rib(flip=False):
 
 
 # The great whale skull of Skull Rise (layout F) and the lower jaw in
-# Whalefall Steps (layout 9): see whale_bones_art.py. The skull's side
+# Whalefall Steps (layout 9), and a smaller kinsman's skull in Saltpan
+# Hollow (layout '('): see whale_bones_art.py. The skull's side
 # hollow is the Marrow Tomb's door.
 
 
 SKULL, SKULL_DOOR, SKULL_FOOTPRINT = whale_bones_art.skull()
 JAW, JAW_FOOTPRINT = whale_bones_art.jaw()
+SMALL_SKULL, SMALL_SKULL_FOOTPRINT = whale_bones_art.small_skull()
 
 
 def build(lit, sheet):
@@ -308,4 +310,5 @@ def build(lit, sheet):
         "rib": sheet([[lit(rib(False), 101)]], 24, 56),
         "skull": sheet([[SKULL]], len(SKULL[0]), len(SKULL)),
         "jaw": sheet([[JAW]], len(JAW[0]), len(JAW)),
+        "small_skull": sheet([[SMALL_SKULL]], len(SMALL_SKULL[0]), len(SMALL_SKULL)),
     }

@@ -16,6 +16,17 @@ const SKULL_FOOTPRINT := [
 	Rect2(-72, -3, 127, 6), Rect2(73, -3, 18, 6),
 	Rect2(-82, 3, 137, 6), Rect2(-93, 9, 112, 6), Rect2(-99, 15, 44, 6),
 ]
+const SMALL_SKULL_FOOTPRINT := [
+	Rect2(-37, -29, 26, 4),
+	Rect2(-42, -25, 36, 4),
+	Rect2(-45, -21, 50, 4),
+	Rect2(-46, -17, 58, 4),
+	Rect2(-45, -13, 65, 4),
+	Rect2(-44, -9, 71, 4),
+	Rect2(-39, -5, 73, 4),
+	Rect2(-22, -1, 65, 4),
+	Rect2(19, 3, 28, 4),
+]
 const JAW_FOOTPRINT := [
 	Rect2(47, -29, 21, 6), Rect2(30, -23, 33, 6), Rect2(15, -17, 30, 6),
 	Rect2(-22, -11, 76, 6), Rect2(-67, -5, 144, 6), Rect2(-77, 1, 41, 6),
@@ -45,6 +56,7 @@ const KINDS := {
 	"U": [OssuarySprites.RIB, 53, Vector2(10, 6), false],
 	"F": [OssuarySprites.SKULL, 102, SKULL_FOOTPRINT, false],
 	"9": [OssuarySprites.JAW, 34, JAW_FOOTPRINT, false],
+	"(": [OssuarySprites.SMALL_SKULL, 45, SMALL_SKULL_FOOTPRINT, false],
 }
 
 ## Props a sword, a bomb or the Stonebreaker smashes (they come back when

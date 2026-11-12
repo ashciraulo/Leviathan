@@ -22,7 +22,7 @@ extends Node2D
 ##          p  the Old One's back (walkable)   N  the Old One's lip (the Maw)
 ##          S  sinking sand (drags Wren to its middle; see SinkField)
 ##          A  Dunejaw (burrows, spouts, bites)   U  great rib   F  whale skull (its side hollow, 4 right, is the door)
-##          9  whale's lower jaw
+##          9  whale's lower jaw   (  a smaller whale skull
 ##          o  pot   u  barrel   f  rope fence   n  signpost
 ##          H  hut   L  lighthouse   M  mangrove   W  wreck
 ##          l  lantern post   R  beached hull (the Rotting Hull)

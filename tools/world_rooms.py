@@ -143,7 +143,7 @@ SEA_GLASS = {
 # windmill (4,-4), in the Wreck's ruin (1,1), out on Cockle Flats at low
 # tide (0,2), and in the middle of Rimewatch Pass's ice (2,-3).
 # Solid scenery (Prop.KINDS with a footprint). N, the Old One's lip, has none.
-PROPS = set("ouf nHLMWlRJZBUF9".replace(" ", ""))
+PROPS = set("ouf nHLMWlRJZBUF9(".replace(" ", ""))
 
 
 def _big_prop_tiles():

@@ -224,7 +224,7 @@ def _shadowed(body, x, y, h, light):
     return False
 
 
-def render(body, width, height, rows):
+def render(body, width, height, rows, scale=SCALE):
     """Draw a body seen from above. Each canvas pixel gets (face, light,
     part, plan x, plan y, ground y) where face is "top" or "side"."""
     light = _light()
@@ -233,7 +233,7 @@ def render(body, width, height, rows):
     while wy <= rows[1]:
         for xi in range(width * 2):
             wx = xi / 2.0
-            mx, my = wx / SCALE, wy / SCALE
+            mx, my = wx / scale, wy / scale
             h, part = body.at(mx, my)
             if h is None:
                 continue
@@ -245,7 +245,7 @@ def render(body, width, height, rows):
             d = (-dx * light[0] - dy * light[1] + light[2]) / math.sqrt(dx * dx + dy * dy + 1)
             lx, ly = body.local(mx, my)
             sx = int(wx)
-            sy = int(round(wy * PY - h * SCALE * PH))
+            sy = int(round(wy * PY - h * scale * PH))
             gy = int(round(wy * PY))
             for yy in range(max(0, sy), min(height, gy + 1)):
                 canvas[yy][sx] = ("side", d, part, lx, ly, gy)
@@ -454,3 +454,13 @@ def jaw():
     px = shade(canvas)
     x0, x1, y0, y1 = _crop(px)
     return [row[x0:x1] for row in px[y0:y1]], footprint(canvas, x0, y0)
+
+
+def small_skull():
+    """A smaller kinsman's skull, sunk deeper, for Saltpan Hollow: the same
+    bones at a third of the size, no door."""
+    body = Body(skull_height, 25.0, (180.0, 200.0), (CX, 150.0))
+    canvas = render(body, 200, 200, (-60.0, 420.0), scale=0.34)
+    px = shade(canvas)
+    x0, x1, y0, y1 = _crop(px)
+    return [row[x0:x1] for row in px[y0:y1]], footprint(canvas, x0, y0, strip=4)

@@ -5154,7 +5154,7 @@ func _test_ossuary() -> void:
 	tangle.free()
 	_check(_walkable_from(swum, Vector2i(11, 12)).has(Vector2i(0, 9)) and _walkable_from(shore, Vector2i(11, 1)).has(Vector2i(23, 9)), "the Diver's Helm swims the strait from Tangle Shore into the dunes")
 	var rise: Room = (load("res://rooms/room_9_0.tscn") as PackedScene).instantiate()
-	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[6][12] == "D", "the beast skull's throat leads into the Marrow Tomb")
+	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[8][17] == "D", "the hollow in the whale skull's side leads into the Marrow Tomb")
 	rise.free()
 
 	GameState.reset_new_game()
