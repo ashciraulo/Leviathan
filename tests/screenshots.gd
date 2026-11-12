@@ -92,6 +92,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=boat_home: the raised lantern-boat at Saltmarrow's steps.
+	if OS.get_environment("SHOTS_ONLY") == "boat_home":
+		game.queue_free()
+		await _boat_home_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=seal_pup: the seal pup in her nook, and at home.
 	if OS.get_environment("SHOTS_ONLY") == "seal_pup":
 		game.queue_free()
@@ -390,6 +399,7 @@ func _ready() -> void:
 				await _echo_shot()
 				await _party_shot()
 				await _walk_shots()
+				await _boat_home_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2350,6 +2360,36 @@ func _echo_shot() -> void:
 	echo.start()
 	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME + 0.05)
 	await _capture("quest_21_echo_game")
+	game.queue_free()
+	await _wait(0.2)
+
+
+## The lantern-boat raised and home at Saltmarrow's steps, lamp lit, while
+## Hessa has her say.
+func _boat_home_shot() -> void:
+	# Let the last game go first, so only one director sees the arrival.
+	await _wait(0.2)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "seen_wayshell", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, "hessa_saw_cap", "gully_boat_ask", StoryDirector.BOAT_DONE_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(12 * 16 + 8, 11 * 16 + 8))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.3)
+	var box := _dialogue_box(game)
+	var pages := 0
+	for i in 200:
+		if DialogueBox.is_open:
+			pages += 1
+			if pages == 2:
+				await _wait(1.6)
+				await _capture("quest_28_boat_home")
+			box.advance()
+			box.advance()
+		await _wait(0.15)
+		if not Cutscene.active and not DialogueBox.is_open and pages > 2:
+			break
 	game.queue_free()
 	await _wait(0.2)
 

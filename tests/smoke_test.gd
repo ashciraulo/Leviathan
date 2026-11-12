@@ -100,6 +100,7 @@ func _ready() -> void:
 		_test_hessa_log()
 		await _test_lowe_after()
 		await _test_hessa_walk()
+		await _test_boat_raised()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -7744,6 +7745,64 @@ func _test_hessa_walk() -> void:
 	# Mantle flies Wren off: the walk's over.
 	director.end_walk()
 	_check(not GameState.has_flag(StoryDirector.WALK_FLAG), "flown off: she makes her own way home")
+	game.queue_free()
+	await _wait(0.1)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+
+
+## Raising the lantern-boat: once Wren has shown Hessa the cap, Gully
+## wants her afloat. Planks from Dunstan, pitch from Agna, a sail from
+## Sorrel and Hessa's lamp; then she floats, and rides at Saltmarrow's
+## steps with her lamp lit.
+func _test_boat_raised() -> void:
+	Cutscene.fast = true
+	GameState.reset_new_game()
+	var first := func(who: String) -> String:
+		var lines: Array = Conversations.branch_for(who).get("lines", [""])
+		return str(lines[0]) if lines[0] is String else str(lines[1])
+	for flag in ["met_hessa", StoryDirector.TURNED_FLAG, StoryDirector.CONFESSION_FLAG, "gully_asked", "gully_paid", "gully_ebb_told", "found_wren_cap", "hessa_saw_cap", "met_agna", "agna_gave_sword", "agna_scales_ask", "sorrel_asked", "sorrel_paid", "sorrel_dared_stacks", "hessa_log_ask", "hessa_round_ask"]:
+		GameState.set_flag(flag)
+	_check(first.call("gully_ebb") == "GULLY_EBB_AFTER", "no ask before the Wayshell")
+	GameState.set_flag("seen_wayshell")
+	_check(first.call("gully_ebb") == "GULLY_BOAT_1", "then Gully wants the lantern-boat afloat")
+	for who in ["dunstan", "agna", "sorrel", "hessa"]:
+		_check(not first.call(who).contains("BOATFIX"), "%s has nothing for the boat before Gully asks" % who)
+	Conversations.talk("gully_ebb")
+	_check(first.call("gully_ebb") == "GULLY_BOAT_WAITING", "and waits for the parts")
+	for part: Array in [["dunstan", "DUNSTAN_BOATFIX_1", "boat_planks"], ["agna", "AGNA_BOATFIX_1", "boat_pitch"], ["sorrel", "SORREL_BOATFIX_1", "boat_sail"], ["hessa", "HESSA_BOATFIX_1", "boat_lamp"]]:
+		_check(first.call("gully_ebb") == "GULLY_BOAT_WAITING", "not ready before %s" % part[2])
+		_check(first.call(part[0]) == part[1], "%s gives a hand" % part[0])
+		Conversations.talk(part[0])
+		_check(GameState.has_flag(part[2]) and first.call(part[0]) != part[1], "%s, once" % part[2])
+	for line: String in ["GULLY_BOAT_1", "GULLY_BOAT_1B", "DUNSTAN_BOATFIX_1", "HESSA_BOATFIX_2", "NARRATE_BOAT_WORK", "NARRATE_BOAT_FLOATS", "GULLY_BOAT_DONE_2", "NARRATE_BOAT_HOME", "HESSA_BOAT_HOME_2"]:
+		_check(tr(line).length() <= 70, "%s fits the box" % line)
+	_check(first.call("gully_ebb") == "GULLY_BOAT_DONE_1", "everything back to Gully")
+	Conversations.talk("gully_ebb")
+	_check(GameState.has_flag(StoryDirector.BOAT_DONE_FLAG) and first.call("gully_ebb") == "GULLY_BOAT_AFTER", "she floats, and Gully rows her home")
+	# Home at the harbour steps, lamp lit, and Hessa has her say.
+	GameState.set_checkpoint(StoryDirector.SALTMARROW, Vector2(18 * 16 + 8, 5 * 16 + 12) + StoryDirector.HOME_FROM_HESSA)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	var room: Room = game.current_room
+	var homes := room.get_children().filter(func(c: Node) -> bool: return c is BoatHome)
+	_check(homes.size() == 1, "the lantern-boat is moored at Saltmarrow")
+	var at := Vector2i(StoryDirector.BOAT_HOME_AT / Room.TILE)
+	_check(room.tile_at(at.x, at.y) == "~" and room.tile_at(at.x - 1, at.y) == "~" and room.tile_at(at.x, at.y - 1) == "~", "on the harbour water")
+	var pages := await _play_scene(game, 12.0)
+	_check(GameState.has_flag(StoryDirector.BOAT_HOME_FLAG) and pages == 3, "Hessa sees her home (%d pages)" % pages)
+	game.queue_free()
+	await _wait(0.1)
+	# And the Ebb Shelf has only sand where she lay.
+	GameState.set_flag(Tide.HELD_FLAG)
+	GameState.set_checkpoint(StoryDirector.EBB_SHELF, StoryDirector.GULLY_EBB_AT + Vector2(0, 16))
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	room = game.current_room
+	_check(_find_kind(room, "gully_ebb") != null and not room.get_children().any(func(c: Node) -> bool: return c is LanternBoat or (c is Prop and c.kind == "W" and not c.is_queued_for_deletion())), "the Shelf's wreck is gone, Gully's still there")
 	game.queue_free()
 	await _wait(0.1)
 	Cutscene.fast = false

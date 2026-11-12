@@ -334,6 +334,11 @@ const WALK_ROUTE := [Vector2i(0, -1), Vector2i(0, 0), Vector2i(1, 0), Vector2i(1
 ## Her own spot in Saltmarrow (the layout's "h").
 const HESSA_HOME := Vector2(18 * 16 + 8, 5 * 16 + 12)
 const WALK_GLINTS := 200
+## The lantern-boat raised: Gully floats her off the Ebb Shelf, and she's
+## moored in Saltmarrow's harbour with Hessa's old lamp at her bow.
+const BOAT_DONE_FLAG := "boat_done"
+const BOAT_HOME_FLAG := "seen_boat_home"
+const BOAT_HOME_AT := Vector2(13 * 16, 10 * 16)
 
 var game: Node
 ## Where Hessa is on her walk: her room and her spot in it. She stays put
@@ -384,6 +389,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_walk_on(coord)
 	if coord == SALTMARROW and GameState.has_flag(TOBIN_HOME_FLAG):
 		_put_tobin_home()
+	if coord == SALTMARROW and GameState.has_flag(BOAT_DONE_FLAG):
+		_put_boat_home()
 	# A party that was asked for but never thrown (the game closed first).
 	if coord == SALTMARROW and GameState.has_flag(PARTY_FLAG) and not GameState.has_flag(PARTY_DONE_FLAG):
 		hessas_lighting_day.call_deferred()
@@ -459,6 +466,8 @@ func _on_room_entered(coord: Vector2i) -> void:
 		tobins_warning()
 	elif coord == SALTMARROW and GameState.has_flag(TOBIN_WARNED_FLAG) and not GameState.has_flag(TOBIN_HOME_FLAG) and not GameState.has_flag(ENDING_FLAG):
 		tobin_comes_home()
+	elif coord == SALTMARROW and GameState.has_flag(BOAT_DONE_FLAG) and not GameState.has_flag(BOAT_HOME_FLAG) and not GameState.has_flag(WALK_FLAG):
+		the_boat_comes_home()
 	elif coord == MAW_VAEL and choir_waits() and not echo:
 		vaels_choir()
 	elif lowe_waits(coord):
@@ -1414,6 +1423,12 @@ func _put_lantern_boat() -> void:
 		return
 	if _gully_on_the_shelf():
 		_put_npc("gully_ebb", GULLY_EBB_AT)
+	# Raised and gone home to Saltmarrow: only sand where she lay.
+	if GameState.has_flag(BOAT_DONE_FLAG):
+		for child in room.get_children():
+			if child is LanternBoat or (child is Prop and child.kind == "W"):
+				child.queue_free()
+		return
 	for child in room.get_children():
 		if child is LanternBoat:
 			return
@@ -1425,6 +1440,33 @@ func _put_lantern_boat() -> void:
 			child.queue_free()
 			room.add_child(boat)
 			return
+
+
+## Wren's lantern-boat at the harbour steps, once Gully has raised her.
+func _put_boat_home() -> void:
+	var room: Node = game.current_room
+	if room == null or room.get_children().any(func(c: Node) -> bool: return c is BoatHome):
+		return
+	var home := BoatHome.new()
+	home.position = BOAT_HOME_AT
+	room.add_child(home)
+
+
+## The first time home after Gully raised her: the lantern-boat rides at
+## the steps with Hessa's lamp lit on her bow, and Hessa has her say.
+func the_boat_comes_home() -> void:
+	GameState.set_flag(BOAT_HOME_FLAG)
+	var hessa := _find_npc("hessa")
+	var scene := _scene()
+	await scene.wait(0.6)
+	await scene.lamp(game.current_room.global_position + BOAT_HOME_AT + BoatHome.LAMP_AT, Cutscene.LAMP_HERE)
+	await scene.narrate(["NARRATE_BOAT_HOME"])
+	if hessa:
+		await scene.walk_around_to(hessa.global_position + HOME_FROM_HESSA)
+		scene.face(Vector2.UP)
+	await scene.speak("hessa", ["HESSA_BOAT_HOME_1", "HESSA_BOAT_HOME_2"])
+	await scene.lamp(game.player.global_position, Cutscene.LAMP_YES)
+	scene.finish()
 
 
 ## Captain Sorrel and the far post of her old kite-post.
