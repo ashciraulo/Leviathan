@@ -47,6 +47,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=env: the overworld ground the art pass redrew: lava pools,
+	# the tide flats at low water, and sinking sand.
+	if OS.get_environment("SHOTS_ONLY") == "env":
+		await _env_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=ebb: the sea bed, under water and then held bare.
 	if OS.get_environment("SHOTS_ONLY") == "ebb":
 		await _ebb_shots(game)
@@ -3574,3 +3583,22 @@ func _close_dialogue(game: Node) -> void:
 				child.advance()
 				guard += 1
 				await _wait(0.05)
+
+
+func _env_shots(game: Node) -> void:
+	var shots := [
+		[Vector2i(8, -1), "env_geyser_basin", Vector2i(11, 1)],
+		[Vector2i(9, -2), "env_slag_fields", Vector2i(2, 6)],
+		[Vector2i(0, 2), "env_cockle_flats", Vector2i(6, 7)],
+		[Vector2i(2, 2), "env_wrack_shore", Vector2i(3, 8)],
+		[Vector2i(7, 1), "env_sinksand_basin", Vector2i(11, 1)],
+		[Vector2i(7, 0), "env_bleached_strand", Vector2i(11, 11)],
+	]
+	for shot: Array in shots:
+		var tile: Vector2i = shot[2]
+		GameState.set_checkpoint(shot[0], Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		Tide.offset = Tide.offset_for(Tide.Phase.LOW, 3.0 - 2.2)
+		game.respawn()
+		await _wait(2.2)
+		await _capture(shot[1])
