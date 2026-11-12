@@ -62,22 +62,30 @@ for b, sym in enumerate(CH):
     # Pop Staccato's keys below F#2 are stretched samples that read an octave up or 13-19 c flat (gate v3/v4),
     # so the ostinato's floor is G#2 and the C# figure sits on C#3.
     root = low_root(sym, 44)
-    # The breakdown thins to drums and reed for two bars, then the ostinato and the march creep back in
-    # so the loop lands on A at full strength (v2's breakdown faded out: a 27 dB step at the seam).
-    if s != "BRK" or b >= 44:
+    # The breakdown thins to drums and reed for four bars, then the march comes back by voices (velocity barely
+    # moves Pop Staccato): bar 46 plays only the ostinato's downbeats, bar 47 the whole figure, with the anvil
+    # and a drum pickup into the loop (review v6 MINOR 3; v2's breakdown faded out: a 27 dB step at the seam).
+    if s != "BRK" or b >= 46:
         fig = [0, 0, 1, 0, 0, 0, 1, 3] if sym == "C#" else [0, 0, 7, 0, 0, 0, 7, 12]
-        lift = 0 if s != "BRK" else (b - 47) * 6  # -18, -12, -6, 0 dB-ish in velocity steps
         for k, iv in enumerate(fig):
-            ost.note(t + k * 0.5, 0.32, root + iv, (82 if k % 4 == 0 else 64) + lift)
+            if b == 46 and k % 2:
+                continue
+            ost.note(t + k * 0.5, 0.32, root + iv, 82 if k % 4 == 0 else 64)
+    # The anvil sounds an octave above its key (Hammer And Anvil): key 73 rings C#, the tonic (review v6 MAJOR 2:
+    # key 84 rang C7, outside the mode), and 74 on the D bars.
+    anvil_key = 74 if sym == "D" else 73
     if s in ("A", "A2", "B") or b >= 46:
         for st, p, v in ((0, 41, 86), (1.5, 41, 60), (2, 45, 72), (3, 41, 70), (3.5, 45, 54)):
             drums.note(t + st, 0.25, p, v - (12 if b == 46 else 0))
-        anvil.note(t + 2.5, 0.2, 84, 46 if s in ("A", "BRK") else 54)
+        anvil.note(t + 2.5, 0.2, anvil_key, 46 if s in ("A", "BRK") else 54)
+        if b == 47:
+            drums.note(t + 3.75, 0.2, 45, 64)
     elif s == "BRK":
         drums.note(t, 0.4, 41, 70 + 4 * (b - 42))
         drums.note(t + 2, 0.3, 41, 56 + 4 * (b - 42))
     if s in ("A2", "B", "BRK") or b < 2:
-        pad.chord(t, 3.95, voicing(sym, 49, 64)[:3], 38)
+        # The root an octave down gives the march a floor now the ostinato starts at C#3 (review v6 MINOR 1).
+        pad.chord(t, 3.95, [low_root(sym, 37)] + voicing(sym, 49, 64)[:3], 38)
 # Phrase 2 on low brass, squared off: C# B G# F#, then its answer.
 for start in (6, 30):
     brass.line(song.bar(start), [(49, 2), (47, 2), (44, 2), (42, 2)], vel=84, legato=0.95)

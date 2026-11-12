@@ -12,13 +12,13 @@
  "parts": [
   {
    "name": "strings_ostinato",
-   "notes": 368,
+   "notes": 348,
    "low": 45,
    "high": 66
   },
   {
    "name": "drum_frame",
-   "notes": 218,
+   "notes": 219,
    "low": 41,
    "high": 45
   },
@@ -31,13 +31,13 @@
   {
    "name": "perc_anvil",
    "notes": 42,
-   "low": 84,
-   "high": 84
+   "low": 73,
+   "high": 74
   },
   {
    "name": "pad_dark",
-   "notes": 96,
-   "low": 49,
+   "notes": 128,
+   "low": 37,
    "high": 59
   },
   {

@@ -40,19 +40,37 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 45,
+     "freq": 40,
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 50,
+     "gain": -3.0,
+     "q": 1.0
+    },
+    {
+     "shape": "bell",
+     "freq": 280,
+     "gain": 3.0,
+     "q": 1.0
+    },
+    {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": 4.0,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
-     "freq": 6000,
+     "freq": 9000,
      "db_oct": 12
     }
    ]
   },
   "perc_anvil": {
    "insert": 4,
-   "target": -31.0,
+   "target": -34.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -67,7 +85,7 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 80,
+     "freq": 45,
      "db_oct": 12
     },
     {
@@ -94,5 +112,5 @@
    ]
   }
  },
- "notes": "Ashfall (region_cinderreach). templates\\kiln_template1.flp (boss_template3 with five presets swapped): Staccato Blend on strings_ostinato (insert 5), 12 Low Strings on brass_low (insert 8, +12), the frame-drum sampler on drum_taiko (insert 3, key 41 plays 42), Hammer And Anvil on choir (insert 4), Dark Pad (Classic Synth Pad) on sub_breath (insert 7, shared with bell_marrow, which only the Kiln uses), Emulator II Bassoon on timpani (insert 1)."
+ "notes": "Ashfall (region_cinderreach). templates\\kiln_template1.flp (boss_template3 with five presets swapped): Staccato Blend on strings_ostinato (insert 5), 12 Low Strings on brass_low (insert 8, +12), the frame-drum sampler on drum_taiko (insert 3, key 41 plays 42), Hammer And Anvil on choir (insert 4), Dark Pad (Classic Synth Pad) on sub_breath (insert 7, shared with bell_marrow, which only the Kiln uses), Emulator II Bassoon on timpani (insert 1). v7 (review v6): anvil keys 73/74 (it rings an octave up, so C# and D), -3 dB; strings_up clone (+14 units, ~1 c each) for key 62 only: measured on harmonics h2-h6, the native keys read 47 -3, 50 +6, 62 -14 c (the gate's fundamental reading made v6's +17 clone sharp); brass_low advance_s 0.12 (12 Low Strings swells in ~145 ms late); pad adds the root an octave down, low-cut 45; frame drum -3 dB at 50 Hz, +3 at 280, +4 at 2.8k; breakdown builds back by voices from bar 46."
 }
