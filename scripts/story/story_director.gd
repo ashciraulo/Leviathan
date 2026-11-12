@@ -110,6 +110,7 @@ const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
 const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
+const DUSK_BELL_AT := Vector2(12 * 16 + 8, 5 * 16 + 12)
 ## Gully dozing beside the Lantern Wake's figurehead on Wreck Strand, and
 ## his strongbox out in the pool.
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
@@ -1191,6 +1192,11 @@ func _put_wick(coord: Vector2i) -> void:
 		var wick := Npc.new("wick")
 		wick.position = WICK_AT
 		room.add_child(wick)
+	# Wick's dusk bell, for the lamplighter's round, once the fen's lit.
+	if coord == FENMOUTH and GameState.has_flag("wick_gave_jar") and not room.get_children().any(func(c: Node) -> bool: return c is DuskBell):
+		var bell := DuskBell.new()
+		bell.position = DUSK_BELL_AT
+		room.add_child(bell)
 	if FenLantern.SPOTS.has(coord) and not room.get_children().any(func(c: Node) -> bool: return c is FenLantern):
 		var lantern := FenLantern.new()
 		lantern.room_coord = coord

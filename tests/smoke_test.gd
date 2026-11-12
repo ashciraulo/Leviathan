@@ -101,6 +101,7 @@ func _ready() -> void:
 		await _test_lowe_after()
 		await _test_hessa_walk()
 		await _test_boat_raised()
+		await _test_wick_round()
 		await _test_murmur_and_dace()
 		_test_talk_order()
 		_test_errands()
@@ -7876,6 +7877,87 @@ func _test_boat_raised() -> void:
 	GameState.reset_new_game()
 
 
+## Wick's lamplighter's round: ring the dusk bell and the fen's lanterns
+## go out for the round; light all five against the clock. The lanterns'
+## own flags stay as they were; each time beaten earns a purse, in order.
+func _test_wick_round() -> void:
+	GameState.reset_new_game()
+	var flags := ["wick_asked", "wick_gave_jar", "wick_told_sink", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG]
+	for coord: Vector2i in FenLantern.SPOTS:
+		flags.append(FenLantern.flag_for(coord))
+	for flag: String in flags:
+		GameState.set_flag(flag)
+	var first := func() -> String:
+		var lines: Array = Conversations.branch_for("wick").get("lines", [""])
+		return str(lines[0]) if lines[0] is String else str(lines[1])
+	_check(first.call() == "WICK_ROUND_1", "once the Old One's turned, Wick tells of the round")
+	for line: String in ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B", "WICK_ROUND_65_1", "WICK_ROUND_65_2", "NARRATE_DUSK_BELL"]:
+		_check(tr(line).length() <= 70, "%s fits the box" % line)
+	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.DUSK_BELL_AT + Vector2(0, 18))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_enemies_away()
+	game.player._invuln = 600.0
+	var room: Room = game.current_room
+	var bells := room.get_children().filter(func(c: Node) -> bool: return c is DuskBell)
+	_check(bells.size() == 1, "Wick's dusk bell stands at Fenmouth")
+	var tile := Vector2i(StoryDirector.DUSK_BELL_AT / Room.TILE)
+	_check(tile.y <= 8 and room.tile_at(tile.x, tile.y) == "." and room.tile_at(tile.x, tile.y + 1) == ".", "on open ground, above the box")
+	var bell: DuskBell = bells[0]
+	bell.interact()
+	await _close_dialogue(game)
+	_check(not LamplighterRound.running, "before Wick explains it, the bell's just a bell")
+	Conversations.talk("wick")
+	await _close_dialogue(game)
+	bell.interact()
+	_check(LamplighterRound.running and is_instance_valid(LamplighterRound.current), "rung, the round begins")
+	await _wait(0.5)
+	_check(LamplighterRound.current.elapsed > 0.3, "and the clock runs")
+	# Over to Glowcap Grove: its lantern is out for the round.
+	game.player.global_position = room.global_position + Vector2(-12, 5 * 16 + 8)
+	await _wait(0.8)
+	room = game.current_room
+	var lantern: FenLantern = room.get_children().filter(func(c: Node) -> bool: return c is FenLantern)[0]
+	_check(room.coord == Vector2i(3, 1) and LamplighterRound.running and not lantern.lit, "the next room's lantern is out for the round")
+	lantern.light()
+	_check(lantern.lit and LamplighterRound.lit.has(Vector2i(3, 1)), "and lights again for it")
+	# Back through Fenmouth and south off the fen: the round's off.
+	game.player.global_position = room.global_position + Vector2(Room.SIZE.x + 12, 5 * 16 + 8)
+	await _wait(0.8)
+	_check(game.current_room.coord == StoryDirector.FENMOUTH and LamplighterRound.running, "Fenmouth is part of the round")
+	game.player.global_position = game.current_room.global_position + Vector2(11 * 16 + 8, Room.SIZE.y + 12)
+	await _wait(0.8)
+	_check(not LamplighterRound.running and LamplighterRound.current == null, "off the fen, the round's off")
+	for coord: Vector2i in FenLantern.SPOTS:
+		_check(GameState.has_flag(FenLantern.flag_for(coord)), "lantern %s still lit for keeps" % coord)
+	# A fast round: all five in 60 seconds beats every time.
+	LamplighterRound.begin(game)
+	LamplighterRound.current.elapsed = 60.0
+	for coord: Vector2i in FenLantern.SPOTS:
+		LamplighterRound.lantern_lit(coord)
+	_check(not LamplighterRound.running and LamplighterRound.best() == 60, "all five: the time stands (%d)" % LamplighterRound.best())
+	for tier: int in LamplighterRound.TIERS:
+		_check(GameState.has_flag(LamplighterRound.tier_flag(tier)), "beat %d seconds" % tier)
+	var glints := GameState.item_count("glint")
+	for expect: Array in [["WICK_ROUND_100_1", 50], ["WICK_ROUND_80_1", 100], ["WICK_ROUND_65_1", 200]]:
+		_check(first.call() == expect[0], "Wick pays: %s" % expect[0])
+		Conversations.talk("wick")
+		glints += int(expect[1])
+	_check(GameState.item_count("glint") == glints and not first.call().begins_with("WICK_ROUND"), "every purse paid, once")
+	# A slower round doesn't spoil the best.
+	LamplighterRound.begin(game)
+	LamplighterRound.current.elapsed = 120.0
+	for coord: Vector2i in FenLantern.SPOTS:
+		LamplighterRound.lantern_lit(coord)
+	_check(LamplighterRound.best() == 60, "a slower round keeps the best")
+	await _wait(0.2)
+	game.queue_free()
+	await _wait(0.1)
+	_check(not LamplighterRound.running, "nothing left running")
+	GameState.reset_new_game()
+
+
 ## Murmur helps Wick at Fenmouth once out of the Choir; Mother Dace sits by
 ## the last mural after the ending.
 func _test_murmur_and_dace() -> void:
@@ -7988,7 +8070,7 @@ func _test_errands() -> void:
 	talk.call("ottilie")
 	_check(GameState.item_count("glint") == glints + 100 and first.call("ottilie") == "OTTILIE_AFTER", "and thanks Wren")
 	# A lantern for Murmur's family.
-	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "murmur_met"]:
+	for flag in ["wick_asked", "fen_lanterns_lit", "wick_gave_jar", "wick_round_ask", "murmur_met"]:
 		GameState.set_flag(flag)
 	_check(first.call("wick") == "WICK_MURMUR_1", "Wick wants a lantern for Murmur's family")
 	talk.call("wick")
@@ -8753,7 +8835,7 @@ func _branch_covers(first: Dictionary, later: Dictionary) -> bool:
 ## Saltmarrow and the locals notice the Old One turn, and the ending.
 func _test_late_reactions() -> void:
 	GameState.reset_new_game()
-	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
+	for flag in ["talked_corrin_quest", "talked_pell_quest", "nettle_learned", "agna_gave_sword", "marga_gave_jar", "rope_promised", "wick_gave_jar", "wick_round_ask", "sorrel_paid", "sorrel_letters", "sorrel_letters_paid", "letter_ottilie", "letter_liesl", "letter_agna", "seen_wayshell", "sorrel_dared_stacks", "wick_told_sink", "agna_scales_ask", "agna_bell_cast", "nettle_got_bell", "nettle_signals_ask", "nettle_signals_done", "nettle_nearly_told", "corrin_bottles_ask", "corrin_bottles_done", "corrin_bottles_after", "pell_shell_ask", "pell_shell_done", "trade_jam", "trade_candles", "trade_line", "trade_chart", "trade_done", "marga_heard_trade"]:
 		GameState.set_flag(flag)
 	# Taught Nettle the signals late, after the Wayshell: the lesson still comes.
 	GameState.clear_flag("nettle_learned")

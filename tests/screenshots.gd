@@ -101,6 +101,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=wick_round: the lamplighter's round under way.
+	if OS.get_environment("SHOTS_ONLY") == "wick_round":
+		game.queue_free()
+		await _wick_round_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=seal_pup: the seal pup in her nook, and at home.
 	if OS.get_environment("SHOTS_ONLY") == "seal_pup":
 		game.queue_free()
@@ -400,6 +409,7 @@ func _ready() -> void:
 				await _party_shot()
 				await _walk_shots()
 				await _boat_home_shot()
+				await _wick_round_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -2360,6 +2370,36 @@ func _echo_shot() -> void:
 	echo.start()
 	await _wait(EchoGame.LEAD_IN + EchoGame.NOTE_TIME + 0.05)
 	await _capture("quest_21_echo_game")
+	game.queue_free()
+	await _wait(0.2)
+
+
+## Wick's lamplighter's round: Glowcap Grove's lantern just caught, the
+## clock running at the top.
+func _wick_round_shot() -> void:
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in ["wick_asked", "wick_gave_jar", "wick_told_sink", "wick_round_ask", FenLantern.ALL_LIT_FLAG, StoryDirector.TURNED_FLAG]:
+		GameState.set_flag(flag)
+	for coord: Vector2i in FenLantern.SPOTS:
+		GameState.set_flag(FenLantern.flag_for(coord))
+	GameState.give_item("glowmoth_lantern", 1, false)
+	var spot: Vector2i = FenLantern.SPOTS[Vector2i(3, 1)]
+	GameState.set_checkpoint(Vector2i(3, 1), Vector2(spot) * 16.0 + Vector2(-8, 30))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var round := LamplighterRound.begin(game)
+	round.elapsed = 47.0
+	await _wait(1.0)
+	var lantern: FenLantern = game.current_room.get_children().filter(func(c: Node) -> bool: return c is FenLantern)[0]
+	lantern.light()
+	game.player.facing = Vector2.UP
+	await _wait(0.3)
+	await _capture("quest_29_wick_round")
+	round.stop()
 	game.queue_free()
 	await _wait(0.2)
 
