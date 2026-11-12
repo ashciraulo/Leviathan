@@ -214,9 +214,16 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   or a clone channel at -3.5 dB). The loop seam steps up 4.9 LU.
 
 ## Cellar Steps, the cellar (2026-11-12)
-- **Template:** `templates\cellar_template2.flp`, channels named by part. Lush Pizzicato was inharmonic; Analog Lab
-  "C-8 Pizzicato" replaced it. It has no release and cuts dead at the note-off, so every pluck rings just past the
-  next one (gate: 57 of 139 cut in v2, none in v4). The tom plays key 52 for written 45.
-- **The loop:** bars 30-31 stop short, so bar 32 has an E3 bassoon pickup and a tom on 4-and; without it the seam
-  stepped 16.6 dB.
-- v4: gate PASS, stems on target, -18.22 LUFS, true peak -3.4 dBTP, seam step 0.4 dB.
+- **Template:** `templates\cellar_template3.flp`, channels named by part. Lush Pizzicato was inharmonic and C-8
+  Pizzicato (v4) is an OB-Xa synth that sustains, so v7 uses Analog Lab "Pizzi Bass" (Augmented Strings, sampled). It
+  sounds an octave low (`maps/dungeon_cellar_transpose.json` +12) and its G#3 is inharmonic, so the E chord's third
+  plays G#4. The tom plays key 48 for written 45 (it settles on A1).
+- **Pizzi Bass has two velocity layers that switch at 63/64** and barely follow velocity inside a layer (review v7
+  MAJOR). Every figure note is written 68-76 so it stays in the loud layer; only bar 32's creep-back is soft (44/40).
+  Any per-key level fix must go through a clone channel, never velocity.
+- **The loop:** bars 30-31 stop short under a slow harp line, and bar 32 creeps back with two soft plucks, an E3
+  bassoon pickup and a tom on 4-and.
+- v8: review PASS. Gate flags only the pizz's own samples. -18.07 LUFS, true peak -4.55 dBTP.
+- **Open MINOR (v8):** E4, G4 and Bb3 (played 76, 79, 70) are 3-7 dB soft in the loud layer; E4 is the and-of-1 on
+  every Am bar. Fix: send them to a clone channel and lower the main pizz about 5 dB with `volume_db`. Tuning: B3, D4,
+  F4, G#4 about +10 c (don't retune C4, it reads -6 c now). No shared reverb send yet.

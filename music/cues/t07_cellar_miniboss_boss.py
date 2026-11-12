@@ -54,25 +54,35 @@ for b, sym in enumerate(CH):
     t = song.bar(b)
     tones = voicing(sym, 50, 64)
     root = low_root(sym, 45)
-    if b in (29, 30):  # A'' stops short: two bars of silence but a tom, then creeps back
+    if b in (29, 30):  # A'' stops short: the harp breathes under it (below), the pizz rests
         continue
-    if b == 31:
-        pizz.line(t + 2, [(root, 0.5), (tones[1], 0.5), (root, 1)], vel=64, legato=0.96)
+    if b == 31:  # creeps back: two soft plucks, then the bassoon's pickup
+        pizz.note(t + 2, 1.05, root, 44)
+        pizz.note(t + 3, 1.2, root + 12, 40)
         reed.note(t + 3, 0.9, 52, 58)  # E3 pickup back into bar 1, so the loop creeps back instead of slamming in
         continue
-    # phrase 7's rhythm, short short long long, on root-fifth-chord
-    # C-8 Pizzicato has no release: it cuts dead at the note-off (gate on v2: 57 of 139 notes at
-    # 0.3 beats). So each pluck rings just past the next one, whose attack hides the note-off.
+    # phrase 7's rhythm, short short long long: root, top, the chord's third, octave root
+    # (review v4 MINOR 1: tones[1] was the octave root on Am, so Am bars had no C).
+    third = (bass_of(sym) + (3 if sym.endswith("m") else 4)) % 12
+    mid = next(p for p in tones if p % 12 == third)
+    if mid == 56:  # Pizzi Bass's G#3 is inharmonic (-26 c on every render): the E chord's third goes up an octave
+        mid = 68
+    top = tones[-1] if tones[-1] != root + 12 else tones[-2]
+    # Each pluck rings just past the next one, so its attack hides the note-off. The last pluck before
+    # the A'' rest rings out (review v4 MAJOR 1: it cut dead at bar 30's downbeat).
     beat3 = b % 2 or 16 <= b < 28
-    for s, ln, p, v in ((0, 0.55, root, 74), (0.5, 0.55, tones[-1], 56), (1, 1.05, tones[1], 64),
-                        (2, 1.05 if beat3 else 2.0, root + 12, 66)):
-        pizz.note(t + s, ln, p, v)
+    last = 4.0 if b == 28 else 2.0
+    # Pizzi Bass has two velocity layers that switch at 63/64 (review v7 MAJOR 1): every figure note stays
+    # in the loud layer, at least 6 steps clear of the switch, and the creep-back plucks sit in the soft one.
+    for s_, ln, p, v in ((0, 0.55, root, 74), (0.5, 0.55, top, 70), (1, 1.05, mid, 72),
+                         (2, 1.05 if beat3 else last, root + 12, 72)):
+        pizz.note(t + s_, ln, p, v)
     if beat3:
-        pizz.note(t + 3, 1.05, tones[0], 58)
+        pizz.note(t + 3, 1.05, mid if sym.endswith("m") else tones[0], 70)
 reed.line(song.bar(0), bars("A3:1 C4:1 E4:2 | D4:1 C4:1 A3:2 | F4:2 E4:1 D4:1 | E4:3 r:1 | "
-                            "C4:1 D4:1 E4:1 F4:1 | G#3:3 r:1 | A3:1 B3:1 C4:1 E4:1 | B3:4"), legato=0.85)
+                            "C4:1 D4:1 E4:1 F4:1 | G#3:3 r:1 | A3:1 B3:1 C4:1 E4:1 | B3:4"), legato=0.95)
 reed.line(song.bar(8), bars("A3:1 C4:1 E4:2 | A4:2 G4:1 E4:1 | F4:2 A4:1 F4:1 | E4:3 r:1 | "
-                            "C4:2 A3:1 C4:1 | D4:2 F4:2 | E4:1 D4:1 B3:2 | G#3:3 r:1"), vel=70, legato=0.85)
+                            "C4:2 A3:1 C4:1 | D4:2 F4:2 | E4:1 D4:1 B3:2 | G#3:3 r:1"), vel=70, legato=0.95)
 reed.line(song.bar(16), bars("C4:2 A3:2 | B3:2 D4:2 | E4:3 G4:1 | E4:3 r:1 | A3:2 C4:2 | D4:2 B3:2 | "
                              "G#3:3 B3:1 | A3:3 r:1 | F3:2 A3:2 | E3:2 C4:2 | D4:2 F4:2 | E4:4"), vel=66, legato=0.88)
 reed.line(song.bar(28), bars("A3:1 C4:1 E4:2 | r:4 | r:4 | r:4"), vel=62, legato=0.85)
@@ -83,13 +93,16 @@ for b in range(song.bars):
         tom.note(song.bar(b) + 3.5, 0.3, 45, 50)
     elif b < 29 and b % 2:
         tom.note(song.bar(b) + 3.5, 0.3, 45, 52)
+# The A'' rest: a slow, soft harp line keeps the cellar breathing (review v4 MAJOR 1: bars 30-31 fell to
+# digital silence between two tom hits).
+harp.line(song.bar(29), [(69, 2), (64, 2), (60, 2), (57, 2)], vel=40, legato=1.6)
 for b, sym in enumerate(CH):
     if 16 <= b < 28 and b % 2 == 0:
         top = voicing(sym, 69, 84)
         for k, p in enumerate(top[:3]):
             harp.note(song.bar(b) + 1 + k * 0.5, 1.5, p, 48)
 for i, p in enumerate(song.parts):
-    p.humanize(seed=900 + i)
+    p.humanize(seed=900 + i, vel=2 if p is pizz else 6)  # pizz: 6 velocity steps are 3.5 dB
 song.save()
 gate(song, CH, ("bassoon",), ("harp_none",), "cellar")
 
