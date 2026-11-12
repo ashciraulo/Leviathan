@@ -178,6 +178,8 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   walked back from the sixth, so Bb bars opened on G: every bar now starts on its root. Bass Gb2 (+6 dB hot) goes to
   bass_soft. The shaker reads as a dry backbeat tick rather than brushes (MINOR, no brush samples).
 - v5: stems on target, -20.18 LUFS, true peak -7.1 dBTP. Bass D3 (key 50) reads -12 c (reviewer: inaudible in a walk).
+- **Review v5 PASS.** Open MINORs: the marimba reads -7.5 c at the written octave (+1 c an octave up): channel PITCH
+  about +7; 2-6 kHz share -18.3 dB (shaker -2 dB); the brushes could gain body from the frame drum ~12 dB under on 2 and 4.
 
 ## Lamplight, inside homes (2026-11-12)
 - **Template:** `templates\house_template2.flp` = lullaby_template with I Felt It (felt piano) on the old harp channel
@@ -185,3 +187,6 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   3 dB jumps at equal velocity. The music box and its glockenspiel shine are the lullaby's; the generator doubles the
   box into `box_shine` and lets each glock note ring to the next one +1 beat (its note-offs cut 14 of 39 dead).
 - v3: gate PASS, stems on target (box -27, piano -29, cello -32, shine -42), -19.82 LUFS, true peak -8.3 dBTP.
+- **Review v3 PASS.** Open MINOR: Soft Cello's octave-up layer sits ~+10 c, so its held notes beat at 1.2-1.5 Hz
+  (bars 13-24); lower that layer in Analog Lab or the cello 2-3 dB. The gate only checks wobble on struck parts:
+  extend it to sustained ones. Village v6 review: PASS with no MINORs.
