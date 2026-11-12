@@ -90,6 +90,13 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
         mono_all = audio.mean(axis=1)
         drop = momentary(mono_all, rate, end)
         report.update(tail_room_s=round(room, 2), loop_end_drop_db=round(drop[0] - drop[1], 1))
+        # Staccato cues (strums, marimba) fall 12-16 dB in the first 400 ms of their own ring; a cut tail
+        # falls to near silence. Judge the fall against the body's own quietest 400 ms (a sparse or swelling
+        # cue's average is no reference): legitimate loops sit 0-7 dB under it, the title v1 cut 24 dB.
+        w = int(0.4 * rate)
+        quiet = min(10 * np.log10(max(1e-12, float(np.mean(mono_all[k:k + w] ** 2))))
+                    for k in range(start, end - w, w // 2))
+        report.update(loop_end_tail_below_quietest_db=round(quiet - drop[1], 1))
         report.update(seam_jump=round(jump, 4), seam_step_db=round(after - before, 2),
                       bar_step_p90_db=round(float(np.percentile(steps, 90)), 2) if steps else 0.0,
                       tail_folded_s=round(n / rate, 2))
@@ -133,7 +140,7 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
     if spec["loop"] and report["tail_room_s"] < 2.0:
         problems.append(f"the render ends {report['tail_room_s']} s past the loop end: render with two bars of room "
                         "(flp_build adds them) so the tail rings over the seam")
-    if spec["loop"] and report["loop_end_drop_db"] > 12:
+    if spec["loop"] and report["loop_end_drop_db"] > 12 and report["loop_end_tail_below_quietest_db"] > 12:
         problems.append(f"the render falls {report['loop_end_drop_db']} dB right after the loop end: FL cut the tail")
     if spec["loop"] and report["seam_jump"] > 0.05:
         problems.append(f"seam jump {report['seam_jump']} would click")
