@@ -16,8 +16,10 @@ const SECTIONS := [
 	["CREDITS_DIRECTION", "Ash"],
 	["CREDITS_MAKING", "Claude"],
 	["CREDITS_MUSIC", "Ash", "Claude"],
+	["CREDITS_SOUND", "Claude"],
 	["CREDITS_FONT", "CREDITS_FONT_NAME"],
-	["CREDITS_ENGINE", "Godot Engine", "CREDITS_GODOT_LICENSE"],
+	["CREDITS_ENGINE", "Godot Engine", "CREDITS_GODOT_LICENSE", "CREDITS_FREETYPE_1", "CREDITS_FREETYPE_2",
+		"CREDITS_LICENSES"],
 	["CREDITS_THANKS", "CREDITS_THANKS_NAME"],
 ]
 
@@ -71,7 +73,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## How many epilogue scenes this roll shows: one after each section but
-## the last, while there are scenes left.
+## the last, while there are scenes left. They go with the sections nearest
+## the end, so the last scene always comes just before the thanks.
 func _vignette_count() -> int:
 	if not _vignettes:
 		return 0
@@ -111,10 +114,11 @@ func _draw() -> void:
 				MenuKit.draw_text(self, section[i], Vector2(0, y), color, HORIZONTAL_ALIGNMENT_CENTER, 384)
 			y += LINE
 		y += GAP
-		if s < _vignette_count():
+		var scene := s - (SECTIONS.size() - 1 - _vignette_count())
+		if scene >= 0 and scene < _vignette_count():
 			var size := CreditsVignettes.SIZE
 			if y > -size.y - 4.0 and y < 220.0:
-				CreditsVignettes.draw(self, CreditsVignettes.KINDS[s], Vector2(roundf((384 - size.x) / 2.0), y - 6.0), _time)
+				CreditsVignettes.draw(self, CreditsVignettes.KINDS[scene], Vector2(roundf((384 - size.x) / 2.0), y - 6.0), _time)
 			y += size.y + CreditsVignettes.GAP
 	y += 40.0
 	if y > -LINE and y < 216.0:

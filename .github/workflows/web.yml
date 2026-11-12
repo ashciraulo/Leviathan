@@ -83,6 +83,8 @@ jobs:
           test -s export/web/index.pck
           # Imports Godot made of the exported icons don't belong on the page.
           rm -f export/web/*.import
+          # The engine's licenses, for the credits' pointer to them.
+          cp THIRD_PARTY_LICENSES.txt export/web/
 
       # Every room in a browser, overworld screens and dungeon rooms, timed,
       # with pictures of the Maw and a dark room.

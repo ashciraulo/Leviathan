@@ -109,9 +109,14 @@ jobs:
         # Zips for Windows and macOS; a tarball keeps Linux's executable bit.
         run: |
           mkdir -p dist
+          # The engine's licenses (and its parts': FreeType, ENet, Mbed TLS...)
+          # go with every download.
+          cp THIRD_PARTY_LICENSES.txt export/windows/
+          cp THIRD_PARTY_LICENSES.txt export/linux/
           (cd export/windows && zip -q -r ../../dist/Leviathan-windows.zip .)
           tar -czf dist/Leviathan-linux.tar.gz -C export/linux .
           cp export/macos/Leviathan.zip dist/Leviathan-macos.zip
+          zip -q -j dist/Leviathan-macos.zip THIRD_PARTY_LICENSES.txt
           ls -la dist
 
       - uses: actions/upload-artifact@v4
@@ -170,6 +175,7 @@ jobs:
             Linux)   tar -xzf dl/Leviathan-linux.tar.gz -C game; echo "BIN=game/Leviathan.x86_64" >> "$GITHUB_ENV" ;;
           esac
           ls -la game
+          test -s game/THIRD_PARTY_LICENSES.txt
 
       - name: Play into a new game
         run: |
