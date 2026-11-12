@@ -45,6 +45,11 @@ const ONE_SHOT_MUSIC := ["lullaby", "bell_1", "bell_2", "bell_3", "bell_4", "bel
 ## The seven Tidebells in lullaby order: bell_1.ogg is the Hull's phrase.
 ## tools/music_gen.py weaves the same phrase into each dungeon's track.
 const BELL_ORDER := ["hull", "kiln", "mire", "gale", "glacier", "belfry", "tomb"]
+## The lullaby is 3/4 at 80 (audio/music/lullaby.json); each phrase is three bars.
+const LULLABY_BPM := 80.0
+const PHRASE_BEATS := 9
+## How long a phrase's ring carries on under the next one in a run.
+const PHRASE_RING_FADE := 1.0
 ## Short jingles: they duck the music and don't loop.
 const JINGLES := ["jingle_item", "jingle_pearl", "jingle_secret", "jingle_clear",
 	"jingle_bell", "jingle_game_over", "jingle_puzzle"]
@@ -410,22 +415,33 @@ func play_lullaby(count: int) -> void:
 
 
 ## Plays lullaby phrases (0-based) back to back. False when none has a file.
+## Each bell_N.ogg is its phrase plus the bell's natural ring, so the files
+## differ in length. In a run of phrases each one hands over after exactly
+## PHRASE_BEATS at the lullaby's tempo (a copy of its stream gets that beat
+## count) and its ring fades under the next; the last one rings out in full.
 func _play_phrases(phrases: Array) -> bool:
 	var playlist := AudioStreamPlaylist.new()
 	playlist.loop = false
-	playlist.fade_time = 0.0
-	var count := 0
-	var length := 0.0
+	playlist.fade_time = PHRASE_RING_FADE
+	var streams: Array[AudioStream] = []
 	for i: int in phrases:
 		var stream := _load(MUSIC_DIR, "bell_%d" % (i + 1))
-		if stream == null or count >= AudioStreamPlaylist.MAX_STREAMS:
-			continue
-		playlist.set_list_stream(count, stream)
-		length += stream.get_length()
-		count += 1
-	if count == 0:
+		if stream != null and streams.size() < AudioStreamPlaylist.MAX_STREAMS:
+			streams.append(stream)
+	if streams.is_empty():
 		return false
-	playlist.stream_count = count
+	var length := 0.0
+	for k in streams.size():
+		var stream := streams[k]
+		if k < streams.size() - 1:
+			stream = stream.duplicate()
+			stream.set("bpm", LULLABY_BPM)
+			stream.set("beat_count", PHRASE_BEATS)
+			length += PHRASE_BEATS * 60.0 / LULLABY_BPM
+		else:
+			length += stream.get_length()
+		playlist.set_list_stream(k, stream)
+	playlist.stream_count = streams.size()
 	_phrase.stream = playlist
 	_phrase.play()
 	_duck(length)
