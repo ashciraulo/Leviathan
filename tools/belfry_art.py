@@ -44,6 +44,7 @@ FLAT = {
     "_": "#0A1418",   # dark inside things
     "*": "#8AF0E0",   # sea-glow
     "k": "#120A14",   # ink
+    "-": "#2E5E50",   # verdigris streak
 }
 
 # --------------------------------------------------------------------------
@@ -409,32 +410,53 @@ def tollshell(pose):
     verdigris, squatting on the nave floor. Shut, it's a bell; ringing, the
     rim flares; open, its lip lifts on a single brass eye. 16x16."""
     c = canvas(16, 16)
-    lift = 2 if pose == "open" else 0
-    for y in range(2, 13 - lift):
-        t = (y - 2) / 10.0
-        half = 3 + 4 * t
-        for x in range(int(8 - half), int(8 + half + 0.5)):
+    lift = 3 if pose == "open" else 0
+    for y in range(3, 13 - lift):
+        t = (y - 3) / 9.0
+        half = 2.5 + 4.5 * t ** 1.3
+        for x in range(int(round(8 - half)), int(round(8 + half))):
             put(c, x, y, "v")
-    fill_rect(c, 7, 1, 2, 2, "v")
-    # A brass band round its shoulder.
+    # The hanging loop on top, open in the middle.
+    fill_rect(c, 6, 0, 4, 3, "g")
+    put(c, 7, 1, ".")
+    put(c, 8, 1, ".")
+    # A brass band round its shoulder, and verdigris running down from it.
     for x in range(16):
-        if c[6][x] == "v":
-            c[6][x] = "g"
-    # The rim.
+        if c[5][x] == "v":
+            c[5][x] = "g"
+    for (x, y0, y1) in ((5, 7, 9), (9, 6, 8), (11, 8, 10)):
+        if y1 < 12 - lift:
+            line(c, x, y0, x, y1, "-")
+    put(c, 6, 4, "!")
+    # The rim, a heavy lip of brass.
     rim_y = 12 - lift
     flare = 1 if pose == "ring" else 0
-    fill_rect(c, 2 - flare, rim_y, 12 + 2 * flare, 1, "g")
+    fill_rect(c, 1 - flare, rim_y, 14 + 2 * flare, 1, "g")
     if pose == "open":
-        # Lifted: dark underneath, and the eye looking out.
-        fill_rect(c, 3, rim_y + 1, 10, 3, "_")
-        fill_rect(c, 6, rim_y + 1, 4, 2, "y")
-        put(c, 7, rim_y + 1, "k")
-        put(c, 8, rim_y + 1, "k")
+        # Lifted on its legs: dark inside, one big brass eye, claws out.
+        fill_rect(c, 3, rim_y + 1, 10, 4 - 1, "_")
+        fill_rect(c, 6, rim_y + 1, 4, 3, "y")
+        put(c, 7, rim_y + 2, "k")
+        put(c, 8, rim_y + 2, "k")
+        for (x, d) in ((1, 1), (14, -1)):
+            put(c, x, rim_y + 2, "s")
+            put(c, x + d, rim_y + 2, "s")
+            put(c, x, rim_y + 3, "s")
+        for x in (4, 11):
+            put(c, x, 15, "s")
     else:
-        fill_rect(c, 3, rim_y + 1, 10, 1, "_")
+        fill_rect(c, 2, rim_y + 1, 12, 1, "_")
+        if pose == "shut":
+            # The crab's legs just showing under the lip.
+            put(c, 3, rim_y + 2, "s")
+            put(c, 12, rim_y + 2, "s")
     if pose == "ring":
-        for (x, y) in ((0, 8), (15, 8), (1, 3), (14, 3)):
-            put(c, x, y, "!")
+        # The ring in the air: short arcs either side.
+        for side in (-1, 1):
+            for (dx, y) in ((0, 6), (1, 7), (1, 8), (0, 9)):
+                put(c, 8 + side * (8 - dx) - (1 if side > 0 else 0), y, "!")
+        put(c, 2, 2, "!")
+        put(c, 13, 2, "!")
     return rows_of(c)
 
 
