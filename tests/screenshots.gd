@@ -237,6 +237,19 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=ossuary_side: the cave run behind Ribfall Sands.
+	if OS.get_environment("SHOTS_ONLY") == "ossuary_side":
+		await _room_shots(game, {
+			Vector2i(9, 3): ["side_ribfall_sands", Vector2i(19, 9)],
+			Vector2i(10, 3): ["side_marrow_seep", Vector2i(2, 9)],
+			Vector2i(11, 3): ["side_vertebra_gallery", Vector2i(2, 4)],
+			Vector2i(11, 2): ["side_marrow_reliquary", Vector2i(11, 10)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=secrets: exploration secrets in the older regions.
 	if OS.get_environment("SHOTS_ONLY") == "secrets":
 		await _room_shots(game, {

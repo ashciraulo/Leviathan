@@ -63,9 +63,21 @@ func _into_room() -> Vector2:
 		return Vector2.UP
 	var room := get_parent() as Room
 	if room:
+		# Toward the side with the most open ground, so the dust drifts out
+		# where Wren walks rather than into the pocket behind the wall.
+		var best := Vector2i.ZERO
+		var best_open := 0
 		for dir in [Vector2i.DOWN, Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP]:
-			if not room.tile_at(tile.x + dir.x, tile.y + dir.y) in ["#", "$", "%", "!"]:
-				return Vector2(dir)
+			var open := 0
+			for step in range(1, 5):
+				if room.tile_at(tile.x + dir.x * step, tile.y + dir.y * step) in ["#", "$", "%", "!"]:
+					break
+				open += 1
+			if open > best_open:
+				best = dir
+				best_open = open
+		if best != Vector2i.ZERO:
+			return Vector2(best)
 	return Vector2.UP
 
 
