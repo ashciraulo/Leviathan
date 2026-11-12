@@ -26,6 +26,7 @@ func _ready() -> void:
 		_test_room_layouts()
 		_test_game_state()
 		_test_save_load()
+		await _test_old_saves()
 		_test_keys()
 		_test_items()
 		await _test_audio()
@@ -219,6 +220,45 @@ func _test_game_state() -> void:
 	_check(not GameState.can_hum(), "can't hum at full breath")
 	GameState.damage(99)
 	_check(GameState.is_dead() and GameState.bubbles == 0, "bubbles stop at zero")
+
+
+## Saves written by earlier releases (tests/old_saves, from each release's
+## playthrough) still load: every item is real, the gear worn is owned, the
+## breath matches the pearls and shards, and the game starts in their room.
+func _test_old_saves() -> void:
+	var dir := "res://tests/old_saves"
+	var files := Array(DirAccess.get_files_at(dir)).filter(func(f: String) -> bool: return f.ends_with(".json"))
+	_check(files.size() >= 3, "old saves to load (%d)" % files.size())
+	for file: String in files:
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join(file)))
+		if not parsed is Dictionary:
+			_check(false, "%s parses" % file)
+			continue
+		GameState.reset_new_game()
+		_check(SaveManager._write(TEST_SLOT, parsed) and SaveManager.load_game(TEST_SLOT), "%s loads" % file)
+		_check(not SaveManager.read_summary(TEST_SLOT).is_empty(), "%s shows on the file select" % file)
+		# Read from the file itself: loading quietly drops unknown items, so a
+		# renamed item would otherwise vanish from old saves unnoticed.
+		var saved: Dictionary = parsed["state"]
+		var bad := (saved.get("inventory", {}) as Dictionary).keys().filter(func(id: String) -> bool: return not Items.exists(id))
+		_check(bad.is_empty(), "%s: every item it holds still exists (%s)" % [file, bad])
+		var worn: Dictionary = saved.get("equipped", {})
+		for kind: String in worn:
+			_check(worn[kind] == "" or GameState.equipped_item(kind) == worn[kind], "%s: still wears its %s (%s)" % [file, kind, worn[kind]])
+		var breath := mini(GameState.START_BUBBLES + GameState.item_count("breath_pearl")
+			+ GameState.item_count("pearl_shard") / Items.SHARDS_PER_BUBBLE, GameState.MAX_BUBBLES)
+		_check(GameState.max_bubbles == breath, "%s: %d bubbles for its pearls" % [file, GameState.max_bubbles])
+		var room := GameState.checkpoint_room
+		_check(ResourceLoader.exists("res://rooms/room_%d_%d.tscn" % [room.x, room.y]), "%s: its room %s still exists" % [file, room])
+		var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+		add_child(game)
+		await _wait(0.6)
+		_check(game.current_room != null and is_instance_valid(game.player) and game.current_room.coord == room,
+			"%s: the game starts there" % file)
+		game.queue_free()
+		await _wait(0.1)
+	SaveManager.delete_save(TEST_SLOT)
+	GameState.reset_new_game()
 
 
 func _test_save_load() -> void:
