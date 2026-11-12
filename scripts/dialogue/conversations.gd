@@ -90,6 +90,8 @@ const TALKS := {
 		{"if": ["lighting_day"], "unless": ["hessa_party_after"], "set": ["hessa_party_after"], "lines": ["HESSA_PARTY_AFTER"]},
 		# The little cap from the lantern-boat on the Ebb Shelf.
 		{"if": ["found_wren_cap"], "unless": ["hessa_saw_cap"], "set": ["hessa_saw_cap"], "lines": [["", "NARRATE_WREN_SHOWS_CAP"], "HESSA_CAP_1", ["", "NARRATE_HESSA_HOLDS_CAP"], "HESSA_CAP_2"]},
+		# The lamp off the lantern-boat's bow, kept lit twelve years (Gully's ask).
+		{"if": ["gully_boat_ask"], "unless": ["boat_lamp"], "set": ["boat_lamp"], "lines": [["", "NARRATE_WREN_SHOWS_LIST"], "HESSA_BOATFIX_1", ["", "NARRATE_HESSA_FETCHES_LAMP"], "HESSA_BOATFIX_2", "HESSA_BOATFIX_3"]},
 		# The keepers' round: once the Kiln's bell is rung, she sends Wren
 		# round the Tidestones; when every one is read, a new line is cut.
 		{"if": ["read_every_stone"], "unless": ["hessa_carved_wren"], "set": ["hessa_carved_wren"], "lines": ["HESSA_ROUND_DONE_1", "HESSA_ROUND_DONE_2", ["", "NARRATE_HESSA_CARVES"], "HESSA_ROUND_DONE_3"]},
@@ -198,6 +200,8 @@ const TALKS := {
 		{"if": ["met_agna", "bram_met"], "unless": ["agna_bram"], "set": ["agna_bram"], "lines": ["AGNA_BRAM_1", "AGNA_BRAM_2"]},
 		{"if": ["sorrel_letters", "met_agna"], "unless": ["letter_agna"], "set": ["letter_agna"], "lines": [["", "NARRATE_HAND_LETTER"], "AGNA_LETTER_1", "AGNA_LETTER_2"]},
 		{"if": ["lighting_ask", "met_agna"], "unless": ["party_agna"], "set": ["party_agna"], "lines": ["AGNA_PARTY_1", "AGNA_PARTY_2"]},
+		# Pitch and a new lamp hook for the lantern-boat (Gully's ask).
+		{"if": ["gully_boat_ask", "met_agna"], "unless": ["boat_pitch"], "set": ["boat_pitch"], "lines": ["AGNA_BOATFIX_1", "AGNA_BOATFIX_2"]},
 		{"if": ["bram_pot_cast", "met_agna"], "unless": ["agna_pot_told"], "set": ["agna_pot_told"], "lines": ["AGNA_POT_1", "AGNA_POT_2"]},
 		# The Old One's scales: six shed pieces from the puzzle caves (ShedScale)
 		# for a hand-bell, which goes to Nettle.
@@ -288,6 +292,8 @@ const TALKS := {
 		# The last singers: Ansel, her old sorter.
 		{"if": ["sorrel_asked", "ansel_met"], "unless": ["sorrel_ansel"], "set": ["sorrel_ansel"], "lines": ["SORREL_ANSEL_1", "SORREL_ANSEL_2"]},
 		{"if": ["lighting_ask", "sorrel_asked"], "unless": ["party_sorrel"], "set": ["party_sorrel"], "lines": ["SORREL_PARTY_1", "SORREL_PARTY_2"]},
+		# A sail for the lantern-boat, from an old spare kite (not mid-race).
+		{"if": ["gully_boat_ask", "sorrel_paid"], "unless": ["boat_sail", "sorrel_race"], "set": ["boat_sail"], "lines": ["SORREL_BOATFIX_1", "SORREL_BOATFIX_2"]},
 		# The jam trade: Wick's candles for kite cord, for Ferrin.
 		{"if": ["trade_candles", "sorrel_asked"], "unless": ["trade_line"], "set": ["trade_line"], "lines": [["", "NARRATE_HAND_CANDLES"], "SORREL_TRADE_1", "SORREL_TRADE_2", "SORREL_TRADE_2B", ["", "NARRATE_GOT_TRADE_LINE"]]},
 		# The post's last three letters, never sent when it shut.
@@ -437,6 +443,13 @@ const TALKS := {
 	# Gully on the Ebb Shelf with the tide held out, and the lantern-boat
 	# the ebb bared (LanternBoat).
 	"gully_ebb": [
+		# Raising the lantern-boat: planks, pitch, a sail and a lamp, from
+		# four friends along the coast (boat_*); then she floats, and goes
+		# home to Saltmarrow (StoryDirector.the_boat_comes_home).
+		{"if": ["gully_boat_ask", "boat_planks", "boat_pitch", "boat_sail", "boat_lamp"], "unless": ["boat_done"], "set": ["boat_done"], "lines": [["", "NARRATE_HAND_BOAT_PARTS"], "GULLY_BOAT_DONE_1", ["", "NARRATE_BOAT_WORK"], ["", "NARRATE_BOAT_FLOATS"], "GULLY_BOAT_DONE_2"]},
+		{"if": ["hessa_saw_cap", "seen_wayshell"], "unless": ["gully_boat_ask"], "set": ["gully_boat_ask"], "lines": ["GULLY_BOAT_1", "GULLY_BOAT_1B", "GULLY_BOAT_2", "GULLY_BOAT_2B"]},
+		{"if": ["gully_boat_ask"], "unless": ["boat_done"], "lines": ["GULLY_BOAT_WAITING"]},
+		{"if": ["boat_done"], "lines": ["GULLY_BOAT_AFTER"]},
 		{"if": ["found_wren_cap"], "lines": ["GULLY_EBB_AFTER"]},
 		{"if": ["gully_ebb_told"], "lines": ["GULLY_EBB_AGAIN"]},
 		{"set": ["gully_ebb_told"], "lines": ["GULLY_EBB_1", "GULLY_EBB_2", "GULLY_EBB_3", "GULLY_EBB_4"]},
@@ -590,6 +603,8 @@ const TALKS := {
 			"set": ["rope_promised"],
 			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
 		},
+		# New planks for the lantern-boat on the Ebb Shelf (Gully's ask).
+		{"if": ["gully_boat_ask"], "unless": ["boat_planks"], "set": ["boat_planks"], "lines": ["DUNSTAN_BOATFIX_1", "DUNSTAN_BOATFIX_2"]},
 		# A boat for Tobin, from the driftwood behind Barnacle Wall (QuestFind),
 		# once Wren has said hello to Tobin.
 		{"if": ["dunstan_boat_ask", "found_driftwood"], "unless": ["dunstan_boat_done"], "set": ["dunstan_boat_done"], "lines": [["", "NARRATE_HAND_DRIFTWOOD"], "DUNSTAN_BOAT_DONE_1", ["", "NARRATE_DUNSTAN_CARVES"], "DUNSTAN_BOAT_DONE_2", ["", "NARRATE_GOT_TOY_BOAT"]]},
