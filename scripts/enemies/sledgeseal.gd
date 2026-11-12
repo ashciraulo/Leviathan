@@ -44,6 +44,8 @@ func _think(delta: float) -> void:
 			if _timer <= 0.0:
 				_timer = randf_range(1.2, 2.4)
 				_wander = [Vector2.ZERO, Vector2.LEFT, Vector2.RIGHT].pick_random()
+				if _wander.x != 0.0:
+					_sprite.flip_h = _wander.x < 0.0
 			velocity = _wander * WANDER_SPEED
 			var line := _lined_up(get_player())
 			if line != Vector2.ZERO:
