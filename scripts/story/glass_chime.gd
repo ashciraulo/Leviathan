@@ -39,8 +39,13 @@ func _ready() -> void:
 
 func interact() -> void:
 	if echo and EchoGame.open():
-		Audio.play_sfx("glass_chime", global_position, 1.0)
-		echo.start()
+		if echo.state == EchoGame.State.IDLE:
+			# Lower than any shell's note, so it isn't heard as the first.
+			Audio.play_sfx("glass_chime", global_position, 0.6)
+			echo.start()
+		return
+	# Before the game, it just rings.
+	Audio.play_sfx("glass_chime", global_position, 1.1)
 
 
 ## How many pieces Coralie has hung.

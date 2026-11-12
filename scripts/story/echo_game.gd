@@ -22,7 +22,7 @@ const COLOURS := [Color("#b4fff0"), Color("#86ccb4"), Color("#e8b85a"), Color("#
 const SHELL := Color("#f4e2c6")
 const SHELL_SHADE := Color("#c8b090")
 ## Seconds per note as the glass sings, and the pause before it starts.
-const NOTE_TIME := 0.55
+const NOTE_TIME := 0.7
 const LEAD_IN := 0.8
 ## Wren walking further than this from the shells ends the round.
 const LEAVE := 96.0
@@ -38,9 +38,18 @@ var _on := -1
 var _time := 0.0
 
 
+## The lit shell's flash, drawn above Wren so it shows even underfoot.
+var _flash: Node2D
+
+
 func _ready() -> void:
 	# Flat on the sand, under Wren's feet.
 	z_index = -1
+	_flash = Node2D.new()
+	_flash.z_index = 6
+	_flash.z_as_relative = false
+	_flash.draw.connect(_draw_flash)
+	add_child(_flash)
 
 
 static func open() -> bool:
@@ -77,7 +86,7 @@ func _sing() -> void:
 
 func _light(i: int) -> void:
 	_lit = i
-	_glow = 0.4
+	_glow = 0.5
 	Audio.play_sfx("glass_chime", global_position + shell_at(i), PITCHES[i])
 
 
@@ -93,6 +102,7 @@ func _process(delta: float) -> void:
 	var wren := Lantern.player(get_tree())
 	if state != State.IDLE and (wren == null or (wren.global_position - global_position).distance_to(centre()) > LEAVE):
 		state = State.IDLE
+		Audio.play_sfx("bubble_pop", global_position + centre(), 0.7)
 	match state:
 		State.SHOW:
 			_timer -= delta
@@ -112,6 +122,7 @@ func _process(delta: float) -> void:
 				if under >= 0:
 					hop(under)
 	queue_redraw()
+	_flash.queue_redraw()
 
 
 ## Wren lands on shell `i` (tests call it directly).
@@ -121,6 +132,9 @@ func hop(i: int) -> void:
 	if i != tune[at]:
 		state = State.IDLE
 		Audio.play_sfx("bubble_pop", global_position + shell_at(i), 0.7)
+		# Show the shell it should have been.
+		_lit = tune[at]
+		_glow = 0.9
 		return
 	_light(i)
 	at += 1
@@ -156,11 +170,30 @@ func _draw() -> void:
 		for p: Vector2 in fan:
 			inner.append(p * 0.8 + Vector2(0, -0.5))
 		draw_colored_polygon(_moved(fan, c), Palette.OUTLINE)
-		draw_colored_polygon(_moved(inner, c), Color.WHITE.lerp(tint, 0.85) if lit else SHELL.lerp(tint, 0.45))
+		draw_colored_polygon(_moved(inner, c), SHELL.lerp(tint, 0.75))
 		# The fan's ridges.
 		for r in [-4, -1.5, 1.5, 4]:
 			draw_line(c + Vector2(r * 0.4, 2), c + Vector2(r, -6), SHELL_SHADE)
 		draw_rect(Rect2(c + Vector2(-2, 2), Vector2(4, 2)), SHELL_SHADE)
+
+
+## The lit shell: a white flash in its own colour, lifted a little, and a
+## ring round it, above everything.
+func _draw_flash() -> void:
+	if _lit < 0 or _glow <= 0.0 or not open():
+		return
+	var c := shell_at(_lit) + Vector2(0, 1)
+	var tint: Color = COLOURS[_lit]
+	var a := minf(_glow * 2.5, 1.0)
+	_flash.draw_set_transform(c, 0.0, Vector2(1.0, 0.6))
+	_flash.draw_arc(Vector2.ZERO, 12.0, 0.0, TAU, 20, Color(tint, a), 2.0)
+	_flash.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var fan := PackedVector2Array([Vector2(-8, 0), Vector2(-7, -5), Vector2(-4, -8), Vector2(0, -9), Vector2(4, -8), Vector2(7, -5), Vector2(8, 0), Vector2(3, 3), Vector2(-3, 3)])
+	_flash.draw_colored_polygon(_moved(fan, c + Vector2(0, -2)), Color(Palette.OUTLINE, a))
+	var inner := PackedVector2Array()
+	for p: Vector2 in fan:
+		inner.append(p * 0.8 + c + Vector2(0, -2.5))
+	_flash.draw_colored_polygon(inner, Color(Color.WHITE.lerp(tint, 0.35), a))
 
 
 static func _moved(points: PackedVector2Array, by: Vector2) -> PackedVector2Array:

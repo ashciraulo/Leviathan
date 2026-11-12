@@ -7359,15 +7359,17 @@ func _test_echo_game() -> void:
 			_check(GameState.has_flag("echo_5") and not GameState.has_flag("echo_8"), "five notes")
 	_check(GameState.has_flag("echo_8") and GameState.has_flag("echo_12") and EchoGame.best() == 12, "eight and twelve")
 	# Walking off ends a round.
-	game.player.global_position = room.global_position + EchoGame.centre() + Vector2(EchoGame.LEAVE + 20, 0)
+	game.player.global_position = room.global_position + EchoGame.centre() + Vector2(-EchoGame.LEAVE - 20, 0)
 	await _wait(0.1)
 	_check(echo.state == EchoGame.State.IDLE, "walking off ends the round")
 	game.queue_free()
 	await _wait(0.1)
 	var glints := GameState.item_count("glint")
-	_check(first.call() == "CORALIE_ECHO_12_1", "twelve first")
-	Conversations.talk("coralie")
-	_check(GameState.item_count("glint") == glints + 200 and first.call() == "CORALIE_AFTER", "twelve covers the smaller prizes too")
+	for e: Array in [["CORALIE_ECHO_5_1", 50], ["CORALIE_ECHO_8_1", 100], ["CORALIE_ECHO_12_1", 200]]:
+		_check(first.call() == e[0], "Coralie pays for each: %s" % e[0])
+		Conversations.talk("coralie")
+		glints += int(e[1])
+	_check(GameState.item_count("glint") == glints and first.call() == "CORALIE_AFTER", "every prize paid, even reaching twelve first")
 	GameState.reset_new_game()
 	for flag in ["coralie_asked", "coralie_chime_done", "coralie_echo_ask", "echo_5"]:
 		GameState.set_flag(flag)

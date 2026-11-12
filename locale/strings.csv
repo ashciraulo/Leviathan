@@ -1466,10 +1466,11 @@ TOAST_FISH_EEL,A glass eel!
 TOAST_FISH_GREY,The Old Grey!
 TOAST_FISH_STREAK_5,Five in a row!
 TOAST_FISH_STREAK_10,Ten in a row!
-CORALIE_ECHO_1,"Now it's all hung, it sings. Gran and I had a game for that."
-CORALIE_ECHO_1B,"She'd ring a tune on the glass, and I'd hop it back on the shells."
-CORALIE_ECHO_2,"Strike the chime to start. Then hop the shells in the order it sang."
-CORALIE_ECHO_2B,"Each tune you get right, it adds a note. Five's good. Twelve's Gran."
+CORALIE_ECHO_1,"Now it's full, it really sings. My gran and I had a game for that."
+CORALIE_ECHO_1B,"She'd ring a tune on the glass, and I'd step it back on the shells."
+CORALIE_ECHO_2,"Strike the chime, then step on the shells in the order it sang."
+CORALIE_ECHO_2B,"Same shell twice? Step off it and back on."
+CORALIE_ECHO_3,"Get a tune right and it adds a note. Twelve was Gran's best."
 CORALIE_ECHO_5_1,"Five notes! That's as far as I got, my first summer."
 CORALIE_ECHO_5_2,"Here. Gran always paid in glints, so I will too."
 NARRATE_GOT_ECHO_5_PURSE,Wren got 50 Glints.
@@ -1477,7 +1478,7 @@ CORALIE_ECHO_8_1,"Eight! You've got an ear for glass, keeper."
 CORALIE_ECHO_8_2,"Gran would've liked you. Here, before I spend it on string."
 NARRATE_GOT_ECHO_8_PURSE,Wren got 100 Glints.
 CORALIE_ECHO_12_1,"Twelve notes. Nobody's done twelve since Gran. I've got goosebumps."
-CORALIE_ECHO_12_2,"Gran kept this for whoever beat her. That's you, now."
+CORALIE_ECHO_12_2,"Gran kept a purse for whoever matched her. That's you, now."
 NARRATE_GOT_ECHO_12_PURSE,Wren got 200 Glints.
 TOAST_ECHO_5,Five notes!
 TOAST_ECHO_8,Eight notes!
