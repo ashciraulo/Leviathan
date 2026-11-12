@@ -228,7 +228,7 @@ func _draw_badge(rect: Rect2, text: String) -> void:
 	var tag := Rect2(rect.position + Vector2(-3, -1), Vector2(w + 3, 9))
 	draw_rect(tag.grow(1), MenuKit.INK)
 	draw_rect(tag, MenuKit.FILL_DARK)
-	MenuKit.draw_text(self, text, tag.position + Vector2(2, -2), MenuKit.TEXT_GOLD)
+	MenuKit.draw_text(self, text, tag.position + Vector2(2, 0), MenuKit.TEXT_GOLD)
 
 
 func _draw_info() -> void:
