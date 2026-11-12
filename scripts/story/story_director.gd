@@ -75,8 +75,8 @@ const TOMB_BELL_FLAG := "tidebell_" + "tomb"
 const TOBIN_WARNED_FLAG := "tobin_warned"
 const TOBIN_HOME_FLAG := "tobin_home"
 ## Tobin comes round the tip of the great skull's beak to Wren at its door.
-const TOBIN_RUNS_IN := [Vector2(-8, 6 * 16 + 8), Vector2(4 * 16 + 8, 6 * 16 + 8), Vector2(4 * 16 + 8, 10 * 16 + 12), Vector2(14 * 16 + 8, 10 * 16 + 12)]
-const TOBIN_LEAVES := [Vector2(4 * 16 + 8, 10 * 16 + 12), Vector2(4 * 16 + 8, 6 * 16 + 8), Vector2(-12, 6 * 16 + 8)]
+const TOBIN_RUNS_IN := [Vector2(-8, 6 * 16 + 8), Vector2(4 * 16 + 8, 6 * 16 + 8), Vector2(4 * 16 + 8, 9 * 16 + 12), Vector2(13 * 16 + 8, 9 * 16 + 12)]
+const TOBIN_LEAVES := [Vector2(4 * 16 + 8, 9 * 16 + 12), Vector2(4 * 16 + 8, 6 * 16 + 8), Vector2(-12, 6 * 16 + 8)]
 ## On the dock, beside Dunstan (who stands at tile 16, 7).
 const TOBIN_HOME_AT := Vector2(18 * 16 + 8, 7 * 16 + 12)
 const WREN_AT_DOCK := Vector2(17 * 16 + 8, 9 * 16 + 4)

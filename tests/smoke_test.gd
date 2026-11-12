@@ -5154,7 +5154,7 @@ func _test_ossuary() -> void:
 	tangle.free()
 	_check(_walkable_from(swum, Vector2i(11, 12)).has(Vector2i(0, 9)) and _walkable_from(shore, Vector2i(11, 1)).has(Vector2i(23, 9)), "the Diver's Helm swims the strait from Tangle Shore into the dunes")
 	var rise: Room = (load("res://rooms/room_9_0.tscn") as PackedScene).instantiate()
-	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[8][17] == "D", "the hollow in the whale skull's side leads into the Marrow Tomb")
+	_check(rise.door_to == Vector2i(40, 10) and Room.parse_layout(rise.layout)[7][16] == "D", "the hollow in the whale skull's side leads into the Marrow Tomb")
 	rise.free()
 
 	GameState.reset_new_game()
@@ -6727,7 +6727,7 @@ func _test_journal() -> void:
 func _test_tobin() -> void:
 	Cutscene.fast = true
 	GameState.reset_new_game()
-	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(17 * Room.TILE + 8, 9 * Room.TILE + 10))
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(16 * Room.TILE + 8, 8 * Room.TILE + 10))
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.4)

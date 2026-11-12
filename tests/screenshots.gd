@@ -135,8 +135,9 @@ func _ready() -> void:
 	# Whalefall Steps.
 	if OS.get_environment("SHOTS_ONLY") == "skull":
 		await _room_shots(game, {
-			Vector2i(9, 0): ["skull_rise", Vector2i(14, 10)],
+			Vector2i(9, 0): ["skull_rise", Vector2i(15, 9)],
 			Vector2i(10, 0): ["whalefall_steps", Vector2i(13, 10)],
+			Vector2i(9, 2): ["saltpan_hollow", Vector2i(9, 11)],
 		})
 		SaveManager.delete_save()
 		SaveManager.restore_aside(TEST_SLOT, "testbackup")
@@ -567,7 +568,7 @@ func _ready() -> void:
 		Vector2i(2, 3): ["72_weir_steps", Vector2i(17, 6), Tide.Phase.HIGH],
 		Vector2i(7, 0): ["73_bleached_strand", Vector2i(11, 11)],
 		Vector2i(8, 0): ["74_rib_hollow", Vector2i(3, 6)],
-		Vector2i(9, 0): ["75_skull_rise", Vector2i(14, 10)],
+		Vector2i(9, 0): ["75_skull_rise", Vector2i(15, 9)],
 		Vector2i(10, 0): ["75b_whalefall_steps", Vector2i(13, 10)],
 		Vector2i(7, 1): ["76_sinksand_basin", Vector2i(11, 1)],
 		Vector2i(8, 1): ["77_vertebra_road", Vector2i(4, 6)],
@@ -2783,7 +2784,7 @@ func _ide_shots() -> void:
 func _tobin_shots() -> void:
 	GameState.reset_new_game()
 	GameState.set_flag(StoryDirector.TOMB_BELL_FLAG)
-	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(17 * Room.TILE + 8, 9 * Room.TILE + 10))
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(16 * Room.TILE + 8, 8 * Room.TILE + 10))
 	var rise: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(rise)
 	while Cutscene.active and not DialogueBox.is_open:
