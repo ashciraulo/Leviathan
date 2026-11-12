@@ -206,6 +206,7 @@ RAMPS = {
     "s": ["#F8E0B0", "#E8C890", "#C49A64", "#A88050", "#6A4C30"],   # sand
     "h": ["#C8A070", "#A88050", "#86603A", "#62442A", "#3A2818"],   # jaw hide
     "t": ["#FFFFFF", "#F4ECDC", "#DCCCB0", "#B4A488", "#80745E"],   # teeth
+    "g": ["#C2A6AE", "#9C7E8E", "#78606E", "#54404E", "#302230"],   # dunejaw hide
 }
 FLAT = {
     "k": "#1A1210",   # sockets, mouth
@@ -221,6 +222,50 @@ def _rows(c):
     return ["".join(r) for r in c]
 
 
+DUNEJAW_BITE = [
+"........gggggggg........",
+"......gggggggggggg......",
+".....ggktkktkktkkgg.....",
+".....gtkkkkkkkkkktg.....",
+".....gkkkkkkkkkkkkg.....",
+".....gtkkkkkkkkkktg.....",
+".....ggkktkktkktkgg.....",
+"......gggggggggggg......",
+"........gggggggg........",
+"..........gggo..........",
+".........ggggo..........",
+"........gggggo..........",
+"........ggggoo..........",
+".........gggggo.........",
+"..........ggggoo........",
+"..........gggggo........",
+".........ggggggo........",
+"......ssssssssssss......",
+"....ssssssssssssssss....",
+"....s.s.s.s.s.s.s.s.....",
+]
+DUNEJAW_EXPOSED = [
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........................",
+"........gggggg..........",
+"......gggggggggg........",
+".....gggg....gggg.......",
+"....ggo........ggg......",
+"....ggo.........gggg....",
+"....ggo........ggtktg...",
+"....ggo........gkkkkg...",
+"...ssss.......sgtktkg...",
+"..ssssssssssssssssssss..",
+"....ssssssssssssssssss..",
+"....s.s.s.s.s.s.s.s.s...",
+]
 # Dunejaw: an eyeless eel-thing that swims under the dunes. Underground only
 # a ripple of sand shows; its tell is a spout of sand and a dry rattle where
 # it's about to burst up; then it bites, and lies out on the sand a moment.
@@ -244,32 +289,9 @@ def dunejaw(frame):
         for x in range(5, 19):
             c[18][x] = "s"
         return _rows(c)
-    up = frame == "bite"
-    top = 2 if up else 9
-    # Body rising from the sand.
-    for y in range(top, 18):
-        half = 4 if y > top + 4 else 2 + (y - top) // 2
-        for x in range(12 - half, 12 + half):
-            c[y][x] = "h"
-    # Jaws: open wide when biting.
-    if up:
-        for y in range(top, top + 5):
-            c[y][12 - 4 + (y - top) // 2 - 1] = "k"
-            c[y][12 + 3 - (y - top) // 2 + 1] = "k"
-        for y in range(top, top + 4):
-            for x in range(10, 14):
-                c[y][x] = "k"
-        for x in (9, 11, 13, 15):
-            c[top + 1][x] = "t"
-            c[top + 4][x - 1] = "t"
-    else:
-        c[top + 1][10], c[top + 1][13] = "e", "e"
-        for x in range(9, 15):
-            c[top + 3][x] = "t" if x % 2 else "k"
-    for x in range(4, 20):
-        c[18][x] = "s"
-        c[19][x] = "s" if x % 2 else "."
-    return _rows(c)
+    # Burst up: a ringed maw of hooked teeth on a ridged neck. Lying out:
+    # arched over the sand, its mouth half shut.
+    return list(DUNEJAW_BITE if frame == "bite" else DUNEJAW_EXPOSED)
 
 
 # A great rib (layout U): one curved bone the height of a house, leaning
