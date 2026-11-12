@@ -62,12 +62,18 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 35,
+     "freq": 45,
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": 4.0,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
-     "freq": 4000,
+     "freq": 6000,
      "db_oct": 12
     }
    ]
@@ -105,5 +111,5 @@
    ]
   }
  },
- "notes": "Wake Not the Deep (boss). templates\\boss_template3.flp (channels named by part; Staccato Blend Time macro at 0): Gong & Timpani (Emulator II) on bassoon (insert 1, +1: it sounds about a semitone flat), Ah Voice (Augmented Voices) on choir_pad (insert 4), Staccato Blend on strings_pizz (insert 5, the sixteenth ostinato), Trumpfal (CMI trumpet) on aud6 (insert 6, horns), 12 Low Strings on strings_low (insert 8, +12) for the held low line, the FL tom sampler on drum_tom (insert 3) for the taiko. Dirty Bronze is out (miniboss review v2: octave-low layer and a synth pitch fall)."
+ "notes": "Wake Not the Deep (boss). templates\\boss_template3.flp (channels named by part; Staccato Blend Time macro at 0): Gong & Timpani (Emulator II) on bassoon (insert 1, +1: it sounds about a semitone flat), Ah Voice (Augmented Voices) on choir_pad (insert 4), Staccato Blend on strings_pizz (insert 5, the sixteenth ostinato), Trumpfal (CMI trumpet) on aud6 (insert 6, horns), 12 Low Strings on strings_low (insert 8, +12) for the held low line, the FL tom sampler on drum_tom (insert 3) for the taiko. Dirty Bronze is out (miniboss review v2: octave-low layer and a synth pitch fall). Taiko keys 36/38 play 47/50 (review v7: they sounded C1/D1, all sub); the choir doubles the D melody because Trumpfal is a one-shot."
 }

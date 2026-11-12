@@ -176,7 +176,7 @@ for b, sym in enumerate(CH):
         timp.note(t, 0.8, root, 84)
     # Ostinato: sixteenths on the root with a rising turn; silent in C.
     if sec != "C":
-        fig = [0, 0, 12, 0, 7, 0, 12, 8 if "m" in sym or sym in ("Ab", "Db") else 7] * 2
+        fig = [0, 0, 12, 0, 7, 0, 12, 8 if "m" in sym else 7] * 2  # review v7: +8 on Ab/Db gave E and A
         for k, iv in enumerate(fig):
             ost.note(t + k * 0.25, 0.18, 48 + (bass_of(sym) - 48) % 12 + iv, 104 if k % 4 == 0 else 66)
 for b in range(2, 18, 2):  # A: brass answers the ostinato
@@ -192,6 +192,10 @@ lowbrass.line(song.bar(32), [(43, 8)], vel=80)  # under the build
 horns.line(song.bar(34), bars(
     "C5:3 Eb5:1 | Bb4:4 | Ab4:2 C5:2 | G4:4 | C5:2 Eb5:1 F5:1 | G5:3 Eb5:1 | F5:2 Ab4:2 | B4:4 | "
     "C5:2 Eb5:2 | D5:3 F5:1 | D5:2 Bb4:2 | C5:4 | Ab4:2 C5:2 | Eb5:2 C5:2 | D5:3 B4:1 | G4:4"), legato=0.92)
+# The trumpet sample is a one-shot that dies after ~408/f0 s (review v7 MAJOR 2): the choir doubles the melody
+# softly so the long phrase endings keep sounding.
+for t_, ln, p, _v in [n for n in horns.notes if song.bar(34) - 1e-6 <= n[0] < song.bar(50)]:
+    choir.note(t_, ln, p, 58)
 for b in range(34, 50):
     lowbrass.note(song.bar(b), 3.9, low_root(CH[b], 34), 74)
 for b in range(50, 56):  # A': ostinato returns with brass hits, G pedal to the loop
@@ -199,4 +203,4 @@ for b in range(50, 56):  # A': ostinato returns with brass hits, G pedal to the 
 for i, p in enumerate(song.parts):
     p.humanize(seed=1100 + i, time_q=0.006)
 song.save()
-gate(song, CH, ("horns",), ("choir",), "boss")
+gate(song, CH, ("horns",), (), "boss")  # the choir doubles the D melody, so it is not comping
