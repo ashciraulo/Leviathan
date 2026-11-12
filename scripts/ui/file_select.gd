@@ -255,16 +255,16 @@ func _draw_card(slot: int) -> void:
 		return
 	var place := str(data.get("place", ""))
 	MenuKit.draw_text(self, place if place != "" else "MAP_UNKNOWN_ROOM", at + Vector2(52, 0), MenuKit.TEXT)
-	var time := MenuKit.format_time(float(data.get("play_time", 0.0)))
+	var time := MenuKit.format_time(maxf(Safe.number(data.get("play_time"), 0.0), 0.0))
 	MenuKit.draw_text(self, time, Vector2(rect.end.x - 12 - MenuKit.text_width(self, time), at.y), MenuKit.TEXT_DIM)
 	# Breath bubbles, then the seven bells.
-	var bubbles := clampi(int(data.get("bubbles", GameState.START_BUBBLES)), 0, GameState.MAX_BUBBLES)
+	var bubbles := clampi(Safe.whole(data.get("bubbles"), GameState.START_BUBBLES), 0, GameState.MAX_BUBBLES)
 	# Closer together past eleven, so a full row stops short of the bells.
 	var bells_x := rect.end.x - 12 - 7 * 15 - at.x
 	var step := 12.0 if bubbles <= 11 else floorf((bells_x - 4 - 52 - 11) / float(bubbles - 1))
 	for i in bubbles:
 		draw_texture_rect_region(Art.BUBBLES, Rect2(at + Vector2(52 + i * step, 15), Vector2(11, 11)), Rect2(0, 0, 11, 11))
-	var bells := int(data.get("bells", 0))
+	var bells := Safe.whole(data.get("bells"), 0)
 	for i in Items.max_count("tidebell"):
 		MenuKit.draw_icon(self, "tidebell", Vector2(rect.end.x - 12 - (7 - i) * 15, at.y + 13),
 			Color.WHITE if i < bells else Color(0.2, 0.25, 0.4, 0.7))

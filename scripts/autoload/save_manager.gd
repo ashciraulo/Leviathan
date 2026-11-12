@@ -159,16 +159,16 @@ func read_summary(slot: int) -> Dictionary:
 		return {"newer": true, "saved_at": str(parsed.get("saved_at", ""))}
 	var out: Dictionary = {}
 	var saved = parsed.get("summary")
-	if saved is Dictionary:
+	if saved is Dictionary and saved.get("bubbles") is float and saved.get("place") is String:
 		out = saved.duplicate()
 	else:
-		# Older saves without a summary: work out what we can.
+		# Older saves without a summary (or a damaged one): work out what we can.
 		var state: Dictionary = parsed["state"]
-		out["bubbles"] = int(state.get("max_bubbles", GameState.START_BUBBLES))
+		out["bubbles"] = Safe.whole(state.get("max_bubbles"), GameState.START_BUBBLES)
 		var room = state.get("checkpoint_room", [0, 0])
 		if room is Array and room.size() >= 2:
-			out["place"] = str(RoomInfo.get_room(Vector2i(int(room[0]), int(room[1]))).get("name_key", ""))
-		out["play_time"] = float(state.get("play_time", 0.0))
+			out["place"] = str(RoomInfo.get_room(Vector2i(Safe.whole(room[0], 0), Safe.whole(room[1], 0))).get("name_key", ""))
+		out["play_time"] = Safe.number(state.get("play_time"), 0.0)
 	out["saved_at"] = str(parsed.get("saved_at", ""))
 	return out
 

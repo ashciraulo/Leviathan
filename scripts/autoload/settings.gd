@@ -355,25 +355,25 @@ func load_settings() -> void:
 	if cfg.load(PATH) != OK:
 		return
 	# A hand-edited or damaged file: anything odd keeps the value it had.
-	hitstop_scale = clampf(Safe.number(cfg.get_value("feel", "hitstop_scale"), hitstop_scale), 0.0, 1.0)
-	screen_shake_scale = clampf(Safe.number(cfg.get_value("feel", "screen_shake_scale"), screen_shake_scale), 0.0, 1.0)
-	flashes = Safe.truth(cfg.get_value("feel", "flashes"), flashes)
-	hum_toggle = Safe.truth(cfg.get_value("controls", "hum_toggle"), hum_toggle)
+	hitstop_scale = clampf(Safe.number(cfg.get_value("feel", "hitstop_scale", hitstop_scale), hitstop_scale), 0.0, 1.0)
+	screen_shake_scale = clampf(Safe.number(cfg.get_value("feel", "screen_shake_scale", screen_shake_scale), screen_shake_scale), 0.0, 1.0)
+	flashes = Safe.truth(cfg.get_value("feel", "flashes", flashes), flashes)
+	hum_toggle = Safe.truth(cfg.get_value("controls", "hum_toggle", hum_toggle), hum_toggle)
 	var saved_locale = cfg.get_value("language", "locale", locale)
 	if saved_locale is String and saved_locale in languages():
 		locale = saved_locale
-	text_speed = clampi(Safe.whole(cfg.get_value("text", "speed"), text_speed), 0, TEXT_SPEEDS.size() - 1)
-	large_text = Safe.truth(cfg.get_value("text", "large"), large_text)
-	captions = Safe.truth(cfg.get_value("text", "captions"), captions)
-	high_contrast = Safe.truth(cfg.get_value("feel", "high_contrast"), high_contrast)
-	color_filter = clampi(Safe.whole(cfg.get_value("feel", "color_filter"), color_filter), 0, 3)
-	music_volume = clampi(Safe.whole(cfg.get_value("audio", "music"), music_volume), 0, 10)
-	effects_volume = clampi(Safe.whole(cfg.get_value("audio", "effects"), effects_volume), 0, 10)
-	ambience_volume = clampi(Safe.whole(cfg.get_value("audio", "ambience"), ambience_volume), 0, 10)
+	text_speed = clampi(Safe.whole(cfg.get_value("text", "speed", text_speed), text_speed), 0, TEXT_SPEEDS.size() - 1)
+	large_text = Safe.truth(cfg.get_value("text", "large", large_text), large_text)
+	captions = Safe.truth(cfg.get_value("text", "captions", captions), captions)
+	high_contrast = Safe.truth(cfg.get_value("feel", "high_contrast", high_contrast), high_contrast)
+	color_filter = clampi(Safe.whole(cfg.get_value("feel", "color_filter", color_filter), color_filter), 0, 3)
+	music_volume = clampi(Safe.whole(cfg.get_value("audio", "music", music_volume), music_volume), 0, 10)
+	effects_volume = clampi(Safe.whole(cfg.get_value("audio", "effects", effects_volume), effects_volume), 0, 10)
+	ambience_volume = clampi(Safe.whole(cfg.get_value("audio", "ambience", ambience_volume), ambience_volume), 0, 10)
 	# A browser only goes fullscreen from a key press or click, never on
 	# load, so the web version always starts windowed.
 	if not OS.has_feature("web"):
-		fullscreen = Safe.truth(cfg.get_value("display", "fullscreen"), fullscreen)
+		fullscreen = Safe.truth(cfg.get_value("display", "fullscreen", fullscreen), fullscreen)
 	key_overrides = _overrides(cfg.get_value("controls", "keys", {}), 1, (KEY_SPECIAL << 1) - 1)
 	pad_overrides = _overrides(cfg.get_value("controls", "pad", {}), 0, JOY_BUTTON_MAX - 1)
 

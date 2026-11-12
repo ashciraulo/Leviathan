@@ -27,7 +27,7 @@ func _ready() -> void:
 		_test_game_state()
 		_test_save_load()
 		await _test_old_saves()
-		_test_save_fuzz()
+		await _test_save_fuzz()
 		_test_settings_fuzz()
 		_test_keys()
 		_test_items()
@@ -482,8 +482,19 @@ func _test_save_fuzz() -> void:
 	# The file select reads a summary that isn't the right shape.
 	for bad: Variant in bad_values:
 		_check(SaveManager._write(TEST_SLOT, {"format_version": 1, "state": good, "summary": bad, "saved_at": bad}), "a save with an odd summary writes")
+		# And a summary of the right shape with odd values inside.
+		SaveManager._write(TEST_SLOT, {"format_version": 1, "state": good, "saved_at": "x",
+			"summary": {"bubbles": 3.0, "place": "", "play_time": bad, "bells": bad, "pearls": bad}})
+		var files := FileSelect.new()
+		add_child(files)
+		files.on_open()
+		files.queue_redraw()
+		await get_tree().process_frame
+		files.queue_free()
+		_check(SaveManager._write(TEST_SLOT, {"format_version": 1, "state": good, "summary": bad, "saved_at": bad}), "a save with an odd summary writes again")
 		var summary := SaveManager.read_summary(TEST_SLOT)
-		_check(summary is Dictionary, "an odd summary (%s) still reads" % JSON.stringify(bad))
+		_check(int(summary.get("bubbles", 0)) == int(good["max_bubbles"]) and str(summary.get("place", "")) != "",
+			"an odd summary (%s) is worked out from the save itself: %s" % [JSON.stringify(bad), summary])
 	SaveManager.delete_save(TEST_SLOT)
 	# Text that isn't a save at all.
 	for text: String in ["", "{", "null", "[]", "{\"state\": 5}", "\u0000\u0001", "{\"format_version\": \"two\", \"state\": {}}"]:
