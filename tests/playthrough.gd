@@ -630,9 +630,10 @@ func _open_tile(coord: Vector2i) -> Vector2i:
 	var rows := Room.parse_layout(_rooms[coord][2]) if _rooms.has(coord) else PackedStringArray()
 	var best := Vector2i(Room.COLS / 2, Room.ROWS / 2)
 	var best_d := INF
+	var under := _under_big_props(rows)
 	for y in rows.size():
 		for x in rows[y].length():
-			if rows[y][x] != ".":
+			if rows[y][x] != "." or under.has(Vector2i(x, y)):
 				continue
 			# Not a lone islet tile (a brazier's perch in a pond): Wren is set
 			# down where they can walk on.
@@ -648,6 +649,26 @@ func _open_tile(coord: Vector2i) -> Vector2i:
 				best_d = d
 				best = Vector2i(x, y)
 	return best
+
+
+## Tiles a big prop (the whale skull, its jaw) lies on: its footprint
+## covers floor that the layout still shows as sand.
+func _under_big_props(rows: PackedStringArray) -> Dictionary:
+	var under := {}
+	for y in rows.size():
+		for x in rows[y].length():
+			var letter := rows[y][x]
+			if not Prop.is_prop(letter) or not Prop.KINDS[letter][2] is Array:
+				continue
+			var anchor := Vector2(x * Room.TILE + 8, y * Room.TILE + 12)
+			for rect: Rect2 in Prop.KINDS[letter][2]:
+				var area := Rect2(rect.position + anchor, rect.size)
+				for ty in range(int(area.position.y) / Room.TILE, int(area.end.y) / Room.TILE + 1):
+					for tx in range(int(area.position.x) / Room.TILE, int(area.end.x) / Room.TILE + 1):
+						var tile := Rect2(tx * Room.TILE, ty * Room.TILE, Room.TILE, Room.TILE)
+						if tile.intersects(area):
+							under[Vector2i(tx, ty)] = true
+	return under
 
 
 func _all(room: Node, type: Variant) -> Array:

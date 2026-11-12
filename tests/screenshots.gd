@@ -167,10 +167,23 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=skull: the great whale skull on Skull Rise, and its jaw in
+	# Whalefall Steps.
+	if OS.get_environment("SHOTS_ONLY") == "skull":
+		await _room_shots(game, {
+			Vector2i(9, 0): ["skull_rise", Vector2i(15, 9)],
+			Vector2i(10, 0): ["whalefall_steps", Vector2i(13, 10)],
+			Vector2i(9, 2): ["saltpan_hollow", Vector2i(9, 11)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=thin_screens: the optional screens off the thinner regions.
 	if OS.get_environment("SHOTS_ONLY") == "thin_screens":
 		await _room_shots(game, {
-			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(20, 6)],
+			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(21, 7)],
 			Vector2i(10, 0): ["thin_whalefall_steps", Vector2i(2, 6)],
 			Vector2i(10, 1): ["thin_sinkwhorl_flats", Vector2i(11, 2)],
 			Vector2i(7, -3): ["thin_kestrel_reach", Vector2i(2, 6)],
@@ -606,7 +619,8 @@ func _ready() -> void:
 		Vector2i(2, 3): ["72_weir_steps", Vector2i(17, 6), Tide.Phase.HIGH],
 		Vector2i(7, 0): ["73_bleached_strand", Vector2i(11, 11)],
 		Vector2i(8, 0): ["74_rib_hollow", Vector2i(3, 6)],
-		Vector2i(9, 0): ["75_skull_rise", Vector2i(12, 7)],
+		Vector2i(9, 0): ["75_skull_rise", Vector2i(15, 9)],
+		Vector2i(10, 0): ["75b_whalefall_steps", Vector2i(13, 10)],
 		Vector2i(7, 1): ["76_sinksand_basin", Vector2i(11, 1)],
 		Vector2i(8, 1): ["77_vertebra_road", Vector2i(4, 6)],
 		Vector2i(9, 1): ["78_hollow_wind_flats", Vector2i(16, 6)],
@@ -2895,7 +2909,7 @@ func _ide_shots() -> void:
 func _tobin_shots() -> void:
 	GameState.reset_new_game()
 	GameState.set_flag(StoryDirector.TOMB_BELL_FLAG)
-	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(12 * Room.TILE + 8, 7 * Room.TILE + 10))
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(16 * Room.TILE + 8, 8 * Room.TILE + 10))
 	var rise: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(rise)
 	while Cutscene.active and not DialogueBox.is_open:
