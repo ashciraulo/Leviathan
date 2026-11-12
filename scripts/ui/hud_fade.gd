@@ -7,7 +7,7 @@ class_name HudFade
 const LOW := 0.35
 const SPEED := 5.0
 ## What a panel fades for.
-const GROUPS: Array[String] = ["player", "interactable", "enemies", "smashable", "breakable", "crates", "ice_eyes"]
+const GROUPS: Array[String] = ["player", "interactable", "enemies", "smashable", "breakable", "crates", "ice_eyes", "pickups"]
 ## A thing's footprint on screen around its position (most stand on it).
 const FOOTPRINT := Rect2(-8, -16, 16, 20)
 

@@ -690,8 +690,9 @@ func _audit(after: String) -> void:
 		"%s: the two item keys hold different tools (%s)" % [after, GameState.item_slots])
 	_check(GameState.jars.size() == GameState.item_count("jar"), "%s: one jar entry per jar (%d, %d)" % [after, GameState.jars.size(), GameState.item_count("jar")])
 	var pearls := GameState.item_count("breath_pearl")
-	_check(GameState.max_bubbles == mini(GameState.START_BUBBLES + pearls, GameState.MAX_BUBBLES),
-		"%s: %d breath bubbles for %d Breath Pearls" % [after, GameState.max_bubbles, pearls])
+	var shards := GameState.item_count("pearl_shard")
+	_check(GameState.max_bubbles == mini(GameState.START_BUBBLES + pearls + shards / Items.SHARDS_PER_BUBBLE, GameState.MAX_BUBBLES),
+		"%s: %d breath bubbles for %d Breath Pearls and %d shards" % [after, GameState.max_bubbles, pearls, shards])
 	_check(GameState.bubbles >= 1 and GameState.bubbles <= GameState.max_bubbles, "%s: breath %d of %d" % [after, GameState.bubbles, GameState.max_bubbles])
 	_check(GameState.resonance >= 0.0 and GameState.resonance <= GameState.resonance_max + 0.001, "%s: Resonance within the meter" % after)
 	for key: String in GameState.tidestones:

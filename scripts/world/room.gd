@@ -32,6 +32,7 @@ extends Node2D
 ##          k  Pell's three-clawed crab (shows once Pell asks for it)
 ##          C  chest (holds chest_item)
 ##          *  a piece of sea-glass (SeaGlass; one per room, overworld only)
+##          8  a pearl shard (PearlShard; four make a breath bubble)
 ##          :  boardwalk over water (walkable; regions with "boardwalk" tiles)
 ##          X  locked hatch (all X in a room open with one small key)
 ##          D  doorway to door_to, arriving on door_spawn
@@ -629,6 +630,11 @@ func _spawn(tile: String, pos: Vector2) -> void:
 			glass.room_coord = coord
 			glass.tile = Vector2i(int(pos.x) / TILE, int(pos.y) / TILE)
 			node = glass
+		"8":
+			var shard := PearlShard.new()
+			shard.room_coord = coord
+			shard.tile = Vector2i(int(pos.x) / TILE, int(pos.y) / TILE)
+			node = shard
 		"k":
 			node = QuestCrab.new()
 		"7":
@@ -974,8 +980,8 @@ func _draw_ground() -> void:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
-				# Sea-glass out on the ice lies on ice.
-				var on_ice := tile == "*" and _tile_at(x - 1, y) == "x" and _tile_at(x + 1, y) == "x"
+				# Sea-glass or a pearl shard out on the ice lies on ice.
+				var on_ice := tile in ["*", "8"] and _tile_at(x - 1, y) == "x" and _tile_at(x + 1, y) == "x"
 				if (tile == "x" or on_ice) and tiles.has("ice"):
 					_draw_tile(tiles["ice"] % (h % 2), x, y)
 				elif Tide.is_seabed(tile) and tiles.has("seabed"):

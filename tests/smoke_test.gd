@@ -6109,6 +6109,70 @@ func _test_overworld_secrets() -> void:
 	chest.queue_free()
 	GameState.reset_new_game()
 	await _test_sea_glass()
+	await _test_pearl_shards()
+
+
+## Pearl shards: every fourth adds a breath bubble. Walking over one picks
+## it up and the box says how far to the next bubble; a chest can hold one;
+## the Satchel shows them; the count and each shard's flag are saved.
+func _test_pearl_shards() -> void:
+	_check(Items.max_count("pearl_shard") == PearlShard.TOTAL and tr("ITEM_PEARL_SHARD") != "ITEM_PEARL_SHARD", "twelve pearl shards, named")
+	var total := 0
+	for coord: Vector2i in RoomInfo.in_area(""):
+		total += "".join(RoomInfo.get_room(coord)["rows"]).count("8")
+	_check(total <= PearlShard.TOTAL, "no more than twelve pearl shards lie in the overworld (%d)" % total)
+	GameState.reset_new_game()
+	GameState.give_item("pearl_shard", 3, false)
+	_check(GameState.max_bubbles == GameState.START_BUBBLES, "three shards aren't a bubble yet")
+	GameState.give_item("pearl_shard", 1, false)
+	_check(GameState.max_bubbles == GameState.START_BUBBLES + 1 and GameState.bubbles == GameState.max_bubbles, "the fourth makes one more bubble, full")
+	GameState.give_item("pearl_shard", 20, false)
+	_check(GameState.item_count("pearl_shard") == PearlShard.TOTAL and GameState.max_bubbles == GameState.START_BUBBLES + 3, "twelve make three bubbles, and no more")
+	_check(PearlShard.talk(0, 1)[0] == "GOT_PEARL_SHARD_FIRST" and "1" in PearlShard.talk(0, 1)[1], "the first shard explains itself and counts")
+	_check(PearlShard.talk(3, 4)[0] == "GOT_PEARL_SHARD_WHOLE" and Array(PearlShard.talk(11, 12)).has("GOT_PEARL_SHARD_LAST"), "a fourth says it's whole, the twelfth that it's the last")
+	_check(PearlShard.talk(3, 5)[0] == "GOT_PEARL_SHARD_WHOLE" and PearlShard.talk(3, 5).size() == 2 and PearlShard.talk(12, 12).is_empty(),
+		"two at once can cross a bubble and still count on; none gained says nothing")
+	_check(Chest.item_talk("pearl_shard").size() > 0, "a shard from a chest explains itself too")
+	GameState.reset_new_game()
+	GameState.set_checkpoint(Vector2i(1, 1), GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.5)
+	var room: Room = game.current_room
+	var player: Player = game.player
+	var shard := PearlShard.new()
+	shard.room_coord = room.coord
+	# Away from where Wren wakes, so it isn't picked up at once.
+	shard.tile = Vector2i(5, 6)
+	shard.position = Vector2(5 * Room.TILE + 8, 6 * Room.TILE + 12)
+	room.add_child(shard)
+	var at := shard.global_position
+	await _wait(0.1)
+	_check(is_instance_valid(shard) and GameState.item_count("pearl_shard") == 0, "a shard lies waiting")
+	player.frozen = true
+	player.global_position = at
+	await _wait(0.3)
+	_check(GameState.item_count("pearl_shard") == 0 and is_instance_valid(shard), "not while Wren is held (a door's fade)")
+	player.frozen = false
+	await _wait(0.3)
+	_check(GameState.item_count("pearl_shard") == 1 and not is_instance_valid(shard), "walking over a shard picks it up")
+	_check(DialogueBox.is_open, "and the box explains it")
+	await _play_scene(game, 5.0)
+	_check(not DialogueBox.is_open and not get_tree().paused, "the box closes and play goes on")
+	var page := SatchelPage.new()
+	add_child(page)
+	page.on_open()
+	var cell := page._cells.find_custom(func(c: Dictionary) -> bool: return c["role"] == "shard")
+	_check(cell >= 0 and page._owned_id(page._cells[cell]) == "pearl_shard", "the Satchel shows the shards")
+	page.queue_free()
+	var saved := GameState.to_dict()
+	GameState.reset_new_game()
+	GameState.from_dict(saved)
+	var flag := "pearl_shard_%d_%d_5_6" % [room.coord.x, room.coord.y]
+	_check(GameState.item_count("pearl_shard") == 1 and GameState.has_flag(flag), "the shard count and the shard's flag are saved")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
 
 
 ## Twelve pieces of sea-glass, one per room; walking over one picks it up
@@ -6290,11 +6354,13 @@ func _test_satchel_sea_glass() -> void:
 	_check(shown.call(), "found sea-glass shows in the satchel")
 	page._cursor = page._cells.size() - 1
 	_check(page._owned_id(page._cells[page._cursor]) == "sea_glass", "the sea-glass cell can be looked at")
-	# Every Breath Pearl there is: the most breath, and a full shelf that
-	# stays inside its panel.
+	# Every Breath Pearl and pearl shard there is: the most breath, and a
+	# full shelf that stays inside its panel.
 	GameState.give_item("breath_pearl", Items.max_count("breath_pearl"), false)
-	_check(GameState.max_bubbles == GameState.MAX_BUBBLES and GameState.START_BUBBLES + Items.max_count("breath_pearl") == GameState.MAX_BUBBLES,
-		"every Breath Pearl together gives the most breath (%d)" % GameState.max_bubbles)
+	GameState.give_item("pearl_shard", Items.max_count("pearl_shard"), false)
+	var most := GameState.START_BUBBLES + Items.max_count("breath_pearl") + Items.max_count("pearl_shard") / Items.SHARDS_PER_BUBBLE
+	_check(GameState.max_bubbles == GameState.MAX_BUBBLES and most == GameState.MAX_BUBBLES,
+		"every Breath Pearl and pearl shard together give the most breath (%d)" % GameState.max_bubbles)
 	page.on_open()
 	var pearls := page._cells.filter(func(c: Dictionary) -> bool: return c["role"] == "pearl")
 	_check(pearls.size() == Items.max_count("breath_pearl"), "the satchel has a place for every Breath Pearl")
