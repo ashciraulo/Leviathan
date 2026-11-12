@@ -29,6 +29,7 @@ func _ready() -> void:
 		await _test_old_saves()
 		await _test_save_fuzz()
 		_test_settings_fuzz()
+		_test_options_keep()
 		_test_keys()
 		_test_items()
 		await _test_audio()
@@ -556,6 +557,63 @@ func _test_settings_fuzz() -> void:
 		DirAccess.remove_absolute(path)
 	Settings.load_settings()
 	Settings.apply()
+
+
+## Accessibility: every option on the Options page is kept when the game is
+## closed and opened again, and every sound caption fits on screen, even
+## doubled by Large text and with its side arrow.
+func _test_options_keep() -> void:
+	var path := ProjectSettings.globalize_path(Settings.PATH)
+	var had := FileAccess.file_exists(path)
+	var old := FileAccess.get_file_as_string(path) if had else ""
+	var page := SettingsPage.new()
+	add_child(page)
+	var before := {}
+	var changed := 0
+	for row: Dictionary in page._rows:
+		if not row.has("prop") or row["prop"] in ["fullscreen", "locale_index"]:
+			continue
+		var prop: String = row["prop"]
+		before[prop] = Settings.get(prop)
+		page._change(row, 1)
+		if Settings.get(prop) == before[prop]:
+			page._change(row, -1)
+		_check(Settings.get(prop) != before[prop], "Options can change %s" % prop)
+		changed += 1
+	_check(changed >= 12, "every option was tried (%d)" % changed)
+	var wanted := {}
+	for prop: String in before:
+		wanted[prop] = Settings.get(prop)
+	Settings.save_settings()
+	for prop: String in before:
+		Settings.set(prop, before[prop])
+	Settings.load_settings()
+	for prop: String in wanted:
+		_check(is_equal_approx(float(Settings.get(prop)), float(wanted[prop])), "%s is kept after closing the game (%s, not %s)" % [prop, wanted[prop], Settings.get(prop)])
+	for prop: String in before:
+		Settings.set(prop, before[prop])
+	page.queue_free()
+	if had:
+		var file := FileAccess.open(Settings.PATH, FileAccess.WRITE)
+		file.store_string(old)
+		file.close()
+	else:
+		DirAccess.remove_absolute(path)
+	Settings.load_settings()
+	Settings.apply()
+	# Captions, at double size with an arrow (CaptionsHud's own sums).
+	var font := ThemeDB.fallback_font
+	var size := UI.FONT_SIZE * 2
+	var csv := FileAccess.open("res://locale/strings.csv", FileAccess.READ)
+	var captions := 0
+	while not csv.eof_reached():
+		var row := csv.get_csv_line()
+		if row.size() < 2 or not row[0].begins_with("CAPTION_"):
+			continue
+		captions += 1
+		var w := font.get_string_size("[%s]" % row[1], HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 8.0 + size / 2.0 + 3.0
+		_check(w <= 384.0, "the caption %s fits on screen at large size (%d px)" % [row[0], w])
+	_check(captions > 20, "there are sound captions to check (%d)" % captions)
 
 
 func _test_keys() -> void:
