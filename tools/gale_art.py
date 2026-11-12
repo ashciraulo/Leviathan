@@ -38,11 +38,13 @@ RAMPS = {
     "l": ["#E8D8B0", "#C8B488", "#A08A62", "#76643E", "#3E3220"],   # sailcloth
     "r": ["#E07060", "#B84A44", "#8A3236", "#5A2028", "#2A1018"],   # kite red
     "b": ["#C8B488", "#A89068", "#80684A", "#584430", "#2C2018"],   # bell bronze, pale
+    "g": ["#E8D890", "#C8B060", "#A08844", "#6E5C30", "#3A3018"],   # heron legs
 }
 FLAT = {
     "!": "#FFF6C0",   # spark core
     "_": "#0C0E16",   # dark inside things
     "*": "#8FC4E8",   # sky glint
+    "-": "#56648A",   # crease between a heron's feather rows
 }
 
 # --------------------------------------------------------------------------
@@ -315,70 +317,152 @@ def lightning_rod(charged):
     return rows_of(c)
 
 
+def fill_poly(c, pts, m):
+    """Fill a polygon given as (x, y) corners, by pixel centres."""
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    for y in range(max(0, int(min(ys))), min(len(c), int(max(ys)) + 1)):
+        for x in range(max(0, int(min(xs))), min(len(c[0]), int(max(xs)) + 1)):
+            px, py = x + 0.5, y + 0.5
+            inside = False
+            j = len(pts) - 1
+            for i in range(len(pts)):
+                xi, yi = pts[i]
+                xj, yj = pts[j]
+                if (yi > py) != (yj > py) and px < (xj - xi) * (py - yi) / (yj - yi) + xi:
+                    inside = not inside
+                j = i
+            if inside:
+                c[y][x] = m
+
+
+def _heron_wing(c, sx, sy, tx, ty, droop):
+    """An open wing from the shoulder (sx, sy) to the tip (tx, ty): a pale
+    leading edge, grey coverts, a crease, then dark primaries splayed into
+    separate fingers. `droop` is how far the trailing edge hangs below."""
+    side = 1 if tx > sx else -1
+    span = abs(tx - sx)
+    for i in range(span + 1):
+        t = i / float(span)
+        x = sx + side * i
+        top = sy + (ty - sy) * t - 3 * math.sin(math.pi * t)
+        depth = droop * (1 - t * 0.55)
+        bottom = top + max(2.0, depth)
+        for y in range(int(round(top)), int(round(bottom)) + 1):
+            d = y - top
+            if d < 1.5:
+                m = "w"
+            elif d < depth * 0.45:
+                m = "h"
+            elif d < depth * 0.45 + 1:
+                m = "-"
+            else:
+                m = "k" if t > 0.55 else "h"
+            put(c, x, y, m)
+    # Split the trailing edge into feathers: notch a gap every few pixels.
+    for i in range(span * 2 // 5, span, 3):
+        t = i / float(span)
+        x = sx + side * i
+        top = sy + (ty - sy) * t - 3 * math.sin(math.pi * t)
+        bottom = int(round(top + max(2.0, droop * (1 - t * 0.55))))
+        for y in range(bottom - (2 if t > 0.55 else 1), bottom + 1):
+            put(c, x, y, ".")
+
+
 def heron(pose):
-    """The Stormheron, 48x48: perch, flare (the tell), fly, grounded."""
+    """The Stormheron, 48x48, facing right: perch, flare (the tell), fly,
+    grounded. A grey heron's build: pale breast, grey back, black flight
+    feathers and crown plume, a long S neck, a dagger beak, thin legs."""
     c = canvas(48, 48)
     if pose == "fly":
-        # Wings spread wide, legs trailing, neck tucked.
-        fill_ellipse(c, 24, 24, 9, 5, "h")
-        for side in (-1, 1):
-            for i in range(20):
-                x = 24 + side * (6 + i)
-                top = 18 - int(6 * math.sin(math.pi * i / 22))
-                for y in range(top, 25 - i // 4):
-                    put(c, x, y, "w" if y < top + 2 else "h")
-            for i in range(0, 20, 4):
-                put(c, 24 + side * (8 + i), 25 - i // 4, "k")
-        fill_ellipse(c, 24, 18, 3, 3, "w")
-        line(c, 26, 18, 32, 19, "y")
-        put(c, 24, 17, "k")
-        line(c, 22, 28, 18, 36, "k")
-        line(c, 26, 28, 22, 36, "k")
+        # Wings spread wide, neck tucked into an S, legs trailing behind.
+        _heron_wing(c, 20, 24, 2, 6, 8)
+        _heron_wing(c, 26, 23, 44, 4, 7)
+        fill_ellipse(c, 24, 27, 10, 4, "h")
+        fill_ellipse(c, 30, 28, 5, 2.5, "w")
+        line(c, 15, 28, 13, 27, "-")
+        line(c, 14, 30, 5, 33, "g")
+        line(c, 5, 33, 3, 31, "g")
+        line(c, 5, 33, 2, 34, "g")
+        # Neck tucked into an S, head held forward.
+        fill_ellipse(c, 34, 27, 2.5, 3, "w")
+        fill_ellipse(c, 37, 25, 3.5, 3, "w")
+        line(c, 35, 23, 30, 22, "k")
+        line(c, 35, 24, 30, 24, "k")
+        put(c, 38, 24, "_")
+        put(c, 38, 23, "y")
+        line(c, 40, 25, 47, 27, "y")
+        line(c, 40, 26, 46, 27, "o")
         return rows_of(c)
     grounded = pose == "grounded"
-    body_y = 34 if grounded else 26
-    # Body and folded wing.
-    fill_ellipse(c, 22, body_y, 10, 7, "h")
-    fill_ellipse(c, 20, body_y + 1, 8, 5, "w" if grounded else "h")
-    for i in range(8):
-        put(c, 12 - i // 2, body_y + 2 + i // 3, "h")
-    if pose == "flare":
-        # Wings half raised, crackling.
-        for side in (-1, 1):
-            for i in range(12):
-                x = 22 + side * (6 + i)
-                for y in range(body_y - 10 + i // 2, body_y - 2):
-                    put(c, x, y, "h" if y > body_y - 9 + i // 2 else "w")
-        for (x, y) in ((8, 14), (37, 13), (6, 19), (40, 18)):
+    body_y = 36 if grounded else 26
+    if grounded:
+        # Slumped on the ground, one wing spilled open, neck laid flat.
+        _heron_wing(c, 18, body_y - 3, 2, body_y + 4, 7)
+        fill_ellipse(c, 21, body_y, 10, 5, "h")
+        fill_ellipse(c, 29, body_y + 1, 3, 4, "w")
+        line(c, 13, body_y - 2, 26, body_y - 4, "-")
+        for x in range(9, 15):
+            put(c, x, body_y + 2 - (x - 9) // 3, "k")
+        line(c, 30, body_y, 37, body_y + 4, "w", 2)
+        line(c, 29, body_y - 1, 36, body_y + 3, "h", 1)
+        fill_ellipse(c, 39, body_y + 5, 3.5, 2.5, "w")
+        line(c, 37, body_y + 3, 31, body_y + 3, "k")
+        line(c, 36, body_y + 4, 31, body_y + 5, "k")
+        line(c, 40, body_y + 5, 41, body_y + 5, "_")      # eye shut
+        line(c, 42, body_y + 5, 47, body_y + 8, "y")
+        line(c, 42, body_y + 6, 46, body_y + 8, "o")
+        for (x, y) in ((16, body_y - 11), (27, body_y - 12), (22, body_y - 14)):
             put(c, x, y, "!")
             put(c, x + 1, y + 1, "y")
-    if grounded:
-        # Slumped, neck down along the ground, crest flat.
-        line(c, 30, body_y - 2, 38, body_y + 2, "h", 1)
-        line(c, 30, body_y - 1, 38, body_y + 3, "h", 1)
-        fill_ellipse(c, 40, body_y + 3, 3, 2.5, "w")
-        line(c, 42, body_y + 4, 47, body_y + 6, "y")
-        put(c, 40, body_y + 2, "k")
-        line(c, 37, body_y + 1, 33, body_y - 1, "k")
-        for (x, y) in ((16, body_y - 9), (27, body_y - 10), (22, body_y - 12)):
-            put(c, x, y, "!")
         return rows_of(c)
-    # Long neck up, head, crest and dagger beak.
-    for i in range(14):
-        x = 28 + int(3 * math.sin(i * 0.35))
-        put(c, x, body_y - 6 - i, "h")
-        put(c, x + 1, body_y - 6 - i, "w")
+    if pose == "flare":
+        # Wings mantled up and out behind the body, crackling.
+        _heron_wing(c, 19, 22, 2, 7, 10)
+        _heron_wing(c, 25, 22, 45, 6, 10)
+        for (x, y) in ((3, 3), (44, 2), (1, 13), (46, 12), (9, 1), (38, 0)):
+            put(c, x, y, "!")
+            put(c, x + 1, y + 1, "y")
+    # Body: a tilted teardrop, grey back over a pale breast, tail low left.
+    fill_ellipse(c, 22, body_y, 10, 6, "h")
+    fill_poly(c, [(13, body_y - 3), (13, body_y + 4), (6, body_y + 7), (5, body_y + 5)], "h")
+    fill_ellipse(c, 29, body_y, 4, 5, "w")
+    # Folded wing: crease along its top, black primaries at the tail.
+    line(c, 13, body_y - 2, 27, body_y - 4, "-")
+    line(c, 14, body_y + 3, 24, body_y + 4, "-")
+    for x in range(5, 15):
+        for y in range(body_y + 1 + (14 - x) // 3, body_y + 4 + (14 - x) // 3):
+            if c[y][x] != ".":
+                put(c, x, y, "k")
+    # Feathered thighs, then thin legs with a backward ankle, and toes.
+    fill_rect(c, 19, body_y + 5, 3, 2, "h")
+    fill_rect(c, 24, body_y + 5, 3, 2, "h")
+    line(c, 20, body_y + 7, 20, 38, "g")
+    line(c, 20, 38, 19, 45, "g")
+    line(c, 25, body_y + 7, 25, 38, "g")
+    line(c, 25, 38, 26, 45, "g")
+    for fx in (19, 26):
+        line(c, fx - 2, 46, fx + 3, 46, "g")
+    # Long S neck: grey nape, pale throat streaked black.
+    for i in range(15):
+        x = 28 + int(round(2.5 * math.sin(i * 0.38)))
+        y = body_y - 5 - i
+        put(c, x - 1, y, "h")
+        put(c, x, y, "w")
+        put(c, x + 1, y, "w")
+        if i % 3 == 1:
+            put(c, x + 1, y, "k")
     hx, hy = 30, body_y - 21
     fill_ellipse(c, hx, hy, 3.5, 3, "w")
-    line(c, hx + 2, hy, hx + 13, hy + 2, "y")
-    line(c, hx + 2, hy + 1, hx + 11, hy + 2, "y")
+    # Black crown stripe running back into a two-strand plume.
+    line(c, hx + 1, hy - 1, hx - 3, hy - 2, "k")
+    line(c, hx - 2, hy - 2, hx - 9, hy - 4, "k")
+    line(c, hx - 2, hy - 1, hx - 8, hy, "k")
+    put(c, hx + 1, hy, "_")
     put(c, hx + 1, hy - 1, "y")
-    line(c, hx - 2, hy - 2, hx - 7, hy - 4, "k")
-    line(c, hx - 2, hy - 1, hx - 8, hy - 2, "k")
-    # Legs down to the perch.
-    line(c, 20, body_y + 6, 20, 46, "k")
-    line(c, 24, body_y + 6, 24, 46, "k")
-    line(c, 18, 46, 26, 46, "k")
+    # Dagger beak, gold on top, deeper below.
+    line(c, hx + 3, hy, hx + 14, hy + 2, "y")
+    line(c, hx + 3, hy + 1, hx + 12, hy + 2, "o")
     return rows_of(c)
 
 
