@@ -1202,6 +1202,20 @@ func _test_play() -> void:
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
 	var bits: Array = room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.SHARDS)
 	_check(bits.size() == 1 and bits[0].tint != HitSpark.DUST and bits[0].tint.a > 0.5, "and bits of it fly, in its own colour (%s)" % (bits[0].tint if bits.size() == 1 else "none"))
+	# Those colours come from a table worked out from the PNGs (no GPU read
+	# when a foe falls): it must match what reading each sheet finds.
+	var wrong_colours: Array = []
+	for path: String in BodyColours.COLOURS:
+		var probe := Scuttler.new()
+		probe._sprite = Sprite2D.new()
+		probe._sprite.texture = load(path)
+		var table := probe.body_colour()
+		var counted := Enemy.count_body_colour(probe._sprite.texture)
+		if not table.is_equal_approx(counted):
+			wrong_colours.append("%s %s vs %s" % [path.get_file(), table, counted])
+		probe._sprite.free()
+		probe.free()
+	_check(wrong_colours.is_empty() and BodyColours.COLOURS.size() > 20, "every sheet's body colour matches its pixels %s" % [wrong_colours])
 	await _wait(0.6)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
 	# A beaten boss's last light lifts off it as it fades.
@@ -1215,6 +1229,38 @@ func _test_play() -> void:
 	lifter.queue_free()
 	await _wait(2.1)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "and they lift away")
+	# A beaten boss's death shudder pulses white each beat; with flashes
+	# turned off it pulses once and then only shakes (no strobe).
+	var shudderer := Scuttler.new()
+	shudderer.ai_enabled = false
+	shudderer.position = Vector2(150, row_y)
+	room.add_child(shudderer)
+	var keep_flashes := Settings.flashes
+	var pulses := [0, 0]
+	for setting in 2:
+		Settings.flashes = setting == 0
+		shudderer._shudder_flashed = false
+		for beat in 6:
+			shudderer._flash = 0.0
+			shudderer._shudder_flash(0.1)
+			if shudderer._flash > 0.0:
+				pulses[setting] += 1
+	Settings.flashes = keep_flashes
+	_check(pulses[0] == 6 and pulses[1] == 1, "a death shudder strobes only with flashes on (%d on, %d off)" % pulses)
+	# Its last light flickers only with flashes on.
+	var steady := HitSpark.spawn(room, Vector2(150, row_y), HitSpark.Kind.RISE)
+	var gaps := [0, 0]
+	for setting in 2:
+		Settings.flashes = setting == 0
+		for step in 10:
+			steady._time = 0.4 + step * 0.05
+			for i in 24:
+				if steady._flickered_out(i):
+					gaps[setting] += 1
+	Settings.flashes = keep_flashes
+	steady.queue_free()
+	shudderer.queue_free()
+	_check(gaps[0] > 0 and gaps[1] == 0, "a boss's last light flickers only with flashes on (%d on, %d off)" % gaps)
 	# A landed blow squashes a foe flat for a moment, then it springs back.
 	var squashee := Scuttler.new()
 	squashee.ai_enabled = false

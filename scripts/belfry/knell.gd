@@ -210,7 +210,7 @@ func _die() -> void:
 	_sprite.frame = FRAME_OUT
 	Audio.play_sfx("knell_moan", global_position, 0.6)
 	for i in 4:
-		_flash = 0.1
+		_shudder_flash(0.1)
 		Feel.shake(2.0)
 		await get_tree().create_timer(0.25).timeout
 		if not is_inside_tree():

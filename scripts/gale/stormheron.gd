@@ -258,7 +258,7 @@ func _die() -> void:
 	_sprite.frame = FRAME_GROUNDED
 	Audio.play_sfx("heron_cry", global_position, 0.6)
 	for i in 4:
-		_flash = 0.1
+		_shudder_flash(0.1)
 		Feel.shake(2.0)
 		await get_tree().create_timer(0.25).timeout
 		if not is_inside_tree():

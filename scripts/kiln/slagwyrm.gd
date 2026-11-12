@@ -384,7 +384,7 @@ func _die() -> void:
 	_sprite.modulate.a = 1.0
 	# It shudders, cools to stone, and crumbles.
 	for i in 8:
-		_flash = 0.08
+		_shudder_flash(0.08)
 		Feel.shake(3.0)
 		await get_tree().create_timer(0.16).timeout
 		if not is_inside_tree():

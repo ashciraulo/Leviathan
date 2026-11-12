@@ -263,7 +263,7 @@ func _die() -> void:
 	_update_plates(0)
 	# A long shudder, then she breaks apart and sinks.
 	for i in 8:
-		_flash = 0.08
+		_shudder_flash(0.08)
 		Feel.shake(3.0)
 		await get_tree().create_timer(0.16).timeout
 	_dissolve()
