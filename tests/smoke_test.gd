@@ -119,6 +119,7 @@ func _ready() -> void:
 		await _test_last_singers()
 		await _test_edge_survey()
 		await _test_scene_music()
+		await _test_elite_music()
 		await _test_calf_rest()
 		await _test_old_ones_scales()
 		await _test_nettle_signals()
@@ -4871,6 +4872,11 @@ func _test_audio() -> void:
 		_check(stream.data.size() > 100, "effect %s synthesises" % id)
 		var caption := str(Audio.SFX[id].get("caption", ""))
 		_check(caption == "" or tr(caption) != caption, "caption for %s is translated" % id)
+		_check(Audio._load(Audio.SFX_DIR, id) != null, "effect %s has a real sound, not the placeholder" % id)
+	var limited := false
+	for i in AudioServer.get_bus_effect_count(0):
+		limited = limited or AudioServer.get_bus_effect(0, i) is AudioEffectHardLimiter
+	_check(limited, "a limiter keeps the master bus from clipping")
 	_check(Audio.cue_for_room("brinewood", "") == "region_brinewood", "rooms play their region's music")
 	_check(Audio.cue_for_room("hull", "hull") == "dungeon_hull", "dungeon rooms play the dungeon's music")
 	var heard: Array[String] = []
@@ -8933,6 +8939,33 @@ func _test_scene_music() -> void:
 	_check(Audio.music_cue == "story_sorrow", "a scene can score itself")
 	scene.finish()
 	_check(Audio.music_cue == room_cue and room_cue != "", "and the room's music comes back after")
+	game.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
+## An elite's room plays the mini-boss theme while it stands, and the
+## room's own track once it falls; beaten, its room is quiet again.
+func _test_elite_music() -> void:
+	GameState.reset_new_game()
+	var coord := Vector2i(3, -1)
+	GameState.set_checkpoint(coord, GameState.NO_POSITION)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	var elite: Enemy = game._living_elite()
+	_check(elite != null and Audio.music_cue == "miniboss", "an elite's room plays the mini-boss theme")
+	if elite:
+		elite.ai_enabled = false
+		elite._die()
+		await _wait(0.2)
+		_check(Audio.music_cue == game._room_music() and Audio.music_cue != "miniboss", "and the room's track comes back when it falls")
+	game.queue_free()
+	await _wait(0.1)
+	game = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.4)
+	_check(Audio.music_cue != "miniboss", "a beaten elite's room plays its own track")
 	game.queue_free()
 	await _wait(0.1)
 	GameState.reset_new_game()
