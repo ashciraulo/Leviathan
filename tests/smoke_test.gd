@@ -5088,6 +5088,11 @@ func _test_credits() -> void:
 	_check(credits._height > 216.0, "the credits have something to roll")
 	for key in ["CREDITS_DIRECTION", "CREDITS_END", "MENU_CREDITS", "GAMEOVER_WAKE"]:
 		_check(tr(key) != key, "%s is translated" % key)
+	for section: Array in credits.SECTIONS:
+		for line: String in section:
+			_check(MenuKit.text_width(credits, line) <= 376.0, "the credits line %s fits across the screen" % line)
+	_check(FileAccess.file_exists("res://THIRD_PARTY_LICENSES.txt") and FileAccess.get_file_as_string("res://THIRD_PARTY_LICENSES.txt").contains("FreeType"),
+		"the engine's licenses the credits point to are there")
 	_check(credits._vignette_count() == 0, "before the ending, the credits show no epilogue scenes")
 	var plain_height: float = credits._height
 	# Leaving would change scene and end the test: don't let it.
