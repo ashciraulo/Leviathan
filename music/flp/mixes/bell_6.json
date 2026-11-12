@@ -9,7 +9,7 @@
   }
  ],
  "comp_over_lufs": 14.0,
- "notes": "Full Range Glockenspiel (Analog Lab), insert 4, sounding an octave up, low-passed hard so it reads as a bell heard through water. Gate: --octave bell_verge=+1. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "notes": "Rom2B 20-T.BL-EXPA (Analog Lab DX7), insert 4, at the written octave, low-passed at 1 kHz so it reads as a church bell heard through water; it sustains, so its last note lets go after a bar (LAST_HOLD in t02) and rings out on the reverb. The preset's own reverb is turned up so the last note rings out instead of stopping. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); reviews of the bells v1 and v2 replaced the detuned and humming ones.",
  "parts": {
   "bell_verge": {
    "insert": 4,
@@ -17,13 +17,13 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 150,
+     "freq": 120,
      "db_oct": 12
     },
     {
      "shape": "highcut",
-     "freq": 1600,
-     "db_oct": 24
+     "freq": 1000,
+     "db_oct": 12
     }
    ]
   }

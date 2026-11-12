@@ -9,7 +9,7 @@
   }
  ],
  "comp_over_lufs": 14.0,
- "notes": "Tubular Bell (Analog Lab), insert 1: a clear bronze bell. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "notes": "Clock Bell (Analog Lab, Dave Polich), insert 1: a clear clock-shop chime that rings on, like a ship's bell, cut above 5 kHz so it is no brighter than the other six. The Tubular Bell before it stacked three layers at -20/0/+20 c. The preset's own reverb is turned up so the last note rings out instead of stopping. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); reviews of the bells v1 and v2 replaced the detuned and humming ones.",
  "parts": {
   "bell_point": {
    "insert": 1,
@@ -18,6 +18,11 @@
     {
      "shape": "lowcut",
      "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
      "db_oct": 12
     }
    ]

@@ -9,7 +9,7 @@ summed mix's loudness. Writes:
   - the master Pro-Q (master_eq, e.g. a 32 Hz low cut);
   - Pro-C 2: Bus style, 2:1, threshold comp_over_lufs (default 12) dB over the mix loudness, auto gain off. At 6 dB
     over (Out There FM's setting for -14 LUFS songs) it took ~4 dB off Saltmarrow, too much for a folk cue;
-  - Pro-L 2: gain to reach the cue's LUFS target, output -1.1 dBTP. --lufs-trim corrects after a measured render.
+  - Pro-L 2: gain to reach the cue's LUFS target, output -1.5 dBTP. --lufs-trim corrects after a measured render.
 State layouts (Pro-Q FFBS band floats, FabFilter parameter order) come from Out There FM's proq.py and fabstate.py,
 checked on screen there; this file only reads and writes the events.
 """
@@ -142,8 +142,8 @@ def main() -> None:
     fab_set(ev[comp][1], 2, 0.6)                     # ratio 2:1
     fab_set(ev[comp][1], 14, 0)                      # auto gain off
     fab_set(ev[lim][1], 0, gain)
-    fab_set(ev[lim][1], 18, -1.1)
-    print(f"mix {pre:.2f} LUFS -> Pro-C threshold {pre + over:.1f}, Pro-L gain {gain:+.2f} dB, ceiling -1.1 dBTP")
+    fab_set(ev[lim][1], 18, -1.5)  # -1.5, not -1.1: the OGG encode overshoots by up to 0.3 dB (review of the bells v1)
+    print(f"mix {pre:.2f} LUFS -> Pro-C threshold {pre + over:.1f}, Pro-L gain {gain:+.2f} dB, ceiling -1.5 dBTP")
     write(dst, head, ev)
 
 

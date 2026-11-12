@@ -9,7 +9,7 @@
   }
  ],
  "comp_over_lufs": 14.0,
- "notes": "Sustained Bells (Analog Lab, Maxime Audfray), insert 5, an octave below the written notes for a tower bell, over Low Strings (Analog Lab, Takashi Odanaka) on insert 8. Gate: --octave bell_gale=-1. Presets chosen by three audition rounds against gate_stems (tuning, octave, wobble, left/right detune).",
+ "notes": "Sustained Bells (Analog Lab), insert 5, at the written notes; the preset itself sounds an octave low, so it reads as a tower bell (gate: --octave bell_gale=-1). The DX7 26-TUB BELLS before it idled at -73 dBFS (an audible hum, review v2 BLOCKER). Under it 12 Low Strings (Analog Lab Prophet, the Saltmarrow pad, in tune) on insert 8, played an octave up because the preset sounds an octave low. The swell grows by voices, one to five, and the bell rings on through bars 3-4. Presets chosen by audition against gate_stems (tuning, octave, wobble, left/right detune); reviews of the bells v1 and v2 replaced the detuned and humming ones.",
  "parts": {
   "bell_gale": {
    "insert": 5,
@@ -28,7 +28,7 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 40,
+     "freq": 60,
      "db_oct": 12
     },
     {

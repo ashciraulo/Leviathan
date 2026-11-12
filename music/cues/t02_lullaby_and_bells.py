@@ -18,6 +18,7 @@ BELL_PARTS = ["bell_point", "bell_ember", "bell_moth", "bell_gale", "bell_rime",
 # Two chords per phrase (one per bar), all in D aeolian.
 HARMONY = [["Dm", "Am"], ["Bb", "C"], ["F", "Gm"], ["Am", "Dm"], ["Dm", "Bb"], ["F", "Bb"], ["Gm", "Dm"]]
 PHRASES = lullaby()
+LAST_HOLD = {"bell_verge": 3.0}  # beats
 songs = []
 
 for i, phrase in enumerate(PHRASES):
@@ -25,14 +26,20 @@ for i, phrase in enumerate(PHRASES):
     bell = song.part(BELL_PARTS[i], program=14, vel=96)
     t = 0.0
     for k, (pitch, beats) in enumerate(phrase):
-        # Bells ring on: each note holds until the next, the last one to the end.
+        # Bells ring on: each note holds until the next, the last one to the end. A preset that sustains
+        # instead of decaying lets its last note go after a bar and rings out on its release and reverb
+        # (review of the bells v2, MAJOR 3: the Verge Bell held flat like an organ for 3.75 s).
         nxt = t + beats
-        bell.note(t, (song.end_q - t) if k == len(phrase) - 1 else beats, pitch, 100 if k == 0 else 88)
+        last = min(song.end_q - t, LAST_HOLD.get(BELL_PARTS[i], song.end_q))
+        bell.note(t, last if k == len(phrase) - 1 else beats, pitch, 100 if k == 0 else 88)
         t = nxt
     if i == 3:  # the Gale Bell turns the tide: a low swell under it and after it
         swell = song.part("strings_swell", program=48, vel=40)
+        # The swell grows by voices as well as velocity: the string preset barely follows velocity
+        # (review of the bells v1, MAJOR 5: flat at -26 LUFS a bar), so one, two, three, then five.
         for b, sym in enumerate(HARMONY[3] + ["Dm", "Dm"]):
-            swell.chord(song.bar(b), song.bar_q * 0.98, voicing(sym, 38, 57)[:3], 36 + 10 * b)
+            tones = voicing(sym, 38, 57)
+            swell.chord(song.bar(b), song.bar_q * 0.98, tones[:[1, 2, 3, 5][b]], 36 + 10 * b)
     songs.append((song, None))
 
 song = Song("lullaby")

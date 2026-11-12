@@ -159,13 +159,45 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str], octaves: dict[str, in
                 r = env - np.polyval(np.polyfit(tt, env, 2), tt)
                 wob.append(r.max() - r.min())
                 lr.append(note_pitch(seg2[:, 0], rate, nt[2])[0] - note_pitch(seg2[:, 1], rate, nt[2])[0])
-            if len(wob) >= 5:
+            # A bell phrase holds only three or four notes (review of the bells v1, MAJOR 6: bell_1's
+            # +-20 c layers and bell_5's 1 Hz beat went unmeasured at the old five-note minimum).
+            if len(wob) >= 3:
                 if abs(np.median(lr)) > 6:
                     problems.append(f"{name}: left channel sounds {np.median(lr):+.0f} cents from the right (a detuned "
                                     "layer that beats): zero the preset's detune/spread or pick another preset")
                 if any(u in name for u in STRUCK) and np.median(wob) > 8:
                     problems.append(f"{name}: held notes wobble {np.median(wob):.1f} dB peak to peak (beating layers, "
                                     "chorus or an LFO): turn it off in the preset or pick another")
+        # Chord tones are never solo, so the solo-note pitch check below never sees a part that only
+        # plays chords (review of the bells v1, BLOCKER: bell_4's string swell sat +23..+32 c sharp).
+        # Read each chord tone's own peak within +-40 c of where it should be, from 0.15 s after the
+        # chord starts until the next onset (at most 1.5 s), and judge the median.
+        if not any(u in name for u in UNPITCHED):
+            onsets = sorted({round(n[0], 2) for n in notes})
+            chord_c = []
+            for on in onsets:
+                tones = [n for n in notes if abs(n[0] - on) < 0.02]
+                if len(tones) < 2:
+                    continue
+                nxt = min((o for o in onsets if o > on + 0.02), default=on + max(t[1] for t in tones))
+                i, j = int((on + 0.15) * rate), int((on + min(nxt - on, 1.5)) * rate)
+                seg3 = mono[i:j]
+                if seg3.size < rate // 4 or 20 * np.log10(np.abs(seg3).max() + 1e-9) < -50:
+                    continue
+                n = 1 << int(np.ceil(np.log2(seg3.size))) + 3
+                spec = np.abs(np.fft.rfft(seg3 * np.hanning(seg3.size), n))
+                freqs = np.fft.rfftfreq(n, 1 / rate)
+                for t in tones:
+                    f = hz(t[2])
+                    band = (freqs > f * 2 ** (-40 / 1200)) & (freqs < f * 2 ** (40 / 1200))
+                    k = int(np.argmax(spec * band))
+                    if not band.any() or not 0 < k < len(spec) - 1 or spec[k] < spec.max() * 10 ** (-40 / 20):
+                        continue
+                    a, b, c = np.log(spec[k - 1:k + 2] + 1e-12)
+                    chord_c.append(1200 * np.log2((k + 0.5 * (a - c) / (a - 2 * b + c)) * rate / n / f))
+            if len(chord_c) >= 4 and abs(np.median(chord_c)) > 10:
+                problems.append(f"{name}: chord tones sound {np.median(chord_c):+.0f} cents off over {len(chord_c)} "
+                                "readings (zero the preset's tuning, then re-measure)")
         levels, level_keys, cents, octs, by_key = [], [], [], [], {}
         # Only notes that sound alone are measured for pitch and evenness:
         # a chord's notes mask each other.
@@ -200,9 +232,11 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str], octaves: dict[str, in
             octs.append(o)
             by_key.setdefault(midi, []).append((c, strong))
         # A part that is mostly chords leaves few solo notes; one note can't judge a part.
-        if len(octs) >= 5:
+        if len(octs) >= min(5, max(3, len(notes) - 1)):
             octave = max(set(octs), key=octs.count)
-            if octave != (octaves or {}).get(name, 0):
+            # A sustained bell still rings under the next note, and its overtones can win a single read
+            # (bell_4 v8: votes -1, 0, +1, 0), so only a clear majority judges the octave.
+            if octs.count(octave) > 0.6 * len(octs) and octave != (octaves or {}).get(name, 0):
                 problems.append(f"{name}: sounds {octave:+d} octave(s) from the written notes "
                                 f"(transpose the part {-12 * octave:+d} or swap the preset)")
             c = np.array(cents)
