@@ -1,0 +1,98 @@
+{
+ "cue": "region_cinderreach",
+ "lufs": -18.0,
+ "parts": {
+  "strings_ostinato": {
+   "insert": 5,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "brass_low": {
+   "insert": 8,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 30,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_frame": {
+   "insert": 3,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "perc_anvil": {
+   "insert": 4,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    }
+   ]
+  },
+  "pad_dark": {
+   "insert": 7,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "reed_low": {
+   "insert": 1,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 100,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Ashfall (region_cinderreach). templates\\kiln_template1.flp (boss_template3 with five presets swapped): Staccato Blend on strings_ostinato (insert 5), 12 Low Strings on brass_low (insert 8, +12), the frame-drum sampler on drum_taiko (insert 3, key 41 plays 42), Hammer And Anvil on choir (insert 4), Dark Pad (Classic Synth Pad) on sub_breath (insert 7, shared with bell_marrow, which only the Kiln uses), Emulator II Bassoon on timpani (insert 1)."
+}
