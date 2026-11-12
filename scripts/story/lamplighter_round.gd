@@ -9,8 +9,9 @@ extends CanvasLayer
 const ASK_FLAG := "wick_round_ask"
 ## The best round, in whole seconds (lower is better; 0 = none yet).
 const BEST_FLAG := "wick_round_best"
-## Times to beat (seconds): good, Wick's own, and Wick's gran's.
-const TIERS := [240, 180, 135]
+## Times to beat (seconds): good, Wick's own, and Wick's gran's. The
+## shortest way round is about half a minute of walking and swimming.
+const TIERS := [100, 80, 65]
 ## Rooms the round may cross: Fenmouth and the lanterns' rooms.
 const FENMOUTH := Vector2i(4, 1)
 ## Long past any real round: it's off.
@@ -70,16 +71,14 @@ func _ready() -> void:
 	_label = UI.label("")
 	# A time, not a text key.
 	_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	# Top middle, clear of the breath plate and the item slots.
-	_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_label.offset_left = -24
-	_label.offset_right = 24
-	_label.offset_top = 4
-	_label.offset_bottom = 16
+	# Top right of middle: clear of a full breath row (16 bubbles end at
+	# x 196) and of the item slots (from x 332).
+	_label.position = Vector2(276, 4)
+	_label.size = Vector2(48, 12)
 	add_child(_label)
 	Events.room_entered.connect(_on_room_entered)
 	Events.player_died.connect(func() -> void: stop("TOAST_ROUND_OFF"))
-	Events.fast_travel_requested.connect(func(_coord: Vector2i) -> void: stop("TOAST_ROUND_OFF"))
+	Events.fast_travel_requested.connect(_on_fast_travel)
 	_show()
 
 
@@ -99,6 +98,15 @@ func _process(delta: float) -> void:
 
 func _show() -> void:
 	_label.text = clock(elapsed)
+
+
+## Flown off by Mantle: the round's off (not when the game turns the
+## trip down, mid-slide).
+func _on_fast_travel(_coord: Vector2i) -> void:
+	var game := get_parent()
+	if game and "busy" in game and game.busy:
+		return
+	stop("TOAST_ROUND_OFF")
 
 
 func _on_room_entered(coord: Vector2i) -> void:

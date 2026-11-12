@@ -528,9 +528,9 @@ const TALKS := {
 	"find_seal_bones": [{"set": ["found_seal_bones"], "lines": ["NARRATE_FOUND_SEAL_BONES", "NARRATE_FOUND_SEAL_BONES_2"]}],
 	"find_seal_net": [{"set": ["found_seal_net"], "lines": ["NARRATE_FOUND_SEAL_NET", "NARRATE_FOUND_SEAL_NET_2"]}],
 	"find_seal_pup": [{"set": ["found_seal_pup"], "lines": ["NARRATE_FOUND_SEAL_PUP", "NARRATE_FOUND_SEAL_PUP_2", "NARRATE_FOUND_SEAL_PUP_3"]}],
-	# The pup at home on the Shore (SealPup).
 	# Wick's dusk bell at Fenmouth, before Wick has explained it.
 	"dusk_bell": [{"lines": ["NARRATE_DUSK_BELL"]}],
+	# The pup at home on the Shore (SealPup).
 	"seal_pup": [
 		{"if": ["pell_pup_told"], "lines": ["NARRATE_PUP_DING"]},
 		{"lines": ["NARRATE_PUP_HOME"]},
@@ -561,19 +561,20 @@ const TALKS := {
 		{"if": ["lighting_ask", "wick_asked"], "unless": ["party_wick"], "set": ["party_wick"], "lines": ["WICK_PARTY_1", "WICK_PARTY_2"]},
 		# The lamplighter's round (LamplighterRound): a purse for each time
 		# beaten, in order.
-		{"if": ["wick_round_240"], "unless": ["wick_round_paid_240"], "set": ["wick_round_paid_240"], "give": {"glint": 50}, "lines": ["WICK_ROUND_240_1", ["", "NARRATE_GOT_ROUND_240_PURSE"]]},
-		{"if": ["wick_round_180", "wick_round_paid_240"], "unless": ["wick_round_paid_180"], "set": ["wick_round_paid_180"], "give": {"glint": 100}, "lines": ["WICK_ROUND_180_1", "WICK_ROUND_180_2", ["", "NARRATE_GOT_ROUND_180_PURSE"]]},
-		{"if": ["wick_round_135", "wick_round_paid_180"], "unless": ["wick_round_paid_135"], "set": ["wick_round_paid_135"], "give": {"glint": 200}, "lines": ["WICK_ROUND_135_1", "WICK_ROUND_135_2", ["", "NARRATE_GOT_ROUND_135_PURSE"]]},
+		{"if": ["wick_round_100"], "unless": ["wick_round_paid_100"], "set": ["wick_round_paid_100"], "give": {"glint": 50}, "lines": ["WICK_ROUND_100_1", ["", "NARRATE_GOT_ROUND_100_PURSE"]]},
+		{"if": ["wick_round_80", "wick_round_paid_100"], "unless": ["wick_round_paid_80"], "set": ["wick_round_paid_80"], "give": {"glint": 100}, "lines": ["WICK_ROUND_80_1", "WICK_ROUND_80_2", ["", "NARRATE_GOT_ROUND_80_PURSE"]]},
+		{"if": ["wick_round_65", "wick_round_paid_80"], "unless": ["wick_round_paid_65"], "set": ["wick_round_paid_65"], "give": {"glint": 200}, "lines": ["WICK_ROUND_65_1", "WICK_ROUND_65_2", ["", "NARRATE_GOT_ROUND_65_PURSE"]]},
 		# The jam trade: Marga's bramble jam for fen candles, for Sorrel.
 		{"if": ["trade_jam", "wick_asked"], "unless": ["trade_candles"], "set": ["trade_candles"], "lines": [["", "NARRATE_HAND_JAM"], "WICK_TRADE_1", "WICK_TRADE_2", "WICK_TRADE_2B", ["", "NARRATE_GOT_TRADE_CANDLES"]]},
 		# A lantern for Murmur's family: Liesl knows the name, Wren lights it.
 		{"if": ["liesl_named_murmur"], "has": ["glowmoth_lantern"], "unless": ["murmur_lantern_lit"], "set": ["murmur_lantern_lit"], "lines": ["WICK_LANTERN_1", ["", "NARRATE_WREN_LIGHTS_LANTERN"], "WICK_LANTERN_2"]},
 		# The Lampless Sink's four braziers, lit at last.
 		{"if": ["wick_gave_jar", "gate_5_3"], "unless": ["wick_saw_sink"], "set": ["wick_saw_sink"], "lines": ["WICK_SINK_DONE_1", "WICK_SINK_DONE_2"]},
+		# The lamplighter's round: told once, ahead of any waiting line.
+		{"if": ["wick_gave_jar", "old_one_turned"], "unless": ["wick_round_ask"], "set": ["wick_round_ask"], "lines": ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B"]},
 		{"if": ["wick_murmur_ask"], "unless": ["murmur_lantern_lit"], "lines": ["WICK_MURMUR_WAITING"]},
 		{"if": ["murmur_met", "wick_gave_jar"], "unless": ["wick_murmur_ask"], "set": ["wick_murmur_ask"], "lines": ["WICK_MURMUR_1", "WICK_MURMUR_1B", "WICK_MURMUR_2", "WICK_MURMUR_2B"]},
 		{"if": ["wick_gave_jar"], "unless": ["wick_told_sink", "wick_saw_sink"], "set": ["wick_told_sink"], "lines": ["WICK_SINK_1", "WICK_SINK_1B"]},
-		{"if": ["wick_gave_jar", "old_one_turned"], "unless": ["wick_round_ask"], "set": ["wick_round_ask"], "lines": ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B"]},
 		{"if": ["trade_candles", "wick_gave_jar"], "unless": ["trade_line"], "lines": ["WICK_TRADE_WAITING"]},
 		{"if": ["wick_gave_jar", "seen_ending"], "lines": ["WICK_END", "WICK_END_2"]},
 		{"if": ["wick_gave_jar", "old_one_turned"], "lines": ["WICK_TURNED"]},

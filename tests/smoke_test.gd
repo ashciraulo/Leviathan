@@ -7836,7 +7836,7 @@ func _test_wick_round() -> void:
 		var lines: Array = Conversations.branch_for("wick").get("lines", [""])
 		return str(lines[0]) if lines[0] is String else str(lines[1])
 	_check(first.call() == "WICK_ROUND_1", "once the Old One's turned, Wick tells of the round")
-	for line: String in ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B", "WICK_ROUND_135_1", "WICK_ROUND_135_2", "NARRATE_DUSK_BELL"]:
+	for line: String in ["WICK_ROUND_1", "WICK_ROUND_1B", "WICK_ROUND_2", "WICK_ROUND_2B", "WICK_ROUND_65_1", "WICK_ROUND_65_2", "NARRATE_DUSK_BELL"]:
 		_check(tr(line).length() <= 70, "%s fits the box" % line)
 	GameState.set_checkpoint(StoryDirector.FENMOUTH, StoryDirector.DUSK_BELL_AT + Vector2(0, 18))
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
@@ -7876,26 +7876,26 @@ func _test_wick_round() -> void:
 	_check(not LamplighterRound.running and LamplighterRound.current == null, "off the fen, the round's off")
 	for coord: Vector2i in FenLantern.SPOTS:
 		_check(GameState.has_flag(FenLantern.flag_for(coord)), "lantern %s still lit for keeps" % coord)
-	# A fast round: all five in 100 seconds beats every time.
+	# A fast round: all five in 60 seconds beats every time.
 	LamplighterRound.begin(game)
-	LamplighterRound.current.elapsed = 100.0
+	LamplighterRound.current.elapsed = 60.0
 	for coord: Vector2i in FenLantern.SPOTS:
 		LamplighterRound.lantern_lit(coord)
-	_check(not LamplighterRound.running and LamplighterRound.best() == 100, "all five: the time stands (%d)" % LamplighterRound.best())
+	_check(not LamplighterRound.running and LamplighterRound.best() == 60, "all five: the time stands (%d)" % LamplighterRound.best())
 	for tier: int in LamplighterRound.TIERS:
 		_check(GameState.has_flag(LamplighterRound.tier_flag(tier)), "beat %d seconds" % tier)
 	var glints := GameState.item_count("glint")
-	for expect: Array in [["WICK_ROUND_240_1", 50], ["WICK_ROUND_180_1", 100], ["WICK_ROUND_135_1", 200]]:
+	for expect: Array in [["WICK_ROUND_100_1", 50], ["WICK_ROUND_80_1", 100], ["WICK_ROUND_65_1", 200]]:
 		_check(first.call() == expect[0], "Wick pays: %s" % expect[0])
 		Conversations.talk("wick")
 		glints += int(expect[1])
 	_check(GameState.item_count("glint") == glints and not first.call().begins_with("WICK_ROUND"), "every purse paid, once")
 	# A slower round doesn't spoil the best.
 	LamplighterRound.begin(game)
-	LamplighterRound.current.elapsed = 200.0
+	LamplighterRound.current.elapsed = 120.0
 	for coord: Vector2i in FenLantern.SPOTS:
 		LamplighterRound.lantern_lit(coord)
-	_check(LamplighterRound.best() == 100, "a slower round keeps the best")
+	_check(LamplighterRound.best() == 60, "a slower round keeps the best")
 	await _wait(0.2)
 	game.queue_free()
 	await _wait(0.1)

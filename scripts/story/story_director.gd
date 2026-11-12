@@ -110,7 +110,7 @@ const DOORBELL_LOST_AT := Vector2(20 * 16 + 8, 7 * 16 + 12)
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
 const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
-const DUSK_BELL_AT := Vector2(14 * 16 + 8, 5 * 16 + 12)
+const DUSK_BELL_AT := Vector2(12 * 16 + 8, 5 * 16 + 12)
 ## Gully dozing beside the Lantern Wake's figurehead on Wreck Strand, and
 ## his strongbox out in the pool.
 const GULLY_AT := Vector2(10 * 16 + 8, 2 * 16 + 10)
