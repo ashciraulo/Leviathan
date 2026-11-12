@@ -2,8 +2,7 @@ name: Build PC
 
 # Builds the Windows, macOS and Linux versions, then starts each one on its
 # own system (a Windows, a Mac and a Linux runner) and has it play into a new
-# game by itself (scripts/core/boot_check.gd). Runs on every PR and push to
-# main, so a broken desktop build shows up at once.
+# game by itself (scripts/core/boot_check.gd). Runs on every branch push, so a broken desktop build shows up at once.
 #
 # Pushing a tag like v0.2.0 also publishes a GitHub release with the three
 # downloads attached; the newest is always at
@@ -19,9 +18,13 @@ on:
         description: "Publish as this release (a tag like v0.2.0); leave empty for builds only"
         required: false
         default: ""
-  pull_request:
+  # Every branch push, not pull_request: GitHub only starts pull_request
+  # runs once it has built the PR's test merge, so a PR with a merge conflict
+  # (or one whose merge was still being worked out) got no checks at all, or
+  # runs stuck "queued" that never started and can't be cancelled. A push run
+  # tests the branch's own commit and still shows on its PR page.
   push:
-    branches: [main]
+    branches: ["**"]
     tags: ["v*"]
 
 permissions:
