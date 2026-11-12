@@ -11,9 +11,9 @@
  "loop": true,
  "parts": [
   {
-   "name": "mandolin",
-   "notes": 432,
-   "low": 55,
+   "name": "guitar",
+   "notes": 480,
+   "low": 50,
    "high": 64
   },
   {
@@ -25,8 +25,8 @@
   {
    "name": "bass_upright",
    "notes": 112,
-   "low": 31,
-   "high": 47
+   "low": 43,
+   "high": 55
   },
   {
    "name": "perc_hand",

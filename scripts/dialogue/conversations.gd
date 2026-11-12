@@ -249,6 +249,8 @@ const TALKS := {
 	"liesl": [
 		{"if": ["sorrel_letters", "liesl_asked"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
 		{"if": ["wick_murmur_ask", "liesl_asked"], "unless": ["liesl_named_murmur"], "set": ["liesl_named_murmur"], "lines": ["LIESL_MURMUR_1", "LIESL_MURMUR_2"]},
+		# Gran's hymn page, for Murmur's song.
+		{"if": ["murmur_song_ask", "liesl_asked"], "unless": ["song_liesl"], "set": ["song_liesl"], "lines": ["LIESL_HYMN_1", "LIESL_HYMN_1B", "LIESL_HYMN_2", ["", "NARRATE_GOT_HYMN_LIESL"]]},
 		# The Ebb Grotto's flood marks: a Liesl, three hundred years back.
 		{"if": ["read_grotto_marks", "liesl_asked"], "unless": ["liesl_heard_marks"], "set": ["liesl_heard_marks"], "lines": ["LIESL_MARKS_1", "LIESL_MARKS_1B", "LIESL_MARKS_2", "LIESL_MARKS_3"]},
 		# Gran's table: her cup (Ide has it), candlestick and salt fish
@@ -352,10 +354,17 @@ const TALKS := {
 		{"unless": ["murmur_met"], "set": ["murmur_met"], "lines": ["MURMUR_FEN_1", "MURMUR_FEN_2", "MURMUR_FEN_3"]},
 		# The Reed family's lantern, lit at last (Wick, Liesl and Wren).
 		{"if": ["murmur_lantern_lit"], "unless": ["murmur_saw_lantern"], "set": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_1", "MURMUR_LANTERN_2", "MURMUR_LANTERN_3"]},
+		# The Reeds' song: hymn pages from the Drowned Chapel, the Wreck Vault
+		# and Liesl, then Murmur sings it in the chapel (StoryDirector).
+		{"if": ["murmur_song_ask", "found_hymn_chapel", "found_hymn_vault", "song_liesl"], "unless": ["reed_song"], "set": ["reed_song"], "lines": [["", "NARRATE_HAND_HYMNS"], "MURMUR_SONG_DONE_1", "MURMUR_SONG_DONE_2", "MURMUR_SONG_DONE_3"]},
+		{"if": ["murmur_saw_lantern", "old_one_turned"], "unless": ["murmur_song_ask"], "set": ["murmur_song_ask"], "lines": ["MURMUR_SONG_1", "MURMUR_SONG_1B", "MURMUR_SONG_2", "MURMUR_SONG_2B", "MURMUR_SONG_3"]},
 		# The Calf's Rest: Wren has found the little skull in the far fen.
 		{"if": ["found_calf_rest", "seen_ending"], "unless": ["murmur_left_robe"], "set": ["murmur_left_robe"], "lines": ["MURMUR_REST_1", "MURMUR_REST_2", "MURMUR_REST_3"]},
 		{"if": ["found_calf_rest"], "unless": ["seen_ending", "murmur_heard_rest"], "set": ["murmur_heard_rest"], "lines": ["MURMUR_REST_EARLY"]},
+		{"if": ["murmur_song_ask"], "unless": ["reed_song"], "lines": ["MURMUR_SONG_WAITING"]},
+		{"if": ["reed_song"], "unless": ["reed_song_done"], "lines": ["MURMUR_SONG_GO"]},
 		{"if": ["seen_ending"], "lines": ["MURMUR_END"]},
+		{"if": ["reed_song_done"], "lines": ["MURMUR_SONG_AFTER"]},
 		{"if": ["old_one_turned"], "lines": ["MURMUR_TURNED"]},
 		{"if": ["murmur_saw_lantern"], "lines": ["MURMUR_LANTERN_AGAIN"]},
 		{"lines": ["MURMUR_AGAIN"]},
@@ -548,6 +557,8 @@ const TALKS := {
 	"find_nameboard": [{"set": ["found_nameboard"], "lines": ["NARRATE_FOUND_NAMEBOARD", "NARRATE_FOUND_NAMEBOARD_2"]}],
 	"find_gran_candle": [{"set": ["found_gran_candle"], "lines": ["NARRATE_FOUND_GRAN_CANDLE", "NARRATE_FOUND_GRAN_CANDLE_2"]}],
 	"find_gran_salt": [{"set": ["found_gran_salt"], "lines": ["NARRATE_FOUND_GRAN_SALT", "NARRATE_FOUND_GRAN_SALT_2"]}],
+	"find_hymn_chapel": [{"set": ["found_hymn_chapel"], "lines": ["NARRATE_FOUND_HYMN_CHAPEL", "NARRATE_FOUND_HYMN_CHAPEL_2"]}],
+	"find_hymn_vault": [{"set": ["found_hymn_vault"], "lines": ["NARRATE_FOUND_HYMN_VAULT", "NARRATE_FOUND_HYMN_VAULT_2"]}],
 	# The Calf's Rest, south of Gloamfen (CalfSkull): the Old One's lost
 	# calf, whose dreams the fen-lights carry. After the ending, Murmur
 	# leaves the grey robe there.

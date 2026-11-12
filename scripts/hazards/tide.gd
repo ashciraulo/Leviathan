@@ -299,7 +299,7 @@ func _is_dry_spot(at: Vector2i) -> bool:
 		return false
 	for dx in [-1, 1]:
 		var side := _room.tile_at(at.x + dx, at.y)
-		if Prop.is_prop(side) and (Prop.KINDS[side][2] as Vector2).x > Room.TILE:
+		if Prop.is_prop(side) and Prop.is_wide(side):
 			return false
 	return Rect2i(0, 0, Room.COLS, Room.ROWS).has_point(at)
 

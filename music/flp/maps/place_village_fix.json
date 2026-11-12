@@ -1,0 +1,66 @@
+{
+ "bass_upright": {
+  "vel_cap": 112,
+  "db_per_vel": 0.097,
+  "keys": {
+   "41": {
+    "db": -1.5
+   },
+   "52": {
+    "db": -2.3
+   },
+   "53": {
+    "db": -1.0
+   },
+   "43": {
+    "channel": "bass_soft"
+   },
+   "46": {
+    "channel": "bass_soft"
+   },
+   "47": {
+    "channel": "bass_soft"
+   },
+   "45": {
+    "channel": "bass_a2",
+    "play": 46
+   },
+   "55": {
+    "channel": "bass_g3",
+    "play": 53
+   }
+  },
+  "pitch": {
+   "bass_a2": -108,
+   "bass_g3": 200
+  },
+  "volume_db": {
+   "bass_soft": -5.0,
+   "bass_a2": -5.0,
+   "bass_g3": -2.5
+  }
+ },
+ "perc_hand": {
+  "db_per_vel": 0.3,
+  "keys": {
+   "60": {
+    "play": 60
+   },
+   "61": {
+    "play": 64
+   },
+   "62": {
+    "channel": "shaker",
+    "play": 60
+   }
+  }
+ },
+ "guitar": {
+  "db_per_vel": 0.3,
+  "keys": {
+   "55": {
+    "db": -7.5
+   }
+  }
+ }
+}

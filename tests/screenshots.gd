@@ -101,6 +101,15 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=reeds_song: Murmur sings in the Drowned Chapel.
+	if OS.get_environment("SHOTS_ONLY") == "reeds_song":
+		game.queue_free()
+		await _reeds_shot()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=gran_supper: supper at Gran's table.
 	if OS.get_environment("SHOTS_ONLY") == "gran_supper":
 		game.queue_free()
@@ -167,10 +176,23 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=skull: the great whale skull on Skull Rise, and its jaw in
+	# Whalefall Steps.
+	if OS.get_environment("SHOTS_ONLY") == "skull":
+		await _room_shots(game, {
+			Vector2i(9, 0): ["skull_rise", Vector2i(15, 9)],
+			Vector2i(10, 0): ["whalefall_steps", Vector2i(13, 10)],
+			Vector2i(9, 2): ["saltpan_hollow", Vector2i(9, 11)],
+		})
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=thin_screens: the optional screens off the thinner regions.
 	if OS.get_environment("SHOTS_ONLY") == "thin_screens":
 		await _room_shots(game, {
-			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(20, 6)],
+			Vector2i(9, 0): ["thin_whalefall_way_in", Vector2i(21, 7)],
 			Vector2i(10, 0): ["thin_whalefall_steps", Vector2i(2, 6)],
 			Vector2i(10, 1): ["thin_sinkwhorl_flats", Vector2i(11, 2)],
 			Vector2i(7, -3): ["thin_kestrel_reach", Vector2i(2, 6)],
@@ -451,6 +473,7 @@ func _ready() -> void:
 				await _boat_home_shot()
 				await _wick_round_shot()
 				await _supper_shot()
+				await _reeds_shot()
 			"far_story":
 				game.queue_free()
 				await _wait(0.2)
@@ -606,7 +629,8 @@ func _ready() -> void:
 		Vector2i(2, 3): ["72_weir_steps", Vector2i(17, 6), Tide.Phase.HIGH],
 		Vector2i(7, 0): ["73_bleached_strand", Vector2i(11, 11)],
 		Vector2i(8, 0): ["74_rib_hollow", Vector2i(3, 6)],
-		Vector2i(9, 0): ["75_skull_rise", Vector2i(12, 7)],
+		Vector2i(9, 0): ["75_skull_rise", Vector2i(15, 9)],
+		Vector2i(10, 0): ["75b_whalefall_steps", Vector2i(13, 10)],
 		Vector2i(7, 1): ["76_sinksand_basin", Vector2i(11, 1)],
 		Vector2i(8, 1): ["77_vertebra_road", Vector2i(4, 6)],
 		Vector2i(9, 1): ["78_hollow_wind_flats", Vector2i(16, 6)],
@@ -2459,6 +2483,36 @@ func _wick_round_shot() -> void:
 	await _wait(0.2)
 
 
+## The Reeds' song: Murmur singing in the Drowned Chapel, Wren's lamp up.
+func _reeds_shot() -> void:
+	await _wait(0.2)
+	Cutscene.fast = false
+	GameState.reset_new_game()
+	for flag in [StoryDirector.CALF_FLAG, StoryDirector.TURNED_FLAG, "murmur_met", "murmur_lantern_lit", "murmur_saw_lantern", "murmur_song_ask", "found_hymn_chapel", "found_hymn_vault", "song_liesl", StoryDirector.REED_FLAG]:
+		GameState.set_flag(flag)
+	GameState.set_checkpoint(StoryDirector.DROWNED_CHAPEL, Vector2(9 * 16 + 8, 10 * 16 + 8))
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.2)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	var box := _dialogue_box(game)
+	var pages := 0
+	for i in 300:
+		if DialogueBox.is_open:
+			pages += 1
+			if pages == 5:
+				await _wait(1.8)
+				await _capture("quest_31_reeds_song")
+			box.advance()
+			box.advance()
+		await _wait(0.15)
+		if not Cutscene.active and not DialogueBox.is_open and pages > 5:
+			break
+	game.queue_free()
+	await _wait(0.2)
+
+
 ## Supper at Gran's table in Drowned Lane: Liesl, Ide's bread, Gran's
 ## candle lit and her place at the head left empty.
 func _supper_shot() -> void:
@@ -2895,7 +2949,7 @@ func _ide_shots() -> void:
 func _tobin_shots() -> void:
 	GameState.reset_new_game()
 	GameState.set_flag(StoryDirector.TOMB_BELL_FLAG)
-	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(12 * Room.TILE + 8, 7 * Room.TILE + 10))
+	GameState.set_checkpoint(StoryDirector.SKULL_RISE, Vector2(16 * Room.TILE + 8, 8 * Room.TILE + 10))
 	var rise: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(rise)
 	while Cutscene.active and not DialogueBox.is_open:
