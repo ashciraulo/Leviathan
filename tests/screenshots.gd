@@ -936,7 +936,10 @@ func _hull_shots(game: Node) -> void:
 		# The last blow: the great star as time runs slow.
 		await get_tree().create_timer(0.5, true, false, true).timeout
 		await _capture("39b_matriarch_final_blow")
-		await _wait(3.2)
+		# Her last light lifting off her as she sinks.
+		await _wait(1.55)
+		await _capture("39c_matriarch_dissolve")
+		await _wait(1.65)
 		game.player.global_position = room.global_position + Vector2(11 * Room.TILE + 8, 7 * Room.TILE)
 		await _wait(0.3)
 		await _capture("40_tidebell")
@@ -1245,6 +1248,17 @@ func _feel_shots(game: Node) -> void:
 	crab.take_hit(1, Vector2.RIGHT)
 	await _wait(0.12)
 	await _capture("05d_fall_dust")
+	# The pop and the bits of it that fly, on a second crab.
+	var crab2 := Scuttler.new()
+	crab2.ai_enabled = false
+	crab2.position = Vector2(200, 7 * Room.TILE + 12)
+	room.add_child(crab2)
+	await _wait(0.3)
+	crab2.take_hit(9, Vector2.RIGHT)
+	await _wait(0.03)
+	await _capture("05e_death_pop")
+	await _wait(0.12)
+	await _capture("05f_death_shards")
 
 
 func _tomb_shots(game: Node) -> void:

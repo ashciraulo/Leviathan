@@ -1197,8 +1197,21 @@ func _test_play() -> void:
 	bog.hp = 1
 	bog.take_hit(1, Vector2.RIGHT)
 	_check(room.get_children().any(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.FALL), "a foe that falls leaves dust")
-	await _wait(0.5)
+	var bits: Array = room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.SHARDS)
+	_check(bits.size() == 1 and bits[0].tint != HitSpark.DUST and bits[0].tint.a > 0.5, "and bits of it fly, in its own colour (%s)" % (bits[0].tint if bits.size() == 1 else "none"))
+	await _wait(0.6)
 	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "sparks and dust clear away")
+	# A beaten boss's last light lifts off it as it fades.
+	var lifter := Scuttler.new()
+	lifter.ai_enabled = false
+	lifter.position = Vector2(150, row_y)
+	room.add_child(lifter)
+	await _wait(0.05)
+	lifter._dissolve()
+	_check(room.get_children().filter(func(n: Node) -> bool: return n is HitSpark and (n as HitSpark).kind == HitSpark.Kind.RISE).size() == 2, "a fading boss sends up two waves of light")
+	lifter.queue_free()
+	await _wait(2.1)
+	_check(not room.get_children().any(func(n: Node) -> bool: return n is HitSpark), "and they lift away")
 	# A landed blow squashes a foe flat for a moment, then it springs back.
 	var squashee := Scuttler.new()
 	squashee.ai_enabled = false
