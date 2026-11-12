@@ -9231,6 +9231,48 @@ func _test_older_secrets() -> void:
 	wreck.queue_free()
 	GameState.reset_new_game()
 
+	# The Marrow Seep, Vertebra Gallery and Marrow Reliquary: a cave run
+	# behind a hidden bone wall in Ribfall Sands. Only the Echo Horn opens
+	# the way in; two braziers for the lantern unbar the way on, a barricade
+	# guards the climb north, and the reliquary shuts Wren in with its crew.
+	var ribfall := Room.parse_layout(((load("res://rooms/room_9_3.tscn") as PackedScene).instantiate() as Room).layout)
+	_check(ribfall[9].substr(21, 3) == "$.." and ribfall[10].substr(21, 3) == "$.." and ribfall[8][22] == "#" and ribfall[11][22] == "#",
+		"Ribfall Sands hides the way east behind a bone wall")
+	var seep: Room = (load("res://rooms/room_10_3.tscn") as PackedScene).instantiate()
+	add_child(seep)
+	await _wait(0.2)
+	var se_rows := Room.parse_layout(seep.layout)
+	var se_bars := _child_of(seep, Bars)
+	_check(seep.cave and seep.biome == "ossuary" and seep.gate == "braziers" and se_bars.size() == 2 and not (se_bars[0] as Bars).is_open
+		and se_rows[9][0] == "." and se_rows[10][0] == "." and se_rows[4][23] == "." and se_rows[5][23] == "." and se_rows[4][22] == "|" and se_rows[5][22] == "|",
+		"the Marrow Seep: two braziers bar the way east")
+	seep.queue_free()
+	GameState.reset_new_game()
+	var gallery: Room = (load("res://rooms/room_11_3.tscn") as PackedScene).instantiate()
+	var g_rows := Room.parse_layout(gallery.layout)
+	var g_closed := g_rows.duplicate()
+	g_closed[2] = g_closed[2].replace("%", "#")
+	var g_open := g_rows.duplicate()
+	g_open[2] = g_open[2].replace("%", ".")
+	_check(gallery.cave and gallery.biome == "ossuary" and g_rows[4][0] == "." and g_rows[5][0] == "." and g_rows[0].substr(11, 2) == ".."
+		and not _walkable_from(g_closed, Vector2i(0, 4)).has(Vector2i(11, 0)) and _walkable_from(g_open, Vector2i(0, 4)).has(Vector2i(11, 0)),
+		"the Vertebra Gallery: a bone barricade guards the climb north")
+	gallery.free()
+	var reliquary: Room = (load("res://rooms/room_11_2.tscn") as PackedScene).instantiate()
+	add_child(reliquary)
+	await _wait(0.1)
+	var r_rows := Room.parse_layout(reliquary.layout)
+	var r_chests := _child_of(reliquary, Chest)
+	var r_crew := 0
+	for child in reliquary.get_children():
+		if child is Enemy:
+			r_crew += 1
+	_check(reliquary.cave and reliquary.biome == "ossuary" and reliquary.gate == "clear" and reliquary.chest_hidden and _child_of(reliquary, Bars).size() == 2
+		and r_chests.size() == 1 and not (r_chests[0] as Chest).visible and r_rows[12].substr(11, 2) == ".." and r_rows[11].substr(11, 2) == "||" and r_crew >= 5,
+		"the Marrow Reliquary: a hidden cache, a crew of %d, bars that shut behind Wren" % r_crew)
+	reliquary.queue_free()
+	GameState.reset_new_game()
+
 
 
 ## One short trial cave per region: a single puzzle and a glint cache.
