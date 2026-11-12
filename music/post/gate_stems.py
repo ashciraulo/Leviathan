@@ -130,9 +130,15 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str], octaves: dict[str, in
             onsets = sorted({n[0] for n in notes})
             cut = 0
             for k, on in enumerate(onsets):
-                stop = onsets[k + 1] if k + 1 < len(onsets) else on + max(n[1] for n in notes if n[0] == on)
+                # The last note's window runs 1 s past its written end, to catch a sound that cuts at the note-off.
+                stop = onsets[k + 1] if k + 1 < len(onsets) else on + max(n[1] for n in notes if n[0] == on) + 1.0
                 seg = env[int((on + 0.15) * 100): int(stop * 100)]
-                if seg.size > 3 and seg.max() > -60 and (-np.diff(seg)).max() > 20:
+                # A cliff counts from above -55 dBFS and within 25 dB of the note's peak: a long release
+                # that has faded 25 dB and more (title v3's sub breath, a Synclavier sine) is not a cut, but a
+                # sound cut 20-24 dB down still is (review of the title v1, MINOR 4).
+                drop = -np.diff(seg) if seg.size > 3 else np.zeros(0)
+                floor = max(seg.max() - 25, -55) if seg.size else 0
+                if seg.size > 3 and seg.max() > -60 and any(d > 20 and seg[i] > floor for i, d in enumerate(drop)):
                     cut += 1
             if cut > max(1, len(onsets) // 10):
                 problems.append(f"{name}: {cut} of {len(onsets)} notes stop dead (a >20 dB drop within 10 ms "

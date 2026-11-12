@@ -122,10 +122,11 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
         raise SystemExit("template has no tempo event")
     flp.set_tempo(meta["qbpm"])
     end = round(meta["end_q"] * flp.ppq)
-    if not meta.get("loop", True):
-        # One-shots: two bars of room after the last note, so a Song-mode render keeps the
-        # release and reverb tail (finalize.py trims the silence after it).
-        end += round(2 * meta["bar_q"] * flp.ppq)
+    # Two bars of room after the last bar, so a Song-mode render keeps the release and reverb tail.
+    # One-shots: finalize.py trims the silence after it. Loops: finalize.py folds it onto the loop start
+    # (review of the title v1, MAJOR 1: without the room FL stopped 0.7 s past the loop end and every ring
+    # was cut at the seam).
+    end += round(2 * meta["bar_q"] * flp.ppq)
     clips = flp.set_pattern_clips(pattern, end)
     if clips == 0:
         raise SystemExit(f"pattern {pattern} has no clip in the playlist; place it at bar 1 in the template")

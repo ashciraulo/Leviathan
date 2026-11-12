@@ -123,3 +123,23 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   percentile read the lullaby's music as its floor). Open polish (MINOR): bell_1 and bell_3 stop at the note-off
   rather than ringing (lengthen their last notes), bell_2's vibraphone auto-pans, bell_4's Sustained Bells warbles at
   0.84 Hz and leans 2 dB left, bell_6 steps down 6 dB when its held note lets go.
+
+## The title (2026-11-12)
+- **Template:** `templates\title_template.flp` is bells_template4 with four presets swapped (aud1 Analog Harp, aud2
+  Simple Ohh, aud4 Meadow Flute, aud5 Simple Sine (Clean)) and the inserts renamed after the parts. The project files
+  (title_vN.flp) carry the Synclavier envelope below; build new versions from the latest PC project, not the template.
+- **A swelling sub:** Analog Lab's Time macro did nothing to Simple Sine's envelope. Edit Preset > Part 1 Open shows the
+  Synclavier V panel; AMP ENV OFFSET Attack and Release at 1.00 give ~11 s in and ~6 s out. The swell has to live in the
+  envelope: a held sine at one velocity is flat and stops dead at the note-off.
+- **Mixing a sparse cue:** the sum of the part targets (-19.2) is not what the stems sum to once each is on target
+  (-22.2), because every stem's integrated loudness only counts where it plays. Measure the summed stems for pre_lufs.
+- **Loop seams:** a calm A section after a busy B dropped 9 dB at the loop point. Ease the last two bars back into the
+  A texture and give the loop's first beat a little more. finalize.py now fades the 10 ms of lead-in before the loop
+  start onto the body's end, so the waveform runs on across the seam (0.052 -> 0.002).
+- **Title review v1 FAIL -> v2 PASS.** v1: FL stopped 0.7 s past the loop end (no room), so the seam cut every ring;
+  flp_build now leaves two bars of room on loops too, and finalize fails a loop with under 2 s of room or a >12 dB fall
+  at loop_end. The tide only breathed below 80 Hz: Analog Harp and 12 Low Strings ignore velocity, so the breath is
+  built from voices (strings 2-5) and notes (harp roll 2-5), plus an octave-up double of the sub.
+  Open MINORs (v2): Sustained Bells at the written octave would read more distant than +12 (the gate's L/R reading on
+  its strike is noise); 12 Low Strings' +22 c layer beats at ~0.9 Hz; Simple Ohh's D4 beats at 3.6 Hz; the folded
+  tail also smears bar 36's A ring over the first pass's bar 5; harp key 50 sits ~2 dB low (velocity can't fix it).
