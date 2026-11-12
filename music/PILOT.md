@@ -257,3 +257,16 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   the ostinato octaves there); trumpet 2-6 kHz still ~5 dB hotter in D (take +0.9 dB on horns per stem_balance); the
   taiko needs a stick layer for 2-6 kHz; the C timpani read as F/Eb above 150 Hz on small speakers (narrow cut near
   700 Hz); ostinato low keys ~26 ms late.
+
+## The Bell Kiln, dungeon 2 (2026-11-12)
+- **Template:** `templates\kiln_template3.flp` (shared with Cinderreach): boss_template3 with harp = Saint Eustache
+  (synth church organ; sounds an octave low, so organ_dark is +12), bell_marrow = Supermini Bass (insert 7),
+  choir = Hammer And Anvil (insert 4; it sounds E6 for written E5 and rings), timpani = Emulator II Bassoon (insert 1).
+  Taiko key 36 plays 47 as in the boss.
+- **Trumpfal can't hold a note:** it dies ~0.85 s into a 1.8 s note (review v3 MAJOR). Every trumpet note is doubled an
+  octave down by the bassoon (`reed_double`, 7 dB under), which fills the holes without mud.
+- v4: review PASS (3 MINOR). -17.94 LUFS, TP -3.6 dBTP. The gate's bass_synth scatter is an artefact of short low
+  notes (the reviewer read the bass on its harmonics: -3 c, spread 6 c).
+- **Open MINORs (v4):** the anvil still rings (hits only 5-9 dB over the ring; needs a 0.4-0.5 s decay, then +2 dB;
+  its mix target is -35 on purpose so stem_balance doesn't undo the cut); the organ canon in B' is 3.5 dB under the
+  bassoon (own clone channel +4-5 dB, E4 and C4 +4 more); the frame drum has no body above 150 Hz (+4 dB at 250-300 Hz).
