@@ -16,6 +16,8 @@ const STEP := 24
 var _cells: Array[Dictionary] = []
 var _rects: Array = []
 var _cursor := 0
+## Item-slot key tags, drawn last so they sit above the cursor.
+var _badges: Array = []
 
 
 func _ready() -> void:
@@ -164,9 +166,13 @@ func _draw() -> void:
 		KEEPER_PANEL.end.x - 256)
 	MenuKit.draw_text(self, "SATCHEL_PEARLS", Vector2(250, 94), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
 		SHARD_AT.x - 252)
+	_badges.clear()
 	for cell in _cells:
 		_draw_cell(cell)
 	MenuKit.draw_cursor(self, _cells[_cursor]["rect"])
+	# Badges go over the cursor: its corner brackets would hide them.
+	for badge: Array in _badges:
+		_draw_badge(badge[0], badge[1])
 	_draw_info()
 
 
@@ -191,7 +197,7 @@ func _draw_cell(cell: Dictionary) -> void:
 			if cell["role"] == "tool" and id != "":
 				var slot := GameState.item_slots.find(id)
 				if slot >= 0:
-					_draw_badge(rect, MenuKit.key_name("item_1" if slot == 0 else "item_2"))
+					_badges.append([rect, MenuKit.key_name("item_1" if slot == 0 else "item_2")])
 			if cell["role"] == "slot":
 				MenuKit.draw_text(self, MenuKit.key_name("item_1" if cell["index"] == 0 else "item_2"),
 					rect.position + Vector2(22, 6), MenuKit.TEXT_GOLD)
@@ -216,8 +222,13 @@ func _draw_count(rect: Rect2, count: int) -> void:
 	MenuKit.draw_text(self, text, rect.end - Vector2(w + 1, 10), MenuKit.TEXT)
 
 
+## A key on a small dark tag at the slot's top-left corner.
 func _draw_badge(rect: Rect2, text: String) -> void:
-	MenuKit.draw_text(self, text, rect.position + Vector2(-1, -3), MenuKit.TEXT_GOLD)
+	var w := ceilf(MenuKit.text_width(self, text))
+	var tag := Rect2(rect.position + Vector2(-3, -1), Vector2(w + 3, 9))
+	draw_rect(tag.grow(1), MenuKit.INK)
+	draw_rect(tag, MenuKit.FILL_DARK)
+	MenuKit.draw_text(self, text, tag.position + Vector2(2, -2), MenuKit.TEXT_GOLD)
 
 
 func _draw_info() -> void:

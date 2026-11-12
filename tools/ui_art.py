@@ -480,18 +480,19 @@ def rivet(px, x, y):
 
 
 def panel():
-    """A 24x24 nine-slice frame: 8px corners, rope edge, brass rivets."""
+    """A 24x24 nine-slice frame: 8px corners, rope edge, brass rivets.
+
+    The edges stretch, so their middles are one even line: a twisted rope
+    stretched out smears into long uneven dashes."""
     s = 24
     px = grid(s, s, DEEP)
-    # Slight vertical sheen in the fill: lighter at the top.
-    for y in range(s):
-        for x in range(s):
-            if y < 9:
-                px[y][x] = DEEP_LIGHT if (x + y) % 7 == 0 and y < 5 else DEEP
     for i in range(s):
         px[0][i] = px[s - 1][i] = INK
         px[i][0] = px[i][s - 1] = INK
     rope_border(px, 1, 1, s - 2, s - 2)
+    for i in range(7, s - 9):
+        px[2][1 + i] = px[s - 3][1 + i] = ROPE[1]
+        px[1 + i][2] = px[1 + i][s - 3] = ROPE[1]
     for x, y in ((1, 1), (s - 5, 1), (1, s - 5), (s - 5, s - 5)):
         rivet(px, x, y)
     # Corners rounded off.

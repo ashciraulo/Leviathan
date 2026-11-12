@@ -10,8 +10,8 @@ const NAME_W := 100.0
 ## Where each column of numbers starts, and how wide it is (errands asked,
 ## done, shards, stones, glass, chests). Asked only ever holds a number;
 ## chests is widest, for "100/125".
-const COL_X := [116.0, 150.0, 188.0, 232.0, 276.0, 316.0]
-const COL_W := [34.0, 38.0, 44.0, 44.0, 40.0, 50.0]
+const COL_X := [116.0, 150.0, 186.0, 230.0, 278.0, 318.0]
+const COL_W := [34.0, 36.0, 44.0, 48.0, 40.0, 48.0]
 const HEAD_Y := 26.0
 const SUBHEAD_Y := 38.0
 const ROW_Y := 54.0
