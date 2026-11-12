@@ -127,6 +127,9 @@ func _ready() -> void:
 		if GameState.jars[i] == Items.JAR_SPRITE:
 			GameState.jars[i] = Items.JAR_EMPTY
 	GameState.bubbles = 1
+	# Sinking in a knit, so the screen shows the jumper Wren wears.
+	GameState.set_flag(Jumpers.flag("ember"))
+	GameState.jumper = "ember"
 	game.player._invuln = 0.0
 	game.player.take_damage(4, game.player.global_position + Vector2(10, 0))
 	await _wait(3.0)

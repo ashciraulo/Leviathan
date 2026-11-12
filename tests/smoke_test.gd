@@ -6427,6 +6427,10 @@ func _test_jumpers() -> void:
 	var saved := GameState.to_dict()
 	GameState.from_dict(saved)
 	_check(GameState.jumper == "kelp", "the jumper is saved")
+	var over := GameOverScreen.new()
+	add_child(over)
+	_check(int((over._wren.material as ShaderMaterial).get_shader_parameter("swap_count")) == 5, "Wren sinks in the knit they wear")
+	over.free()
 	saved["jumper"] = "storm"
 	GameState.from_dict(saved)
 	_check(GameState.jumper == "", "a save can't wear a jumper it never bought")
