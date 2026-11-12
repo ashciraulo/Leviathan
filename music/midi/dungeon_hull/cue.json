@@ -12,8 +12,8 @@
  "parts": [
   {
    "name": "cello",
-   "notes": 50,
-   "low": 48,
+   "notes": 56,
+   "low": 43,
    "high": 69
   },
   {
@@ -24,9 +24,9 @@
   },
   {
    "name": "strings_low",
-   "notes": 264,
+   "notes": 228,
    "low": 41,
-   "high": 52
+   "high": 57
   },
   {
    "name": "harp",
@@ -36,13 +36,13 @@
   },
   {
    "name": "perc_woodblock",
-   "notes": 64,
-   "low": 76,
-   "high": 76
+   "notes": 68,
+   "low": 50,
+   "high": 53
   },
   {
    "name": "drum_deep",
-   "notes": 68,
+   "notes": 58,
    "low": 36,
    "high": 36
   },

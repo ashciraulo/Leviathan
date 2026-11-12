@@ -20,7 +20,7 @@
   },
   "bassclarinet": {
    "insert": 4,
-   "target": -29.0,
+   "target": -26.5,
    "eq": [
     {
      "shape": "lowcut",
@@ -84,7 +84,7 @@
   },
   "drum_deep": {
    "insert": 3,
-   "target": -30.0,
+   "target": -35.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -92,8 +92,14 @@
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 70,
+     "gain": -5,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
-     "freq": 4000,
+     "freq": 3000,
      "db_oct": 12
     }
    ]
@@ -104,12 +110,12 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 300,
+     "freq": 200,
      "db_oct": 12
     },
     {
      "shape": "highcut",
-     "freq": 5000,
+     "freq": 1500,
      "db_oct": 12
     }
    ]
@@ -122,5 +128,5 @@
    "db_oct": 12
   }
  ],
- "notes": "The Rotting Hull. Built on hull_template (title_template2 with Soft Cello on 'flute' (insert 1), Emulator II Clarinet on 'choir_pad' (insert 4, PITCH -17 as in the shop), a second 12 Low Strings on 'bell_tower' (insert 5) for the bowed bass, Rom2A 30-BLOCK on 'bell_marrow' (insert 7) for the hull's creaks, the frame-drum sampler moved to insert 3 (sub_breath) for the deep drum (key 36 plays the sample at 50). Both 12 Low Strings parts +12: the preset sounds an octave low."
+ "notes": "The Rotting Hull. Built on hull_template (title_template2 with Soft Cello on 'flute' (insert 1), Emulator II Clarinet on 'choir_pad' (insert 4, PITCH -17 as in the shop), a second 12 Low Strings on 'bell_tower' (insert 5) for the bowed bass, Rom2A 30-BLOCK on 'bell_marrow' (insert 7) for the hull's creaks, the frame-drum sampler moved to insert 3 (sub_breath) for the deep drum (key 36 plays the sample at 50). Both 12 Low Strings parts +12: the preset sounds an octave low. Review v5 (FAIL): drum on D2 (key 36 plays 53) at -35 with a 70 Hz cut and empty downbeats; strings sway by voices (the preset ignores velocity); B cello holds one bar at a time under the clarinet (-26.5); the block plays two octaves down on irregular eighths behind a 1.5 kHz cut; clarinet PITCH -7 (D3-F4 read -10.6 c at -17)."
 }

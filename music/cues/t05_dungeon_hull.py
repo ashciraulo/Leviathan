@@ -46,9 +46,9 @@ cello.line(song.bar(4), seq("F3:4 E3:2 | D3:3 G3:3 | A3:5 r:1 | E3:6".replace("|
 cello.line(song.bar(8), slow1 + seq("G3:3 E3:3", E), legato=0.96)
 cello.line(song.bar(12), seq("F3:4 D3:2 | A3:3 F3:3 | G3:3 Bb3:3 | C#4:6".replace("|", ""), E), vel=78, legato=0.96)
 # B: the cello holds long notes under the clarinet's tune.
-for b in range(16, 28, 2):
-    tones = voicing(CHORDS[b], 48, 60)
-    cello.note(song.bar(b), song.bar_q * 2 * 0.97, tones[0], 62)
+# One bar at a time and under the clarinet (review v5: a held D3 buried the tune and rubbed the chords).
+for b, p in zip(range(16, 28), seq("A2:1 G2:1 A2:1 A2:1 Bb2:1 A2:1 B2:1 B2:1 A2:1 A2:1 Bb2:1 C#3:1")):
+    cello.note(song.bar(b), song.bar_q * 0.97, p[0], 62)
 clarinet.line(song.bar(16), seq("""
 A3:3 C4:3 | G3:4 E3:2 | F3:2 A3:1 D4:3 | C4:6 |
 D4:3 F4:2 D4:1 | C4:4 A3:2 | B3:3 D4:3 | G3:6 |
@@ -64,14 +64,17 @@ for b, sym in enumerate(CHORDS):
     if section(b) == "BRIDGE" and b < 44:
         continue
     tones = voicing(sym, 41, 57)[:3]
-    if section(b) == "BRIDGE":  # the strings creep back in under the last four bars, so the loop doesn't jump at A
-        v = 36 + 4 * (b - 44)
-        strings.chord(song.bar(b), 3 * E * 0.98, tones, v)
-        strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones, v + 2)
+    # 12 Low Strings ignores velocity (review v5), so the sway is built from voices: the bar leans in
+    # with the full chord and eases out to its lower two notes; A' adds the octave on top.
+    if section(b) == "BRIDGE":  # the strings creep back in under the last four bars, one voice at a time
+        n = b - 43
+        strings.chord(song.bar(b), 3 * E * 0.98, tones[:min(n, 3)], 40)
+        strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones[:min(n, 2)], 34)
         continue
     full = section(b) == "A2"
-    strings.chord(song.bar(b), 3 * E * 0.98, tones, 54 if full else 46)
-    strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones, 40 if full else 34)
+    lean_in = tones + ([tones[0] + 12] if full else [])
+    strings.chord(song.bar(b), 3 * E * 0.98, lean_in, 54 if full else 46)
+    strings.chord(song.bar(b) + 3 * E, 3 * E * 0.98, tones[:2], 40 if full else 34)
 
 # Harp: a single high drip now and then (water through the planks).
 for b, sym in enumerate(CHORDS):
@@ -80,15 +83,18 @@ for b, sym in enumerate(CHORDS):
         harp.note(song.bar(b) + 5 * E, 1.5, top[(b // 3) % len(top)], 44)
 
 # Creaks: slow off-beat knocks; denser in the bridge.
+# Two octaves down and on irregular eighths (review v5: a fixed E6 tok every bar read as a click).
+import random  # noqa: E402
+rng = random.Random(55)
 for b in range(song.bars):
-    hits = [(2 * E, 46)] if b % 2 else [(5 * E, 40)]
-    if section(b) == "BRIDGE":
-        hits = [(E, 52), (2 * E, 40), (4 * E, 48)]
-    for s, v in hits:
-        creak.note(song.bar(b) + s, E * 0.5, 76, v)
+    count = 3 if section(b) == "BRIDGE" else rng.choice((0, 1, 1, 2))
+    for s in sorted(rng.sample(range(1, 6), count)):
+        creak.note(song.bar(b) + s * E, E * 0.5, rng.choice((50, 52, 53)), rng.choice((40, 46, 52)))
 
 # Deep drum on every downbeat, a softer second hit in A' and the bridge.
 for b in range(song.bars):
+    if section(b) == "B" and b % 2 or section(b) == "A" and b % 4 == 3:
+        continue  # some downbeats left empty (review v5: a boom on all 48 read as a thump)
     drum.note(song.bar(b), E, 36, 84)
     if section(b) in ("A2", "BRIDGE"):
         drum.note(song.bar(b) + 3 * E, E, 36, 58)

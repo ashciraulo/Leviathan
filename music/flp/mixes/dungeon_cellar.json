@@ -1,0 +1,84 @@
+{
+ "cue": "dungeon_cellar",
+ "lufs": -18.0,
+ "parts": {
+  "strings_pizz": {
+   "insert": 5,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bassoon": {
+   "insert": 1,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 70,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3500,
+     "db_oct": 24
+    }
+   ]
+  },
+  "drum_tom": {
+   "insert": 3,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 120,
+     "gain": -3,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "harp": {
+   "insert": 2,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "notes": "Cellar Steps. Built on cellar_template2 (hull_template with Emulator II Bassoon on insert 1 and Analog Lab C-8 Pizzicato (OB-Xa) on insert 5; v1 had Lush Pizzicato, whose granular layers read 13-35 c off on six keys); tom = the frame-drum sampler on insert 3, key 45 played at 52; harp = Analog Harp)."
+}

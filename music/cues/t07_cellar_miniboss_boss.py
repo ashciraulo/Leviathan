@@ -57,13 +57,18 @@ for b, sym in enumerate(CH):
     if b in (29, 30):  # A'' stops short: two bars of silence but a tom, then creeps back
         continue
     if b == 31:
-        pizz.line(t + 2, [(root, 0.5), (tones[1], 0.5), (root, 1)], vel=54, legato=0.4)
+        pizz.line(t + 2, [(root, 0.5), (tones[1], 0.5), (root, 1)], vel=64, legato=0.96)
+        reed.note(t + 3, 0.9, 52, 58)  # E3 pickup back into bar 1, so the loop creeps back instead of slamming in
         continue
     # phrase 7's rhythm, short short long long, on root-fifth-chord
-    for s, p, v in ((0, root, 74), (0.5, tones[-1], 56), (1, tones[1], 64), (2, root + 12, 66)):
-        pizz.note(t + s, 0.3, p, v)
-    if b % 2 or 16 <= b < 28:
-        pizz.note(t + 3, 0.3, tones[0], 58)
+    # C-8 Pizzicato has no release: it cuts dead at the note-off (gate on v2: 57 of 139 notes at
+    # 0.3 beats). So each pluck rings just past the next one, whose attack hides the note-off.
+    beat3 = b % 2 or 16 <= b < 28
+    for s, ln, p, v in ((0, 0.55, root, 74), (0.5, 0.55, tones[-1], 56), (1, 1.05, tones[1], 64),
+                        (2, 1.05 if beat3 else 2.0, root + 12, 66)):
+        pizz.note(t + s, ln, p, v)
+    if beat3:
+        pizz.note(t + 3, 1.05, tones[0], 58)
 reed.line(song.bar(0), bars("A3:1 C4:1 E4:2 | D4:1 C4:1 A3:2 | F4:2 E4:1 D4:1 | E4:3 r:1 | "
                             "C4:1 D4:1 E4:1 F4:1 | G#3:3 r:1 | A3:1 B3:1 C4:1 E4:1 | B3:4"), legato=0.85)
 reed.line(song.bar(8), bars("A3:1 C4:1 E4:2 | A4:2 G4:1 E4:1 | F4:2 A4:1 F4:1 | E4:3 r:1 | "
@@ -74,6 +79,8 @@ reed.line(song.bar(28), bars("A3:1 C4:1 E4:2 | r:4 | r:4 | r:4"), vel=62, legato
 for b in range(song.bars):
     if b in (29, 30):
         tom.note(song.bar(b) + 2, 0.3, 45, 40)
+    elif b == 31:
+        tom.note(song.bar(b) + 3.5, 0.3, 45, 50)
     elif b < 29 and b % 2:
         tom.note(song.bar(b) + 3.5, 0.3, 45, 52)
 for b, sym in enumerate(CH):
