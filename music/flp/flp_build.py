@@ -74,7 +74,7 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
     "play": 46 sends the neighbouring key to the clone, whose PITCH knob moves
     it to the written note.
     A preset with a slow attack: "advance_s": 0.05 plays the part that much early
-    (loops only: a note before 0 wraps to the loop end)."""
+    (a note before 0 wraps to the loop end; in a cue with an intro it starts at 0)."""
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
     flp = flp_raw.Flp.load(template)
     names = channel_names(template)
@@ -102,9 +102,10 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
             # beat (miniboss review v4). A note pushed before 0 wraps to the loop end; finalize folds it back.
             adv = round(fix["advance_s"] * meta["qbpm"] / 60 * flp.ppq)
             loop = round(meta["end_q"] * flp.ppq)
-            if any(st < adv for st, *_ in part_notes) and not (meta["loop"] and not meta["intro_q"]):
-                raise SystemExit(f"{part_name}: advance_s pushes a note before 0 and the cue does not loop from 0")
-            part_notes = [(st - adv if st >= adv else st - adv + loop, ln, k, v) for st, ln, k, v in part_notes]
+            wraps = meta["loop"] and not meta["intro_q"]
+            # A cue with an intro starts once, so a note in its first ticks just starts at 0 (a little late).
+            part_notes = [(st - adv if st >= adv else (st - adv + loop if wraps else 0), max(1, ln - (0 if st >= adv or wraps
+                           else adv - st)), k, v) for st, ln, k, v in part_notes]
         for start, length, key, vel in part_notes:
             # FL velocity runs 0-128 with 100 as default; MIDI 127 maps to 128.
             v = vel * 128 / 127

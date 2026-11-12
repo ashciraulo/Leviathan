@@ -59,19 +59,33 @@ assert len(CH) == song.bars == 48
 sec = sections([("INTRO", 0), ("A", 2), ("B", 18), ("A2", 26), ("BRK", 42)])
 for b, sym in enumerate(CH):
     t, s = song.bar(b), sec(b)
-    root = low_root(sym, 37)
-    if s != "BRK":
+    # Pop Staccato's keys below F#2 are stretched samples that read an octave up or 13-19 c flat (gate v3/v4),
+    # so the ostinato's floor is G#2 and the C# figure sits on C#3.
+    root = low_root(sym, 44)
+    # The breakdown thins to drums and reed for four bars, then the march comes back by voices (velocity barely
+    # moves Pop Staccato): bar 46 plays only the ostinato's downbeats, bar 47 the whole figure, with the anvil
+    # and a drum pickup into the loop (review v6 MINOR 3; v2's breakdown faded out: a 27 dB step at the seam).
+    if s != "BRK" or b >= 46:
         fig = [0, 0, 1, 0, 0, 0, 1, 3] if sym == "C#" else [0, 0, 7, 0, 0, 0, 7, 12]
         for k, iv in enumerate(fig):
-            ost.note(t + k * 0.5, 0.32, root + iv if sym != "C#" else 37 + iv, 82 if k % 4 == 0 else 64)
-    if s in ("A", "A2", "B"):
+            if b == 46 and k % 2:
+                continue
+            ost.note(t + k * 0.5, 0.32, root + iv, 82 if k % 4 == 0 else 64)
+    # The anvil sounds an octave above its key (Hammer And Anvil): key 73 rings C#, the tonic (review v6 MAJOR 2:
+    # key 84 rang C7, outside the mode), and 74 on the D bars.
+    anvil_key = 74 if sym == "D" else 73
+    if s in ("A", "A2", "B") or b >= 46:
         for st, p, v in ((0, 41, 86), (1.5, 41, 60), (2, 45, 72), (3, 41, 70), (3.5, 45, 54)):
-            drums.note(t + st, 0.25, p, v)
-        anvil.note(t + 2.5, 0.2, 84, 46 if s == "A" else 54)
+            drums.note(t + st, 0.25, p, v - (12 if b == 46 else 0))
+        anvil.note(t + 2.5, 0.2, anvil_key, 46 if s in ("A", "BRK") else 54)
+        if b == 47:
+            drums.note(t + 3.75, 0.2, 45, 64)
     elif s == "BRK":
-        drums.note(t, 0.4, 41, 70 - 6 * (b - 42))
-    if s in ("A2", "B") or b < 2:
-        pad.chord(t, 3.95, voicing(sym, 49, 64)[:3], 38)
+        drums.note(t, 0.4, 41, 70 + 4 * (b - 42))
+        drums.note(t + 2, 0.3, 41, 56 + 4 * (b - 42))
+    if s in ("A2", "B", "BRK") or b < 2:
+        # The root an octave down gives the march a floor now the ostinato starts at C#3 (review v6 MINOR 1).
+        pad.chord(t, 3.95, [low_root(sym, 37)] + voicing(sym, 49, 64)[:3], 38)
 # Phrase 2 on low brass, squared off: C# B G# F#, then its answer.
 for start in (6, 30):
     brass.line(song.bar(start), [(49, 2), (47, 2), (44, 2), (42, 2)], vel=84, legato=0.95)
@@ -125,6 +139,11 @@ for start in (48, 52, 56, 60):  # B': brass, and organ one bar behind (the canon
     tail = [(59, 2), (60, 4), (59, 2)] if start < 60 else [(59, 2), (60, 4)]  # the last one ends with the loop
     organ.line(song.bar(start + 1), [(p - 12, d) for p, d in P2] + tail, vel=58)
 brass.line(song.bar(40), bars("C5:4 | A4:4 | F4:2 A4:2 | C5:4 | D5:4 | F4:4 | A4:2 C5:2 | B4:4"), vel=70)
+# Trumpfal is a one-shot that dies ~0.85 s into a 1.8 s note (review v3, MAJOR 1), so a bassoon holds every
+# trumpet note an octave down, quieter, the way the boss's choir doubles its horns.
+double = song.part("reed_double", program=70, vel=70)
+for t_, ln, p, _v in brass.notes:
+    double.note(t_, ln, p - 12, 70)
 for i, p in enumerate(song.parts):
     p.humanize(seed=1300 + i, time_q=0.006)
 song.save()

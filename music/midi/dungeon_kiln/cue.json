@@ -39,6 +39,12 @@
    "notes": 147,
    "low": 52,
    "high": 64
+  },
+  {
+   "name": "reed_double",
+   "notes": 52,
+   "low": 53,
+   "high": 64
   }
  ]
 }

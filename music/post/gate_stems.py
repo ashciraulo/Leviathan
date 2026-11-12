@@ -122,7 +122,8 @@ def gate(cue: str, stem_dir: str, mapping: dict[str, str], octaves: dict[str, in
         adv = json.load(open(fix_path)).get(name, {}).get("advance_s", 0) if os.path.exists(fix_path) else 0
         if adv:
             loop_s = meta["end_q"] * 60 / meta["qbpm"]
-            notes = sorted((s - adv if s >= adv else s - adv + loop_s, *rest) for s, *rest in notes)
+            wraps = meta.get("loop") and not meta.get("intro_q")  # with an intro, flp_build starts it at 0
+            notes = sorted((s - adv if s >= adv else (s - adv + loop_s if wraps else 0.0), *rest) for s, *rest in notes)
         first = int(notes[0][0] * rate)
         pre = mono[: max(0, first - int(0.02 * rate))]
         if pre.size and 20 * np.log10(np.abs(pre).max() + 1e-9) > -60:

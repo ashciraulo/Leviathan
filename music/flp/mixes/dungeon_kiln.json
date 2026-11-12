@@ -1,0 +1,110 @@
+{
+ "cue": "dungeon_kiln",
+ "lufs": -18.0,
+ "parts": {
+  "perc_anvil": {
+   "insert": 4,
+   "target": -35.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 1320,
+     "gain": -4.0,
+     "q": 2.0
+    }
+   ]
+  },
+  "drum_taiko": {
+   "insert": 3,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": 6.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 10000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bass_synth": {
+   "insert": 7,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 30,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "horns_brass": {
+   "insert": 6,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "organ_dark": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "reed_double": {
+   "insert": 1,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Bell Kiln (dungeon_kiln). templates\\kiln_template1.flp: Hammer And Anvil on choir (insert 4), the frame-drum sampler on drum_taiko (insert 3, key 36 plays 47), Supermini Bass on bell_marrow (insert 7), Trumpfal on horns_brass (insert 6), Saint Eustache (synth church organ) on harp (insert 2). v4 (review v3): Emulator II Bassoon on timpani (insert 1) doubles every trumpet note an octave down (reed_double), since Trumpfal dies ~0.85 s into its long notes; anvil -4 dB bell at 1320 Hz (it rings E6); frame drum +6 dB at 2.8 kHz for attack."
+}
