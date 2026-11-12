@@ -118,7 +118,7 @@ const LIESL_SUPPER_AT := Vector2(9 * 16 + 12, 4 * 16 + 12)
 const WREN_SUPPER_AT := Vector2(7 * 16 + 10, 3 * 16 + 12)
 const IDE_SUPPER_AT := Vector2(8 * 16 + 10, 3 * 16 + 12)
 ## Ide comes down the lane from the top.
-const IDE_SUPPER_ROUTE := [Vector2(4 * 16 + 8, -8), Vector2(4 * 16 + 8, 2 * 16 + 8), IDE_SUPPER_AT]
+const IDE_SUPPER_ROUTE := [Vector2(5 * 16 + 8, -8), Vector2(5 * 16 + 8, 20), Vector2(7 * 16 + 8, 28), IDE_SUPPER_AT]
 const SUPPER_GLINTS := 150
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
@@ -1174,8 +1174,8 @@ func _gran_table() -> GranTable:
 
 
 ## Supper at Gran's table: Liesl lays out Gran's things, Ide comes down the
-## lane with bread, Wren lights the candle, and (if it's hung) the old door
-## bell rings once out by the drowned cottage.
+## lane with bread, Wren lights the candle, and the old door bell (hung
+## before Liesl ever asked) rings once out by the drowned cottage.
 func grans_supper() -> void:
 	var room: Node2D = game.current_room
 	# The flag is set just before Liesl's words open: let her finish them.
@@ -1193,7 +1193,7 @@ func grans_supper() -> void:
 	await scene.wait(0.3)
 	var lay := liesl.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	lay.tween_property(liesl, "position", LIESL_SUPPER_AT, liesl.position.distance_to(LIESL_SUPPER_AT) / 40.0)
-	await scene.walk_around_to(room.global_position + WREN_SUPPER_AT)
+	await scene.walk_route(room.global_position + WREN_SUPPER_AT)
 	if lay.is_running():
 		await lay.finished
 	scene.face(Vector2.DOWN)
@@ -1225,24 +1225,26 @@ func grans_supper() -> void:
 			bell = child
 	if bell:
 		bell.ring()
-		await scene.narrate(["NARRATE_GRAN_BELL"])
-		await scene.speak("liesl", ["LIESL_SUPPER_BELL"])
-	else:
-		await scene.speak("liesl", ["LIESL_SUPPER_NO_BELL"])
+	await scene.narrate(["NARRATE_GRAN_BELL"])
+	await scene.speak("liesl", ["LIESL_SUPPER_BELL"])
 	await scene.speak("liesl", ["LIESL_SUPPER_3", "LIESL_SUPPER_4"])
 	GameState.give_item("glint", SUPPER_GLINTS, false)
 	Audio.play_jingle("jingle_item")
 	await scene.narrate(["NARRATE_GOT_SUPPER_PURSE"])
 	await scene.speak("ide", ["IDE_SUPPER_3"])
 	GameState.set_flag(SUPPER_DONE_FLAG)
-	# Back up the lane to her boat.
+	# Back up the lane to her boat, still in the scene (she isn't someone
+	# to talk to here).
 	if is_instance_valid(ide):
 		var go := ide.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		var at := ide.position
-		for point: Vector2 in [IDE_SUPPER_ROUTE[1], IDE_SUPPER_ROUTE[0]]:
+		for i in range(IDE_SUPPER_ROUTE.size() - 2, -1, -1):
+			var point: Vector2 = IDE_SUPPER_ROUTE[i]
 			go.tween_property(ide, "position", point, at.distance_to(point) / 40.0)
 			at = point
-		go.tween_callback(ide.queue_free)
+		await go.finished
+		if is_instance_valid(ide):
+			ide.queue_free()
 	scene.finish()
 
 

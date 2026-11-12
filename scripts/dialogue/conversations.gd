@@ -228,11 +228,11 @@ const TALKS := {
 	# Belfry's bell rings wrong under the channel. Asking sets ide_ferry,
 	# and StoryDirector rows Wren over.
 	"ide": [
-		# Gran's blue cup, for Liesl's table: Ide's bailed her boat with it
-		# for years. (Handing it over is all; she rows Wren next time.)
-		{"if": ["liesl_table_ask"], "unless": ["table_cup"], "set": ["table_cup"], "lines": ["IDE_CUP_1", "IDE_CUP_2", "IDE_CUP_3", ["", "NARRATE_GOT_GRAN_CUP"]]},
 		{"unless": ["tidebell_belfry"], "lines": ["IDE_1", "IDE_2"]},
 		{"unless": ["met_ide_ferry"], "set": ["met_ide_ferry", "ide_ferry"], "lines": ["IDE_FERRY_1", "IDE_FERRY_2"]},
+		# Gran's blue cup, for Liesl's table: Ide's bailed her boat with it
+		# for years. (Handing it over is all; she rows Wren next time.)
+		{"if": ["liesl_table_ask", "met_ide_ferry"], "unless": ["table_cup"], "set": ["table_cup"], "lines": ["IDE_CUP_1", "IDE_CUP_2", "IDE_CUP_3", ["", "NARRATE_GOT_GRAN_CUP"]]},
 		# The jam trade ends here: Ferrin's chart of the far shores.
 		{"if": ["trade_chart"], "unless": ["trade_done"], "set": ["trade_done", "ide_ferry"], "give": {"glint": 200}, "lines": [["", "NARRATE_HAND_CHART"], "IDE_TRADE_1", "IDE_TRADE_2", "IDE_TRADE_3", ["", "NARRATE_GOT_TRADE_PURSE"]]},
 		# Her boat's lost nameboard (QuestFind). Every branch still rows Wren over.
@@ -253,8 +253,9 @@ const TALKS := {
 		{"if": ["read_grotto_marks", "liesl_asked"], "unless": ["liesl_heard_marks"], "set": ["liesl_heard_marks"], "lines": ["LIESL_MARKS_1", "LIESL_MARKS_1B", "LIESL_MARKS_2", "LIESL_MARKS_3"]},
 		# Gran's table: her cup (Ide has it), candlestick and salt fish
 		# (QuestFind), then supper in the lane (StoryDirector.grans_supper).
+		# Only once her door bell's home, so the bell's hand-in is never hidden.
 		{"if": ["liesl_table_ask", "table_cup", "found_gran_candle", "found_gran_salt"], "unless": ["gran_supper"], "set": ["gran_supper"], "lines": [["", "NARRATE_HAND_GRAN_THINGS"], "LIESL_TABLE_DONE_1", "LIESL_TABLE_DONE_2"]},
-		{"if": ["liesl_heard_marks"], "unless": ["liesl_table_ask"], "set": ["liesl_table_ask"], "lines": ["LIESL_TABLE_1", "LIESL_TABLE_1B", "LIESL_TABLE_2", "LIESL_TABLE_2B", "LIESL_TABLE_3", "LIESL_TABLE_3B"]},
+		{"if": ["liesl_heard_marks", "liesl_bell_hung"], "unless": ["liesl_table_ask"], "set": ["liesl_table_ask"], "lines": ["LIESL_TABLE_1", "LIESL_TABLE_1B", "LIESL_TABLE_2", "LIESL_TABLE_2B", "LIESL_TABLE_3", "LIESL_TABLE_3B"]},
 		{"if": ["liesl_table_ask"], "unless": ["gran_supper"], "lines": ["LIESL_TABLE_WAITING"]},
 		{"if": ["liesl_bell_hung", "seen_ending"], "lines": ["LIESL_END"]},
 		{"if": ["gran_supper_done"], "lines": ["LIESL_TABLE_AFTER"]},
