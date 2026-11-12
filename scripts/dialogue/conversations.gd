@@ -244,7 +244,7 @@ const TALKS := {
 		{"if": ["seen_ending"], "set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_END"]},
 		{"set": ["ide_ferry", "ide_rowed_again"], "lines": ["IDE_FERRY_AGAIN"]},
 	],
-	# Liesl in Drowned Lane, and her great-grandmother's lost door bell
+	# Liesl in Drowned Lane, and her long-ago gran's lost door bell
 	# (a Doorbell out on Belfry Square's flats, there at low tide).
 	"liesl": [
 		{"if": ["sorrel_letters", "liesl_asked"], "unless": ["letter_liesl"], "set": ["letter_liesl"], "lines": [["", "NARRATE_HAND_LETTER"], "LIESL_LETTER_1", "LIESL_LETTER_2"]},
@@ -416,6 +416,10 @@ const TALKS := {
 		# The Bone Ring, where the bone-readers' young proved their nerve.
 		{"if": ["gate_8_2"], "unless": ["dace_saw_ring"], "set": ["dace_saw_ring"], "lines": ["DACE_RING_DONE_1", "DACE_RING_DONE_2"]},
 		{"unless": ["dace_told_ring", "dace_saw_ring"], "set": ["dace_told_ring"], "lines": ["DACE_RING_1", "DACE_RING_1B"]},
+		# The bone-readers' song, struck on Rib Hollow's ribs (RibChime).
+		{"if": ["dace_song_sung"], "unless": ["dace_song_paid"], "set": ["dace_song_paid"], "give": {"glint": 200}, "lines": ["DACE_SONG_DONE_1", "DACE_SONG_DONE_2", ["", "NARRATE_GOT_RIB_PURSE"]]},
+		{"unless": ["dace_song_ask"], "set": ["dace_song_ask"], "lines": ["DACE_SONG_1", "DACE_SONG_1B", "DACE_SONG_2", "DACE_SONG_2B", "DACE_SONG_3"]},
+		{"if": ["dace_song_ask"], "unless": ["dace_song_sung"], "lines": ["DACE_SONG_WAITING"]},
 		{"lines": ["DACE_AGAIN"]},
 	],
 	# Coralie on Saltmarrow Shore, who strings sea-glass into a wind chime

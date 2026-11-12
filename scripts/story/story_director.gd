@@ -102,7 +102,7 @@ const WREN_SOUTH := Vector2(21 * 16 + 8, 9 * 16 + 12)
 const FERRY_BELL_AT := Vector2(17 * 16 + 4, 9 * 16 + 14)
 const FERRY_ROW_TIME := 3.0
 ## Liesl at the head of Drowned Lane, looking out over the flats to her
-## great-grandmother's cottage; and that cottage's door bell, lost on Belfry
+## long-ago gran's cottage; and that cottage's door bell, lost on Belfry
 ## Square's flats until Wren finds it, then hung back by the door.
 const DROWNED_LANE := Vector2i(0, 3)
 const BELFRY_SQUARE := Vector2i(1, 3)
@@ -130,6 +130,11 @@ const REED_DONE_FLAG := "reed_song_done"
 const MURMUR_CHAPEL_AT := Vector2(12 * 16, 6 * 16 + 10)
 const WREN_CHAPEL_AT := Vector2(12 * 16, 8 * 16 + 10)
 const REED_GLINTS := 150
+## Dace's bone-readers' song: five ribs along Rib Hollow's north wall
+## ring while it's wanted (RibChime). Struck in order, the hollow sings it
+## back (the_hollow_sings).
+const RIB_HOLLOW := Vector2i(8, 0)
+const RIB_TILES := [Vector2i(5, 2), Vector2i(8, 2), Vector2i(11, 2), Vector2i(14, 2), Vector2i(17, 2)]
 ## Wick at Fenmouth, and the fen's five dark lanterns (FenLantern.SPOTS).
 const FENMOUTH := Vector2i(4, 1)
 const WICK_AT := Vector2(17 * 16 + 8, 5 * 16 + 10)
@@ -454,6 +459,7 @@ func _on_room_entered(coord: Vector2i) -> void:
 	_put_survey_stake(coord)
 	_put_shed_scale(coord)
 	_put_find(coord)
+	_put_ribs(coord)
 	_put_seal_pup(coord)
 	_put_signal_stone(coord)
 	if CALF_REST.has(coord):
@@ -561,6 +567,8 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		hessas_lighting_day()
 	elif flag == ROW_ASKED_FLAG and GameState.room_coord == SALTMARROW:
 		rowing_to_the_maw()
+	elif flag == RibChime.SUNG_FLAG and GameState.room_coord == RIB_HOLLOW and GameState.has_flag(RibChime.SUNG_FLAG):
+		the_hollow_sings()
 	elif flag == SUPPER_FLAG and GameState.room_coord == DROWNED_LANE and GameState.has_flag(SUPPER_FLAG) and not GameState.has_flag(SUPPER_DONE_FLAG):
 		grans_supper()
 	elif flag == HollowRegent.DEFEATED_FLAG and GameState.room_coord == TOMB_BOSS and not GameState.has_flag(MURAL_FLAG):
@@ -1220,7 +1228,7 @@ func grans_supper() -> void:
 	scene.face(Vector2.DOWN)
 	table.set_out = true
 	table.queue_redraw()
-	await scene.narrate(["NARRATE_GRAN_TABLE"])
+	await scene.wait(0.8)
 	await scene.speak("liesl", ["LIESL_SUPPER_1"])
 	var ide := Npc.new("ide")
 	ide.position = IDE_SUPPER_ROUTE[0]
@@ -1230,7 +1238,6 @@ func grans_supper() -> void:
 	for point: Vector2 in IDE_SUPPER_ROUTE.slice(1):
 		come.tween_property(ide, "position", point, from.distance_to(point) / 40.0)
 		from = point
-	await scene.narrate(["NARRATE_IDE_COMES"])
 	if come.is_running():
 		await come.finished
 	table.bread = true
@@ -1239,14 +1246,14 @@ func grans_supper() -> void:
 	await scene.speak("liesl", ["LIESL_SUPPER_2"])
 	await scene.lamp(room.global_position + GRAN_TABLE_AT + GranTable.FLAME_AT, Cutscene.LAMP_HERE)
 	table.candle_lit = true
-	await scene.narrate(["NARRATE_GRAN_CANDLE"])
+	await scene.wait(0.8)
 	var bell: Doorbell = null
 	for child in room.get_children():
 		if child is Doorbell and (child as Doorbell).hung:
 			bell = child
 	if bell:
 		bell.ring()
-	await scene.narrate(["NARRATE_GRAN_BELL"])
+	await scene.wait(1.0)
 	await scene.speak("liesl", ["LIESL_SUPPER_BELL"])
 	await scene.speak("liesl", ["LIESL_SUPPER_3", "LIESL_SUPPER_4"])
 	GameState.give_item("glint", SUPPER_GLINTS, false)
@@ -1287,7 +1294,7 @@ func reeds_song() -> void:
 	await scene.wait(0.4)
 	await scene.walk_route(room.global_position + WREN_CHAPEL_AT)
 	scene.face(Vector2.UP)
-	await scene.narrate(["NARRATE_REED_CHAPEL"])
+	await scene.wait(0.6)
 	await scene.speak("murmur", ["MURMUR_CHAPEL_1", "MURMUR_CHAPEL_2"])
 	await scene.narrate(["NARRATE_REED_SINGS"])
 	await scene.lamp(murmur.global_position + Vector2(0, -14), Cutscene.LAMP_HERE)
@@ -1334,7 +1341,7 @@ func _put_ide() -> void:
 		room.add_child(bell)
 
 
-## Liesl and her great-grandmother's door bell: Liesl sweeping at the head
+## Liesl and her long-ago gran's door bell: Liesl sweeping at the head
 ## of Drowned Lane, and the bell out on Belfry Square's flats while she
 ## waits for it, or back by the drowned cottage's door once she has it.
 func _put_liesl(coord: Vector2i) -> void:
@@ -1458,6 +1465,45 @@ func _put_shed_scale(coord: Vector2i) -> void:
 		piece.id = id
 		piece.position = Vector2(spot[1]) * 16.0 + Vector2(8, 14)
 		room.add_child(piece)
+
+
+## Rib Hollow's five singing ribs, while Dace's song is wanted.
+func _put_ribs(coord: Vector2i) -> void:
+	var room: Node = game.current_room
+	if room == null or coord != RIB_HOLLOW or not GameState.has_flag(RibChime.ASK_FLAG) or GameState.has_flag(RibChime.SUNG_FLAG):
+		return
+	if room.get_children().any(func(c: Node) -> bool: return c is RibChime):
+		return
+	for i in RIB_TILES.size():
+		var chime := RibChime.new()
+		chime.index = i
+		var tile: Vector2i = RIB_TILES[i]
+		# Just in front of the rib's foot, where Wren can reach it.
+		chime.position = Vector2(tile) * 16.0 + Vector2(8, 18)
+		room.add_child(chime)
+
+
+## The bone-readers' song struck right: the hollow rings it back, rib by
+## rib, and far under the dunes something old hums along.
+func the_hollow_sings() -> void:
+	var room: Node = game.current_room
+	await get_tree().process_frame
+	if Cutscene.active or not is_instance_valid(room) or room != game.current_room:
+		return
+	var scene := _scene()
+	var ribs: Array = room.get_children().filter(func(c: Node) -> bool: return c is RibChime)
+	ribs.sort_custom(func(a: RibChime, b: RibChime) -> bool: return a.index < b.index)
+	await scene.wait(0.6)
+	if ribs.size() == RIB_TILES.size():
+		for i: int in RibChime.SONG:
+			(ribs[i] as RibChime).ring()
+			await scene.wait(0.45)
+	await scene.wait(0.6)
+	for rib: RibChime in ribs:
+		rib.ring()
+		await scene.wait(0.2)
+	await scene.narrate(["NARRATE_RIB_SONG_2"])
+	scene.finish()
 
 
 ## A villager's lost thing, until Wren picks it up.
@@ -1666,7 +1712,7 @@ func the_boat_comes_home() -> void:
 	var scene := _scene()
 	await scene.wait(0.6)
 	await scene.lamp(game.current_room.global_position + BOAT_HOME_AT + BoatHome.LAMP_AT, Cutscene.LAMP_HERE)
-	await scene.narrate(["NARRATE_BOAT_HOME"])
+	await scene.wait(0.8)
 	if hessa:
 		await scene.walk_around_to(hessa.global_position + HOME_FROM_HESSA)
 		scene.face(Vector2.UP)

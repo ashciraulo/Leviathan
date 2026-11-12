@@ -79,6 +79,10 @@ MINIGAMES = {
     # fen rooms against the clock (about 30 s of pure movement); about five
     # rounds of 90 s, ringing the bell between, to get under his gran's 65.
     "Wick's lamplighter's round": 5 * 100.0,
+    # Dace's bone-readers' song (RibChime): the walk out to Rib Hollow from
+    # the Tomb (about 90 s), then working five notes out by ear and a few
+    # tries at the order (about 2 minutes).
+    "Dace's song on the ribs": 90.0 + 120.0,
     # Not a minigame, but timed the same way: Hessa's walk out to Lullaby
     # Point (HessaWalker), four rooms at her pace with a word in three of
     # them, a few waits while Wren goes back for her, and the way home.

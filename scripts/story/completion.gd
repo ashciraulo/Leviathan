@@ -58,6 +58,7 @@ const QUESTS := [
 	{"id": "grans_table", "region": "sunken_verge", "start": "liesl_table_ask", "done": "gran_supper_done"},
 	# Ossuary Dunes
 	{"id": "bone_ring", "region": "ossuary", "start": "dace_told_ring", "done": "dace_saw_ring"},
+	{"id": "rib_song", "region": "ossuary", "start": "dace_song_ask", "done": "dace_song_paid"},
 ]
 
 const KINDS := ["underway", "done", "shards", "stones", "glass", "chests"]

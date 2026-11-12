@@ -464,3 +464,75 @@ def small_skull():
     px = shade(canvas)
     x0, x1, y0, y1 = _crop(px)
     return [row[x0:x1] for row in px[y0:y1]], footprint(canvas, x0, y0, strip=4)
+
+
+MOSS = ["#C4DB7A", "#9FC46A", "#6F9A4E", "#3F6648", "#1F3A33"]
+FEN_LIGHT = ["#E8FFF8", "#6EF0E0"]
+CALF_SCALE = 0.24
+CALF_YAW = 25.0
+
+
+def calf_skull():
+    """The Old One's lost calf (the Calf's Rest, south of Gloamfen): the same
+    sperm-whale bones as its kin on the dunes, a fifth of their size, sunk to
+    the jaw in fen moss, moss grown over the crown, reeds at its sides and
+    three fen-lights resting on the bone. Returns the sprite and its foot
+    row (where it meets the fen)."""
+    body = Body(skull_height, CALF_YAW, (180.0, 200.0), (CX, 150.0))
+    canvas = render(body, 120, 120, (-60.0, 420.0), scale=CALF_SCALE)
+    px = shade(canvas)
+    x0, x1, y0, y1 = _crop(px)
+    pad_top, pad_side, pad_bottom = 5, 3, 3
+    w, h = x1 - x0 + pad_side * 2, y1 - y0 + pad_top + pad_bottom
+    out = [[(0, 0, 0, 0)] * w for _ in range(h)]
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            out[y - y0 + pad_top][x - x0 + pad_side] = px[y][x]
+    moss = [hx(c) for c in MOSS]
+    sand = {hx(c) for c in SAND}
+    # Sand drifts become fen moss.
+    for y in range(h):
+        for x in range(w):
+            if out[y][x] in sand:
+                out[y][x] = moss[1] if (x + y) % 3 else moss[2]
+    # Moss over the crown: lit top pixels in patches.
+    bone = {hx(c) for c in BONE} | {hx(c) for c in STAIN}
+    for y in range(h):
+        for x in range(w):
+            if out[y][x] in bone and y < pad_top + 9 and noise(x * 0.45, y * 0.6, 21) > 0.72:
+                out[y][x] = moss[0] if y < pad_top + 5 else moss[1]
+    # Sunk to the jaw: a ragged band of fen moss across the foot.
+    foot = h - pad_bottom
+    # Only under the bone (and a little past it), ragged at the ends.
+    cols = [x for x in range(w) if any(out[y][x][3] for y in range(foot - 6, foot))]
+    left, right = min(cols) - 2, max(cols) + 2
+    for x in range(max(0, left), min(w, right + 1)):
+        end = min(x - left, right - x)
+        top = foot - 1 - int(3.2 * noise(x * 0.35, 1, 5)) + (2 - min(end, 2))
+        for y in range(max(0, top), min(h, foot + 2)):
+            if out[y][x][3] or y >= foot - 2:
+                edge = y == top
+                out[y][x] = moss[0] if edge else moss[2] if (x * 3 + y) % 4 else moss[3]
+        if out[min(h - 1, foot + 1)][x][3]:
+            out[min(h - 1, foot + 1)][x] = moss[4]
+    # Reeds at either side.
+    o = hx(OUTLINE)
+    for x, tall in ((max(0, left), 9), (max(0, left) + 2, 12), (min(w - 1, right) - 3, 11), (min(w - 1, right), 8)):
+        for y in range(foot - tall, foot):
+            out[y][x] = moss[3] if y > foot - tall + 1 else moss[1]
+    # Three fen-lights resting on the bone.
+    lights = [hx(c) for c in FEN_LIGHT]
+    for fx, fy in ((w // 2 - 2, pad_top + 2), (pad_side + 6, h // 2), (w - pad_side - 9, foot - 7)):
+        out[fy][fx] = lights[0]
+        out[fy][fx + 1] = lights[1]
+        if out[fy - 1][fx][3] == 0:
+            out[fy - 1][fx] = lights[1]
+    # Centre the bone's foot on the sprite, so the prop's footprint (centred
+    # on its middle) sits under it.
+    cols = [x for x in range(w) if any(out[y][x][3] for y in range(foot - 3, foot))]
+    shift = int(round(w / 2.0 - (min(cols) + max(cols) + 1) / 2.0))
+    if shift > 0:
+        out = [[(0, 0, 0, 0)] * shift + row for row in out]
+    elif shift < 0:
+        out = [row + [(0, 0, 0, 0)] * -shift for row in out]
+    return out, foot

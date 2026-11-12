@@ -2,7 +2,7 @@ class_name CreditsVignettes
 extends RefCounted
 ## The epilogue's little scenes between the credits' names, once the game
 ## has been finished (story bible, Epilogue): Agna's forge lit, Wick's
-## lanterns all in place, Liesl at her great-grandmother's door, Tobin
+## lanterns all in place, Liesl at her long-ago gran's door, Tobin
 ## hauling rope with his dad, and Sister Lowe alone on a cliff over the sea.
 ## Pictures only, no words.
 
@@ -77,7 +77,7 @@ static func _lanterns(canvas: CanvasItem, at: Vector2, time: float) -> void:
 	_person(canvas, Art.VILLAGER_WICK, at + Vector2(6, 22), time, 0.5)
 
 
-## Liesl on her great-grandmother's step, the little bell hung again.
+## Liesl on her long-ago gran's step, the little bell hung again.
 static func _doorstep(canvas: CanvasItem, at: Vector2, time: float) -> void:
 	canvas.draw_rect(Rect2(at, SIZE), Color("#f2b48a"))
 	canvas.draw_rect(Rect2(at + Vector2(0, 30), Vector2(SIZE.x, 26)), Color("#86b8c8"))

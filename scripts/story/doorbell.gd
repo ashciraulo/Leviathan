@@ -1,6 +1,6 @@
 class_name Doorbell
 extends Node2D
-## Liesl's great-grandmother's little brass door bell (StoryDirector).
+## Liesl's long-ago gran's little brass door bell (StoryDirector).
 ## Lost: half buried in Belfry Square's flats, glinting, there to pick up
 ## only at low tide while Liesl is waiting for it. Hung: back on its
 ## bracket by the drowned cottage's door in Drowned Lane, where it rings
