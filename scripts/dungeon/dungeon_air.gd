@@ -22,10 +22,10 @@ const CONTRAST_FADE := 0.4
 ##   falls of sand from cracks in the roof
 const AIR := {
 	"hull": {"motes": 12, "mote": Color(1.0, 0.86, 0.6), "drips": 2, "drip": Color(0.6, 0.82, 0.86)},
-	"kiln": {"rise": 24, "rise_on": "lava", "rise_col": Color(1.0, 0.62, 0.22), "fall": 8, "fall_col": Color(0.55, 0.5, 0.5)},
-	"mire": {"motes": 18, "mote": Color(0.72, 0.95, 0.78)},
-	"gale": {"rain": 22, "rain_col": Color(0.82, 0.9, 1.0)},
-	"glacier": {"fall": 34, "fall_col": Color(1.0, 1.0, 1.0)},
+	"kiln": {"rise": 16, "rise_on": "lava", "rise_col": Color(1.0, 0.62, 0.22), "fall": 5, "fall_col": Color(0.55, 0.5, 0.5)},
+	"mire": {"motes": 12, "mote": Color(0.72, 0.95, 0.78)},
+	"gale": {"rain": 14, "rain_col": Color(0.82, 0.9, 1.0)},
+	"glacier": {"fall": 22, "fall_col": Color(1.0, 1.0, 1.0)},
 	"belfry": {"drips": 3, "drip": Color(0.62, 0.86, 0.82), "rise": 10, "rise_on": "water", "rise_col": Color(0.78, 0.95, 0.92)},
 	"tomb": {"trickles": 3, "trickle": Color(0.85, 0.74, 0.52)},
 	"maw": {"motes": 14, "mote": Color(1.0, 0.9, 0.86), "drips": 2, "drip": Color(0.95, 0.8, 0.82)},
