@@ -3143,7 +3143,7 @@ func _shop_shots() -> void:
 	GameState.set_flag("tidebell_hull")
 	GameState.give_item("glint", 45, false)
 	GameState.give_item("jar", 2, false)
-	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW_MARKET, GameState.NO_POSITION)
 	var village: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(village)
 	await _wait(0.5)
