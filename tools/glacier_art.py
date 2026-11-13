@@ -96,20 +96,32 @@ def floor_tile(seed):
 
 
 def wall_top(seed):
-    """The glacier from above: deep snow heaped on the ice, pale and
-    lumpy, with blue showing in the cracks between the drifts."""
+    """The glacier from above: old blue-grey snow heaped on the ice in soft, rounded
+    drifts, each lit on its upper side and shadowed underneath. No courses or grid: drifts
+    wrap round the tile's edges so the wall reads as one bank of snow,
+    a shade darker than the floor's fresh snow so the edge reads."""
     rnd = random.Random(4200 + seed)
-    px = blank(SNOW[3])
-    for y in range(T):
-        for x in range(T):
-            if (x + (5 if y >= 8 else 0)) % 8 == 0 or y in (0, 8):
-                px[y][x] = ICE[4]
-            elif y in (1, 9) or (x + (5 if y >= 8 else 0)) % 8 == 1:
-                px[y][x] = SNOW[4]
-            elif y in (3, 11):
-                px[y][x] = SNOW[2]
-    for _ in range(6):
-        px[rnd.randrange(T)][rnd.randrange(T)] = rnd.choice((SNOW[1], SNOW[2], SNOW[4]))
+    px = blank(SNOW[4])
+    drifts = [(rnd.uniform(0, T), rnd.uniform(0, T), rnd.uniform(4.0, 6.5), rnd.uniform(2.6, 3.6)) for _ in range(5)]
+    # Lowest drifts first so the nearer (lower) ones overlap the far ones.
+    drifts.sort(key=lambda d: d[1])
+    for cx, cy, rx, ry in drifts:
+        for y in range(T):
+            for x in range(T):
+                # Wrap so a drift cut by one edge carries on across the next.
+                dx = (x - cx + T / 2) % T - T / 2
+                dy = (y - cy + T / 2) % T - T / 2
+                d = (dx / rx) ** 2 + (dy / ry) ** 2
+                if d > 1.0:
+                    continue
+                if dy < -ry * 0.35 and d < 0.75:
+                    px[y][x] = SNOW[1] if d < 0.35 else SNOW[2]
+                elif dy > ry * 0.45:
+                    px[y][x] = SNOW[4]
+                else:
+                    px[y][x] = SNOW[3] if d > 0.55 else SNOW[2]
+                if 0.85 < d <= 1.0 and dy > ry * 0.5:
+                    px[y][x] = SNOW[5]
     return px
 
 
@@ -140,22 +152,37 @@ def wall_face(seed):
 
 
 def ice_tile(seed):
-    """Slick blue ice laid over the floor: Wren slides on it. Long scratches
-    and a pale shine so it reads apart from snow at a glance."""
+    """Slick blue ice laid over the floor: Wren slides on it. A clear,
+    glossy sheet rather than a pattern: soft paler patches where it is
+    thinner, a few fine skate-like scratches at odd angles, bubbles frozen
+    in it. Blue enough to read apart
+    from snow at a glance; even enough that a field of it stays calm."""
     rnd = random.Random(4400 + seed)
     px = blank(ICE[3])
+    # One soft, paler patch where the ice is thinner (wrapping at the
+    # edges so neighbours join).
+    cx, cy = rnd.uniform(0, T), rnd.uniform(0, T)
+    rx, ry = rnd.uniform(4.0, 5.5), rnd.uniform(3.0, 4.0)
     for y in range(T):
         for x in range(T):
-            if (x - y + seed * 4) % 11 == 0:
-                px[y][x] = ICE[1]
-            elif (x - y + seed * 4) % 11 == 1:
+            dx = (x - cx + T / 2) % T - T / 2
+            dy = (y - cy + T / 2) % T - T / 2
+            d = (dx / rx) ** 2 + (dy / ry) ** 2
+            if d <= 1.0:
                 px[y][x] = ICE[2]
+    # A fine scratch, short and thin, at its own shallow angle.
+    for _ in range(1):
+        x0, y0 = rnd.uniform(0, T), rnd.uniform(0, T)
+        a = rnd.uniform(-0.5, 0.5) + (math.pi if rnd.random() < 0.5 else 0.0)
+        for i in range(rnd.randrange(5, 9)):
+            x = int(x0 + math.cos(a) * i) % T
+            y = int(y0 + math.sin(a) * i) % T
+            px[y][x] = ICE[1]
+    # Bubbles caught in the ice.
     for _ in range(2):
-        x0, y0 = rnd.randrange(T - 6), rnd.randrange(T)
-        for i in range(rnd.randrange(4, 7)):
-            px[y0][x0 + i] = ICE[0]
-    for _ in range(4):
-        px[rnd.randrange(T)][rnd.randrange(T)] = ICE[4]
+        x, y = rnd.randrange(T), rnd.randrange(T - 1)
+        px[y][x] = ICE[0]
+        px[y + 1][x] = ICE[4]
     return px
 
 
