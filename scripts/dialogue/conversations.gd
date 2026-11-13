@@ -32,6 +32,8 @@ const GLASS_TRADE := {"take": "sea_glass", "tally": "coralie_glass", "each": {"g
 const ENDING_FLAG := "seen_ending"
 ## Speakers who look different after the ending: Murmur without the robe.
 const LATER_PORTRAITS := {"murmur": Art.PORTRAIT_MURMUR_PLAIN}
+## speaker -> [flag, portrait]: a change of clothes once the flag is set.
+const FLAG_PORTRAITS := {"lowe": ["lowe_singers_done", Art.PORTRAIT_LOWE_PLAIN]}
 
 const SPEAKERS := {
 	"hessa": ["NAME_HESSA", Art.PORTRAIT_HESSA],
@@ -387,7 +389,6 @@ const TALKS := {
 		# Home at the mills, with the baby brother she'd never held.
 		{"if": ["settled_sela"], "unless": ["sela_mills_told"], "set": ["sela_mills_told"], "lines": ["SELA_MILLS_1", "SELA_MILLS_2"]},
 		{"if": ["settled_sela"], "lines": ["SELA_MILLS_AGAIN"]},
-		{"if": ["sela_home"], "lines": ["SELA_BYE"]},
 		{"if": ["ottilie_sela"], "set": ["sela_home"], "lines": [["", "NARRATE_WREN_ROCKS_BABY"], "SELA_HOME_1", "SELA_HOME_2"]},
 		{"if": ["sela_met"], "lines": ["SELA_WAITING"]},
 		{"set": ["sela_met"], "lines": ["SELA_1", "SELA_1B", "SELA_2"]},
@@ -396,7 +397,6 @@ const TALKS := {
 		# Home, and counting Wick's lanterns with him.
 		{"if": ["settled_pim"], "unless": ["pim_fen_told"], "set": ["pim_fen_told"], "lines": ["PIM_FEN_1", "PIM_FEN_2"]},
 		{"if": ["settled_pim"], "lines": ["PIM_FEN_AGAIN"]},
-		{"if": ["pim_home"], "lines": ["PIM_BYE"]},
 		{"if": ["pim_met"], "has": ["glowmoth_lantern"], "set": ["pim_home"], "lines": [["", "NARRATE_WREN_RAISES_LANTERN"], "PIM_HOME_1", "PIM_HOME_2"]},
 		{"if": ["pim_met"], "lines": ["PIM_WAITING"]},
 		{"set": ["pim_met"], "lines": ["PIM_1", "PIM_1B", "PIM_2"]},
@@ -405,7 +405,6 @@ const TALKS := {
 		# Home at the Gullwatch post, sorting again.
 		{"if": ["settled_ansel"], "unless": ["ansel_post_told"], "set": ["ansel_post_told"], "lines": ["ANSEL_POST_1", "ANSEL_POST_2"]},
 		{"if": ["settled_ansel"], "lines": ["ANSEL_POST_AGAIN"]},
-		{"if": ["ansel_home"], "lines": ["ANSEL_BYE"]},
 		{"if": ["sorrel_ansel"], "set": ["ansel_home"], "lines": [["", "NARRATE_WREN_KITE"], "ANSEL_HOME_1", "ANSEL_HOME_2"]},
 		{"if": ["ansel_met"], "lines": ["ANSEL_WAITING"]},
 		{"set": ["ansel_met"], "lines": ["ANSEL_1", "ANSEL_1B", "ANSEL_2"]},
@@ -637,7 +636,7 @@ const TALKS := {
 			"if": ["asked_for_rope"],
 			"unless": ["rope_promised"],
 			"set": ["rope_promised"],
-			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2", ["", "NARRATE_DUNSTAN_ROPE"]],
+			"lines": ["DUNSTAN_ROPE_1", ["", "NARRATE_WREN_NODS"], "DUNSTAN_ROPE_2"],
 		},
 		# New planks for the lantern-boat on the Ebb Shelf (Gully's ask).
 		{"if": ["gully_boat_ask"], "unless": ["boat_planks"], "set": ["boat_planks"], "lines": ["DUNSTAN_BOATFIX_1", "DUNSTAN_BOATFIX_2"]},
@@ -700,6 +699,8 @@ static func pages(speaker: String, branch: Dictionary) -> Array:
 		var portrait: Variant = spec[1]
 		if LATER_PORTRAITS.has(who) and GameState.has_flag(ENDING_FLAG):
 			portrait = LATER_PORTRAITS[who]
+		if FLAG_PORTRAITS.has(who) and GameState.has_flag(FLAG_PORTRAITS[who][0]):
+			portrait = FLAG_PORTRAITS[who][1]
 		out.append({"name": spec[0], "portrait": portrait, "text": key})
 	return out
 
@@ -710,6 +711,9 @@ static func talk(speaker: String) -> Array:
 	var branch := branch_for(speaker)
 	if branch.is_empty():
 		return []
+	# Pages first: a change of clothes (FLAG_PORTRAITS) the talk itself
+	# sets shows from the next talk on, not before it's told.
+	var shown := pages(speaker, branch)
 	for flag: String in branch.get("set", []):
 		GameState.set_flag(flag)
 	var gifts: Dictionary = branch.get("give", {}).duplicate()
@@ -725,6 +729,5 @@ static func talk(speaker: String) -> Array:
 		GameState.give_item(id, int(gifts[id]), false)
 	if not gifts.is_empty():
 		Audio.play_jingle("jingle_pearl" if gifts.has("breath_pearl") else "jingle_item")
-	var shown := pages(speaker, branch)
 	Events.conversation_requested.emit(shown)
 	return shown

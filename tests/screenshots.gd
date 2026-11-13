@@ -139,6 +139,16 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=said_and_seen: errands that make sense on screen (Dunstan
+	# at the market and carrying the rope off, the Reed lantern, the
+	# Lantern Wake's lanterns, Lowe without her robe, a singer leaving).
+	if OS.get_environment("SHOTS_ONLY") == "said_and_seen":
+		game.queue_free()
+		await _said_and_seen_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
 	# SHOTS_ONLY=rib_song: Rib Hollow's ribs ringing for Dace's song.
 	if OS.get_environment("SHOTS_ONLY") == "rib_song":
 		game.queue_free()
@@ -2617,6 +2627,59 @@ func _rib_shot() -> void:
 	game.player.try_interact()
 	await _wait(0.25)
 	await _capture("quest_32_rib_song")
+	game.queue_free()
+	await _wait(0.2)
+
+
+func _shot_at(coord: Vector2i, at: Vector2) -> Node:
+	GameState.set_checkpoint(coord, at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	return game
+
+
+func _said_and_seen_shots() -> void:
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "asked_for_rope"]:
+		GameState.set_flag(flag)
+	var game: Node = await _shot_at(StoryDirector.SALTMARROW_MARKET, StoryDirector.DUNSTAN_MARKET_AT + Vector2(14, 22))
+	game.player.facing = Vector2.UP
+	await _capture("quest_34_dunstan_market")
+	GameState.set_flag(StoryDirector.ROPE_FLAG)
+	await _wait(4.0)
+	await _capture("quest_35_dunstan_rope")
+	game.queue_free()
+	await _wait(0.2)
+	game = await _shot_at(StoryDirector.SALTMARROW, Vector2(14 * 16 + 8, 9 * 16 + 8))
+	await _capture("quest_36_square_dunstan")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in [StoryDirector.ENDING_FLAG, StoryDirector.CALF_FLAG, "murmur_lantern_lit", "gully_paid", "gully_box_hauled", "gully_lanterns_done", "lowe_singers_done", "lowe_garden_done"]:
+		GameState.set_flag(flag)
+	game = await _shot_at(StoryDirector.FENMOUTH, StoryDirector.REED_LANTERN_AT + Vector2(-20, 30))
+	await _capture("quest_37_reed_lantern")
+	game.queue_free()
+	await _wait(0.2)
+	game = await _shot_at(StoryDirector.WRECK_STRAND, StoryDirector.FIGUREHEAD_AT + Vector2(0, 40))
+	await _capture("quest_38_ship_lanterns")
+	game.queue_free()
+	await _wait(0.2)
+	game = await _shot_at(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-56, 24))
+	await _capture("quest_39_lowe_plain")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	var spot: Array = StoryDirector.SINGERS["sela"]
+	game = await _shot_at(spot[0], Vector2(spot[1]) * 16.0 + Vector2(8, 34))
+	GameState.set_flag("sela_home")
+	await _wait(2.5)
+	await _capture("quest_40_sela_leaves")
 	game.queue_free()
 	await _wait(0.2)
 
