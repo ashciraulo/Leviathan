@@ -18,12 +18,13 @@ const DUNSTAN_TO_SQUARE := [Vector2(5 * 16 + 8, 7 * 16 + 8), Vector2(24 * 16 + 8
 ## room) and is gone.
 const SINGER_EXITS := {
 	"bram": [Vector2i(20, 4), Vector2i(21, 5), Vector2i(23, 5)],
-	"sela": [Vector2i(9, 3), Vector2i(13, 3)],
-	"pim": [Vector2i(17, 2), Vector2i(14, 2)],
+	"sela": [Vector2i(9, 3), Vector2i(23, 3)],
+	"pim": [Vector2i(19, 4), Vector2i(19, 6), Vector2i(23, 6)],
 	"ansel": [Vector2i(21, 6), Vector2i(23, 6)],
 }
-## The Reed lantern Wick made, burning by the water at Fenmouth.
-const REED_LANTERN_AT := Vector2(16 * 16 + 8, 4 * 16 + 12)
+## The Reed lantern Wick made, burning by the water at Fenmouth (a quiet
+## corner, away from Wick and his bell).
+const REED_LANTERN_AT := Vector2(11 * 16 + 8, 2 * 16 + 12)
 const WRECK_STRAND := Vector2i(4, 0)
 ## Where Mantle lies netted on the Wreck Strand (its feet), and where Wren
 ## stands to cut it free.
@@ -575,7 +576,7 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 		return
 	if flag == "murmur_lantern_lit":
 		if GameState.has_flag(flag) and GameState.room_coord == FENMOUTH:
-			_put_reed_lantern()
+			_light_reed_lantern()
 		return
 	if flag == BOAT_DONE_FLAG:
 		if GameState.has_flag(BOAT_DONE_FLAG) and GameState.room_coord == EBB_SHELF:
@@ -1482,7 +1483,9 @@ func _put_lowe() -> void:
 ## Dunstan by the market barrels till Marga's rope is promised; after
 ## that, on the square (the layout's own Dunstan).
 func _put_dunstan(coord: Vector2i) -> void:
-	var promised := GameState.has_flag(ROPE_FLAG)
+	# Once Tobin's on his way home, his dad waits for him on the square,
+	# rope or no rope (tobin_comes_home is on the dock beside him).
+	var promised := GameState.has_flag(ROPE_FLAG) or GameState.has_flag(TOBIN_WARNED_FLAG)
 	if coord == SALTMARROW and not promised:
 		var dunstan := _find_npc("dunstan")
 		if dunstan:
@@ -1516,7 +1519,7 @@ func _singer_goes_home(kind: String) -> void:
 	var route: Array = []
 	for tile: Vector2i in SINGER_EXITS[kind]:
 		route.append(Vector2(tile) * 16.0 + Vector2(8, 10))
-	await _walk_off(singer, route, 34.0)
+	await _walk_off(singer, route, 40.0)
 
 
 ## Walks an NPC along `route` (room positions), fading at the end, then
@@ -1532,6 +1535,16 @@ func _walk_off(npc: Npc, route: Array, speed: float) -> void:
 	await tween.finished
 	if is_instance_valid(npc):
 		npc.queue_free()
+
+
+## Wren lights it while Wick talks: there once the talk is read.
+func _light_reed_lantern() -> void:
+	var room: Node = game.current_room
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if room == game.current_room:
+		_put_reed_lantern()
 
 
 ## The Reeds' lantern at Fenmouth, lit.

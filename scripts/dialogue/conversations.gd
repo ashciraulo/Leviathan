@@ -711,6 +711,9 @@ static func talk(speaker: String) -> Array:
 	var branch := branch_for(speaker)
 	if branch.is_empty():
 		return []
+	# Pages first: a change of clothes (FLAG_PORTRAITS) the talk itself
+	# sets shows from the next talk on, not before it's told.
+	var shown := pages(speaker, branch)
 	for flag: String in branch.get("set", []):
 		GameState.set_flag(flag)
 	var gifts: Dictionary = branch.get("give", {}).duplicate()
@@ -726,6 +729,5 @@ static func talk(speaker: String) -> Array:
 		GameState.give_item(id, int(gifts[id]), false)
 	if not gifts.is_empty():
 		Audio.play_jingle("jingle_pearl" if gifts.has("breath_pearl") else "jingle_item")
-	var shown := pages(speaker, branch)
 	Events.conversation_requested.emit(shown)
 	return shown

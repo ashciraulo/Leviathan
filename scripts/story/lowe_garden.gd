@@ -9,7 +9,7 @@ const ROBE_FLAG := "lowe_singers_done"
 const GARDEN_FLAG := "lowe_garden_done"
 ## Where the robe lies and where the three plants grow, from Lowe's feet.
 const ROBE_AT := Vector2(22, 2)
-const PLANTS_AT := [Vector2(-20, 10), Vector2(-10, 13), Vector2(0, 11)]
+const PLANTS_AT := [Vector2(-34, 4), Vector2(-25, 7), Vector2(-16, 5)]
 const THISTLE := Color("#6aa0e0")
 const THISTLE_DARK := Color("#3a5a9a")
 const MOSS := Color("#e07a3a")
@@ -25,7 +25,17 @@ func _ready() -> void:
 	_robe = RobeHeap.new()
 	_robe.position = ROBE_AT
 	add_child(_robe)
-	Events.flag_changed.connect(func(_flag: String, _value: Variant) -> void: _refresh())
+	Events.flag_changed.connect(func(flag: String, _value: Variant) -> void:
+		if flag == ROBE_FLAG or flag == GARDEN_FLAG:
+			_refresh_after_talk())
+	_refresh()
+
+
+## Lowe's talk tells it (the robe folded, the plants in): shown once read.
+func _refresh_after_talk() -> void:
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
 	_refresh()
 
 

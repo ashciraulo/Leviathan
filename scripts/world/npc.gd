@@ -129,10 +129,16 @@ func _ready() -> void:
 	Events.dialogue_finished.connect(func() -> void: _talking = false)
 
 
-## A change of clothes the moment the flag is set (the robe comes off
-## mid-talk, not on the next visit).
+## A change of clothes as soon as the talk that sets the flag is over (the
+## robe comes off then, not on the next visit).
 func _on_flag_changed(flag: String, _value: Variant) -> void:
-	if flag == _spec["plain"][0] and GameState.has_flag(flag):
+	if flag != _spec["plain"][0] or not GameState.has_flag(flag):
+		return
+	# The talk that sets it says what happens: show it once that's read.
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	if is_instance_valid(_sprite):
 		_sprite.texture = _spec["plain"][1]
 
 
@@ -149,7 +155,7 @@ func _process(delta: float) -> void:
 		_sprite.flip_h = player.global_position.x < global_position.x - 4.0
 	elif not _wander(delta):
 		_sprite.frame = FRAME_BREATHE if int(_time / BREATHE_TIME) % 2 == 1 else FRAME_IDLE
-	_mark.visible = _can_talk and not DialogueBox.is_open and not Cutscene.active
+	_mark.visible = _can_talk and is_in_group("interactable") and not DialogueBox.is_open and not Cutscene.active
 	_mark.position.y = -30 + (1 if int(_time * 2.0) % 2 == 0 else 0)
 	_mark.queue_redraw()
 

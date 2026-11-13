@@ -9372,7 +9372,7 @@ func _test_said_and_seen() -> void:
 				singer = child
 		_check(singer != null, "%s waits to be sent home" % kind)
 		GameState.set_flag(kind + "_home")
-		await _wait(8.0)
+		await _wait(8.5)
 		_check(not is_instance_valid(singer), "%s walks off home" % kind)
 		game.queue_free()
 		await _wait(0.1)
@@ -9385,6 +9385,7 @@ func _test_said_and_seen() -> void:
 	var hung := func() -> bool: return strand.current_room.get_children().any(func(c: Node) -> bool: return c is ShipLanterns and c.visible)
 	_check(not hung.call(), "no lanterns on the figurehead yet")
 	GameState.set_flag("gully_lanterns_done")
+	await _wait(0.1)
 	_check(hung.call(), "Gully's three lanterns hang on her")
 	strand.queue_free()
 	await _wait(0.1)
@@ -9399,6 +9400,7 @@ func _test_said_and_seen() -> void:
 	_check(lowe != null and garden != null and not garden._robe.visible, "Lowe in her robe on the Point")
 	if lowe and garden:
 		GameState.set_flag("lowe_singers_done")
+		await _wait(0.1)
 		var sprite: Sprite2D = lowe._sprite
 		_check(sprite.texture == Art.VILLAGER_LOWE_PLAIN and garden._robe.visible, "the robe comes off and lies folded on the rocks")
 		_check(Conversations.pages("lowe", {"lines": ["LOWE_JUST_LOWE"]})[0]["portrait"] == Art.PORTRAIT_LOWE_PLAIN, "her portrait too")

@@ -18,11 +18,18 @@ var _time := 0.0
 
 
 func _ready() -> void:
-	z_index = 1
 	visible = GameState.has_flag(FLAG)
 	Events.flag_changed.connect(func(flag: String, _value: Variant) -> void:
 		if flag == FLAG:
-			visible = GameState.has_flag(FLAG))
+			_show_after_talk())
+
+
+## Gully's talk tells it (hung, then lit): shown once read.
+func _show_after_talk() -> void:
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	visible = GameState.has_flag(FLAG)
 
 
 func _process(delta: float) -> void:
