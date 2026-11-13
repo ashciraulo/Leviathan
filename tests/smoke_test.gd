@@ -3889,6 +3889,37 @@ func _test_air_dungeon() -> void:
 	for tile in seam_air._roof:
 		near = near or not seam_air._clear_of_seams(Vector2(tile * Room.TILE))
 	_check(not near, "and no sand trickles near one")
+	# The Valve Chamber's pools bubble; let the water down and its drained
+	# floor never does.
+	var valves := await _goto(game, Vector2i(36, 8), Vector2i(11, 11))
+	var chamber: DungeonAir = valves.get_node("Air")
+	var high := chamber._sources.size()
+	GameState.set_flag(Room.low_water_flag("belfry"))
+	valves.refresh_water()
+	_check(chamber._sources.size() < high and not chamber._rises.is_empty(),
+		"with the water down, bubbles only rise off what's still water (%d to %d tiles)" % [high, chamber._sources.size()])
+	var dry := true
+	for r in chamber._rises:
+		var t := Vector2i((r.at / Room.TILE).floor())
+		dry = dry and chamber._sources.has(t)
+	_check(dry, "and every bubble starts on water")
+	GameState.flags.erase(Room.low_water_flag("belfry"))
+	# A bell rung settles its dungeon's air, as its words say: the Storm
+	# Bell stops the Gale Spire's rain where Wren stands...
+	var gale := await _goto(game, Vector2i(28, 10), Vector2i(11, 10))
+	var rain: DungeonAir = gale.get_node("Air")
+	_check(not rain._rain.is_empty(), "rain blows through the Gale Spire")
+	GameState.set_flag(Tidebell.flag_for("gale"))
+	await _wait(3.0)
+	_check(rain._rain.is_empty(), "the Storm Bell stops the rain (%d streaks left)" % rain._rain.size())
+	# ...and a dungeon whose bell has rung stays calmer after.
+	GameState.set_flag(Tidebell.flag_for("kiln"))
+	var calm := await _goto(game, Vector2i(21, 10), Vector2i(11, 10))
+	var embers: DungeonAir = calm.get_node("Air")
+	_check(embers._rises.size() < int(DungeonAir.AIR["kiln"]["rise"]) and not embers._rises.is_empty(),
+		"the Kiln's embers die down once its bell has rung (%d)" % embers._rises.size())
+	GameState.flags.erase(Tidebell.flag_for("gale"))
+	GameState.flags.erase(Tidebell.flag_for("kiln"))
 	var outside := await _goto(game, Vector2i(1, 1), Vector2i(11, 6))
 	_check(outside.get_node_or_null("Air") == null, "the overworld has its own life instead")
 	# High contrast: the air steps back.

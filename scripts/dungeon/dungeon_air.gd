@@ -30,6 +30,18 @@ const AIR := {
 	"tomb": {"trickles": 3, "trickle": Color(0.85, 0.74, 0.52)},
 	"maw": {"motes": 14, "mote": Color(1.0, 0.9, 0.86), "drips": 2, "drip": Color(0.95, 0.8, 0.82)},
 }
+## Once a dungeon's Tidebell has rung, its air settles, as the bell's words
+## say: the Kiln's embers die down, the Mire's spores flicker and sink like
+## snow, the Gale Spire's rain stops and the Glacier's snow thins. "keep" is
+## the share of each kind that stays, "speed" how fast what's left moves.
+const SETTLE := {
+	"kiln": {"keep": 0.35, "speed": 0.6},
+	"mire": {"keep": 0.6, "speed": 0.8, "sink": true, "flicker": true},
+	"gale": {"keep": 0.0, "speed": 1.0},
+	"glacier": {"keep": 0.3, "speed": 0.6},
+}
+## How long the Mire's spores flicker when its bell rings (s).
+const FLICKER_TIME := 1.4
 ## Tiles a drip can land on and leave a ring (not walls, gaps, lava or
 ## deep water).
 const DRY_FLOOR := "#_^~Q|!G"
@@ -45,6 +57,9 @@ var _room: Room
 var _dungeon := ""
 var _kind: Dictionary = {}
 var _fade := 1.0
+## True once this dungeon's bell has rung (see SETTLE).
+var _settled := false
+var _flicker := 0.0
 var _time := 0.0
 ## Each speck is a small dictionary: where it is, its own clock, and so on.
 var _motes: Array[Dictionary] = []
@@ -69,20 +84,79 @@ func _ready() -> void:
 		set_process(false)
 		return
 	_find_tiles()
-	for i in int(_kind.get("motes", 0)):
+	if SETTLE.has(_dungeon):
+		_settled = GameState.has_flag(Tidebell.flag_for(_dungeon))
+		Events.flag_changed.connect(_on_flag)
+	for i in _count("motes"):
 		_motes.append(_new_mote(true))
-	for i in int(_kind.get("fall", 0)):
+	for i in _count("fall"):
 		_falls.append(_new_fall(true))
 	if not _sources.is_empty():
-		for i in int(_kind.get("rise", 0)):
+		for i in _count("rise"):
 			_rises.append(_new_rise(true))
-	for i in int(_kind.get("rain", 0)):
+	for i in _count("rain"):
 		_rain.append(_new_rain(true))
 	if not _roof.is_empty():
 		for i in int(_kind.get("drips", 0)):
 			_drips.append(_new_drip(randf_range(0.0, 2.5)))
 		for i in int(_kind.get("trickles", 0)):
 			_trickles.append(_new_trickle())
+
+
+## How many of a kind hang in the air now.
+func _count(kind: String) -> int:
+	var n := int(_kind.get(kind, 0))
+	if _settled:
+		return ceili(n * float(SETTLE[_dungeon].keep))
+	return n
+
+
+## The bell rings: the air settles from now on. What's already drifting
+## finishes its way, and fewer take its place.
+func _on_flag(flag: String, value: Variant) -> void:
+	if flag != Tidebell.flag_for(_dungeon) or not value or _settled:
+		return
+	_settled = true
+	if SETTLE[_dungeon].get("flicker", false):
+		_flicker = FLICKER_TIME
+
+
+## Whether a speck that has run its course should go rather than start
+## again, so a settled room thins out to its share.
+func _thin(list: Array[Dictionary], kind: String) -> bool:
+	if not _settled:
+		return false
+	var alive := list.filter(func(p: Dictionary) -> bool: return not p.get("gone", false)).size()
+	return alive > _count(kind)
+
+
+func _prune() -> void:
+	if not _settled:
+		return
+	for list: Array[Dictionary] in [_motes, _falls, _rises, _rain]:
+		if list.any(func(p: Dictionary) -> bool: return p.get("gone", false)):
+			list.assign(list.filter(func(p: Dictionary) -> bool: return not p.get("gone", false)))
+
+
+## The water has risen or fallen (a Belfry valve): bubbles come off the
+## water as it now lies, never off floor that has just drained.
+func refresh() -> void:
+	if _kind.is_empty():
+		return
+	_sources.clear()
+	_roof.clear()
+	_seams.clear()
+	_find_tiles()
+	_rises.clear()
+	if not _sources.is_empty():
+		for i in _count("rise"):
+			_rises.append(_new_rise(true))
+	# Drips land on dry floor, and what's dry has changed too.
+	if _roof.is_empty():
+		_drips.clear()
+	else:
+		for d in _drips:
+			d.merge(_new_drip(randf_range(0.0, 2.5)), true)
 
 
 ## Where embers and bubbles rise from, and the floor tiles just under the
@@ -128,6 +202,11 @@ func _new_mote(anywhere: bool) -> Dictionary:
 		"size": 1 + int(randf() < 0.3)}
 
 
+## How fast the air moves: slower once it has settled.
+func _pace() -> float:
+	return float(SETTLE[_dungeon].speed) if _settled else 1.0
+
+
 func _new_fall(anywhere: bool) -> Dictionary:
 	var at := Vector2(randf_range(0.0, Room.SIZE.x), randf_range(0.0, Room.SIZE.y) if anywhere else -2.0)
 	return {"at": at, "speed": randf_range(10.0, 22.0), "phase": randf() * TAU, "size": 1 + int(randf() < 0.5)}
@@ -164,27 +243,54 @@ func _new_trickle() -> Dictionary:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_flicker = maxf(_flicker - delta, 0.0)
+	var pace := _pace() if SETTLE.has(_dungeon) else 1.0
+	var sink: bool = _settled and SETTLE[_dungeon].get("sink", false)
 	for m in _motes:
+		if m.get("gone", false):
+			continue
 		m.age += delta
 		if m.age >= m.life:
-			m.merge(_new_mote(false), true)
+			if _thin(_motes, "motes"):
+				m.gone = true
+			else:
+				m.merge(_new_mote(false), true)
 			continue
-		m.at += (m.drift + Vector2(sin(_time * 0.9 + m.phase) * 3.0, 0.0)) * delta
+		var drift: Vector2 = m.drift
+		if sink:
+			# Settling like snow: down, not up.
+			drift.y = absf(drift.y) + 2.0
+		m.at += (drift + Vector2(sin(_time * 0.9 + m.phase) * 3.0, 0.0)) * pace * delta
 	for f in _falls:
-		f.at += Vector2(sin(_time * 1.3 + f.phase) * 6.0, f.speed) * delta
-		if f.at.y > Room.SIZE.y + 2.0:
-			f.merge(_new_fall(false), true)
-	for r in _rises:
-		r.age += delta
-		if r.age >= r.life:
-			r.merge(_new_rise(false), true)
+		if f.get("gone", false):
 			continue
-		r.at += Vector2(sin(_time * 3.0 + r.phase) * 4.0, -r.speed) * delta
+		f.at += Vector2(sin(_time * 1.3 + f.phase) * 6.0, f.speed) * pace * delta
+		if f.at.y > Room.SIZE.y + 2.0:
+			if _thin(_falls, "fall"):
+				f.gone = true
+			else:
+				f.merge(_new_fall(false), true)
+	for r in _rises:
+		if r.get("gone", false):
+			continue
+		r.age += delta * pace
+		if r.age >= r.life:
+			if _thin(_rises, "rise"):
+				r.gone = true
+			else:
+				r.merge(_new_rise(false), true)
+			continue
+		r.at += Vector2(sin(_time * 3.0 + r.phase) * 4.0, -r.speed) * pace * delta
 	for s in _rain:
+		if s.get("gone", false):
+			continue
 		if s.ring >= 0.0:
 			s.ring += delta
 			if s.ring >= RING_TIME:
-				s.merge(_new_rain(false), true)
+				if _thin(_rain, "rain"):
+					s.gone = true
+				else:
+					s.merge(_new_rain(false), true)
 			continue
 		s.at += RAIN_VEL * delta
 		if s.at.y >= s.end:
@@ -210,6 +316,7 @@ func _process(delta: float) -> void:
 		t.age += delta
 		if t.age >= t.on + t.off:
 			t.merge(_new_trickle(), true)
+	_prune()
 	queue_redraw()
 
 
@@ -217,10 +324,14 @@ func _draw() -> void:
 	# Read live, so turning high contrast on in the pause menu shows at once.
 	_fade = CONTRAST_FADE if Settings.high_contrast else 1.0
 	var mote_col: Color = _kind.get("mote", Color.WHITE)
+	# The Moth Bell's note: every spore blinks out and back at once.
+	var blink := 1.0
+	if _flicker > 0.0 and int(_flicker * 7.0) % 2 == 0:
+		blink = 0.15
 	for m in _motes:
 		var t: float = m.age / m.life
 		var a := minf(t / 0.25, (1.0 - t) / 0.25)
-		a = clampf(a, 0.0, 1.0) * 0.8 * _fade
+		a = clampf(a, 0.0, 1.0) * 0.8 * _fade * blink
 		if a > 0.02:
 			draw_rect(Rect2(m.at.floor(), Vector2(m.size, m.size)), Color(mote_col, a))
 	var fall_col: Color = _kind.get("fall_col", Color.WHITE)

@@ -537,6 +537,9 @@ static func low_water_flag(for_dungeon: String) -> String:
 func refresh_water() -> void:
 	_build_water()
 	_redraw_ground()
+	var air := get_node_or_null("Air") as DungeonAir
+	if air:
+		air.refresh()
 
 
 ## The room under a point (global), or null.
