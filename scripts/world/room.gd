@@ -254,7 +254,7 @@ const BIOMES := {
 		"floor": "kiln_floor_%d", "wall_top": "kiln_top_%d", "wall_face": "kiln_face_%d",
 		"water": "quench_%d", "water_edge": "kerb_%s_%d", "damp": "kiln_scorch_%s",
 		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
-		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
+		"floor_overlay": ["glowcrack_%d", 31], "door": "exit_glow",
 		"set_pieces": 2,
 	},
 	"mire": {
@@ -270,8 +270,8 @@ const BIOMES := {
 		"set_pieces": 2,
 		"floor": "gale_floor_%d", "wall_top": "gale_top_%d", "wall_face": "gale_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
-		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
-		"floor_overlay": ["lichen_%d", 17], "door": "exit_glow", "gap": "galesky",
+		"wet_deco": "lichen_%d", "dry_deco": "feather_%d", "dry_every": 26,
+		"floor_overlay": ["lichen_%d", 31], "door": "exit_glow", "gap": "galesky",
 	},
 	"glacier": {
 		"wall_deco": "glacier",
@@ -1107,7 +1107,7 @@ func _draw_ground() -> void:
 					pass
 				elif wet and h % 11 == 0:
 					_draw_deco(tiles["wet_deco"] % (h % 2), x, y)
-				elif not wet and h % 13 == 0 and not _cut.has(Vector2i(x, y)):
+				elif not wet and h % int(tiles.get("dry_every", 13)) == 0 and not _cut.has(Vector2i(x, y)):
 					_draw_deco(tiles["dry_deco"] % (h % 2), x, y)
 	# The floor set pieces go over the floor they lie on.
 	var deco: String = tiles.get("wall_deco", "")
