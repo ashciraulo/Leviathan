@@ -479,8 +479,8 @@ TOAST_GOT_GLOWMOTH_LANTERN,You found the Glowmoth Lantern!
 GOT_GLOWMOTH_LANTERN_1,"The Glowmoth Lantern! Pale moths stir inside the glass, and the dark around you thins."
 GOT_GLOWMOTH_LANTERN_2,"Press {key} to raise it, and again to lower it. Things that hide from the light can't hide from it."
 BOSS_PALE_CONGREGATION,The Pale Congregation
-BELL_MIRE_1,"Wren rings the Moth Bell. A soft, clear note, and every lamp in the mire flickers at once."
-BELL_MIRE_2,"The wisps settle like snow. Far away, something huge turns over in its sleep, and lies still."
+BELL_MIRE_1,"Wren rings the Moth Bell. A soft, clear note, and every glowing spore in the air flickers."
+BELL_MIRE_2,"The spores settle like snow. Far away, something huge turns over in its sleep, and lies still."
 CAPTION_FLAME,Flame catches
 CAPTION_HEARTBEAT,Heartbeat
 ROOM_FENMOUTH,Fenmouth
