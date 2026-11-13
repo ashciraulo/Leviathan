@@ -51,7 +51,8 @@ const KINDS := {
 	"ottilie": {"texture": Art.VILLAGER_OTTILIE, "frames": 3, "near": 0, "talk": 2, "wander": 0.0},
 	# Sister Lowe on Lullaby Point after the ending (StoryDirector): no
 	# orders left to give, so she talks standing still.
-	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3, "near": 0, "talk": 0, "wander": 0.0},
+	# Lowe folds the Choir robe away once her four singers are home.
+	"lowe": {"texture": Art.VILLAGER_LOWE, "frames": 3, "near": 0, "talk": 0, "wander": 0.0, "plain": ["lowe_singers_done", Art.VILLAGER_LOWE_PLAIN]},
 	# Murmur at Fenmouth after leaving the Choir, and Mother Dace by the last
 	# mural after the ending (StoryDirector). Once the Old One has turned,
 	# Murmur has put the Choir's robe away.
@@ -112,8 +113,12 @@ func _ready() -> void:
 	var texture: Texture2D = _spec["texture"]
 	if _spec.has("ending_texture") and GameState.has_flag(Conversations.ENDING_FLAG):
 		texture = _spec["ending_texture"]
+	if _spec.has("plain") and GameState.has_flag(_spec["plain"][0]):
+		texture = _spec["plain"][1]
 	_sprite = Art.sprite(texture, _spec["frames"], 1, 22)
 	add_child(_sprite)
+	if _spec.has("plain"):
+		Events.flag_changed.connect(_on_flag_changed)
 	_mark = Node2D.new()
 	_mark.position = Vector2(0, -30)
 	_mark.draw.connect(_draw_mark)
@@ -122,6 +127,13 @@ func _ready() -> void:
 	_rng.seed = hash(kind)
 	_pause = _rng.randf_range(WANDER_PAUSE.x, WANDER_PAUSE.y)
 	Events.dialogue_finished.connect(func() -> void: _talking = false)
+
+
+## A change of clothes the moment the flag is set (the robe comes off
+## mid-talk, not on the next visit).
+func _on_flag_changed(flag: String, _value: Variant) -> void:
+	if flag == _spec["plain"][0] and GameState.has_flag(flag):
+		_sprite.texture = _spec["plain"][1]
 
 
 func _process(delta: float) -> void:

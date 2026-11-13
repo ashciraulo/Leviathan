@@ -8,6 +8,22 @@ extends Node
 const SALTMARROW := Vector2i(0, -1)
 ## The market lane west of the village square: Marlo Pike's stall.
 const SALTMARROW_MARKET := Vector2i(-1, -1)
+## Dunstan dozes by the market barrels until Wren brings him Marga's ask;
+## then he carries the rope round to the square himself (and stays there,
+## where the square's layout has him).
+const ROPE_FLAG := "rope_promised"
+const DUNSTAN_MARKET_AT := Vector2(5 * 16 + 8, 8 * 16 + 10)
+const DUNSTAN_TO_SQUARE := [Vector2(5 * 16 + 8, 7 * 16 + 8), Vector2(24 * 16 + 8, 7 * 16 + 8)]
+## Each of the last singers, sent home, walks off this way (tiles in their
+## room) and is gone.
+const SINGER_EXITS := {
+	"bram": [Vector2i(20, 4), Vector2i(21, 5), Vector2i(23, 5)],
+	"sela": [Vector2i(9, 3), Vector2i(13, 3)],
+	"pim": [Vector2i(17, 2), Vector2i(14, 2)],
+	"ansel": [Vector2i(21, 6), Vector2i(23, 6)],
+}
+## The Reed lantern Wick made, burning by the water at Fenmouth.
+const REED_LANTERN_AT := Vector2(16 * 16 + 8, 4 * 16 + 12)
 const WRECK_STRAND := Vector2i(4, 0)
 ## Where Mantle lies netted on the Wreck Strand (its feet), and where Wren
 ## stands to cut it free.
@@ -442,6 +458,10 @@ func _on_room_entered(coord: Vector2i) -> void:
 		_put_liesl(coord)
 	if coord == FENMOUTH or FenLantern.SPOTS.has(coord):
 		_put_wick(coord)
+	if coord == SALTMARROW or coord == SALTMARROW_MARKET:
+		_put_dunstan(coord)
+	if coord == FENMOUTH and GameState.has_flag("murmur_lantern_lit"):
+		_put_reed_lantern()
 	if coord == FENMOUTH and GameState.has_flag(CALF_FLAG) and not _murmur_in_chapel():
 		_put_npc("murmur", MURMUR_FEN_AT)
 	if coord == DROWNED_CHAPEL and _murmur_in_chapel():
@@ -544,6 +564,18 @@ func _on_flag_changed(flag: String, _value: Variant) -> void:
 			GameState.clear_flag.call_deferred(WALK_FLAG)
 		else:
 			hessas_walk()
+		return
+	if flag == ROPE_FLAG:
+		if GameState.has_flag(ROPE_FLAG) and GameState.room_coord == SALTMARROW_MARKET:
+			_dunstan_takes_the_rope()
+		return
+	if flag.ends_with("_home") and SINGER_EXITS.has(flag.trim_suffix("_home")):
+		if GameState.has_flag(flag):
+			_singer_goes_home(flag.trim_suffix("_home"))
+		return
+	if flag == "murmur_lantern_lit":
+		if GameState.has_flag(flag) and GameState.room_coord == FENMOUTH:
+			_put_reed_lantern()
 		return
 	if flag == BOAT_DONE_FLAG:
 		if GameState.has_flag(BOAT_DONE_FLAG) and GameState.room_coord == EBB_SHELF:
@@ -1408,6 +1440,9 @@ func _put_gully() -> void:
 	var figurehead := Prop.new("figurehead")
 	figurehead.position = FIGUREHEAD_AT
 	room.add_child(figurehead)
+	var lanterns := ShipLanterns.new()
+	lanterns.position = FIGUREHEAD_AT
+	room.add_child(lanterns)
 	# With the tide held out (and his strongbox home), Gully is out
 	# salvaging on the Ebb Shelf.
 	if not _gully_on_the_shelf():
@@ -1433,9 +1468,82 @@ func _put_ottilie() -> void:
 	room.add_child(hole)
 
 
-## Sister Lowe on the point, after the ending.
+## Sister Lowe on the point, after the ending, with her robe folded on the
+## rocks and her garden growing once those are done (LoweGarden).
 func _put_lowe() -> void:
 	_put_npc("lowe", LOWE_AT)
+	var room: Node = game.current_room
+	if room and not room.get_children().any(func(c: Node) -> bool: return c is LoweGarden):
+		var garden := LoweGarden.new()
+		garden.position = LOWE_AT
+		room.add_child(garden)
+
+
+## Dunstan by the market barrels till Marga's rope is promised; after
+## that, on the square (the layout's own Dunstan).
+func _put_dunstan(coord: Vector2i) -> void:
+	var promised := GameState.has_flag(ROPE_FLAG)
+	if coord == SALTMARROW and not promised:
+		var dunstan := _find_npc("dunstan")
+		if dunstan:
+			dunstan.queue_free()
+	elif coord == SALTMARROW_MARKET and not promised:
+		_put_npc("dunstan", DUNSTAN_MARKET_AT)
+
+
+## Once he's said yes, Dunstan shoulders the rope and walks it round to the
+## square, slowly, out past the stall.
+func _dunstan_takes_the_rope() -> void:
+	var room: Node = game.current_room
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	var dunstan := _find_npc("dunstan")
+	if dunstan == null or room != game.current_room:
+		return
+	await _walk_off(dunstan, DUNSTAN_TO_SQUARE, 30.0)
+
+
+## A last singer, sent home: off they go, out of the room.
+func _singer_goes_home(kind: String) -> void:
+	var room: Node = game.current_room
+	await get_tree().process_frame
+	if DialogueBox.is_open:
+		await Events.dialogue_finished
+	var singer := _find_npc(kind)
+	if singer == null or room != game.current_room:
+		return
+	var route: Array = []
+	for tile: Vector2i in SINGER_EXITS[kind]:
+		route.append(Vector2(tile) * 16.0 + Vector2(8, 10))
+	await _walk_off(singer, route, 34.0)
+
+
+## Walks an NPC along `route` (room positions), fading at the end, then
+## takes them away. Not talkable on the way.
+func _walk_off(npc: Npc, route: Array, speed: float) -> void:
+	npc.remove_from_group("interactable")
+	var tween := npc.create_tween()
+	var from := npc.position
+	for point: Vector2 in route:
+		tween.tween_property(npc, "position", point, from.distance_to(point) / speed)
+		from = point
+	tween.tween_property(npc, "modulate:a", 0.0, 0.4)
+	await tween.finished
+	if is_instance_valid(npc):
+		npc.queue_free()
+
+
+## The Reeds' lantern at Fenmouth, lit.
+func _put_reed_lantern() -> void:
+	var room: Node = game.current_room
+	if room == null or room.get_children().any(func(c: Node) -> bool: return c is FenLantern and (c as FenLantern).reed):
+		return
+	var lantern := FenLantern.new()
+	lantern.reed = true
+	lantern.room_coord = FENMOUTH
+	lantern.position = REED_LANTERN_AT
+	room.add_child(lantern)
 
 
 ## Ferrin's survey stake (or the cairn where it goes) at the end of a reach.

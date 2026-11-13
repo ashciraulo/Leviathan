@@ -380,7 +380,6 @@ NAME_MARGA,Marga
 NAME_DUNSTAN,Dunstan
 NARRATE_WREN_NODS,Wren nods.
 NARRATE_WREN_LAMP_YES,Wren lifts the lamp and flashes it once: I'll go.
-NARRATE_DUNSTAN_ROPE,"Dunstan shoulders a coil of rope and wanders off toward the smokehouse, very slowly."
 SIGN_SALTMARROW,"Saltmarrow. Mind the lamp, mind the tide."
 SIGN_BARNACLE_WALL,"Barnacle Wall. Built to keep the sea out. The sea moved in anyway."
 SIGN_BRINEWOOD,"Brinewood. The roots drink the tide and give back only shade."
@@ -408,16 +407,16 @@ PELL_HULL_1,You went in the Rotting Hull?! Was it full of ghosts?
 PELL_HULL_2,Mum says it's full of ghosts. I said I'd go and check. She said no.
 MARGA_1,Keeper. Good. Do me a kindness?
 MARGA_2,"My smokehouse rack's come down, and Dunstan's got the only good rope in Saltmarrow."
-MARGA_2B,Tell him Marga's asking. Nicely.
-MARGA_WAITING,"Dunstan's down by the barrels, most likely. Asleep on his feet."
-MARGA_THANKS_1,"He said yes? Without grumbling? Keeper, you've a gift."
+MARGA_2B,He'll be round at the market. Tell him Marga's asking. Nicely.
+MARGA_WAITING,"Dunstan's round at the market, by the barrels. Asleep on his feet."
+MARGA_THANKS_1,"He brought it round himself! Not one grumble. Keeper, you've a gift."
 MARGA_THANKS_2,"Come by when you're back. There'll be smoked eel, and you'll be eating it."
 MARGA_AGAIN,Smoked eel when you're back. That's a promise.
 DUNSTAN_1,Hm.
 DUNSTAN_2,Bell's quiet. Sea's quiet. Even the gulls are quiet. Whole coast's holding its breath.
 DUNSTAN_ROPE_1,Marga sent you? Was she asking nicely?
-DUNSTAN_ROPE_2,...Hm. Tell her she'll have it by supper.
-DUNSTAN_AGAIN,Rope's coming. Rope's always coming.
+DUNSTAN_ROPE_2,...Hm. I'll take it round to her now.
+DUNSTAN_AGAIN,Rack's up. Rope's holding. Hm. Good day's work.
 ROOM_KILN_ENTRY,The Kiln
 ROOM_KILN_CASTING,The Kiln: Casting Floor
 ROOM_KILN_MOULDS,The Kiln: Mould Store
@@ -1142,7 +1141,7 @@ HESSA_ROUND_1,"Every keeper cuts a line into the Tidestones. Vael and I walked t
 HESSA_ROUND_1B,"Twenty-two of them, shore to dunes. Read every one, child, then come and tell me."
 HESSA_ROUND_DONE_1,"You've read every stone. I can see it on you. Every keeper back to Morrow."
 HESSA_ROUND_DONE_2,"Then there's one line missing. Fetch my old knife from the drawer."
-NARRATE_HESSA_CARVES,"Hessa walks out to the Tidestone at Wreck Hollow, and cuts into it for a long while."
+NARRATE_HESSA_CARVES,Hessa is gone till dark. She comes back with stone dust on her sleeves.
 HESSA_ROUND_DONE_3,"There. Under mine. Go and read it, keeper."
 STONE_SALTMARROW_WREN,"And W., keeper of the Point. Rang all seven. Not alone."
 NAME_BRAM,Bram
@@ -1193,13 +1192,10 @@ ANSEL_2,"My knees won't carry me home over the chasm. And who wants an old singe
 ANSEL_WAITING,"I'll just sit with the sea a while longer."
 SORREL_ANSEL_1,"Ansel? My old sorter? He's alive? The old goose!"
 SORREL_ANSEL_2,"Tell him the post's open and the letters are piling up. I'll fly a kite to fetch him."
-NARRATE_WREN_KITE,"Wren points up. A red kite is coming in over the cliffs."
-ANSEL_HOME_1,"That's Sorrel's kite! She's sent for me?"
+NARRATE_WREN_KITE,"Wren points toward Gullwatch, then mimes a kite tugging on its string."
+ANSEL_HOME_1,Sorrel's sending her kite for me? To Gullwatch?
 ANSEL_HOME_2,"Then I'm going home by air, keeper. At my age. Imagine."
 OTTILIE_SELA_2B,"Tell her I'm walking down to the mills to see my sister. She can walk with me."
-SELA_BYE,"Aunt Ottilie walks fast. I'd better catch her up."
-PIM_BYE,"I'm going, I'm going! Keep the light up."
-ANSEL_BYE,"Wave to Sorrel for me, keeper. I'll be the one in the sky."
 NAME_FERRIN,Ferrin
 FERRIN_1,"Ha! A lamp, this far out. I thought I was the only fool up here."
 FERRIN_1B,"Ferrin. I map the edges, where the world stops bothering."
@@ -1310,7 +1306,7 @@ MARGA_PARTY_WAITING,"No rimefin, no pie, love. Ottilie up at Still Cove will see
 NARRATE_HAND_RIMEFIN,Wren hands over Ottilie's rimefin.
 MARGA_PARTY_PIE_1,"Rimefin! From Ottilie? Oh, she remembered. Hessa's favourite, this."
 MARGA_PARTY_PIE_2,"The pie goes in the oven tonight. Don't you dare let her smell it."
-NARRATE_PARTY_1,"That evening, Wren leads Hessa down from the lighthouse. The square is full."
+NARRATE_PARTY_1,"That evening, the square fills up, and Hessa has no idea why."
 NETTLE_PARTY_NOW,"Now! Everybody, now!"
 HESSA_PARTY_1,"Fifty years. I thought nobody had kept count."
 HESSA_PARTY_2,"I can't hear a word you're all saying. I don't need to. I can see every one of you."
