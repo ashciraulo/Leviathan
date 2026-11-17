@@ -329,6 +329,9 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   `maps/story_sorrow_fix.json` evens keys 70 and 72.
   Review v5 PASS (3 MINOR): the preset's own chorus still shimmers on the even partials (turn its FX chorus off and
   save a user preset); it is bright (2-4 kHz share -14 dB: a -3 dB bell at 2.2 kHz); key 66 is ~4 dB hot.
+  v6 (templates\sorrow_template_v3: Chorus and Phaser off on both cellos, -3.5 dB bell at 2.2 kHz, key 66 trim)
+  PASS: brightness -16.1 dB, but the shimmer is the preset's octave-up Layer B (likely "Random Reattacks"), not
+  its FX; Adagio Cello gives only ~0.13 dB per velocity step, so per-key trims need clone channels, not velocity.
 - **FL tips from this batch:** ctrl+r (after clicking empty workspace) opens the export dialog directly; the File menu
   route sometimes missed and toggled channel-rack steps. In Analog Lab, typing in the search box leaks keys to FL
   (it played notes and loaded another preset): use the Types / Instruments filters with the mouse instead.

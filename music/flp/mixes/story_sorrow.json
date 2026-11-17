@@ -20,6 +20,12 @@
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 2200,
+     "gain": -3.5,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
      "freq": 5000,
      "db_oct": 12
