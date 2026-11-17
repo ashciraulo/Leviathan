@@ -173,7 +173,18 @@ assert len(CH) == song.bars == 16
 cello.line(0, bars("D4:3 | C4:3 | Bb3:3 | A3:3", per_bar=3), legato=0.98)  # phrase 4's degrees, very slow
 cello.line(song.bar(4), bars("D4:2 C4:1 | Bb3:2 G3:1 | Bb3:2 Eb4:1 | F#3:3 | G3:2 Bb3:1 | D4:2 F4:1 | "
                              "Eb4:2 C4:1 | D4:3", per_bar=3), vel=74, legato=0.97)
+# Adagio Cello plays F#3 ~4 dB hot (review v5) and follows velocity only ~0.13 dB a step: bar 8's F#3 drops to 50.
+# Its velocity response is not smooth (a sample-layer change between 50 and 63: v10's 63 came out +7.9 dB over v9's
+# 50), so further level fixes go through clone channels, not velocity.
+for n in cello.notes:
+    if n[2] == 54 and abs(n[0] - song.bar(7)) < 0.01:
+        n[3] = 50
 cello.line(song.bar(12), bars("Bb3:3 | G3:3 | G3:3 | F#3:3", per_bar=3), vel=60, legato=0.98)
+# ... and plays G3 ~3 dB soft (gate, v8): +24 velocity is about +3 dB. (v10 tried +12 on the body G3s only: the
+# tail G3s at 60 then fell into 5-6 dB holes, so v9's +24 everywhere stays.)
+for n in cello.notes:
+    if n[2] == 55:
+        n[3] = min(110, n[3] + 24)
 for b, sym in enumerate(CH):
     tb = song.bar(b)
     if 4 <= b < 16:

@@ -332,6 +332,16 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   v6 (templates\sorrow_template_v3: Chorus and Phaser off on both cellos, -3.5 dB bell at 2.2 kHz, key 66 trim)
   PASS: brightness -16.1 dB, but the shimmer is the preset's octave-up Layer B (likely "Random Reattacks"), not
   its FX; Adagio Cello gives only ~0.13 dB per velocity step, so per-key trims need clone channels, not velocity.
+  v9 (`templates\sorrow_template_v4`: Random Reattacks at 0 on both channels, a `cello_soft` clone at -3.5 dB
+  for key 70) PASS (5 MINOR): shimmer about halved, body bars within 2.5 LU, seam +1.2 dB. Velocity response is
+  uneven (0.13-0.32 dB a step), so bar 8's F#3 at 50 overshot to a -7.7 dB hole and +24 on every G3 undid the
+  tail's ebb and exposed a flat (~191 Hz) attack resonance. v10 tried F#3 63, +12 on the body G3s only and +10
+  on the tail Bb3: bar 8 jumped +7.9 dB and the tail G3s fell into 5-6 dB holes (the preset changes sample layers
+  between those velocities), so v9 ships. Level fixes on this preset need clone channels. Still open: the even-partial shimmer left (h4/h8) is likely Layer B's Light Pool synth.
+- **Ritual choir v10/v11:** turning the bell's Part 2 off made it toll properly, but its strikes vary randomly by 5+
+  dB from render to render (Soft Bells), so no key trim can level it, and the choir's chorus/phaser off changed
+  nothing. v8 stays the shipped cue; `maps/story_choir_fix.json` (bell_soft clone) is kept for a future bell swap.
+- **Spring v4:** the Simple Ohh pad 3 dB lower (pad_glass -35 in `mixes/place_spring.json`), its v3 MINOR.
 - **FL tips from this batch:** ctrl+r (after clicking empty workspace) opens the export dialog directly; the File menu
   route sometimes missed and toggled channel-rack steps. In Analog Lab, typing in the search box leaks keys to FL
   (it played notes and loaded another preset): use the Types / Instruments filters with the mouse instead.
