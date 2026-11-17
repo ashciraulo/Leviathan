@@ -8,6 +8,7 @@ Material letters here must not clash with other art modules (build_art
 asserts it): this file uses + < > ^ for ramps and none for flats.
 """
 
+import functools
 import math
 import random
 
@@ -126,6 +127,57 @@ def lava_tile(frame):
     return px
 
 
+# Open lava pools on the overworld are drawn from one 64px block (4x4
+# tiles, picked by position), so a pool shows no 16px repeat.
+LAVA_BLOCK = 4
+
+
+@functools.lru_cache(maxsize=None)
+def lava_block(frame):
+    """Molten cells, wrapped so the block tiles with no seam: each one wells
+    up bright in the middle and cools to glowing red seams where it meets
+    its neighbours. The second frame swells the middles a touch."""
+    size = LAVA_BLOCK * T
+    rnd = random.Random(1717)
+    pts = []
+    for gy in range(LAVA_BLOCK):
+        for gx in range(LAVA_BLOCK):
+            pts.append((gx * T + rnd.uniform(2, 14), gy * T + rnd.uniform(2, 14), rnd.uniform(0.85, 1.15)))
+    px = [[LAVA[2]] * size for _ in range(size)]
+    for y in range(size):
+        for x in range(size):
+            ds = []
+            for (cx, cy, k) in pts:
+                dx = (x - cx + size / 2) % size - size / 2
+                dy = ((y - cy + size / 2) % size - size / 2) * 1.25
+                ds.append(math.hypot(dx, dy) * k)
+            ds.sort()
+            edge = ds[1] - ds[0]
+            core = ds[0] - frame * 0.8
+            wob = 0.8 * math.sin((x * 3 + y * 5) * 0.37)
+            if edge + wob * 0.3 < 0.8:
+                c = LAVA[5]
+            elif edge < 1.9:
+                c = LAVA[4]
+            elif edge < 3.4:
+                c = LAVA[3]
+            elif core < 4.6 + wob:
+                c = LAVA[1]
+            else:
+                c = LAVA[2]
+            px[y][x] = c
+    for (cx, cy, _k) in pts:
+        x, y = (int(cx) + frame) % size, int(cy) % size
+        px[y][x] = LAVA[0]
+    return px
+
+
+def lava_block_tile(frame, q):
+    block = lava_block(frame)
+    ox, oy = (q % LAVA_BLOCK) * T, (q // LAVA_BLOCK) * T
+    return [row[ox:ox + T] for row in block[oy:oy + T]]
+
+
 def crust_edge(side, frame):
     """A black, cooled lip where the lava meets the ash."""
     px = blank()
@@ -195,6 +247,10 @@ TILES = [
     ("mesa_top_0", lambda: mesa_top(0)), ("mesa_top_1", lambda: mesa_top(1)),
     ("mesa_face_0", lambda: mesa_face(0)), ("mesa_face_1", lambda: mesa_face(1)),
     ("lava_0", lambda: lava_tile(0)), ("lava_1", lambda: lava_tile(1)),
+] + [
+    ("lava_%d_%d" % (f, q), (lambda f=f, q=q: lava_block_tile(f, q)))
+    for f in range(2) for q in range(LAVA_BLOCK * LAVA_BLOCK)
+] + [
     ("crust_top_0", lambda: crust_edge("top", 0)), ("crust_bottom_0", lambda: crust_edge("bottom", 0)),
     ("crust_left_0", lambda: crust_edge("left", 0)), ("crust_right_0", lambda: crust_edge("right", 0)),
     ("crust_top_1", lambda: crust_edge("top", 1)), ("crust_bottom_1", lambda: crust_edge("bottom", 1)),

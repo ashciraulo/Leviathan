@@ -355,6 +355,19 @@ def lowe_frames():
     return [idle, breathe, talk]
 
 
+# Lowe once the Choir's done with: the grey robe and its tuning-fork badge
+# folded away (her singers all home), a green knit jumper under it.
+LOWE_PLAIN = [row.replace("S", "Y").replace("J", "Y").replace("U", "Y") if i >= 10 else row
+              for i, row in enumerate(LOWE)]
+
+
+def lowe_plain_frames():
+    idle = LOWE_PLAIN
+    breathe = settle(idle, 10)
+    talk = paint(idle, [(13, 14, "Y."), (14, 14, "Y."), (12, 14, "YA"), (11, 14, "YA"), (10, 15, "A")])
+    return [idle, breathe, talk]
+
+
 # --------------------------------------------------------------------------
 # Ide the ferrywoman, at Causeway End: a red headscarf, a long grey braid
 # over one shoulder, a sea-green coat and her oar stood upright beside her.
@@ -1362,6 +1375,7 @@ SPRITES = {
     "ansel": lambda: straggler_frames(ANSEL),
     "ferrin": ferrin_frames,
     "lowe": lowe_frames,
+    "lowe_plain": lowe_plain_frames,
     "tobin": tobin_frames,
     "ide": ide_frames,
     "liesl": liesl_frames,
@@ -1544,6 +1558,17 @@ def portrait_lowe():
     _ellipse(c, 16, 32, 15, 8, "S")                    # grey robe
     _ellipse(c, 16, 26, 13, 4, "S")                    # the hood, down
     _dots(c, [(16, 26), (16, 27), (15, 28), (16, 28), (17, 28), (16, 29)], "J")  # tuning fork
+    _ellipse(c, 16, 13, 10, 8, "v")                    # black hair, scraped back
+    _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, cheeks=False)
+    _box(c, 10, 14, 4, 1, "v")                         # hard brows
+    _box(c, 18, 14, 4, 1, "v")
+    return _rows(c)
+
+
+def portrait_lowe_plain():
+    c = _canvas()
+    _ellipse(c, 16, 32, 15, 8, "Y")                    # a green knit jumper
+    _box(c, 12, 25, 8, 1, "Z")                         # its rolled collar
     _ellipse(c, 16, 13, 10, 8, "v")                    # black hair, scraped back
     _face(c, "A", eye_row=16, cy=17, rx=7, ry=8, cheeks=False)
     _box(c, 10, 14, 4, 1, "v")                         # hard brows
@@ -1865,6 +1890,7 @@ PORTRAITS = {
     "ansel": portrait_ansel(),
     "ferrin": portrait_ferrin(),
     "lowe": portrait_lowe(),
+    "lowe_plain": portrait_lowe_plain(),
     "tobin": portrait_tobin(),
     "ide": portrait_ide(),
     "liesl": portrait_liesl(),

@@ -47,6 +47,34 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=env: the overworld ground the art pass redrew: lava pools,
+	# the tide flats at low water, and sinking sand. SHOTS_ONLY=shores:
+	# pools and shorelines, for their rounded corners.
+	if OS.get_environment("SHOTS_ONLY") in ["env", "shores"]:
+		await _env_shots(game, OS.get_environment("SHOTS_ONLY"))
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=atlas: every overworld screen, native size, HUD hidden
+	# (screenshots/atlas/<x>_<y>.png), to stitch into one map of the world.
+	if OS.get_environment("SHOTS_ONLY") == "atlas":
+		await _atlas_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
+	# SHOTS_ONLY=motion: a few seconds of frames from one screen per
+	# region (screenshots/motion/<name>_NN.png), for judging what moves.
+	if OS.get_environment("SHOTS_ONLY") == "motion":
+		await _motion_shots(game)
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
+
 	# SHOTS_ONLY=ebb: the sea bed, under water and then held bare.
 	if OS.get_environment("SHOTS_ONLY") == "ebb":
 		await _ebb_shots(game)
@@ -111,6 +139,16 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 
+	# SHOTS_ONLY=said_and_seen: errands that make sense on screen (Dunstan
+	# at the market and carrying the rope off, the Reed lantern, the
+	# Lantern Wake's lanterns, Lowe without her robe, a singer leaving).
+	if OS.get_environment("SHOTS_ONLY") == "said_and_seen":
+		game.queue_free()
+		await _said_and_seen_shots()
+		SaveManager.delete_save()
+		SaveManager.restore_aside(TEST_SLOT, "testbackup")
+		get_tree().quit(0)
+		return
 	# SHOTS_ONLY=rib_song: Rib Hollow's ribs ringing for Dace's song.
 	if OS.get_environment("SHOTS_ONLY") == "rib_song":
 		game.queue_free()
@@ -1213,11 +1251,17 @@ func _mire_shots(game: Node) -> void:
 	await _wait(0.6)
 	await _capture("82_congregation_heart_bare")
 	if boss:
-		while is_instance_valid(boss) and boss.hp > 0:
+		# One hit a frame: a blocked hit (the heart not bare yet) only comes
+		# right on a later frame, and a loop that never yields floods the
+		# message queue with redraws until Godot crashes.
+		var tries := 600
+		while is_instance_valid(boss) and boss.hp > 0 and tries > 0:
+			tries -= 1
 			boss._stun = 0.0
 			for wisp: Dictionary in boss.wisps:
 				wisp["home"] = false
 			boss.take_hit(1, Vector2.UP)
+			await get_tree().physics_frame
 	await _wait(1.2)
 	await _capture("83_congregation_released")
 	# The calf in the lights, with Murmur.
@@ -2587,6 +2631,59 @@ func _rib_shot() -> void:
 	await _wait(0.2)
 
 
+func _shot_at(coord: Vector2i, at: Vector2) -> Node:
+	GameState.set_checkpoint(coord, at)
+	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
+	add_child(game)
+	await _wait(0.6)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+	return game
+
+
+func _said_and_seen_shots() -> void:
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in ["met_hessa", "asked_for_rope"]:
+		GameState.set_flag(flag)
+	var game: Node = await _shot_at(StoryDirector.SALTMARROW_MARKET, StoryDirector.DUNSTAN_MARKET_AT + Vector2(14, 22))
+	game.player.facing = Vector2.UP
+	await _capture("quest_34_dunstan_market")
+	GameState.set_flag(StoryDirector.ROPE_FLAG)
+	await _wait(4.0)
+	await _capture("quest_35_dunstan_rope")
+	game.queue_free()
+	await _wait(0.2)
+	game = await _shot_at(StoryDirector.SALTMARROW, Vector2(14 * 16 + 8, 9 * 16 + 8))
+	await _capture("quest_36_square_dunstan")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	for flag in [StoryDirector.ENDING_FLAG, StoryDirector.CALF_FLAG, "murmur_lantern_lit", "gully_paid", "gully_box_hauled", "gully_lanterns_done", "lowe_singers_done", "lowe_garden_done"]:
+		GameState.set_flag(flag)
+	game = await _shot_at(StoryDirector.FENMOUTH, StoryDirector.REED_LANTERN_AT + Vector2(-20, 30))
+	await _capture("quest_37_reed_lantern")
+	game.queue_free()
+	await _wait(0.2)
+	game = await _shot_at(StoryDirector.WRECK_STRAND, StoryDirector.FIGUREHEAD_AT + Vector2(0, 40))
+	await _capture("quest_38_ship_lanterns")
+	game.queue_free()
+	await _wait(0.2)
+	game = await _shot_at(StoryDirector.LULLABY_POINT, StoryDirector.LOWE_AT + Vector2(-56, 24))
+	await _capture("quest_39_lowe_plain")
+	game.queue_free()
+	await _wait(0.2)
+	GameState.reset_new_game()
+	GameState.set_flag(StoryDirector.ENDING_FLAG)
+	var spot: Array = StoryDirector.SINGERS["sela"]
+	game = await _shot_at(spot[0], Vector2(spot[1]) * 16.0 + Vector2(8, 34))
+	GameState.set_flag("sela_home")
+	await _wait(2.5)
+	await _capture("quest_40_sela_leaves")
+	game.queue_free()
+	await _wait(0.2)
+
+
 ## The Reeds' song: Murmur singing in the Drowned Chapel, Wren's lamp up.
 func _reeds_shot() -> void:
 	await _wait(0.2)
@@ -3109,7 +3206,7 @@ func _shop_shots() -> void:
 	GameState.set_flag("tidebell_hull")
 	GameState.give_item("glint", 45, false)
 	GameState.give_item("jar", 2, false)
-	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW_MARKET, GameState.NO_POSITION)
 	var village: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(village)
 	await _wait(0.5)
@@ -3574,3 +3671,93 @@ func _close_dialogue(game: Node) -> void:
 				child.advance()
 				guard += 1
 				await _wait(0.05)
+
+
+func _env_shots(game: Node, which: String) -> void:
+	var shots := [
+		[Vector2i(0, 0), "shore_saltmarrow_shore", Vector2i(2, 3)],
+		[Vector2i(3, 0), "shore_brinewood_edge", Vector2i(7, 6)],
+		[Vector2i(1, -3), "shore_frostbite_shelf", Vector2i(4, 4)],
+		[Vector2i(6, -4), "shore_windbreak_cliffs", Vector2i(3, 5)],
+		[Vector2i(4, 1), "shore_fenmouth", Vector2i(11, 1)],
+		[Vector2i(2, 2), "shore_wrack_shore", Vector2i(3, 8)],
+	] if which == "shores" else [
+		[Vector2i(8, -1), "env_geyser_basin", Vector2i(11, 1)],
+		[Vector2i(9, -2), "env_slag_fields", Vector2i(2, 6)],
+		[Vector2i(0, 2), "env_cockle_flats", Vector2i(6, 7)],
+		[Vector2i(2, 2), "env_wrack_shore", Vector2i(3, 8)],
+		[Vector2i(7, 1), "env_sinksand_basin", Vector2i(11, 1)],
+		[Vector2i(7, 0), "env_bleached_strand", Vector2i(11, 11)],
+		[Vector2i(10, 1), "env_sinksand_ring", Vector2i(11, 1)],
+	]
+	for shot: Array in shots:
+		var tile: Vector2i = shot[2]
+		GameState.set_checkpoint(shot[0], Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		Tide.offset = Tide.offset_for(Tide.Phase.LOW, 3.0 - 2.2)
+		game.respawn()
+		await _wait(2.2)
+		await _capture(shot[1])
+
+
+## Frame runs for SHOTS_ONLY=motion: 3 s at 10 fps per screen, native size.
+## MOTION_ONLY=<name> takes one of them.
+func _motion_shots(game: Node) -> void:
+	var shots := [
+		[Vector2i(0, 0), "saltmarrow", Vector2i(2, 3)],
+		[Vector2i(3, 0), "brinewood", Vector2i(7, 6)],
+		[Vector2i(4, 1), "gloamfen", Vector2i(11, 1)],
+		[Vector2i(6, -4), "windmere", Vector2i(3, 5)],
+		[Vector2i(1, -3), "frostspine", Vector2i(4, 4)],
+		[Vector2i(2, 2), "sunken_verge", Vector2i(3, 8)],
+		[Vector2i(9, -2), "cinderreach", Vector2i(2, 6)],
+		[Vector2i(7, 0), "ossuary", Vector2i(11, 11)],
+	]
+	var only := OS.get_environment("MOTION_ONLY")
+	var dir := _out_dir.path_join("motion")
+	DirAccess.make_dir_recursive_absolute(dir)
+	for shot: Array in shots:
+		if only != "" and not only.split(",").has(shot[1]):
+			continue
+		var tile: Vector2i = shot[2]
+		GameState.set_checkpoint(shot[0], Vector2(tile.x * Room.TILE + 8, tile.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		await _wait(2.0)
+		for i in 30:
+			await RenderingServer.frame_post_draw
+			var image := get_viewport().get_texture().get_image()
+			image.save_png(dir.path_join("%s_%02d.png" % [shot[1], i]))
+			await _wait(0.1)
+		print("Saved motion %s" % shot[1])
+
+
+func _atlas_shots(game: Node) -> void:
+	var dir := _out_dir.path_join("atlas")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var coords: Array = RoomInfo.all().keys().filter(func(c: Vector2i) -> bool: return str(RoomInfo.get_room(c).get("dungeon", "")) == "")
+	coords.sort()
+	for coord: Vector2i in coords:
+		var rows: PackedStringArray = RoomInfo.rows_now(coord)
+		var best := Vector2i(-1, -1)
+		var best_d := 1e9
+		for y in rows.size():
+			for x in rows[y].length():
+				if rows[y][x] == ".":
+					var d := Vector2(x - 12, y - 7).length()
+					if d < best_d:
+						best_d = d
+						best = Vector2i(x, y)
+		if best.x < 0:
+			continue
+		GameState.set_checkpoint(coord, Vector2(best.x * Room.TILE + 8, best.y * Room.TILE + 12))
+		SaveManager.save_game()
+		game.respawn()
+		await _wait(1.0)
+		for layer in game.find_children("*", "CanvasLayer", true, false):
+			(layer as CanvasLayer).visible = false
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join("%d_%d.png" % [coord.x, coord.y]))
+		for layer in game.find_children("*", "CanvasLayer", true, false):
+			(layer as CanvasLayer).visible = true
+	print("Saved atlas (%d screens)" % coords.size())

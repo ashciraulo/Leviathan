@@ -273,6 +273,28 @@ def lizard(m, frame):
     return _rows(c)
 
 
+CLOUD_W, CLOUD_H = 190, 80
+
+
+def cloud_shadow(k):
+    """A cloud's shadow on the ground: a few overlapping round puffs,
+    squashed flat, white (the game tints it) and even inside, its rim a
+    checker of pixels so it fades over one pixel instead of a hard line."""
+    rnd = random.Random(4100 + k)
+    w, h = 150 + k * 20, 64 + k * 8
+    puffs = []
+    for _ in range(6):
+        r = rnd.uniform(h * 0.22, h * 0.42)
+        puffs.append((rnd.uniform(r, w - r), rnd.uniform(r * 0.9, h - r * 0.9), r))
+    px = [[CLEAR] * CLOUD_W for _ in range(CLOUD_H)]
+    for y in range(h):
+        for x in range(w):
+            best = max(r - ((x - cx) ** 2 + ((y - cy) * 1.3) ** 2) ** 0.5 for cx, cy, r in puffs)
+            if best >= 1.5 or (best >= 0 and (x + y) % 2 == 0):
+                px[y][x] = (255, 255, 255, 255)
+    return px
+
+
 def build(lit, sheet):
     """Everything in assets/ambient/, as {file name: pixels}."""
     return {
@@ -283,4 +305,5 @@ def build(lit, sheet):
         "splash": sheet([[splash(f) for f in (0, 1, 2)]], 12, 8),
         "hare": sheet([[lit(hare(m, f), 143) for f in (0, 1)] for m in ("h", "j")], 12, 10),
         "lizard": sheet([[lit(lizard(m, f), 144) for f in (0, 1)] for m in ("l", "k")], 12, 6),
+        "cloud": sheet([[cloud_shadow(k)] for k in range(3)], CLOUD_W, CLOUD_H),
     }

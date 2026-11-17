@@ -13,6 +13,11 @@ const PULL := 50.0
 const SWALLOW := 6.0
 ## How often (seconds) firm footing is remembered.
 const SAFE_EVERY := 0.15
+## The whirl each patch is drawn with (tools/ossuary_art.py): a block of
+## WHIRL_BLOCK x WHIRL_BLOCK tiles centred on the patch's middle, turning
+## through WHIRL_FRAMES.
+const WHIRL_BLOCK := 5
+const WHIRL_FRAMES := 3
 
 var _room: Room
 ## Tile -> the middle (room-local) of the patch it belongs to.
@@ -70,7 +75,7 @@ func middle_at(local: Vector2) -> Vector2:
 
 
 func _physics_process(delta: float) -> void:
-	var frame := int(Time.get_ticks_msec() / 400) % 2
+	var frame := int(Time.get_ticks_msec() / 400) % WHIRL_FRAMES
 	if frame != _frame:
 		_frame = frame
 		queue_redraw()
@@ -124,6 +129,19 @@ func _firm_near(local: Vector2) -> Vector2:
 
 
 func _draw() -> void:
+	var half := WHIRL_BLOCK / 2
 	for tile: Vector2i in _middle:
 		var rect := Rect2(Vector2(tile * Room.TILE), Vector2(Room.TILE, Room.TILE))
-		draw_texture_rect_region(Art.WORLD_TILES, rect, TileAtlas.region("sinksand_%d" % ((_frame + tile.x + tile.y) % 2)))
+		# Which piece of the whirl: by the tile's place round its patch's
+		# middle, so each patch turns round the spot it drags Wren to.
+		var mid := Vector2i((_middle[tile] as Vector2) / Room.TILE)
+		var i := tile.x - mid.x + half
+		var j := tile.y - mid.y + half
+		if i < 0 or j < 0 or i >= WHIRL_BLOCK or j >= WHIRL_BLOCK:
+			# Beyond the whirl, a big patch carries on in plain loose sand.
+			draw_texture_rect_region(Art.WORLD_TILES, rect, TileAtlas.region("sinkloose_%d" % ((tile.x * 7 + tile.y * 3) % 2)))
+		else:
+			draw_texture_rect_region(Art.WORLD_TILES, rect, TileAtlas.region("sinkwhirl_%d_%d_%d" % [_frame, i, j]))
+		for side: Array in [["top", Vector2i.UP], ["bottom", Vector2i.DOWN], ["left", Vector2i.LEFT], ["right", Vector2i.RIGHT]]:
+			if not _middle.has(tile + (side[1] as Vector2i)):
+				draw_texture_rect_region(Art.WORLD_TILES, rect, TileAtlas.region("sinkrim_%s" % side[0]))

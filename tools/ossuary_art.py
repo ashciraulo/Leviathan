@@ -9,6 +9,7 @@ materials (RAMPS, FLAT). Imported by build_art.py, which writes the
 sprites to assets/ossuary/.
 """
 
+import functools
 import math
 import random
 
@@ -50,20 +51,79 @@ def dune_tile(seed):
     return px
 
 
-def sinksand(frame):
-    """Sinking sand (layout S): darker, loose, turning slowly round its
-    middle. Two frames so it seems to swirl."""
-    px = blank(SAND[3])
-    for y in range(T):
-        for x in range(T):
-            dx, dy = x - 7.5, y - 7.5
-            angle = math.atan2(dy, dx)
+# A patch of sinking sand is drawn as one whirl round the patch's middle
+# (where it drags Wren): a SINK_BLOCK x SINK_BLOCK block of tiles with the
+# middle tile in its centre, picked by each tile's offset from the middle
+# (clamped, so a bigger patch carries on in loose sand). SINK_FRAMES turn
+# it a third of the way round each.
+SINK_BLOCK = 5
+SINK_FRAMES = 3
+
+
+@functools.lru_cache(maxsize=None)
+def sink_block(frame):
+    """A funnel of loose sand: two arms winding in, tighter toward a dark
+    hollow in the middle, fading out to plain loose sand at the rim."""
+    size = SINK_BLOCK * T
+    c = size / 2.0
+    rnd = random.Random(6050)
+    px = [[SAND[3]] * size for _ in range(size)]
+    for y in range(size):
+        for x in range(size):
+            dx, dy = x + 0.5 - c, (y + 0.5 - c) * 1.15
             r = math.hypot(dx, dy)
-            v = math.sin(angle * 2 + r * 0.9 - frame * 1.6)
-            if v > 0.55:
-                px[y][x] = SAND[2]
-            elif v < -0.6:
-                px[y][x] = SAND[4]
+            a = math.atan2(dy, dx)
+            v = math.sin(2 * a + 7.0 * math.log(r + 3.0) - frame * 2 * math.pi / SINK_FRAMES)
+            fade = max(0.0, 1.0 - r / 42.0)
+            if r < 4.0:
+                col = SAND[5]
+            elif r < 8.5:
+                col = SAND[4] if v > -0.3 else SAND[5]
+            else:
+                col = SAND[3]
+                if v > 1.0 - 0.55 * fade:
+                    col = SAND[2]
+                elif v < -1.0 + 0.6 * fade:
+                    col = SAND[4]
+            px[y][x] = col
+    # Grit, the same grains every frame so only the arms seem to turn.
+    for _ in range(40):
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        if px[y][x] == SAND[3]:
+            px[y][x] = SAND[2] if rnd.random() < 0.6 else SAND[4]
+    return px
+
+
+def sink_tile(frame, i, j):
+    block = sink_block(frame)
+    return [row[i * T:i * T + T] for row in block[j * T:j * T + T]]
+
+
+def sink_loose(seed):
+    """Loose sand for a big patch's far reaches, past the whirl's block:
+    the whirl's outer colour with grit, no arms, so it never ends
+    abruptly against a copy of itself."""
+    rnd = random.Random(6070 + seed)
+    px = blank(SAND[3])
+    for _ in range(9):
+        x, y = rnd.randrange(T), rnd.randrange(T)
+        px[y][x] = SAND[2] if rnd.random() < 0.6 else SAND[4]
+    # A faint drift line, the sand creeping in.
+    y = rnd.randrange(3, T - 3)
+    for x in range(rnd.randrange(0, 5), rnd.randrange(9, T)):
+        px[y + (x // 5) % 2][x] = SAND[2]
+    return px
+
+
+def sink_rim(side):
+    """The crest where loose sand meets firm (drawn on the loose side): a
+    pale ridge with a shade under it."""
+    px = blank()
+    for i in range(T):
+        bump = 1 if (i * 5) % 7 < 2 else 0
+        for k, col in ((0, SAND[0]), (1, SAND[1]), (2, SAND[2]), (3 + bump, SAND[4])):
+            x, y = {"top": (i, k), "bottom": (i, T - 1 - k), "left": (k, i), "right": (T - 1 - k, i)}[side]
+            px[y][x] = col
     return px
 
 
@@ -183,7 +243,13 @@ def sanddrift(seed):
 TILES = [
     ("dune_0", lambda: dune_tile(0)), ("dune_1", lambda: dune_tile(1)),
     ("dune_2", lambda: dune_tile(2)), ("dune_3", lambda: dune_tile(3)),
-    ("sinksand_0", lambda: sinksand(0)), ("sinksand_1", lambda: sinksand(1)),
+] + [
+    ("sinkwhirl_%d_%d_%d" % (f, i, j), (lambda f=f, i=i, j=j: sink_tile(f, i, j)))
+    for f in range(SINK_FRAMES) for j in range(SINK_BLOCK) for i in range(SINK_BLOCK)
+] + [
+    ("sinkloose_0", lambda: sink_loose(0)), ("sinkloose_1", lambda: sink_loose(1)),
+    ("sinkrim_top", lambda: sink_rim("top")), ("sinkrim_bottom", lambda: sink_rim("bottom")),
+    ("sinkrim_left", lambda: sink_rim("left")), ("sinkrim_right", lambda: sink_rim("right")),
     ("ossuary_top_0", lambda: ossuary_top(0)), ("ossuary_top_1", lambda: ossuary_top(1)),
     ("ossuary_face_0", lambda: ossuary_face(0)), ("ossuary_face_1", lambda: ossuary_face(1)),
     ("bitter_sea_0", lambda: bitter_sea(0)), ("bitter_sea_1", lambda: bitter_sea(1)),

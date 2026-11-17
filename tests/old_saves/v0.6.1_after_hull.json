@@ -1,0 +1,106 @@
+{
+ "format_version": 1,
+ "game_version": "0.6.1",
+ "saved_at": "2026-11-12T17:52:08",
+ "state": {
+  "area_stats": {
+   "dungeon_hull": {
+    "deaths": 0,
+    "time": 59.0382338888808
+   },
+   "region_brinewood": {
+    "deaths": 0,
+    "time": 1.98784711111111
+   },
+   "region_saltmarrow": {
+    "deaths": 0,
+    "time": 0.974509
+   }
+  },
+  "bubbles": 5,
+  "checkpoint_pos": [
+   184.0,
+   140.0
+  ],
+  "checkpoint_room": [
+   5,
+   0
+  ],
+  "equipped": {
+   "shield": "cork_buckler",
+   "sword": "driftwood_sword",
+   "tunic": "oilskin"
+  },
+  "flags": {
+   "boss_hull": true,
+   "chest_11_10_13_6": true,
+   "chest_11_8_17_3": true,
+   "chest_11_9_19_3": true,
+   "chest_12_8_20_6": true,
+   "chest_12_9_17_6": true,
+   "chest_8_8_3_2": true,
+   "chest_9_10_17_10": true,
+   "chest_9_8_20_11": true,
+   "chest_9_9_15_2": true,
+   "entered_hull": true,
+   "gate_11_10": true,
+   "gate_12_8": true,
+   "gate_12_9": true,
+   "keys_hull": 3,
+   "seen_0_0": true,
+   "seen_10_10": true,
+   "seen_10_7": true,
+   "seen_10_8": true,
+   "seen_10_9": true,
+   "seen_11_10": true,
+   "seen_11_8": true,
+   "seen_11_9": true,
+   "seen_12_8": true,
+   "seen_12_9": true,
+   "seen_5_0": true,
+   "seen_8_8": true,
+   "seen_8_9": true,
+   "seen_9_10": true,
+   "seen_9_8": true,
+   "seen_9_9": true,
+   "seen_lowe_hull": true,
+   "tidebell_hull": true,
+   "tidestone_10_10": true
+  },
+  "inventory": {
+   "cork_buckler": 1,
+   "driftwood_sword": 1,
+   "glint": 150,
+   "hull_big_key": 1,
+   "hull_compass": 1,
+   "hull_map": 1,
+   "keeper_lamp": 1,
+   "oilskin": 1,
+   "tide_hook": 1,
+   "tidebell": 1
+  },
+  "item_slots": [
+   "tide_hook",
+   ""
+  ],
+  "jars": [],
+  "jumper": "",
+  "max_bubbles": 5,
+  "play_time": 62.0005899999911,
+  "resonance": 40.0,
+  "resonance_max": 40.0,
+  "tidestones": {
+   "10_10": [
+    184.0,
+    136.0
+   ]
+  }
+ },
+ "summary": {
+  "bells": 1,
+  "bubbles": 5,
+  "pearls": 0,
+  "place": "ROOM_HULL_LANDING",
+  "play_time": 62.0005899999911
+ }
+}

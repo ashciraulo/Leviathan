@@ -142,6 +142,8 @@ var player_spawn := SIZE / 2.0
 
 var _rows := PackedStringArray()
 var _ground: Node2D
+## The swaying tufts, drawn over the ground.
+var _sway: Sway
 ## The ground is drawn in pieces of this many tiles, so a light (a dark
 ## room's lantern, a wisp) only shades the pieces it reaches: a whole-room
 ## canvas item under one small light costs a browser a lit full screen.
@@ -177,12 +179,15 @@ const WATER_FRAME_TIME := 0.6
 ## animation frame; %s is a side (top, bottom, left, right).
 const BIOMES := {
 	"saltmarrow": {
+		"shore": "shore_saltmarrow_%s_%d",
 		"floor": "sand_%d", "wall_top": "cliff_top_%d", "wall_face": "cliff_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
 		"wet_deco": "shell_%d", "dry_deco": "grass_%d", "floor_overlay": ["ripple_%d", 7],
 		"water_overlay": ["tidepool_%d", 5],
 	},
 	"brinewood": {
+		"deep": "deep_brinewood_%d", "deep_shelf": "deepshelf_brinewood_%s_%d", "deep_colour": "#193b40",
+		"shore": "shore_brinewood_%s_%d",
 		"floor": "peat_%d", "wall_top": "canopy_%d", "wall_face": "roots_%d",
 		"water": "bog_%d", "water_edge": "bank_%s_%d", "damp": "mire_%s",
 		"wet_deco": "reeds_%d", "dry_deco": "fern_%d",
@@ -192,23 +197,27 @@ const BIOMES := {
 	},
 	"cinderreach": {
 		"floor": "ash_%d", "wall_top": "mesa_top_%d", "wall_face": "mesa_face_%d",
-		"water": "lava_%d", "water_edge": "crust_%s_%d", "damp": "scorch_%s",
+		"water": "lava_%d", "water_block": ["lava_%d_%d", 4], "water_edge": "crust_%s_%d", "damp": "scorch_%s",
 		"wet_deco": "vent_%d", "dry_deco": "scrub_%d",
 		"floor_overlay": ["shimmer_%d", 7], "door": "exit_glow",
 	},
 	"gloamfen": {
+		"shore": "shore_gloamfen_%s_%d",
 		"floor": "fen_%d", "wall_top": "canopy_top_%d", "wall_face": "root_face_%d",
 		"water": "gloom_%d", "water_edge": "reed_%s_%d", "damp": "mirk_%s",
 		"wet_deco": "glowcap_%d", "dry_deco": "frond_%d",
 		"floor_overlay": ["motes_%d", 11], "boardwalk": "boardwalk_%s", "door": "exit_glow",
 	},
 	"windmere": {
+		"deep": "deep_windmere_%d", "deep_shelf": "deepshelf_windmere_%s_%d", "deep_colour": "#1c4676",
+		"shore": "shore_windmere_%s_%d",
 		"floor": "turf_%d", "wall_top": "chalk_top_%d", "wall_face": "chalk_face_%d",
 		"water": "deep_sea_%d", "water_edge": "surf_%s_%d", "damp": "brink_%s",
 		"wet_deco": "seapinks_%d", "dry_deco": "tussock_%d", "gap": "galesky",
 		"floor_overlay": ["gust_%d", 9], "door": "exit_glow",
 	},
 	"frostspine": {
+		"shore": "shore_frostspine_%s_%d",
 		"floor": "snow_%d", "wall_top": "glacier_top_%d", "wall_face": "glacier_face_%d",
 		"water": "floe_sea_%d", "water_edge": "shelf_%s_%d", "damp": "drift_%s",
 		"wet_deco": "ice_shards_%d", "dry_deco": "frost_rock_%d",
@@ -216,12 +225,17 @@ const BIOMES := {
 		"gap": "crevasse",
 	},
 	"sunken_verge": {
+		"deep": "deep_sunken_verge_%d", "deep_shelf": "deepshelf_sunken_verge_%s_%d", "deep_colour": "#233b4a",
+		"shore": "shore_sunken_verge_%s_%d",
 		"floor": "silt_%d", "wall_top": "seawall_top_%d", "wall_face": "seawall_face_%d",
 		"water": "shallows_%d", "water_edge": "tideline_%s_%d", "damp": "seep_%s",
 		"wet_deco": "wrack_%d", "dry_deco": "cockle_%d",
-		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d", "seabed": "seabed_%d", "door": "exit_glow",
+		"floor_overlay": ["glint_%d", 9], "tidal": "flat_%d",
+		"tidal_block": ["flat_block_%d", 2], "tidal_edge": "flat_edge_%s", "seabed": "seabed_%d", "door": "exit_glow",
 	},
 	"ossuary": {
+		"deep": "deep_ossuary_%d", "deep_shelf": "deepshelf_ossuary_%s_%d", "deep_colour": "#244e65",
+		"shore": "shore_ossuary_%s_%d",
 		"floor": "dune_%d", "wall_top": "ossuary_top_%d", "wall_face": "ossuary_face_%d",
 		"water": "bitter_sea_%d", "water_edge": "salt_crust_%s_%d", "damp": "sandshade_%s",
 		"wet_deco": "thornbush_%d", "dry_deco": "bone_shards_%d",
@@ -240,7 +254,7 @@ const BIOMES := {
 		"floor": "kiln_floor_%d", "wall_top": "kiln_top_%d", "wall_face": "kiln_face_%d",
 		"water": "quench_%d", "water_edge": "kerb_%s_%d", "damp": "kiln_scorch_%s",
 		"wet_deco": "cinder_%d", "dry_deco": "slagbit_%d",
-		"floor_overlay": ["glowcrack_%d", 23], "door": "exit_glow",
+		"floor_overlay": ["glowcrack_%d", 31], "door": "exit_glow",
 		"set_pieces": 2,
 	},
 	"mire": {
@@ -256,8 +270,8 @@ const BIOMES := {
 		"set_pieces": 2,
 		"floor": "gale_floor_%d", "wall_top": "gale_top_%d", "wall_face": "gale_face_%d",
 		"water": "water_%d", "water_edge": "foam_%s_%d", "damp": "damp_%s",
-		"wet_deco": "lichen_%d", "dry_deco": "feather_%d",
-		"floor_overlay": ["lichen_%d", 17], "door": "exit_glow", "gap": "galesky",
+		"wet_deco": "lichen_%d", "dry_deco": "feather_%d", "dry_every": 26,
+		"floor_overlay": ["lichen_%d", 31], "door": "exit_glow", "gap": "galesky",
 	},
 	"glacier": {
 		"wall_deco": "glacier",
@@ -314,6 +328,10 @@ func _ready() -> void:
 			var rect := Rect2i(Vector2i(cx, cy) * GROUND_CHUNK, GROUND_CHUNK)
 			piece.draw.connect(_draw_ground_piece.bind(piece, rect))
 			_ground.add_child(piece)
+	_sway = Sway.new()
+	_sway.name = "Sway"
+	_sway.room = self
+	_ground.add_child(_sway)
 	_build()
 	if dark:
 		var darkness := Darkness.new()
@@ -519,6 +537,9 @@ static func low_water_flag(for_dungeon: String) -> String:
 func refresh_water() -> void:
 	_build_water()
 	_redraw_ground()
+	var air := get_node_or_null("Air") as DungeonAir
+	if air:
+		air.refresh()
 
 
 ## The room under a point (global), or null.
@@ -826,6 +847,11 @@ func _plain_block(x0: int, y0: int, size: int) -> bool:
 				return false
 	return true
 
+## The colour of this room's deep water, for Wren's waterline as they swim.
+func deep_colour() -> Color:
+	return Color(str(BIOMES.get(biome, {}).get("deep_colour", "#1c4a5c")))
+
+
 ## True when the tile shows a tuft a sword can cut (drawn by _draw_ground).
 func has_plant(x: int, y: int) -> bool:
 	var tiles: Dictionary = BIOMES.get(biome, BIOMES["saltmarrow"])
@@ -855,6 +881,7 @@ func cut_plants(area: Rect2) -> int:
 			if not has_plant(x, y):
 				continue
 			_cut[Vector2i(x, y)] = true
+			_sway.tufts.erase(Vector2i(x, y))
 			cut += 1
 			var at := Vector2(x * TILE + TILE / 2.0, y * TILE + TILE / 2.0)
 			var bits := Clippings.new()
@@ -925,14 +952,44 @@ func _redraw_ground() -> void:
 func _draw_ground_piece(piece: Node2D, rect: Rect2i) -> void:
 	_chunk = piece
 	_chunk_rect = rect
+	# The ground may have changed (water frozen or thawed): the piece sends
+	# its swaying tufts again.
+	for tile: Vector2i in _sway.tufts.keys():
+		if rect.has_point(tile):
+			_sway.tufts.erase(tile)
 	_draw_ground()
 	_chunk = null
+
+
+## Open ground a pool's corner can round off into: plain floor, not water,
+## wall, a drop or the screen's edge.
+func _shore_ground(x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= COLS or y >= ROWS:
+		return false
+	var t := _tile_at(x, y)
+	# Only ground drawn as the region's plain floor: not ice, tide flats, the
+	# sea bed, sinking sand or the Old One's back, nor a find lying on ice.
+	if t in ["~", ":", "v", "Q", "#", "_", "^", "I", "x", "r", "d", ";", "S", "p"] or _frozen.has(Vector2i(x, y)):
+		return false
+	return not (t in ["*", "8"] and _tile_at(x - 1, y) == "x" and _tile_at(x + 1, y) == "x")
 
 
 func _draw_tile(tile_name: String, x: int, y: int) -> void:
 	if not _chunk_rect.has_point(Vector2i(x, y)):
 		return
 	_chunk.draw_texture_rect_region(Art.WORLD_TILES, Rect2(x * TILE, y * TILE, TILE, TILE), TileAtlas.region(tile_name))
+
+
+## Grass, ferns and reeds outside the dungeons sway in the wind (see
+## Sway): they are drawn there, not baked into the ground. Not under a cave
+## roof, nor in the dark, where a whole-room layer under a small light
+## would cost a browser a lit full screen.
+func _draw_deco(tile_name: String, x: int, y: int) -> void:
+	if dungeon == "" and not cave and not dark and Sway.sways(tile_name):
+		if _chunk_rect.has_point(Vector2i(x, y)):
+			_sway.tufts[Vector2i(x, y)] = tile_name
+		return
+	_draw_tile(tile_name, x, y)
 
 
 func _draw_ground() -> void:
@@ -975,15 +1032,34 @@ func _draw_ground() -> void:
 				if not _tile_at(x, y - 1) in ["_", "v"]:
 					_draw_tile(gap + "_lip", x, y)
 			elif tile == "~" or tile == "v" or tile == "Q":
-				# Deep water is the same deep green wherever it is (Wren's
-				# waterline is drawn to match it).
-				_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
+				# Deep water is the same deep green in every dungeon; out in
+				# the open it is the region's own water, darker, with a shelf
+				# where the shallows drop off into it (Wren's waterline is
+				# drawn to match: see deep_colour()).
+				if tile == "~" and tiles.has("water_block"):
+					# Drawn from a larger block, picked by position, so a
+					# pool shows no repeat.
+					var block: int = tiles["water_block"][1]
+					_draw_tile(tiles["water_block"][0] % [_water_frame, x % block + (y % block) * block], x, y)
+				elif tile == "Q" and tiles.has("deep"):
+					_draw_tile(tiles["deep"] % _water_frame, x, y)
+					for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
+						if _tile_at(x + side[1], y + side[2]) == "~":
+							_draw_tile(tiles["deep_shelf"] % [side[0], _water_frame], x, y)
+				else:
+					_draw_tile(("deepwater_%d" if tile == "Q" else tiles["water"]) % _water_frame, x, y)
 				if tile != "Q" and tiles.has("water_overlay") and h % int(tiles["water_overlay"][1]) == 0:
 					_draw_tile(tiles["water_overlay"][0] % (h % 3 % 2), x, y)
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					# Boardwalks sit on the water, so no bank line against them.
 					if not _tile_at(x + side[1], y + side[2]) in ["~", ":", "v", "Q"]:
 						_draw_tile(tiles["water_edge"] % [side[0], _water_frame], x, y)
+				# A corner jutting into open ground rounds off.
+				if tile == "~" and tiles.has("shore"):
+					for corner in [["tl", -1, -1], ["tr", 1, -1], ["bl", -1, 1], ["br", 1, 1]]:
+						if _shore_ground(x + corner[1], y) and _shore_ground(x, y + corner[2]) \
+								and _shore_ground(x + corner[1], y + corner[2]):
+							_draw_tile(tiles["shore"] % [corner[0], _water_frame], x, y)
 			else:
 				var wet := _near_water(x, y)
 				# Sea-glass or a pearl shard out on the ice lies on ice.
@@ -994,6 +1070,9 @@ func _draw_ground() -> void:
 					# Mostly bare; now and then a starfish or an anemone.
 					var k := h % 9
 					_draw_tile(tiles["seabed"] % (2 if k == 7 else 3 if k == 8 else k % 2), x, y)
+				elif Tide.is_flat(tile) and tiles.has("tidal_block"):
+					var block: int = tiles["tidal_block"][1]
+					_draw_tile(tiles["tidal_block"][0] % (x % block + (y % block) * block), x, y)
 				elif Tide.is_flat(tile) and tiles.has("tidal"):
 					_draw_tile(tiles["tidal"] % (h % 2), x, y)
 				elif tile == "p":
@@ -1004,6 +1083,9 @@ func _draw_ground() -> void:
 				for side in [["top", 0, -1], ["bottom", 0, 1], ["left", -1, 0], ["right", 1, 0]]:
 					if _tile_at(x + side[1], y + side[2]) in ["~", "v", "Q"] and not is_drop_plank(x + side[1], y + side[2]):
 						_draw_tile(tiles["damp"] % side[0], x, y)
+					# And dry sand darkens toward a tide flat beside it.
+					elif tiles.has("tidal_edge") and not Tide.is_flat(tile) and _tile_at(x + side[1], y + side[2]) in ["r", "d"]:
+						_draw_tile(tiles["tidal_edge"] % side[0], x, y)
 				if _tile_at(x, y - 1) == "#":
 					_draw_tile("shade_top", x, y)
 					# A wall light's glow pooled below it; elsewhere, now and
@@ -1027,9 +1109,9 @@ func _draw_ground() -> void:
 				if tile == "D" or tile == "I":
 					pass
 				elif wet and h % 11 == 0:
-					_draw_tile(tiles["wet_deco"] % (h % 2), x, y)
-				elif not wet and h % 13 == 0 and not _cut.has(Vector2i(x, y)):
-					_draw_tile(tiles["dry_deco"] % (h % 2), x, y)
+					_draw_deco(tiles["wet_deco"] % (h % 2), x, y)
+				elif not wet and h % int(tiles.get("dry_every", 13)) == 0 and not _cut.has(Vector2i(x, y)):
+					_draw_deco(tiles["dry_deco"] % (h % 2), x, y)
 	# The floor set pieces go over the floor they lie on.
 	var deco: String = tiles.get("wall_deco", "")
 	for piece: Array in _set_pieces:

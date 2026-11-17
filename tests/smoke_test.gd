@@ -35,6 +35,7 @@ func _ready() -> void:
 		await _test_audio()
 		_test_text_fit()
 		_test_talks_reachable()
+		await _test_said_and_seen()
 		await _test_menus()
 		await _test_play()
 		await _test_talk_and_dungeon()
@@ -777,8 +778,10 @@ func _test_villagers() -> void:
 			people[child.kind] = child
 		elif child is Prop and child.kind == "n":
 			sign = child
-	for who in ["hessa", "pell", "marga", "dunstan", "nettle"]:
+	for who in ["hessa", "pell", "marga", "nettle"]:
 		_check(people.has(who), "%s lives in Saltmarrow" % who)
+	# Dunstan is round at the market until Marga's rope is promised.
+	_check(not people.has("dunstan"), "Dunstan isn't on the square while Marga needs him fetched")
 	# On screen, each of them, and Wren standing just below to talk, stays
 	# above the tallest the dialogue box (and its name tab) ever gets.
 	for who in people:
@@ -789,7 +792,7 @@ func _test_villagers() -> void:
 		for branch: Dictionary in Conversations.TALKS[who]:
 			for page: Dictionary in Conversations.pages(who, branch):
 				_check(TranslationServer.translate(page["text"]) != page["text"], "line %s is in strings.csv" % page["text"])
-	if not people.has("marga") or not people.has("dunstan"):
+	if not people.has("marga"):
 		game.queue_free()
 		return
 	# Every line fits in the box, with or without a portrait.
@@ -858,8 +861,6 @@ func _test_villagers() -> void:
 	_check(GameState.has_flag("asked_for_rope") == false, "opening the box directly doesn't set story flags")
 	var player: Player = game.player
 
-	# Dunstan grunts until Marga sends Wren over.
-	_check(people["dunstan"].current_pages()[0]["text"] == "DUNSTAN_1", "Dunstan has nothing to say about rope yet")
 	player.global_position = people["marga"].global_position + Vector2(0, 14)
 	player.facing = Vector2.UP
 	await _wait(0.1)
@@ -874,6 +875,20 @@ func _test_villagers() -> void:
 	_finish_talk(game)
 	_check(GameState.has_flag("asked_for_rope"), "Marga's errand is remembered")
 	await _wait(0.4)
+	# Round to the market, where Dunstan dozes by the barrels.
+	var director: StoryDirector = null
+	for child in game.get_children():
+		if child is StoryDirector:
+			director = child
+	director._move_to(StoryDirector.SALTMARROW_MARKET)
+	await _wait(0.3)
+	for child in game.current_room.get_children():
+		if child is Npc and child.kind == "dunstan":
+			people["dunstan"] = child
+	_check(people.has("dunstan") and people["dunstan"].position == StoryDirector.DUNSTAN_MARKET_AT, "Dunstan is by the market barrels")
+	if not people.has("dunstan"):
+		game.queue_free()
+		return
 	player.global_position = people["dunstan"].global_position + Vector2(0, 14)
 	await _wait(0.1)
 	_check(player.try_interact(), "Wren can talk to Dunstan")
@@ -887,6 +902,18 @@ func _test_villagers() -> void:
 		box.advance()
 	_check(narration >= 1, "Wren answers without words (narration pages)")
 	_check(GameState.has_flag("rope_promised"), "Dunstan promises the rope")
+	# And off he goes with it, out of the market.
+	await _wait(13.0)
+	_check(not is_instance_valid(people["dunstan"]), "Dunstan carries the rope off to the square")
+	director._move_to(StoryDirector.SALTMARROW)
+	await _wait(0.3)
+	people.erase("dunstan")
+	for child in game.current_room.get_children():
+		if child is Npc:
+			people[child.kind] = child
+		elif child is Prop and child.kind == "n":
+			sign = child
+	_check(people.has("dunstan"), "and he's on the square now")
 	_check(people["marga"].current_pages()[0]["text"] == "MARGA_THANKS_1", "Marga hears the good news")
 	await _wait(0.4)
 
@@ -3889,6 +3916,37 @@ func _test_air_dungeon() -> void:
 	for tile in seam_air._roof:
 		near = near or not seam_air._clear_of_seams(Vector2(tile * Room.TILE))
 	_check(not near, "and no sand trickles near one")
+	# The Valve Chamber's pools bubble; let the water down and its drained
+	# floor never does.
+	var valves := await _goto(game, Vector2i(36, 8), Vector2i(11, 11))
+	var chamber: DungeonAir = valves.get_node("Air")
+	var high := chamber._sources.size()
+	GameState.set_flag(Room.low_water_flag("belfry"))
+	valves.refresh_water()
+	_check(chamber._sources.size() < high and not chamber._rises.is_empty(),
+		"with the water down, bubbles only rise off what's still water (%d to %d tiles)" % [high, chamber._sources.size()])
+	var dry := true
+	for r in chamber._rises:
+		var t := Vector2i((r.at / Room.TILE).floor())
+		dry = dry and chamber._sources.has(t)
+	_check(dry, "and every bubble starts on water")
+	GameState.flags.erase(Room.low_water_flag("belfry"))
+	# A bell rung settles its dungeon's air, as its words say: the Storm
+	# Bell stops the Gale Spire's rain where Wren stands...
+	var gale := await _goto(game, Vector2i(28, 10), Vector2i(11, 10))
+	var rain: DungeonAir = gale.get_node("Air")
+	_check(not rain._rain.is_empty(), "rain blows through the Gale Spire")
+	GameState.set_flag(Tidebell.flag_for("gale"))
+	await _wait(3.0)
+	_check(rain._rain.is_empty(), "the Storm Bell stops the rain (%d streaks left)" % rain._rain.size())
+	# ...and a dungeon whose bell has rung stays calmer after.
+	GameState.set_flag(Tidebell.flag_for("kiln"))
+	var calm := await _goto(game, Vector2i(21, 10), Vector2i(11, 10))
+	var embers: DungeonAir = calm.get_node("Air")
+	_check(embers._rises.size() < int(DungeonAir.AIR["kiln"]["rise"]) and not embers._rises.is_empty(),
+		"the Kiln's embers die down once its bell has rung (%d)" % embers._rises.size())
+	GameState.flags.erase(Tidebell.flag_for("gale"))
+	GameState.flags.erase(Tidebell.flag_for("kiln"))
 	var outside := await _goto(game, Vector2i(1, 1), Vector2i(11, 6))
 	_check(outside.get_node_or_null("Air") == null, "the overworld has its own life instead")
 	# High contrast: the air steps back.
@@ -6949,7 +7007,7 @@ func _test_jumpers() -> void:
 ## bought with glints.
 func _test_shop() -> void:
 	GameState.reset_new_game()
-	GameState.set_checkpoint(StoryDirector.SALTMARROW, GameState.NO_POSITION)
+	GameState.set_checkpoint(StoryDirector.SALTMARROW_MARKET, GameState.NO_POSITION)
 	var game: Node = (load("res://scenes/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await _wait(0.4)
@@ -9329,6 +9387,59 @@ func _test_rib_song() -> void:
 	GameState.reset_new_game()
 
 
+## What the words say happens, happens on screen: a singer sent home walks
+## off, the Reed lantern burns at Fenmouth, the Lantern Wake's lanterns hang
+## on her figurehead, and Lowe's robe comes off (and lies folded on the
+## rocks).
+func _test_said_and_seen() -> void:
+	GameState.reset_new_game()
+	GameState.set_flag(Conversations.ENDING_FLAG)
+	for kind: String in StoryDirector.SINGER_EXITS:
+		var spot: Array = StoryDirector.SINGERS[kind]
+		var game: Node = await _stand_below(spot[0], spot[1])
+		var singer: Npc = null
+		for child in game.current_room.get_children():
+			if child is Npc and child.kind == kind:
+				singer = child
+		_check(singer != null, "%s waits to be sent home" % kind)
+		GameState.set_flag(kind + "_home")
+		await _wait(8.5)
+		_check(not is_instance_valid(singer), "%s walks off home" % kind)
+		game.queue_free()
+		await _wait(0.1)
+	GameState.set_flag("murmur_lantern_lit")
+	var fen: Node = await _stand_below(StoryDirector.FENMOUTH, Vector2i(10, 6))
+	_check(fen.current_room.get_children().any(func(c: Node) -> bool: return c is FenLantern and c.reed and c.lit), "the Reed lantern burns at Fenmouth")
+	fen.queue_free()
+	await _wait(0.1)
+	var strand: Node = await _stand_below(StoryDirector.WRECK_STRAND, Vector2i(10, 6))
+	var hung := func() -> bool: return strand.current_room.get_children().any(func(c: Node) -> bool: return c is ShipLanterns and c.visible)
+	_check(not hung.call(), "no lanterns on the figurehead yet")
+	GameState.set_flag("gully_lanterns_done")
+	await _wait(0.1)
+	_check(hung.call(), "Gully's three lanterns hang on her")
+	strand.queue_free()
+	await _wait(0.1)
+	var point: Node = await _stand_below(StoryDirector.LULLABY_POINT, Vector2i(10, 9))
+	var lowe: Npc = null
+	var garden: LoweGarden = null
+	for child in point.current_room.get_children():
+		if child is Npc and child.kind == "lowe":
+			lowe = child
+		elif child is LoweGarden:
+			garden = child
+	_check(lowe != null and garden != null and not garden._robe.visible, "Lowe in her robe on the Point")
+	if lowe and garden:
+		GameState.set_flag("lowe_singers_done")
+		await _wait(0.1)
+		var sprite: Sprite2D = lowe._sprite
+		_check(sprite.texture == Art.VILLAGER_LOWE_PLAIN and garden._robe.visible, "the robe comes off and lies folded on the rocks")
+		_check(Conversations.pages("lowe", {"lines": ["LOWE_JUST_LOWE"]})[0]["portrait"] == Art.PORTRAIT_LOWE_PLAIN, "her portrait too")
+	point.queue_free()
+	await _wait(0.1)
+	GameState.reset_new_game()
+
+
 ## No talk branch is hidden for good behind an earlier one: a branch that
 ## never switches itself off (sets none of its own "unless" flags) and asks
 ## for no more than a later branch does would win every time, so the later
@@ -9518,7 +9629,11 @@ func _test_singers_at_home() -> void:
 		await _wait(0.1)
 		for flag in [StoryDirector.ENDING_FLAG, kind + "_met", kind + "_home"]:
 			GameState.set_flag(flag)
-		_check(str(Conversations.branch_for(kind)["lines"][0]).ends_with("_BYE"), "%s says goodbye where Wren found them" % kind)
+		var spot: Array = StoryDirector.SINGERS[kind]
+		game = await _stand_below(spot[0], spot[1])
+		_check(_find_kind(game.current_room, kind) == null, "%s has gone from where Wren found them" % kind)
+		game.queue_free()
+		await _wait(0.1)
 		game = await _stand_below(home[0], tile)
 		var room: Room = game.current_room
 		_check(_find_kind(room, kind) != null and GameState.has_flag("settled_" + kind), "%s is home in %s" % [kind, home[0]])

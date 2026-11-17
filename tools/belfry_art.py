@@ -140,16 +140,23 @@ def wall_face(seed):
 
 
 def deep_tile(frame):
-    """Deep green water: dark, slow light moving across it."""
+    """Deep green water: dark and slow. A few short ripples catch the light
+    and drift two pixels between frames; darker swells lie under them, so
+    a wide pool has depth without a pattern standing out."""
     px = blank(DEEP[2])
+    # Darker swells, wrapping round the tile.
     for y in range(T):
         for x in range(T):
-            if (x * 3 + y * 7 + frame * 5) % 23 == 0:
-                px[y][x] = DEEP[1]
-            elif (x * 5 - y * 2 + frame * 3) % 29 == 0:
-                px[y][x] = DEEP[0]
-            elif (x + y * 5 + frame) % 31 == 0:
+            v = math.sin((x + frame) * math.tau / T + y * 0.9) + math.sin(y * math.tau / T * 2 - x * 0.4)
+            if v < -1.2:
                 px[y][x] = DEEP[3]
+    # Ripples: a soft crest over a shadow, few and staggered.
+    for (x0, y0, n) in ((2, 3, 4), (10, 8, 3), (5, 13, 3)):
+        x0 = (x0 + frame * 2) % T
+        for i in range(n):
+            x = (x0 + i) % T
+            px[y0][x] = DEEP[1]
+            px[y0 + 1][x] = DEEP[3]
     return px
 
 

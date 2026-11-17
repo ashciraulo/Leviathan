@@ -25,6 +25,9 @@ const GLOW := Color("#f6c25a")
 
 var room_coord := Vector2i.ZERO
 var lit := false
+## The Reed family's lantern at Fenmouth (Wick made it, Wren lit it): always
+## burning, and no part of Wick's five or his round.
+var reed := false
 var _light: Glow
 var _time := 0.0
 var _catch := 0.0
@@ -59,6 +62,10 @@ func _ready() -> void:
 
 ## Lit as kept (its flag), or as lit this round while Wick's round is on.
 func _sync() -> void:
+	if reed:
+		lit = true
+		_show()
+		return
 	lit = LamplighterRound.lit.has(room_coord) if LamplighterRound.running else GameState.has_flag(flag_for(room_coord))
 	_show()
 
