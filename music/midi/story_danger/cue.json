@@ -12,21 +12,21 @@
  "parts": [
   {
    "name": "strings_ostinato",
-   "notes": 184,
+   "notes": 280,
    "low": 47,
-   "high": 62
+   "high": 74
   },
   {
    "name": "drum_toms",
-   "notes": 64,
+   "notes": 96,
    "low": 45,
    "high": 50
   },
   {
    "name": "brass_low",
-   "notes": 20,
+   "notes": 30,
    "low": 47,
-   "high": 66
+   "high": 73
   }
  ]
 }

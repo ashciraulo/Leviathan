@@ -1,0 +1,63 @@
+{
+ "cue": "story_choir",
+ "lufs": -17.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "choir_unison": {
+   "insert": 4,
+   "target": -22.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_low": {
+   "insert": 5,
+   "target": -21.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drone": {
+   "insert": 8,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Built from projects\\title_v10.flp: choir_unison = Simple Ohh (in tune as is: a -18 PITCH made it 17 c flat in v3), bell_low = Sustained Bells at the written octave (its strike has a loud +12 partial; transposing -12 made it ring an octave low in v3), drone = 12 Low Strings (+12). The bells lead bars 7-10, so their target is -21."
+}

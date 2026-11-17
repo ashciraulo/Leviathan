@@ -9,7 +9,8 @@ boss_heart: D minor, 4/4 at 144, 48 bars: intro 2 | A 16 | B 16 (the lullaby
   bell channels share names with bell_1..7 so the same FL sounds are reused.
   Loop from bar 3.
 story_danger: B minor, 4/4 at 134, 16 bars: A 6 (ostinato builds) | B 6 |
-  A' 4 (drops to the pulse). Phrase 4 in diminution (F# E D B in eighths).
+  A' 4 (back to the opening's eighths). Phrase 4 in diminution (F# E D B in
+  eighths); B adds an octave layer, tom fills and brass answers.
 story_sorrow: G minor, 3/4 at 56, 16 bars: cello alone 4 | A 8 (piano
   joins) | tail 4. Phrase 4 (D C Bb G) on cello, very slow.
 
@@ -133,16 +134,31 @@ for b, sym in enumerate(CH):
         n_hits = 8 if b < 2 else 16
         for k in range(n_hits):
             step = 4 / n_hits
-            ost.note(tb + k * step, step * 0.6, root + 12 + (7 if k % 4 == 2 else 0), 60 + b * 3 if k % 4 == 0 else 50 + b * 2)
-        for st, p, v in ((0, 45, 90), (1.5, 47, 70), (2, 45, 84), (3, 48, 66), (3.5, 50, 74)):
+            # Eighth-bar accents stay near 54: the loud layer has a slower bow and lands ~40 ms late.
+            acc = 54 if n_hits == 8 else 60 + b * 3
+            p = root + 12 + (7 if k % 4 == 2 else 0)
+            ost.note(tb + k * step, step * 0.6, p, acc if k % 4 == 0 else 50 + b * 2)
+            # B builds by adding voices, not velocity (Staccato Blend barely follows velocity on sixteenths):
+            # an octave-up layer from bar 7, its upper fifths from bar 10.
+            if b >= 6 and (k % 2 == 0 or b >= 9):
+                ost.note(tb + k * step, step * 0.6, p + 12, 58 + (b - 6) * 4)
+        hits = ((0, 45, 90), (1.5, 47, 70), (2, 45, 84), (3, 48, 66), (3.5, 50, 74))
+        if b >= 6:  # B: more hits, harder
+            hits = ((0, 45, 98), (0.75, 45, 72), (1.5, 47, 80), (2, 45, 94), (2.75, 47, 74), (3, 48, 80),
+                    (3.25, 48, 76), (3.5, 50, 86), (3.75, 50, 90))
+        for st, p, v in hits:
             toms.note(tb + st, 0.25, p, v)
-    else:  # A': only the pulse is left
-        ost.note(tb, 0.5, 47, 60)
-        ost.note(tb + 2, 0.5, 47, 50)
-        toms.note(tb, 0.25, 45, 70 - (b - 12) * 8)
-# Phrase 4 diminished: F# E D B in eighths, rising in pitch each time.
-for b, lift in ((2, 0), (4, 5), (6, 7), (8, 12), (10, 12)):
+    else:  # A': the ostinato goes back to the opening's eighths so the loop restarts without a jump
+        for k in range(8):
+            ost.note(tb + k * 0.5, 0.3, 47 + (7 if k % 4 == 2 else 0), 54 if k % 4 == 0 else 52)
+        for st, p, v in ((0, 45, 84), (2, 45, 76), (3.5, 50, 66)):
+            toms.note(tb + st, 0.25, p, v)
+# Phrase 4 diminished: F# E D B in eighths, rising in pitch each time; B answers it a bar later.
+for b, lift in ((2, 0), (4, 5), (6, 7), (8, 12), (10, 19)):
     brass.line(song.bar(b), [(54 + lift, 0.5), (52 + lift, 0.5), (50 + lift, 0.5), (47 + lift, 1.5)], legato=0.85)
+for b, line in ((7, [(59, 1.0), (61, 0.5), (62, 2.5)]), (9, [(62, 1.0), (64, 0.5), (66, 2.5)]),
+                (11, [(66, 0.5), (64, 0.5), (66, 0.5), (73, 2.5)])):
+    brass.line(song.bar(b), line, legato=0.9)
 for i, p in enumerate(song.parts):
     p.humanize(seed=3300 + i, time_q=0.006)
 song.save()

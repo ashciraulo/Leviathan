@@ -31,12 +31,18 @@
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 40,
+     "freq": 50,
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": 5.0,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
-     "freq": 4000,
+     "freq": 6000,
      "db_oct": 12
     }
    ]

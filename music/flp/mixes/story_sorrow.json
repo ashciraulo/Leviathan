@@ -1,0 +1,63 @@
+{
+ "cue": "story_sorrow",
+ "lufs": -17.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "cello": {
+   "insert": 2,
+   "target": -23.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "piano_felt": {
+   "insert": 5,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "pad_soft": {
+   "insert": 3,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 100,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Built from templates\\sorrow_template.flp = place_house_v3 with a clone of the Soft Cello channel (pad_soft, insert 3) playing the soft two-note pad as a muted string bed; cello = Soft Cello, piano_felt = I Felt It."
+}
