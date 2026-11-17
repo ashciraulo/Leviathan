@@ -327,6 +327,8 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   (Analog Lab, Aug. STRINGS, sampled) on both the cello and pad_soft channels. It sounds an octave below the written
   note, so `maps/story_sorrow_transpose.json` plays both +12; it follows velocity (about 0.3 dB per step), and
   `maps/story_sorrow_fix.json` evens keys 70 and 72.
+  Review v5 PASS (3 MINOR): the preset's own chorus still shimmers on the even partials (turn its FX chorus off and
+  save a user preset); it is bright (2-4 kHz share -14 dB: a -3 dB bell at 2.2 kHz); key 66 is ~4 dB hot.
 - **FL tips from this batch:** ctrl+r (after clicking empty workspace) opens the export dialog directly; the File menu
   route sometimes missed and toggled channel-rack steps. In Analog Lab, typing in the search box leaks keys to FL
   (it played notes and loaded another preset): use the Types / Instruments filters with the mouse instead.
