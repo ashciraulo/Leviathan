@@ -1,0 +1,90 @@
+{
+ "cue": "story_memory",
+ "lufs": -20.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "pad_warm": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "celesta": {
+   "insert": 2,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_soft": {
+   "insert": 4,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_distant": {
+   "insert": 5,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "sub_swell": {
+   "insert": 3,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "highcut",
+     "freq": 120,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Built from projects\\title_v10.flp: pad = 12 Low Strings (+12), celesta line on Analog Harp (high), choir = Simple Ohh, bell = Sustained Bells, sub = Simple Sine swell."
+}

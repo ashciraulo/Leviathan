@@ -1,0 +1,58 @@
+{
+ "cue": "place_cave",
+ "lufs": -20.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "harp_harmonics": {
+   "insert": 2,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drone": {
+   "insert": 3,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "highcut",
+     "freq": 400,
+     "db_oct": 12
+    }
+   ]
+  },
+  "pluck_drip": {
+   "insert": 5,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Hollows. Built from projects\\title_v10.flp (title presets): harp_harmonics = Analog Harp, drone = Simple Sine (Synclavier, ~11 s swell in, ~6 s out), pluck_drip = Sustained Bells (the faint echo of each harmonic)."
+}
