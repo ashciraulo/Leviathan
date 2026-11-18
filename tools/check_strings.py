@@ -23,7 +23,7 @@ KEY_TOKEN = re.compile(r"\{([a-z_0-9]+)\}")
 ACTIONS = set(re.findall(r'"([a-z_0-9]+)"', re.search(r"const REMAPPABLE := \[(.*?)\]",
     open(os.path.join(ROOT, "scripts", "autoload", "settings.gd"), encoding="utf-8").read(), re.S).group(1)))
 # Uppercase literals that are not text keys.
-NOT_KEYS = {"KEY_ESCAPE"}
+NOT_KEYS = {"KEY_ESCAPE", "LEVIATHAN_LOCALE"}
 
 
 def csv_keys():

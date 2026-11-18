@@ -782,7 +782,7 @@ func _accessibility_runs() -> void:
 		await _menu_sweep(label)
 		if MenuKit.audit:
 			_check(MenuKit.missing_keys.is_empty(), "every key the menus show has text: %s" % [MenuKit.missing_keys.keys()])
-			_check(MenuKit.cut_texts.is_empty(), "no menu text is cut short in English: %s" % [MenuKit.cut_texts])
+			_check(MenuKit.cut_texts.is_empty(), "no menu text is cut short (%s): %s" % [Settings.locale, MenuKit.cut_texts])
 			MenuKit.audit = false
 		await _hit_and_hum(label)
 		await _conversation(label)

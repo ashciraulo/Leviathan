@@ -90,6 +90,9 @@ void fragment() {
 }
 """
 
+## LEVIATHAN_LOCALE=ja runs the game (and every test) in that language,
+## whatever the settings file says: for translators and release checks.
+var _forced_locale := ""
 var _filter_layer: CanvasLayer
 var _filter_material: ShaderMaterial
 var _default_events: Dictionary = {}
@@ -105,6 +108,10 @@ func _ready() -> void:
 	_register_default_actions()
 	_set_default_font()
 	_make_filter()
+	_forced_locale = OS.get_environment("LEVIATHAN_LOCALE")
+	if _forced_locale != "" and not _forced_locale in languages():
+		push_error("LEVIATHAN_LOCALE=%s is not one of %s" % [_forced_locale, languages()])
+		_forced_locale = ""
 	load_settings()
 	apply()
 	get_tree().root.size_changed.connect(_fit_scale)
@@ -360,6 +367,12 @@ func _apply_filter() -> void:
 
 
 func load_settings() -> void:
+	_load_file()
+	if _forced_locale != "":
+		locale = _forced_locale
+
+
+func _load_file() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(PATH) != OK:
 		return
