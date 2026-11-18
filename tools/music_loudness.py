@@ -23,7 +23,7 @@ PEAK_MAX = -1.0
 
 def measure(path):
     out = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-nostats", "-i", path, "-af", "ebur128=peak=true", "-f", "null", "-"],
+        ["ffmpeg", "-hide_banner", "-nostats", "-i", path, "-af", "ebur128=peak=true:framelog=quiet", "-f", "null", "-"],
         capture_output=True, text=True).stderr
     lufs = re.findall(r"I:\s+(-?[\d.]+) LUFS", out)
     peak = re.findall(r"Peak:\s+(-?[\d.]+) dBFS", out)
@@ -35,6 +35,9 @@ def main():
         cues = json.load(f)["cues"]
     only = set(sys.argv[1:])
     bad = 0
+    for name in sorted(only - {cue["id"] for cue in cues}):
+        print("%-22s not a cue in music/track_sheet.json" % name)
+        bad += 1
     for cue in cues:
         cid, target = cue["id"], cue.get("lufs")
         if only and cid not in only:
@@ -50,7 +53,9 @@ def main():
             notes.append("can't measure")
         elif target is not None and abs(lufs - target) > TOLERANCE:
             notes.append("%+.1f LU off target" % (lufs - target))
-        if peak is not None and peak > PEAK_MAX:
+        if peak is None:
+            notes.append("no peak reading")
+        elif peak > PEAK_MAX:
             notes.append("peak over %.0f dBFS" % PEAK_MAX)
         print("%-22s target %6s  measured %6s LUFS  peak %6s dBFS  %s" % (
             cid, target, lufs, peak, "<-- " + ", ".join(notes) if notes else "ok"))

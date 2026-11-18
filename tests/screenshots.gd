@@ -1278,7 +1278,7 @@ func _mire_shots(game: Node) -> void:
 	while Cutscene.active and not DialogueBox.is_open and calf_wait > 0:
 		calf_wait -= 1
 		await _wait(0.1)
-	if calf_wait == 0:
+	if Cutscene.active and not DialogueBox.is_open:
 		push_error("Screenshots: the calf scene never opened its dialogue")
 	await _wait(1.6)
 	await _capture("43_calf_in_the_lights")
