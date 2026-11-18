@@ -12,7 +12,7 @@
  "parts": [
   {
    "name": "strings_high",
-   "notes": 62,
+   "notes": 71,
    "low": 50,
    "high": 86
   },
@@ -30,15 +30,21 @@
   },
   {
    "name": "horns_french",
-   "notes": 27,
+   "notes": 14,
    "low": 62,
-   "high": 83
+   "high": 73
   },
   {
    "name": "bass_arco",
    "notes": 24,
    "low": 38,
    "high": 47
+  },
+  {
+   "name": "horns_a2",
+   "notes": 13,
+   "low": 62,
+   "high": 71
   }
  ]
 }

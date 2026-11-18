@@ -135,6 +135,9 @@ harp = song.part("harp", program=46, vel=60)
 choir = song.part("choir_ah", program=52, vel=54)
 horn = song.part("horns_french", program=60, vel=80)
 bass = song.part("bass_arco", program=43, vel=70)
+# v5 (review v4 MINOR: A' darker than A, the bronze layer ignores velocity): A' horn on its own part, so FL can send it
+# to a louder bronze clone. Added last so the other parts keep their humanize seeds. Same insert as horns_french.
+horn_a2 = song.part("horns_a2", program=60, vel=88)
 A = ["D", "E", "D", "E", "Bm", "F#m", "G#m", "A"]
 B = ["D", "Bm", "E", "A", "D", "F#m", "E", "A"]
 A2 = ["D", "E", "D", "E", "Bm", "E", "A", "A"]
@@ -145,8 +148,12 @@ horn.line(song.bar(0), bars("A4:2 F#4:1 | G#4:1 A4:2 | F#4:2 D4:1 | E4:3 | D4:1 
                             "C#5:3 | B4:2 G#4:1 | A4:3", per_bar=3), legato=0.94)
 strings.line(song.bar(8), bars("D5:1 F#5:1 A5:1 | D6:3 | B5:2 G#5:1 | A5:3 | A5:1 F#5:1 D5:1 | "
                                "C#6:3 | B5:2 G#5:1 | A5:3", per_bar=3), legato=0.96)
-horn.line(song.bar(16), bars("A4:2 F#4:1 | G#4:1 A4:2 | D5:2 F#5:1 | E5:3 | D5:1 F#5:1 B5:1 | "
-                             "G#5:3 | A5:3 | A5:3", per_bar=3), vel=86, legato=0.94)
+# A' (review v1): the horn stays in its range (the climax an octave down, D4-B4) and louder, and the strings take the
+# written top line, so A' lifts as strings and horn in octaves.
+horn_a2.line(song.bar(16), bars("A4:2 F#4:1 | G#4:1 A4:2 | D4:2 F#4:1 | E4:3 | D4:1 F#4:1 B4:1 | "
+                             "G#4:3 | A4:3 | A4:3", per_bar=3), vel=88, legato=0.94)
+strings.line(song.bar(18), bars("D5:2 F#5:1 | E5:3 | D5:1 F#5:1 B5:1 | G#5:3 | A5:3 | A5:3", per_bar=3), vel=84,
+             legato=0.96)
 for b, sym in enumerate(CH):
     t = song.bar(b)
     tones = voicing(sym, 50, 69)
@@ -156,7 +163,7 @@ for b, sym in enumerate(CH):
     choir.chord(t, 2.95, voicing(sym, 55, 67)[:3], 48 if 8 <= b < 16 else 40)
     if b % 4 == 3:  # a harp glissando up into each fourth bar's end
         for k, p in enumerate(voicing(sym, 62, 93)):
-            harp.note(t + 2 + k * (1.0 / 10), 1.2, p, 50 + k)
+            harp.note(t + 2 + k * (1.0 / 10), 1.2, p, 38 + k)  # review v1: the glissandi ran 4-6 dB hot
     elif b % 2 == 0:
         for k, p in enumerate(tones[:3]):
             harp.note(t + k * 0.5, 2.5 - k * 0.5, p, 54)

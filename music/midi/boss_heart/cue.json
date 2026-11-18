@@ -12,21 +12,21 @@
  "parts": [
   {
    "name": "strings_full",
-   "notes": 368,
+   "notes": 256,
    "low": 50,
    "high": 72
   },
   {
    "name": "choir",
-   "notes": 138,
+   "notes": 96,
    "low": 55,
    "high": 65
   },
   {
    "name": "brass",
-   "notes": 46,
+   "notes": 27,
    "low": 69,
-   "high": 86
+   "high": 79
   },
   {
    "name": "timpani",
@@ -75,6 +75,24 @@
    "notes": 4,
    "low": 74,
    "high": 81
+  },
+  {
+   "name": "strings_c",
+   "notes": 112,
+   "low": 50,
+   "high": 72
+  },
+  {
+   "name": "choir_c",
+   "notes": 42,
+   "low": 55,
+   "high": 65
+  },
+  {
+   "name": "brass_c",
+   "notes": 19,
+   "low": 69,
+   "high": 86
   }
  ]
 }

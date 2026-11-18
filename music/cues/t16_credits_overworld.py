@@ -1,7 +1,7 @@
 """The Eighth Line (credits) and the overworld fallback.
 
-credits: D major, 3/4 at 84, 96 bars, plays once: A 16 (new tune, harp and
-  strings) | B 16 | lullaby 16 (all seven phrases, turned to D major) |
+credits: D major, 3/4 at 84, 96 bars, plays once: A 16 (new tune, flute over
+  harp) | B 16 | lullaby 16 (all seven phrases, turned to D major) |
   eighth line 8 (the line no bell holds, which Wren hums) | region medley 32
   (Saltmarrow, Lamplight, the Belfry hymn, the Wayshell flight, all in D) |
   close 8 (the eighth line once more, then the last chord, 3 dB under).
@@ -51,7 +51,8 @@ for phrase in lullaby():
         bells.note(t, beats * 0.95, p + 12, 84)  # FL's bell rings on by itself
         lul.append((t, beats, p + 12))
         t += beats
-cello.line(song.bar(48), bars(EIGHTH + " | " + EIGHTH, per_bar=3), legato=0.97)  # Wren's hum: a low, soft voice
+EIGHTH_LOW = "A3:2 F#3:1 | G3:1 A3:2 | B3:2 C#4:1 | D4:3"  # an octave under the flute's line (v1 review: A4-D5 was bright)
+cello.line(song.bar(48), bars(EIGHTH_LOW + " | " + EIGHTH_LOW, per_bar=3), legato=0.97)  # Wren's hum: a low, soft voice
 for k, (text, unit) in enumerate(MED):
     flute.line(song.bar(56 + 8 * k), bars(text, per_bar=3, unit=unit), vel=70, legato=0.93)
 flute.line(song.bar(88), bars(EIGHTH + " | D5:3 | r:3 | r:3 | r:3", per_bar=3), vel=62, legato=0.97)
@@ -67,18 +68,35 @@ for b, sym in enumerate(CH):
     tb, s = song.bar(b), sec(b)
     tones = voicing(sym, 50, 69)
     root = low_root(sym, 38)
-    last = b >= 92
-    if s == "EIGHTH":  # near silence under the hum: one held string chord per bar
-        strings.chord(tb, 2.95, tones[:3], 40)
+    if b >= 92:  # the close (v1/v2 review MAJOR: it stopped, then ended on a thin pluck): bar 92 as written, then one
+        # held chord that thins out (bass, then strings, then the choir past the end) under two harp rolls
+        if b == 92:
+            bass.note(tb, 2.9, root, 50)
+            choir.chord(tb, 2.9, voicing(sym, 55, 67)[:3], 32)
+            for k, p in enumerate(voicing(sym, 57, 74)[:3]):
+                harp.note(tb + k * 0.25, 2.5, p, 42)
+        elif b == 93:  # the voices leave one by one (v3a held them all to the end, so bar 95 sat level with 92):
+            # bass at bar 95, strings half a bar later, the choir a bar past the written end into the render's room
+            bass.note(tb, 6.0, root, 50)
+            strings.chord(tb, 7.5, voicing(sym, 57, 74)[:2], 40)
+            choir.chord(tb, 11.0, voicing(sym, 55, 67)[:3], 32)
+            for k, p in enumerate(voicing(sym, 57, 74)[:3]):
+                harp.note(tb + k * 0.33, 6.0, p, 40)
+        elif b == 95:
+            for k, p in enumerate(voicing(sym, 62, 79)[:3]):
+                harp.note(tb + k * 0.33, 6.0, p, 36)
         continue
-    bass.note(tb, 2.9, root, 60 if not last else 50)
-    if s in ("A", "MED", "CLOSE"):
-        for k, p in enumerate([root + 12] + tones[:2]):
-            harp.note(tb + k, 2.5 - k * 0.5, p, 54 if not last else 42)
+    if s == "EIGHTH":  # near silence under the hum: a thin held string pair per bar
+        strings.chord(tb, 2.95, voicing(sym, 57, 74)[:2], 40)  # above the hum (v2 review: F#3/G3 doubled it)
+        continue
+    bass.note(tb, 2.9, root, 60)
+    if s in ("A", "MED", "CLOSE"):  # root, third and fifth (v1 review: the low figure never spelled its chords)
+        for k, p in enumerate(voicing(sym, 57, 74)[:3]):
+            harp.note(tb + k, 2.5 - k * 0.5, p, 54)
     if s in ("B", "LUL", "MED"):
         strings.chord(tb, 2.95, tones[:3], 50)
     if s in ("LUL", "CLOSE") or (s == "MED" and b >= 80):
-        choir.chord(tb, 2.95, voicing(sym, 55, 67)[:3], 40 if not last else 32)
+        choir.chord(tb, 2.95, voicing(sym, 55, 67)[:3], 40)
 for i, p in enumerate(song.parts):
     if p.name != "bell_point":
         p.humanize(seed=3500 + i, time_q=0.01, vel=4)
