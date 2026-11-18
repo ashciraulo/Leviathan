@@ -12,6 +12,7 @@ web_title.png
 Thumbs.db
 .vscode/
 screenshots/
+store/
 __pycache__/
 web_saves.png
 clips/

@@ -1,0 +1,175 @@
+name: Upload to itch.io
+
+# Puts a published release on itch.io: the web build (played in the browser
+# on the game's page) and the Windows, macOS and Linux downloads. It only
+# runs by hand: Actions > Upload to itch.io > Run workflow.
+#
+#   release   the GitHub release to upload (a tag like v1.0.0). Its desktop
+#             downloads are taken as they are; the web build is exported
+#             from that tag.
+#   dry_run   on by default: builds and gathers everything, lists what each
+#             itch channel would get and keeps it as a downloadable artifact,
+#             but uploads nothing. Turn it off to upload for real.
+#
+# Before the first real upload (see docs/itch.md):
+#   - create the game's page on itch.io (it can stay a draft),
+#   - add the repository secret BUTLER_API_KEY (itch.io > Settings > API keys),
+#   - add the repository variable ITCH_GAME, the page as user/game
+#     (for example someone/leviathan).
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Release to upload (a tag like v1.0.0)"
+        required: true
+      dry_run:
+        description: "Dry run: gather and list everything, upload nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: itch
+  cancel-in-progress: false
+
+jobs:
+  web:
+    name: Export the web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GODOT_VERSION: 4.7.2
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.release }}
+          lfs: true
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mkdir -p ~/godot-bin
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" ~/godot-bin/godot
+
+      - name: Install Godot
+        run: |
+          cp ~/godot-bin/godot "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot"
+
+      - name: Cache web export template
+        id: templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-templates-${{ env.GODOT_VERSION }}-web
+
+      - name: Download web export template
+        if: steps.templates.outputs.cache-hit != 'true'
+        run: |
+          dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$dir"
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q -o -j templates.tpz templates/version.txt templates/web_nothreads_release.zip -d "$dir"
+          rm templates.tpz
+
+      - name: Import project
+        run: timeout 300 "$RUNNER_TEMP/godot" --headless --path . --import
+
+      - name: Export
+        run: |
+          mkdir -p export/web
+          "$RUNNER_TEMP/godot" --headless --path . --export-release "Web" export/web/index.html 2>&1 | tee export.log
+          test -s export/web/index.html
+          test -s export/web/index.wasm
+          test -s export/web/index.pck
+          rm -f export/web/*.import
+          cp THIRD_PARTY_LICENSES.txt export/web/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: itch-web
+          path: export/web
+          compression-level: 0
+
+  upload:
+    name: Upload to itch.io
+    needs: web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ inputs.release }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      ITCH_GAME: ${{ vars.ITCH_GAME }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: tools
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: itch-web
+          path: channels/web
+
+      - name: Get the release's desktop downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dl \
+            --pattern Leviathan-windows.zip --pattern Leviathan-linux.tar.gz --pattern Leviathan-macos.zip
+          mkdir -p channels/windows channels/linux channels/mac
+          unzip -q dl/Leviathan-windows.zip -d channels/windows
+          tar -xzf dl/Leviathan-linux.tar.gz -C channels/linux
+          # Godot packs the .app in this zip; unzip keeps its executable bit.
+          unzip -q dl/Leviathan-macos.zip -d channels/mac
+
+      - name: Check every channel
+        run: bash tools/itch_check.sh channels
+
+      # Artifacts drop file permissions, so the folders go in a tarball:
+      # the Linux and Mac programs stay runnable once unpacked.
+      - name: Pack what would be uploaded
+        if: env.DRY_RUN == 'true'
+        run: tar -cf itch-channels.tar channels
+
+      - name: Keep what would be uploaded
+        if: env.DRY_RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: itch-channels-${{ inputs.release }}
+          path: itch-channels.tar
+          compression-level: 0
+
+      - name: Install butler
+        if: env.DRY_RUN != 'true'
+        run: |
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o butler.zip \
+            https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d "$RUNNER_TEMP/butler"
+          chmod +x "$RUNNER_TEMP/butler/butler"
+          "$RUNNER_TEMP/butler/butler" -V
+
+      - name: Upload
+        if: env.DRY_RUN != 'true'
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ] || [ -z "$ITCH_GAME" ]; then
+            echo "Set the BUTLER_API_KEY secret and the ITCH_GAME variable first (docs/itch.md)."
+            exit 1
+          fi
+          version="${TAG#v}"
+          for channel in web windows linux mac; do
+            "$RUNNER_TEMP/butler/butler" push "channels/$channel" "$ITCH_GAME:$channel" --userversion "$version"
+          done
