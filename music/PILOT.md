@@ -499,7 +499,13 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
 - **ceiling** (mix json): Pro-L 2's output ceiling, default -1.5. Glacier's ticks made the OGG peak 0.5 dB over the
   master's -1.51, so it uses -2.2.
 - **Passed:** Mire v3 (`projects\dungeon_mire_v3b.flp`), Windmere v2 (`projects\region_windmere_v2.flp`; MINORs left:
-  pad ~4 dB hot, the snare reads as a low tom).
+  pad ~4 dB hot, the snare reads as a low tom), Gale v3 (`projects\dungeon_gale_v3b.flp`), Gloamfen v6
+  (`projects\region_gloamfen_v6b.flp`; MINORs left: the choir's detuned layers beat at 1-1.8 Hz against the in-tune
+  vibes in B/A', so put its Eb3 on a +7 c clone; A-section floor p5 -26.2 dB, +0.5 dB on Pro-L fixes it; B is 5.3 LU
+  under A on a phone, +2 dB at 400-700 Hz on the choir insert), Frostspine v2 (`projects\region_frostspine_v2b.flp`;
+  MINORs left: in bar 19 the bell's F#5 lands in unison on the ringing e-piano F#5, same patch, and they cancel, so
+  move it to B5 or drop it; the e-piano's 4-beat notes still fall 14 dB by +2 s, VCA sustain ~3 of 10 would hold them;
+  the bell sits only 1.8 dB under the e-piano and reads as a second e-piano; choir warble and C#4 sung as C#3).
 - **template6** (`templates\ambient_sine_template6.flp`): template5 plus two more Analog Harp clones, renamed
   locally to `celesta_bow` (insert 5: attack ~0.3 s, sustain 4.0 of 10, release ~1.2 s, for bowed vibes and glass:
   Gloamfen v5 failed with the vibes ringing out like a second celesta) and `celesta_tick` (insert 1: decay ~0.2 s, a
