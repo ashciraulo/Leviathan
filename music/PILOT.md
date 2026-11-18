@@ -555,3 +555,24 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
 - **Tomb v2 (PASS):** MINORs left: with sustain 1.5 the long marimba notes fade under drone and choir after ~0.6 s
   (raise sustain to ~3-3.5 or decay to ~2.5 s, keep the 0.17 s release); drum accents dip the master 3.3 dB (100 Hz
   side-chain high-pass on Pro-C); the frame drum is a 43 Hz thud (low cut 60-70 Hz, +3-4 dB at 150-250 Hz).
+- **Maw region v1 (FAIL):** Trumpfal can't hold a 4-beat note at 58 bpm (one resampled trumpet: its length scales with
+  1/f, and it carries a half-frequency series 8-9 dB under the harmonics). The Dark Pad (SQ-80) has unison, a tape-delay
+  wow and a Juno chorus that beat its octave partials 9-24 dB at 1-4 Hz; switching them off didn't stop it.
+- **Maw region v2:** brass_low = Analog Lab "Tuba" (Orchestral Brass, Theo Niessink; a tape-sampled tuba that holds
+  flat to the end of a 4 s note, in tune to 1 c, sounds an octave below its key, so +12). An audition of Tuba, Orch2
+  (dies at 2 s), Duohorn (detuned, period-doubled) and Ascendant Brass (10 dB PWM wobble) is in
+  `templates\brass_audition.flp`. sub_breath moved to the Analog Harp (bell_marrow channel, insert 7): its VCA sustain
+  is already 10 and its filter envelope closes to a near-sine, a steady mono sub (0.2 dB movement).
+- **Maw dungeon v1 (FAIL):** `advance_s` on a note held across the loop end lost the drone in bars 3-4 (FL stops a
+  note at the song end, so the fold carried only its first two bars); don't advance a note that spans the restart. The
+  Saint Eustache organ has a celeste rank (~1 c apart: the fundamental dips 22 dB every 4 s) and a sharp tierce, so
+  it can't play long notes; v2 plays metal_bowed on the sustained Analog Harp.
+- **Maw region v2 (PASS, `projects\region_maw_v2c.flp`):** MINORs left: the Analog Harp sub's 3.3 s release folds
+  onto bar 1 out of phase (40-60 Hz dips 9 dB for 0.25 s) and smears note changes 4-8 dB (VCA release ~0.4-0.5 s);
+  the choir's bar-17 chord dies 1.5 s early; brass 2.1 dB under strings and choir above 300 Hz in bars 17-32 (choir
+  -29.5); choir keys 62/63 speak late; loud strings chords not louder (`vel_channels` clone +2 dB); strings dip 3 dB
+  at chord changes.
+- **Maw dungeon v2 (PASS, `projects\dungeon_maw_v2b.flp`):** MINORs left: the heartbeat drum (sample 47) still loses
+  18 dB on small speakers (add a body layer: a clone playing sample 50 at -10 to -12 dB, or saturation on insert 3);
+  metal_bowed's 3.3 s release smears its steps (VCA release 0.8-1.0 s or `cap_at_next`) and its 17 ms attack reads as
+  a sine lead (attack ~0.3 s); section B doesn't lift (+2 dB on insert 4 over bars 17-24, or a choir clone).

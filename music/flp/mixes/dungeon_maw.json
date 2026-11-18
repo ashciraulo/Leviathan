@@ -1,0 +1,84 @@
+{
+ "cue": "dungeon_maw",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "drum_heart": {
+   "insert": 3,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 150,
+     "gain": 4.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "sub_swell": {
+   "insert": 8,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 25,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 1500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_dark": {
+   "insert": 4,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "metal_bowed": {
+   "insert": 7,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 24
+    }
+   ]
+  }
+ },
+ "notes": "The Maw (dungeon_maw) v2. Built on templates\\belfry_template.flp: drum_heart on drum_taiko (insert 3, key 36 plays 47 as in the Kiln; +4 dB at 150 Hz for small speakers), sub_swell on brass_low (12 Low Strings, Osc2 off, +12, insert 8, no advance: the drone is held across the loop restart), choir_dark on choir (Ah Voice, insert 4), metal_bowed on bell_marrow (Analog Harp at full sustain, no transpose, insert 7; the Saint Eustache organ beat on long notes)."
+}

@@ -1,0 +1,78 @@
+{
+ "cue": "region_maw",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "brass_low": {
+   "insert": 6,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "strings_low": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir": {
+   "insert": 4,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "sub_breath": {
+   "insert": 7,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 30,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 1500,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Maw region (region_maw) v2. Built on templates\\belfry_template.flp: brass_low on horns_brass with Analog Lab Tuba (+12, insert 6; the lead, target -25), strings_low on brass_low (12 Low Strings, Osc2 off, +12, insert 8, advance 0.12), choir on Ah Voice (insert 4), sub_breath on bell_marrow (Analog Harp at full sustain, a near-sine sub, insert 7)."
+}
