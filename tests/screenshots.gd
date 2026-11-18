@@ -1272,9 +1272,14 @@ func _mire_shots(game: Node) -> void:
 			await get_tree().physics_frame
 	await _wait(1.2)
 	await _capture("83_congregation_released")
-	# The calf in the lights, with Murmur.
-	while Cutscene.active and not DialogueBox.is_open:
+	# The calf in the lights, with Murmur. Given up after 20 s, so a scene
+	# that never opens a dialogue can't hang the whole run.
+	var calf_wait := 200
+	while Cutscene.active and not DialogueBox.is_open and calf_wait > 0:
+		calf_wait -= 1
 		await _wait(0.1)
+	if Cutscene.active and not DialogueBox.is_open:
+		push_error("Screenshots: the calf scene never opened its dialogue")
 	await _wait(1.6)
 	await _capture("43_calf_in_the_lights")
 	await _skip_scene(game)
