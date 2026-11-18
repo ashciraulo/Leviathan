@@ -654,3 +654,11 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   Open MINORs: still bright in C (2-6 kHz -13.1, bars 36 and 40 over -12: a -3 dB bell at 3.2 kHz on the strings);
   the brass_c peaks D6/C#6 (bars 38, 40, 41) are its softest notes, 3-4 LU under the rest of the line (keys 85-86 to a
   +2 dB clone, paired with a deeper strings cut).
+- **Wayshell Flight v5 (PASS, `projects\story_flight_v5.flp`, template `templates\flight_template5.flp`):** the A'
+  horn is its own part `horns_a2`, played on the Mellotron plus a second Dirty Bronze clone `bronze_hot` at VOL -21 dB
+  (A's bronze stays at -24). A' horn attacks are now within ±1.2 dB of A's brightness (v4 1.8-2.9 dB darker) and the
+  climax horn sits -5.4 dB against the rest (v4 -6.6), with no takeover. The horn insert holds a ~-100 dBFS noise
+  floor (in v4 too), so a render can run past the end; it folds 80 dB under. Open MINORs: the mix-level A' lift is
+  still missing at 1-3 kHz (-0.1 dB vs the +1 test); the bronze's sub-octave series rose 1-4 dB, so bar 22's D#5 sits
+  +3 dB over the mix at 622 Hz (listen: if it reads as a second voice, it is a MAJOR; a 300 Hz lowcut on a separate
+  bronze insert would fix it); the bronze's late edge and fade, tuning scatter, and v4's strings/choir/harp MINORs.
