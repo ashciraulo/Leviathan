@@ -243,7 +243,8 @@ func _draw_card(slot: int) -> void:
 		draw_rect(rect.grow(-4), Color(MenuKit.TEXT_GOLD, 0.15))
 	var data := _summaries[slot]
 	var at := rect.position + Vector2(12, 7)
-	MenuKit.draw_text(self, tr("JOURNEY_FILE_N") % (slot + 1), at, MenuKit.TEXT_GOLD)
+	var label := tr("JOURNEY_FILE_N") % (slot + 1)
+	MenuKit.draw_text(self, label, at, MenuKit.TEXT_GOLD)
 	if data.is_empty():
 		MenuKit.draw_text(self, "FILES_EMPTY", Vector2(rect.position.x, rect.position.y + 17), MenuKit.TEXT_DIM,
 			HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
@@ -254,9 +255,13 @@ func _draw_card(slot: int) -> void:
 			HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 		return
 	var place := str(data.get("place", ""))
-	MenuKit.draw_text(self, place if place != "" else "MAP_UNKNOWN_ROOM", at + Vector2(52, 0), MenuKit.TEXT)
 	var time := MenuKit.format_time(maxf(Safe.number(data.get("play_time"), 0.0), 0.0))
-	MenuKit.draw_text(self, time, Vector2(rect.end.x - 12 - MenuKit.text_width(self, time), at.y), MenuKit.TEXT_DIM)
+	var time_x := rect.end.x - 12 - MenuKit.text_width(self, time)
+	# The place starts after the file label, which is longer in some languages.
+	var place_x := maxf(at.x + 52, at.x + MenuKit.text_width(self, label) + 8)
+	MenuKit.draw_text(self, place if place != "" else "MAP_UNKNOWN_ROOM", Vector2(place_x, at.y), MenuKit.TEXT,
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, time_x - place_x - 8)
+	MenuKit.draw_text(self, time, Vector2(time_x, at.y), MenuKit.TEXT_DIM)
 	# Breath bubbles, then the seven bells.
 	var bubbles := clampi(Safe.whole(data.get("bubbles"), GameState.START_BUBBLES), 0, GameState.MAX_BUBBLES)
 	# Closer together past eleven, so a full row stops short of the bells.

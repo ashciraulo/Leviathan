@@ -46,20 +46,26 @@ func _draw() -> void:
 	MenuKit.draw_panel(self, INFO_PANEL)
 	var info := RoomInfo.get_room(GameState.room_coord)
 	var left := Vector2(24, 34)
-	MenuKit.draw_text(self, "JOURNEY_FILE", left, MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 104)
-	MenuKit.draw_text(self, tr("JOURNEY_FILE_N") % (SaveManager.current_slot + 1), left + Vector2(110, 0))
-	MenuKit.draw_text(self, "JOURNEY_PLACE", left + Vector2(0, 14), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 104)
-	MenuKit.draw_text(self, info.get("name_key", "MAP_UNKNOWN_ROOM"), left + Vector2(110, 14), MenuKit.TEXT,
-		HORIZONTAL_ALIGNMENT_LEFT, -1.0, PANEL.end.x - left.x - 118)
-	MenuKit.draw_text(self, "JOURNEY_TIME", left + Vector2(0, 28), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 104)
-	MenuKit.draw_text(self, MenuKit.format_time(GameState.play_time), left + Vector2(110, 28))
-	MenuKit.draw_text(self, "JOURNEY_BELLS", left + Vector2(0, 42), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 104)
+	# The values start after the longest label, which is longer in some languages.
+	var label_w := 0.0
+	for key in ["JOURNEY_FILE", "JOURNEY_PLACE", "JOURNEY_TIME", "JOURNEY_BELLS", "JOURNEY_STONES"]:
+		label_w = maxf(label_w, MenuKit.text_width(self, tr(key)))
+	var col := clampf(label_w + 8.0, 110.0, 150.0)
+	var label_max := col - 6.0
+	MenuKit.draw_text(self, "JOURNEY_FILE", left, MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_max)
+	MenuKit.draw_text(self, tr("JOURNEY_FILE_N") % (SaveManager.current_slot + 1), left + Vector2(col, 0))
+	MenuKit.draw_text(self, "JOURNEY_PLACE", left + Vector2(0, 14), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_max)
+	MenuKit.draw_text(self, info.get("name_key", "MAP_UNKNOWN_ROOM"), left + Vector2(col, 14), MenuKit.TEXT,
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, PANEL.end.x - left.x - col - 8)
+	MenuKit.draw_text(self, "JOURNEY_TIME", left + Vector2(0, 28), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_max)
+	MenuKit.draw_text(self, MenuKit.format_time(GameState.play_time), left + Vector2(col, 28))
+	MenuKit.draw_text(self, "JOURNEY_BELLS", left + Vector2(0, 42), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_max)
 	for i in Items.max_count("tidebell"):
 		var lit := i < GameState.item_count("tidebell")
-		MenuKit.draw_icon(self, "tidebell", left + Vector2(108 + i * 17, 38),
+		MenuKit.draw_icon(self, "tidebell", left + Vector2(col - 2 + i * 17, 38),
 			Color.WHITE if lit else Color(0.2, 0.25, 0.4, 0.7))
-	MenuKit.draw_text(self, "JOURNEY_STONES", left + Vector2(0, 58), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 104)
-	MenuKit.draw_text(self, str(GameState.tidestones.size()), left + Vector2(110, 58))
+	MenuKit.draw_text(self, "JOURNEY_STONES", left + Vector2(0, 58), MenuKit.TEXT_HEAD, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_max)
+	MenuKit.draw_text(self, str(GameState.tidestones.size()), left + Vector2(col, 58))
 	for i in BUTTONS.size():
 		var y := BUTTON_Y + i * 14
 		var selected := i == _cursor
