@@ -160,6 +160,22 @@ for _key in ("MAP_STONE_ASLEEP", "MAP_STONE_NO_FLY_INSIDE", "MAP_STONE_NEED_WAYS
         "MAP_YOU_ARE_HERE", "MAP_UNKNOWN_ROOM"):
     CELL_LIMITS[_key] = 368 - 20
 
+# Two-line descriptions under a menu (MenuKit.draw_wrapped, max 2 lines): the
+# 368 px info panels on Options, Controls, Satchel and Journey, and the
+# narrower shop panel (shop_menu.gd INFO, 256 px) for what the shops sell.
+WRAP_WIDE = 368 - 20
+WRAP_SHOP = 256 - 20
+SHOP_KEYS = ("ITEM_PUFFER_BOMBS_DESC", "ITEM_LAMP_OIL_DESC", "ITEM_JAR_POTION_DESC")
+
+
+def wrap_limit(key):
+    """The width a two-line description must fit, or 0 if the key isn't one."""
+    if key.endswith("_INFO") or key in SHOP_KEYS:
+        return WRAP_SHOP
+    if key.endswith("_DESC") or key == "JOURNEY_SAVE_NOTE":
+        return WRAP_WIDE
+    return 0
+
 
 def check(code):
     rows = read_rows()
@@ -173,6 +189,9 @@ def check(code):
         limit = CELL_LIMITS.get(key, REGION_LIMIT if key.startswith("REGION_") else 0)
         if limit and sum(widths.get(c, 11) for c in tr) > limit:
             bad.append("%s: wider than its %d px menu cell: %s" % (key, limit, tr))
+        wrap = wrap_limit(key)
+        if wrap and line_count(tr, wrap, widths) > 2:
+            bad.append("%s: more than two lines at %d px: %s" % (key, wrap, tr))
         if key.startswith(MENU_PREFIXES):
             continue
         shown = re.sub(r"\{[a-z_0-9]+\}", KEY_NAME, tr).replace("%s", "Wwwww").replace("%d", "00")
