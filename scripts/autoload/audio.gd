@@ -476,10 +476,15 @@ func _duck(length: float) -> void:
 
 ## The track a room plays: its own (Room.music: a cue, or "none" for
 ## only the ambience), else its dungeon's or region's.
-static func music_for_room(biome: String, dungeon: String, own: String = "") -> String:
+static func music_for_room(biome: String, dungeon: String, own: String = "", cave: bool = false) -> String:
 	if own == "none":
 		return ""
-	return own if own != "" else cue_for_room(biome, dungeon)
+	if own != "":
+		return own
+	# Overworld caves and grottoes have their own track (Hollows).
+	if cave and dungeon == "":
+		return "place_cave"
+	return cue_for_room(biome, dungeon)
 
 
 ## Which music fits a room: its dungeon, else its region. Also names the

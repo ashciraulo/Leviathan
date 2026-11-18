@@ -5,6 +5,7 @@
 [node name="Room" type="Node2D"]
 script = ExtResource("1_room")
 name_key = "ROOM_BRINE_SPRING"
+music = "place_spring"
 biome = "brinewood"
 sign_key = "SIGN_BRINE_SPRING"
 layout = "########################

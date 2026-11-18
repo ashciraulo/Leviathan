@@ -100,7 +100,7 @@ func _play_room_music() -> void:
 
 
 func _room_music() -> String:
-	return Audio.music_for_room(current_room.biome, current_room.dungeon, current_room.music)
+	return Audio.music_for_room(current_room.biome, current_room.dungeon, current_room.music, current_room.cave)
 
 
 func _room_has_boss() -> bool:

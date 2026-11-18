@@ -49,6 +49,8 @@ var _flash := 0.0
 var _spent := 0
 var _spent_time := 0.0
 var _canvas: Control
+## The music that was playing before the stall's own tune, put back on close.
+var _music_before := ""
 
 
 func _ready() -> void:
@@ -63,6 +65,8 @@ func _ready() -> void:
 	_canvas.draw.connect(_draw_menu)
 	add_child(_canvas)
 	Audio.play_sfx("ui_open")
+	_music_before = Audio.music_cue
+	Audio.play_music("place_shop", 0.6)
 
 
 static func recently_closed() -> bool:
@@ -131,6 +135,7 @@ func close() -> void:
 	_done = true
 	_closed_at = Time.get_ticks_msec()
 	Audio.play_sfx("ui_back")
+	Audio.play_music(_music_before, 0.6)
 	get_tree().paused = false
 	queue_free()
 	closed.emit(_bought)

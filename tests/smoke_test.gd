@@ -1768,7 +1768,7 @@ func _test_boss_game_over_dungeon() -> void:
 		_check(game.current_room != null and game.current_room.coord == entry, "%s: Wren wakes at the checkpoint (%s)" % [label, game.current_room.coord if game.current_room else null])
 		_check(is_equal_approx(Engine.time_scale, 1.0) and not get_tree().paused and not Cutscene.active,
 			"%s: time runs again (scale %.2f, paused %s, scene %s)" % [label, Engine.time_scale, get_tree().paused, Cutscene.active])
-		_check(Audio.music_cue == Audio.music_for_room(game.current_room.biome, game.current_room.dungeon, game.current_room.music) if game.current_room else false,
+		_check(Audio.music_cue == Audio.music_for_room(game.current_room.biome, game.current_room.dungeon, game.current_room.music, game.current_room.cave) if game.current_room else false,
 			"%s: the boss theme gives way to the room's own music (%s)" % [label, Audio.music_cue])
 		player = game.player
 		Input.action_press("move_right")
@@ -5022,6 +5022,28 @@ func _test_audio() -> void:
 	_check(shelf.music == "none" and grotto.music == "none", "the Ebb Shelf and Grotto have only the sea's sound")
 	shelf.free()
 	grotto.free()
+	# The place tracks: caves, the chapel, the spring, the market and the
+	# shop. Each one is played somewhere, so none of them goes unheard.
+	_check(Audio.music_for_room("brinewood", "", "", true) == "place_cave"
+		and Audio.music_for_room("hull", "hull", "", true) == "dungeon_hull"
+		and Audio.music_for_room("brinewood", "", "none", true) == "", "overworld caves play Hollows; dungeons and silent rooms keep theirs")
+	for entry: Array in [["res://rooms/room_3_5.tscn", "place_choir"], ["res://rooms/room_6_-2.tscn", "place_spring"], ["res://rooms/room_-1_-1.tscn", "place_village"]]:
+		var place: Room = (load(entry[0]) as PackedScene).instantiate()
+		_check(Audio.music_for_room(place.biome, place.dungeon, place.music, place.cave) == entry[1], "%s plays %s" % [entry[0].get_file(), entry[1]])
+		place.free()
+	for cue: String in Audio.MUSIC_CUES:
+		if cue.begins_with("place_"):
+			_check(Audio._load(Audio.MUSIC_DIR, cue) != null, "the %s track exists" % cue)
+	Audio.play_music("region_saltmarrow", 0.01)
+	var stall := ShopMenu.new()
+	get_tree().current_scene.add_child(stall)
+	_check(Audio.music_cue == "place_shop", "a shop plays the stall's tune")
+	stall.close()
+	_check(Audio.music_cue == "region_saltmarrow" and not get_tree().paused, "closing the shop puts the music back")
+	# Let the shop's fades finish before the next check measures volume.
+	await _wait(0.8)
+	Audio.stop_music(0.01)
+	await _wait(0.1)
 	# Music in a hollow is muffled, and clears outside.
 	Audio.play_music("region_brinewood", 0.01)
 	await _wait(0.1)
