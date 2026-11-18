@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/dungeon_maw.ogg-4b6ced48c357bed180cf6bc8dd014
 [params]
 
 loop=false
-loop_offset=0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4
