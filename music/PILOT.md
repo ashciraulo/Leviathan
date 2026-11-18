@@ -367,7 +367,9 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   (577,293); a knob's value shows while the mouse is held down on it.
   - Chapel choir (`place_choir`): v3 FINE to 0 (PASS, unison variance left); v4 Osc2 an octave up (FREQ 0, Osc1
     is -12) at mixer 2.56, Osc1 ~7.0: h1 swing <=0.8 dB, notes within 2.2 dB, master 25-110 Hz <=1.8 dB.
-    `projects\place_choir_v4.flp`.
+    `projects\place_choir_v4.flp`. v5 (PASS, `projects\place_choir_v5.flp`): Osc2 1.84, FINE checked at 0.00; the
+    octave's colour across the 12 notes spans 6.4 dB (v4 13.4). B1's octave still sits ~+2 c (per-voice spread; no
+    Sync or Vintage in Analog Lab): the remaining fix is Osc2 off plus a +4-5 dB bell near 140 Hz on the pedal insert.
   - Ritual choir (`story_choir`): v13 Osc2 off, Osc1 7.32 (PASS, better than v8: drone partials +0.4..+0.9 c, 60-250
     Hz p90-p10 0.4-0.5 dB). v14 (built from `projects\story_choir_v13.flp`, so the plugin edit carries over) holds the
     last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB, but the seam stayed as low, because
