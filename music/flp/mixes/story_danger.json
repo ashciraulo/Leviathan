@@ -113,6 +113,12 @@
      "q": 6.0
     },
     {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": -9.0,
+     "q": 0.8
+    },
+    {
      "shape": "highcut",
      "freq": 1800,
      "db_oct": 24
