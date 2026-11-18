@@ -6,6 +6,12 @@
    "shape": "lowcut",
    "freq": 25,
    "db_oct": 12
+  },
+  {
+   "shape": "bell",
+   "freq": 3600,
+   "gain": -2.5,
+   "q": 0.8
   }
  ],
  "comp_over_lufs": 14.0,
@@ -34,7 +40,7 @@
   },
   "organ_pedal": {
    "insert": 8,
-   "target": -30.0,
+   "target": -28.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -42,8 +48,20 @@
      "db_oct": 12
     },
     {
+     "shape": "bell",
+     "freq": 140,
+     "gain": 4.5,
+     "q": 0.7
+    },
+    {
+     "shape": "bell",
+     "freq": 350,
+     "gain": 3.0,
+     "q": 1.0
+    },
+    {
      "shape": "highcut",
-     "freq": 2500,
+     "freq": 3500,
      "db_oct": 12
     }
    ]

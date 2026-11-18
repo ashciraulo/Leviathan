@@ -347,6 +347,9 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   tail's ebb and exposed a flat (~191 Hz) attack resonance. v10 tried F#3 63, +12 on the body G3s only and +10
   on the tail Bb3: bar 8 jumped +7.9 dB and the tail G3s fell into 5-6 dB holes (the preset changes sample layers
   between those velocities), so v9 ships. Level fixes on this preset need clone channels. Still open: the even-partial shimmer left (h4/h8) is likely Layer B's Light Pool synth.
+- **Simple Ohh's 4 Hz warble** (ritual choir, Healing Spring): it is in the Female Ooh sample itself (Augmented
+  VOICES). Vibrato and Tremolo depths are 0 and the LFO slots empty; bypassing Male Ooh (16a) or the granular Layer B
+  (16b) left the 4 Hz depth at 0.40-0.48. The only fix left is playing Eb4 from a neighbouring key on a retuned clone.
 - **Ritual choir v10/v11:** turning the bell's Part 2 off made it toll properly, but its strikes vary randomly by 5+
   dB from render to render (Soft Bells), so no key trim can level it, and the choir's chorus/phaser off changed
   nothing. v8 stays the shipped cue; `maps/story_choir_fix.json` (bell_soft clone) is kept for a future bell swap.
@@ -379,6 +382,12 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
     `projects\place_choir_v4.flp`. v5 (PASS, `projects\place_choir_v5.flp`): Osc2 1.84, FINE checked at 0.00; the
     octave's colour across the 12 notes spans 6.4 dB (v4 13.4). B1's octave still sits ~+2 c (per-voice spread; no
     Sync or Vintage in Analog Lab): the remaining fix is Osc2 off plus a +4-5 dB bell near 140 Hz on the pedal insert.
+    v6 (PASS, `projects\place_choir_v6a.flp` = Osc2 at 0.00, then `flp_mix` with a +4.5 dB 140 Hz Q 0.7 bell on
+    the pedal and a 3.6 kHz bell on the master): every key's octave colour identical (spread 0.0 dB, v5 6.0), B1 on
+    one peak, 2-6 kHz share -24.2. MINOR: the pedal stem at -27.1 LUFS (target -30) after the bell. v7 sets its
+    target to -28, adds +3 dB at 350 Hz and a 3.5 kHz high cut for small speakers, and eases the master bell to -2.5.
+    v7 PASS, no MINORs (`projects\place_choir_v7.flp`): pedal -27.45 LUFS, 12.1 LU under the choir at a 250 Hz
+    high-pass (v5 15.0), 2-6 kHz share -22.8. Notes: the pedal is static now (a 0.15 Hz +-1 dB LFO if it needs motion).
   - Ritual choir (`story_choir`): v13 Osc2 off, Osc1 7.32 (PASS, better than v8: drone partials +0.4..+0.9 c, 60-250
     Hz p90-p10 0.4-0.5 dB). v14 (built from `projects\story_choir_v13.flp`, so the plugin edit carries over) holds the
     last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB, but the seam stayed as low, because
