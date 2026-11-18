@@ -39,6 +39,12 @@
    "notes": 9,
    "low": 64,
    "high": 73
+  },
+  {
+   "name": "drum_rim",
+   "notes": 96,
+   "low": 60,
+   "high": 60
   }
  ]
 }

@@ -187,6 +187,10 @@ brass_hi = song.part("brass_hi", program=57, vel=84)
 # The bounds sit 0.05 beat early: humanize leaves bar 11's downbeat C#5 a hair before the bar line (review v10).
 brass_hi.notes = [n for n in brass.notes if song.bar(10) - 0.05 <= n[0] < song.bar(12) - 0.05]
 brass.notes = [n for n in brass.notes if not song.bar(10) - 0.05 <= n[0] < song.bar(12) - 0.05]
+# The toms have no attack above 150 Hz, so on small speakers they vanish (review v5-v11 MINOR): every tom hit gets a
+# rim click on its own channel and insert, at the same (humanized) time, so the two land as one stroke.
+rim = song.part("drum_rim", program=0, vel=80)
+rim.notes = [[n[0], 0.1, 60, n[3]] + list(n[4:]) for n in toms.notes]
 song.save()
 
 # ------------------------------------------------------------ story_sorrow
