@@ -67,6 +67,10 @@ Murmur use no first-person word; Wren is レン, a keeper 灯守り. Korean: nev
 - `LEVIATHAN_LOCALE=de xvfb-run -a godot --rendering-driver opengl3 --path .
   res://tests/menu_screenshots.tscn` saves the menus as `screenshots/de_*.png`
   and prints `CUT (de): ...` for every label it had to cut short.
+- `LEVIATHAN_LOCALE` works for any run, the game included: Settings uses it
+  over the saved language. `LEVIATHAN_LOCALE=ja godot --headless --path .
+  res://tests/playthrough.tscn` plays the whole game in Japanese (the smoke
+  test works the same way). Do this for every language before a release.
 - `python3 tools/check_strings.py` (also run by CI) fails if code uses a key
   that has no English text, a key is listed twice, or a row is empty.
   `-v` lists keys that no script names directly (most are built at runtime,

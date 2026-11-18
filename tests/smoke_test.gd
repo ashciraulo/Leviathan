@@ -13,11 +13,6 @@ var _checks := 0
 
 
 func _ready() -> void:
-	# LEVIATHAN_LOCALE=ja runs the whole thing in that language.
-	var lang := OS.get_environment("LEVIATHAN_LOCALE")
-	if lang != "":
-		Settings.locale = lang
-		TranslationServer.set_locale(lang)
 	SaveManager.current_slot = TEST_SLOT
 	# Slot 2 is File 3 on the file select: keep a real save safe.
 	SaveManager.set_aside(TEST_SLOT, "testbackup")
