@@ -1,0 +1,46 @@
+{
+ "cue": "overworld",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "harp": {
+   "insert": 6,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 70,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "flute": {
+   "insert": 2,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The overworld fallback (overworld). templates\\saltmarrow_template8.flp: the harp line on guitar_nylon (Ample Guitar M Lite, insert 6, as Brinewood's harp), flute on flute_wood (Meadow Flute, insert 2). v2 was tried and reverted (REVIEW_overworld_v2: the struck Analog Harp is near a sine, h2 -27 dB, and vanishes on small speakers); the shipped version is v1 (projects\\overworld_v1c.flp)."
+}

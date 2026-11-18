@@ -18,19 +18,19 @@
   },
   {
    "name": "harp",
-   "notes": 168,
-   "low": 50,
-   "high": 59
+   "notes": 165,
+   "low": 57,
+   "high": 69
   },
   {
    "name": "strings",
-   "notes": 216,
+   "notes": 210,
    "low": 50,
-   "high": 61
+   "high": 64
   },
   {
    "name": "choir",
-   "notes": 96,
+   "notes": 90,
    "low": 55,
    "high": 66
   },
@@ -42,15 +42,15 @@
   },
   {
    "name": "bass_arco",
-   "notes": 88,
+   "notes": 86,
    "low": 38,
    "high": 47
   },
   {
    "name": "cello",
    "notes": 14,
-   "low": 66,
-   "high": 74
+   "low": 54,
+   "high": 62
   }
  ]
 }

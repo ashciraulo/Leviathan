@@ -1,0 +1,94 @@
+{
+ "cue": "story_flight",
+ "lufs": -17.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "strings_high": {
+   "insert": 5,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "horns_french": {
+   "insert": 6,
+   "target": -26.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_ah": {
+   "insert": 4,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "harp": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bass_arco": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Wayshell Flight (story_flight). templates\\flight_template.flp = boss_heart_v2raw with the struck Analog Harp (decay 1.46 s, sustain 0, release 0.4 s) renamed harp_struck (insert 2), Analog Lab \"French Horn Solo\" (a sampled Mellotron horn, velocity-responsive, no samples above F5) on brass (insert 6), Ah Voice on choir (insert 4), 12 Low Strings on brass_low (+12, insert 8) and a clone strings_hi on insert 5 (+12). v2 (review v1, 2 MAJOR): templates\\flight_template2.flp; the OB-Xa B-1 French Horn read as a near-sine, so the horn is the Mellotron; A' rewritten with the horn an octave down (D4-B4, velocity 88: the Mellotron moves ~0.4 dB per step) and the strings on the written top line; harp glissandi 12 velocity steps softer. v3 (review v2 MAJOR: the Mellotron horn was too dark, 2-6 kHz -50 dB): templates\\flight_template3.flp adds a clone of the brass channel named trumpet (Analog Lab Trumpfal, same insert 6) at VOL -20 dB, so the trumpet's bright attack sits under the Mellotron's sustain (horn stem 2-6 kHz -24.6 dB). Build with --audition \"strings_high=strings_hi;harp=harp_struck;choir_ah=choir;horns_french=brass,trumpet;bass_arco=brass_low\" --transpose maps/story_flight_transpose.json --fix maps/story_flight_fix.json on the template with channels renamed (iid 1 harp_struck, 11 bell_marrow_sub, 13 strings_hi, 15 trumpet). Gains horns 10.5, Pro-L trim +1.2 (projects\\story_flight_v3c.flp). v4 (review v3 MAJOR: Trumpfal dies ~0.6-1.0 s into a note, so held notes went dark again): templates\\flight_template4.flp swaps the clone's preset for Analog Lab Orchestral Brass 'Dirty Bronze' (sustains bright: h2 -2, h3 -12 dB on held notes, in tune; picked in a split audition, templates\\horn_audition2.flp, against Prophet '43 Horn' (dark) and 'Cresc. Horns 1' (swells, +19 c)). Clone renamed 'bronze' (iid 15), VOL -24 dB (-14 took over: horn +4.7 dB, 2-6 kHz -11); --audition '...;horns_french=brass,bronze;...'; horns gain 9.8. v5 (review v4 MINOR: A' darker than A): the A' horn is its own part horns_a2, and templates\\flight_template5.flp adds a second Dirty Bronze clone 'bronze_hot' (iid 16, insert 6) at VOL -21 dB; --audition '...;horns_french=brass,bronze;horns_a2=brass,bronze_hot;...' --fix maps/story_flight_v5_fix.json, renames as v4 plus 16 bronze_hot; same gains and trim 1.2 (projects\\story_flight_v5.flp). A' horn 2-6 kHz -13.4 (A -13.3; v4 A' -15.2)."
+}

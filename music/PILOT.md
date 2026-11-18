@@ -598,3 +598,59 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   otherwise). MINORs left: no climax (C 0.5 LU under A; route louder-written brass/choir/strings notes to clones with
   `vel_channels` + `volume_db`: brass +3.5, choir +2, strings +1.5 in C); still bright (2-6 kHz -12.6 A / -12.1 C;
   a second brass cut -6 dB at 3.2 kHz Q 0.8).
+- **Wayshell Flight v1 (FAIL):** the OB-Xa "B-1 French Horn" is near a sine (h2 -20 dB, h3 -32 dB at A5) with a
+  decaying hold, so it doesn't read as a horn, and its A' climb went above a real horn's range (to B5). A' sat 0.4 LU
+  under A. v2: the A' climax is rewritten with the horn an octave down (D4-B4) and the strings on the written top
+  line; the horn moves to the Mellotron "French Horn Solo" (sampled, velocity-responsive, no samples above F5); the
+  harp glissandi are 12 velocity steps softer. A horn audition (Mellotron, B-1, Soft Horn) is
+  `templates\horn_audition.flp`.
+- **Pattern mode:** saltmarrow_template8 saves in Pattern mode, and a project built from it opens in Pattern mode,
+  so the render dialog says "Pattern" and drops the song's tail room. Switch to Song before ctrl+r and check the
+  dialog reads Full song.
+- **Overworld v1 (PASS, `projects\overworld_v1c.flp`):** saltmarrow_template8, harp line on Ample Guitar, flute on
+  Meadow Flute; harp keys 43/48/53/57 trimmed (db_per_vel 0.3). MINORs left: the nylon guitar isn't a harp and its
+  same-string notes choke each other 5-13 dB (a harp preset, e.g. the struck Analog Harp, would fix both); 7 of 16 bars
+  repeat a key on beats 1-2, and the cadence bass in bars 8/15 sits ~7 dB under; the D-major chords in bars 8/15 bring
+  in F#, out of G mixolydian (F or Dm).
+- **Wayshell Flight v2 (FAIL, MAJOR):** the Mellotron horn is darker still (2-6 kHz share -50 dB; h2 -24, h3 -38 dB at A4)
+  and velocity moves its level, not its brightness. v3 (`projects\story_flight_v3c.flp`, template
+  `templates\flight_template3.flp`): a clone of the brass channel, `trumpet`, plays the same part on Trumpfal at VOL -20 dB
+  on the same insert; its bright attack sits under the Mellotron's sustain (horn stem 2-6 kHz -24.6 dB). At VOL -6 the
+  trumpet took over (+6.4 dB, -17.7 dB share). Built with `--audition "...;horns_french=brass,trumpet;..."`, which
+  sends one part to two channels (the full command is in `mixes/story_flight.json`). v2 MINORs still open: strings
+  +6-7 c sharp, horn onset +84 ms, choir keys 62-64 ~230 ms late, the harp glissandi ignore velocity.
+- **Credits v1 (FAIL, MAJOR):** `templates\credits_template.flp` (Meadow Flute on insert 6, a bell clone on insert 1,
+  a cello clone of brass_low on insert 3; struck Analog Harp on insert 2, strings_hi on 5). The last four bars were
+  four equal full-level strikes that stopped dead (harp, choir and bass ignore velocity, so "3 dB under" rendered
+  0-0.5 dB under). v2 holds one chord at bar 93 and ends on a soft two-note harp roll that rings out; Wren's hum
+  (cello) goes an octave down (it was the brightest section); the eighth-line strings are a pair, not a triad; the
+  harp spells root, third and fifth an octave up. Open: choir keys 62/64 ~0.2 s late (Ah Voice zone), bell darker
+  than the in-game Point bell.
+- **Overworld v2 (FAIL, reverted to v1):** the struck Analog Harp (h2 27 dB under the fundamental, 2-6 kHz -42.5 dB)
+  reads as a sine pluck and loses 17 dB through a 300 Hz high-pass, so the cue turns into solo flute on small
+  speakers. The struck harp needs an opened filter or a plucked attack layer before it carries a line alone.
+- **Wayshell Flight v3 (FAIL) / v4 (PASS, `projects\story_flight_v4b.flp`, template `templates\flight_template4.flp`):**
+  Trumpfal dies 0.6-1.0 s into a note, so v3's held notes went dark again. v4's layer is Orchestral Brass "Dirty
+  Bronze" (sustains bright; picked in `templates\horn_audition2.flp` over Prophet "43 Horn" and "Cresc. Horns 1"),
+  clone `bronze` at VOL -24 dB (-14 took over). Held-note 2-6 kHz -24 dB (v3 -49). Open MINORs: the bronze's edge
+  lands ~90 ms after the note and fades like a synth filter envelope; it adds a sub-octave series (300 Hz lowcut on
+  its own insert); A' still darker than A (bronze ignores velocity: a +3 dB A'-only clone); climax horn -6.6 dB;
+  strings +6.5 c; choir keys 62-64 ~0.2 s late; harp glissandi +3-5.5 dB.
+- **Credits v2 (FAIL, MAJOR) / v3 (PASS, `projects\credits_v3e.flp`, template `templates\credits_template2.flp`):** v2's
+  last chord was no softer than bar 92 and ended on a bare D3-D4 struck-harp octave that died in 1.5 s, so the cue
+  stopped on a thin pluck. v3 thins the close (bar 92 bass, choir and a harp roll at 2.9-2.5 beats; bar 93 bass 6,
+  string pair 7.5, choir 11 beats; a last harp roll of root, third and fifth at bar 95) and puts Fruity Reeverb 2
+  "Large Hall" on the inserts, so the last chord rings ~4.2 s into a ~4 s hall. Trim 1.0 gives -17.0 LUFS; the OGG is
+  3:29.8 (the roll paces itself to the music, so the tail is safe). Open MINORs: the close is only 0.4 LU under the
+  bars before it (the harp ignores velocity: a -4 dB clone for the last roll, or master automation); the final ring
+  is light on its root D (hold the strings' D4, D on top of the last roll); the eighth line is brighter and only 1.9
+  LU under A; choir keys 55/62/64 still ~0.25 s late (a clone with advance_s 0.2); the hall costs the flute F#4s and
+  the bell's A5s some clarity (-6 dB wet on harp and strings before bar 93); harp key 62 gates 3.2 dB low.
+- **Heart v3 (PASS, `projects\boss_heart_v3b.flp`, template `templates\heart_template2.flp`):** section C (bars
+  35-48) has its own parts strings_c, choir_c and brass_c, routed in FL to clones of strings_full, choir and brass at
+  +1.5, +2 and +3.5 dB VOL on the parents' inserts (maps `boss_heart_v3.json`, `boss_heart_v3_fix.json`); the brass
+  gets a second cut (-6 dB bell at 3.2 kHz, Q 0.8). A -17.25, B -18.19, C -15.92 LUFS: C is the climax (+1.3 LU) and
+  the seam still lands as the climax settling back. Measure with symlinks for the _c parts onto the parents' stems.
+  Open MINORs: still bright in C (2-6 kHz -13.1, bars 36 and 40 over -12: a -3 dB bell at 3.2 kHz on the strings);
+  the brass_c peaks D6/C#6 (bars 38, 40, 41) are its softest notes, 3-4 LU under the rest of the line (keys 85-86 to a
+  +2 dB clone, paired with a deeper strings cut).

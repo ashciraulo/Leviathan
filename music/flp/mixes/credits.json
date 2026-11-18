@@ -1,0 +1,126 @@
+{
+ "cue": "credits",
+ "lufs": -17.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "flute": {
+   "insert": 6,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "cello": {
+   "insert": 3,
+   "target": -26.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "strings": {
+   "insert": 5,
+   "target": -26.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir": {
+   "insert": 4,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "harp": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 100,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_point": {
+   "insert": 1,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bass_arco": {
+   "insert": 8,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Eighth Line (credits). templates\\credits_template.flp = flight_template2 with Meadow Flute on flute_md (insert 6), the struck Analog Harp on harp_struck (insert 2) and a clone bell_struck on insert 1 for the bell, Ah Voice on choir (insert 4), 12 Low Strings on strings_hi (+12, insert 5), brass_low (bass, +12, insert 8) and a clone cello_str (+12, insert 3). v3 (review v1/v2 MAJOR: the close stopped, then ended on a thin pluck): templates\\credits_template2.flp adds Fruity Reeverb 2 'Large Hall' after the Pro-Q on inserts 2 (harp), 4 (choir) and 5 (strings); the score's last bars thin out (bass, strings, then the choir at the end) under two harp rolls; gains strings -8.4, choir -9.4, harp +0.6 (the reverb added 1.4-3.2 dB), Pro-L trim +1.0 (projects\\credits_v3e.flp)."
+}

@@ -79,6 +79,11 @@ choir = song.part("choir", program=52, vel=60)
 brass = song.part("brass", program=61, vel=86)
 timp = song.part("timpani", program=47, vel=88)
 bell = [song.part(name, program=14, vel=96) for name in BELL_PARTS]
+# Section C on their own parts, played by louder clones of the same channels (v2 review: no climax, C sat 0.5 LU under
+# A, and Trumpfal, Ah Voice and Staccato Blend barely follow velocity).
+strings_c = song.part("strings_c", program=48, vel=78)
+choir_c = song.part("choir_c", program=52, vel=60)
+brass_c = song.part("brass_c", program=61, vel=86)
 INTRO = ["Dm", "Dm"]
 A = ["Dm", "Dm", "Bb", "Bb", "Gm", "Gm", "A", "A", "Dm", "C", "Bb", "F", "Gm", "Bb", "A", "A"]
 # B: the lullaby stretched by half (each 3/4 beat = 1.5 quarters), 63 of 64 beats.
@@ -100,7 +105,7 @@ for k, phrase in enumerate(PHRASES):
 brass.line(song.bar(2), bars("D5:2 A4:2 | F5:3 D5:1 | D5:2 Bb4:2 | F5:4 | G5:2 D5:2 | Bb4:3 D5:1 | C#5:4 | E5:4 | "
                              "F5:2 D5:2 | E5:2 G5:2 | F5:3 D5:1 | C5:4 | Bb4:2 D5:2 | F5:2 D5:2 | E5:3 C#5:1 | A4:4"),
            legato=0.9)
-brass.line(song.bar(34), bars("D5:4 | E5:4 | F5:2 A5:2 | D6:4 | Bb5:2 G5:2 | A5:2 C#6:2 | D6:4 | A5:4 | "
+brass_c.line(song.bar(34), bars("D5:4 | E5:4 | F5:2 A5:2 | D6:4 | Bb5:2 G5:2 | A5:2 C#6:2 | D6:4 | A5:4 | "
                               "F5:2 D5:2 | G5:2 Bb5:2 | A5:4 | C#5:4 | E5:4 | A4:4"), vel=92, legato=0.9)
 for b, sym in enumerate(CH):
     tb, s = song.bar(b), sec(b)
@@ -109,11 +114,12 @@ for b, sym in enumerate(CH):
         for st in (0, 1.5, 3):
             timp.note(tb + st, 0.5, root, 100)
         continue
+    st_part, ch_part = (strings_c, choir_c) if s == "C" else (strings, choir)
     for k in range(8):
-        strings.note(tb + k * 0.5, 0.3, root + 12 + [0, 0, 7, 0, 12, 0, 7, 10 if "m" in sym else 7][k], 82 if k % 4 == 0 else 64)
+        st_part.note(tb + k * 0.5, 0.3, root + 12 + [0, 0, 7, 0, 12, 0, 7, 10 if "m" in sym else 7][k], 82 if k % 4 == 0 else 64)
     timp.note(tb, 0.5, root, 90)
     timp.note(tb + 2.5, 0.4, root + 7 if root + 7 < 53 else root - 5, 72)
-    choir.chord(tb, 3.95, voicing(sym, 55, 69)[:3], 66 if s == "B" else 52)
+    ch_part.chord(tb, 3.95, voicing(sym, 55, 69)[:3], 66 if s == "B" else 52)
 for i, p in enumerate(song.parts):
     if not p.name.startswith("bell"):
         p.humanize(seed=3200 + i, time_q=0.006)
