@@ -1,0 +1,100 @@
+{
+ "cue": "region_sunken_verge",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "clarinet_low": {
+   "insert": 2,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3800,
+     "db_oct": 24
+    }
+   ]
+  },
+  "harp": {
+   "insert": 6,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 70,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "pluck_drop": {
+   "insert": 4,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4500,
+     "db_oct": 24
+    }
+   ]
+  },
+  "bass_upright": {
+   "insert": 3,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 220,
+     "gain": 3.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "pad_soft": {
+   "insert": 5,
+   "target": -34.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Sunken Verge (region_sunken_verge). templates\\shop_template.flp: clarinet_low on flute_wood (Emulator II Clarinet, PITCH -17, insert 2), harp on guitar_nylon (Ample Guitar, insert 6), pluck_drop on reed_concertina (Emulator II Marimba, -12, insert 4), bass_upright on the Diamond bass channels with brinewood's key fixes plus Eb2 from E2 on bass_a2 (insert 3), pad_soft on pad_strings (12 Low Strings +12, insert 5; needs Osc2 off/Osc1 7.32 in FL). v2: bass Ab2 plays G2 on bass_g3 (+108, -5 dB), Eb2 clone at 0 dB, harp Eb2 up an octave (Ample Guitar stops at E2), darker pluck/clarinet cuts, +3 dB at 220 Hz on the bass for small speakers."
+}
