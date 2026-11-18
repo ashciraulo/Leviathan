@@ -576,3 +576,25 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   18 dB on small speakers (add a body layer: a clone playing sample 50 at -10 to -12 dB, or saturation on insert 3);
   metal_bowed's 3.3 s release smears its steps (VCA release 0.8-1.0 s or `cap_at_next`) and its 17 ms attack reads as
   a sine lead (attack ~0.3 s); section B doesn't lift (+2 dB on insert 4 over bars 17-24, or a choir clone).
+- **Vael v1 (FAIL, BLOCKER):** a transpose key is looked up both as a part and as a channel name, so the timpani's
+  `+1` (keyed "timpani") also shifted the bell part playing on channel "timpani" a semitone sharp. flp_build now
+  refuses a transpose key that is both a part and another part's channel; key such a part by its own channel.
+- **The PITCH knob's units:** on Staccato Blend one unit is about 1 cent (key 51: 6 units = +18 c, 17 = +29 c; the
+  key itself is ~+12 c off). Measure a preset's units before using `pitch` (v1 assumed 2.35 c and overshot). Staccato
+  Blend's fundamentals and upper harmonics disagree by up to 30 c on some keys, so tune by h2-h8, not h1.
+- **Clock Bell above D5** scatters 15-25 c key to key; boss_heart's seven bell parts play on the Analog Harp instead
+  (`templates\heart_template.flp`: harp channel = Analog Harp, stems on the harp/insert 2 label).
+- **Templates:** `vael_template.flp` = belfry_template with Gong & Timpani on sub_breath (insert 7).
+- **Vael v2 (PASS, `projects\boss_vael_v2b.flp`):** key 51 reads -1 c on h2-h8; Staccato Blend is judged by its
+  harmonics (the gate's fundamental reading is waived on keys 51/63). MINORs left: choir 2.5 dB under in B (choir +1,
+  ostinato -1.5 there); key 46 speaks ~24 ms late (nudge it earlier); strings_high 5-8 c sharp; the bell's tenth
+  only 7.5-8.5 dB under its fundamental (target 9).
+- **Heart v1 (FAIL, MAJOR):** the stock Analog Harp holds full level and releases over ~3 s, so 3-4 bell pitches
+  overlap at most onsets and the seven motifs merge into a pad (the same fault failed Gale v1/v2). v2 gives the bells
+  channel a struck envelope (VCA decay ~1.4 s, sustain 0, release ~0.4 s). MINORs: no climax (A -16.6, B -17.7,
+  C -17.0 LUFS; Trumpfal/choir velocities don't render, so use volume automation); bright (2-6 kHz -11, brass most of it).
+- **Heart v2 (PASS, `projects\boss_heart_v2c.flp`):** struck bells: one bell pitch per onset, each note falls ~23 dB
+  in 1 s, all seven bells at 0 c. Measure a cue's stems with its noeq json (stem_balance applies the mix eq again
+  otherwise). MINORs left: no climax (C 0.5 LU under A; route louder-written brass/choir/strings notes to clones with
+  `vel_channels` + `volume_db`: brass +3.5, choir +2, strings +1.5 in C); still bright (2-6 kHz -12.6 A / -12.1 C;
+  a second brass cut -6 dB at 3.2 kHz Q 0.8).

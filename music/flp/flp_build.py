@@ -90,7 +90,14 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
             raise SystemExit("audition template needs channels named aud1, aud2 ...")
     else:
         targets = [(part["name"], (mapping or {}).get(part["name"], part["name"])) for part in meta["parts"]]
+    part_names = {p for p, _ in targets}
     for part_name, name in targets:
+        # A transpose key that names a part is also read as a channel name, so it would shift every other part
+        # mapped onto a channel of that name (boss_vael v1: the timpani's +1 made the bell on channel "timpani"
+        # a semitone sharp). Key such a part by its channel instead.
+        if name != part_name and name in (transpose or {}) and name in part_names:
+            raise SystemExit(f"transpose key {name!r} is both a part and the channel {part_name!r} plays on; "
+                             f"key the {name!r} part by its own channel instead")
         if name not in names:
             raise SystemExit(f"template has no channel named {name!r} (has {sorted(names)})")
         # Keyed by part or by channel name; when they are the same name, count it once.

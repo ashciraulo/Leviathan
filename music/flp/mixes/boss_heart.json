@@ -1,0 +1,189 @@
+{
+ "cue": "boss_heart",
+ "lufs": -17.0,
+ "parts": {
+  "strings_full": {
+   "insert": 5,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir": {
+   "insert": 4,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "brass": {
+   "insert": 6,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2500,
+     "gain": -3.0,
+     "q": 0.9
+    },
+    {
+     "shape": "highcut",
+     "freq": 5500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "timpani": {
+   "insert": 7,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_point": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_ember": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_moth": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_gale": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_rime": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_verge": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_marrow": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Heart (boss_heart). Built on templates\\heart_template.flp (vael_template with its parts' names; channel 'bells' = Analog Harp on insert 2, replacing the organ; 'bell_clock' = the unused Clock Bell): strings_full on Staccato Blend (insert 5, advance 0.06; keys 50/62/64 read -11..-20 c on the fundamental but +0..+11 c on h2-h8, so no clone pitch fixes both: left as is), choir on Ah Voice (4), brass on Trumpfal (6), timpani on Gong & Timpani (+1, insert 7), all seven bells on the Analog Harp (they enter one after another in bars 19-34 and share a stem). v1 had the bells on the Clock Bell, which scatters 15-25 c above D5. v2 (review v1 MAJOR): the bells channel's Analog Harp is struck, not held (both VCA rows decay 1.46 s, sustain 0, release ~0.41 s; projects\\boss_heart_v2raw.flp), so the seven motifs stay apart; brass -3 dB at 2.5 kHz and high cut 5.5 kHz (it was 63-65 % of the 2-6 kHz energy). Struck bells measure ~10 dB under the held ones over their active time; their target is -31.5 (a struck onset reads louder than its average)."
+}
