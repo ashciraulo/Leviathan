@@ -1,0 +1,53 @@
+{
+ "cue": "place_choir",
+ "lufs": -20.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 25,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "choir": {
+   "insert": 4,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 3000,
+     "gain": -3.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "organ_pedal": {
+   "insert": 8,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 28,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Built from projects\\boss_v10.flp: choir = Ah Voice (ignores velocity), organ_pedal = 12 Low Strings (+12) as a bowed pedal."
+}

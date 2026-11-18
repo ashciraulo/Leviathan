@@ -286,3 +286,62 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **Open MINORs (v8):** key 50 reads +13 c and 62 +17 c on the reviewer's harmonics (put 50 on the clone at -10 c and
   take 62 off); section A has nothing pitched below 100 Hz (pad root or a brass pedal from bar 11) and the frame drum
   has no stick above 150 Hz (a slap/rim layer).
+
+## Silent cues batch (2026-11-17): Hollows, the Healing Spring, the chapel choir, Half-Remembered
+- **Templates:** no new presets. Hollows, the spring and Half-Remembered build from `projects\title_v10.flp` (Analog
+  Harp, Simple Ohh, Meadow Flute, Sustained Bells, 12 Low Strings, Simple Sine with the long Synclavier swell); the
+  chapel choir builds from `projects\boss_v10.flp` (Ah Voice choir, 12 Low Strings +12 as the "organ" pedal). Maps
+  and mixes in `maps/` and `mixes/` under each cue name.
+- **Pro-L 2 make-up:** for these quiet ambient cues the chain (Pro-C 2 + Pro-L 2) loses 1.7-2.8 dB, not the 1 dB
+  `LIMIT_LOSS` assumes, so `--lufs-trim` ran 0.75-1.8. Measure pre_lufs as the real sum of the stems after the
+  stem_balance deltas (stem_balance's own "mix" line is not that sum), then trim = measured loss - 1.
+- **Reviews:** Hollows v3 PASS (4 MINOR), Spring v3 PASS (1 MINOR), Chapel choir v2 PASS (3 MINOR), Half-Remembered
+  v2 PASS (6 MINOR). Game OGGs: place_cave -19.9, place_spring -19.6, place_choir -20.3, story_memory -19.3 LUFS.
+- **Open MINORs:**
+  - Hollows: the sine drone dips at each 4-bar retrigger and bar 22 is a 4 s hole (hold A2+E3 across the loop);
+    the drone is a pure sine, so through the game's cave muffle it dominates (add partials 2-3 or an octave clone,
+    drone -30 / harp -24); the bell "echo" is as loud as the harp (bell target -36.5); two semitone clusters per
+    loop (cap each harp note at the gap to the next drip).
+  - Spring: Simple Ohh beats on every chord tone (detuned layer, keys -13..+6 c): lower its detune or the pad 3 dB.
+  - Chapel choir: the 12 Low Strings pedal has a +20 c layer and throbs at 0.4-0.7 Hz; it is a 35-62 Hz
+    fundamental, gone on small speakers; choir 2-6 kHz share -19.7 dB.
+  - Half-Remembered: two semitone rubs (bar 8 pad C4 vs choir C#4; celesta G5/Ab5); the Db root lives only in the
+    35 Hz sine; the bell strikes as loud as the celesta; Simple Ohh C4/C#4 -10 c; "fade 4" can't fade (no part
+    follows velocity: needs volume automation); one sub retrigger cancels itself (20 dB hole at 8.75 s).
+
+### Danger, the ritual choir and Grief in the Water (same batch)
+- **Danger (`story_danger`, v4 PASS):** built from `projects\miniboss_v7.flp` (ostinato on bell_tower's strings,
+  toms on sub_breath, brass on bell_ember). v1's A' section stepped 16.8 dB at the seam; v3 had no build and the
+  wrong tom pitches. v4 builds from bar 6 with an octave-up ostinato layer, a 9-hit tom fill and brass lifts.
+  `maps/story_danger_fix.json` moves the toms to the right keys and trims two ostinato keys. Open MINORs: brass 2 kHz
+  bell -1.4 dB, strings highcut 4.5k, tom key 50 -> 54, a stick layer, pan.
+- **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
+  low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
+  the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
+  Held to the end the seam stepped -6.6 dB (v4); with choir and drone both released early it was a 0.5 s hole (v7,
+  which finalize's 400 ms windows passed). v8 keeps the choir's 0.97 legato and releases only the last drone chord
+  half a beat early (-4.4 dB, the low point matches the cue's own breaths). Open MINORs: the bell is a strike plus a
+  swelling pad (try DX7 26-TUB BELLS or Clock Bell); Simple Ohh's Eb4 warbles at 4 Hz; the drone is 7-11 c sharp.
+- **Grief in the Water (`story_sorrow`):** v2 used Soft Cello (a synth: a +20 c layer, so every note pulsed at
+  2-4 Hz, review FAIL). v5 uses `templates\sorrow_template_v2.flp`, which is the house template with **Adagio Cello**
+  (Analog Lab, Aug. STRINGS, sampled) on both the cello and pad_soft channels. It sounds an octave below the written
+  note, so `maps/story_sorrow_transpose.json` plays both +12; it follows velocity (about 0.3 dB per step), and
+  `maps/story_sorrow_fix.json` evens keys 70 and 72.
+  Review v5 PASS (3 MINOR): the preset's own chorus still shimmers on the even partials (turn its FX chorus off and
+  save a user preset); it is bright (2-4 kHz share -14 dB: a -3 dB bell at 2.2 kHz); key 66 is ~4 dB hot.
+  v6 (templates\sorrow_template_v3: Chorus and Phaser off on both cellos, -3.5 dB bell at 2.2 kHz, key 66 trim)
+  PASS: brightness -16.1 dB, but the shimmer is the preset's octave-up Layer B (likely "Random Reattacks"), not
+  its FX; Adagio Cello gives only ~0.13 dB per velocity step, so per-key trims need clone channels, not velocity.
+  v9 (`templates\sorrow_template_v4`: Random Reattacks at 0 on both channels, a `cello_soft` clone at -3.5 dB
+  for key 70) PASS (5 MINOR): shimmer about halved, body bars within 2.5 LU, seam +1.2 dB. Velocity response is
+  uneven (0.13-0.32 dB a step), so bar 8's F#3 at 50 overshot to a -7.7 dB hole and +24 on every G3 undid the
+  tail's ebb and exposed a flat (~191 Hz) attack resonance. v10 tried F#3 63, +12 on the body G3s only and +10
+  on the tail Bb3: bar 8 jumped +7.9 dB and the tail G3s fell into 5-6 dB holes (the preset changes sample layers
+  between those velocities), so v9 ships. Level fixes on this preset need clone channels. Still open: the even-partial shimmer left (h4/h8) is likely Layer B's Light Pool synth.
+- **Ritual choir v10/v11:** turning the bell's Part 2 off made it toll properly, but its strikes vary randomly by 5+
+  dB from render to render (Soft Bells), so no key trim can level it, and the choir's chorus/phaser off changed
+  nothing. v8 stays the shipped cue; `maps/story_choir_fix.json` (bell_soft clone) is kept for a future bell swap.
+- **Spring v4:** the Simple Ohh pad 3 dB lower (pad_glass -35 in `mixes/place_spring.json`), its v3 MINOR.
+- **FL tips from this batch:** ctrl+r (after clicking empty workspace) opens the export dialog directly; the File menu
+  route sometimes missed and toggled channel-rack steps. In Analog Lab, typing in the search box leaks keys to FL
+  (it played notes and loaded another preset): use the Types / Instruments filters with the mouse instead.

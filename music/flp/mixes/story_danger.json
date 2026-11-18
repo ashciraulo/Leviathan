@@ -1,0 +1,74 @@
+{
+ "cue": "story_danger",
+ "lufs": -17.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "strings_ostinato": {
+   "insert": 5,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_toms": {
+   "insert": 3,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 50,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": 5.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "brass_low": {
+   "insert": 6,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 80,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2000,
+     "gain": 3.0,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Built from projects\\miniboss_v7.flp: ostinato = Staccato Blend (60 ms early), toms as the miniboss (keys a minor third down), the brass line on Trumpfal (12 Low Strings can't play eighths)."
+}
