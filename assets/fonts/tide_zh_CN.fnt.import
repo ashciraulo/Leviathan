@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://byx6mglvg1kwv"
+path="res://.godot/imported/tide_zh_CN.fnt-1628249b805622a8fed7e5fce35a51a6.fontdata"
+
+[deps]
+
+source_file="res://assets/fonts/tide_zh_CN.fnt"
+dest_files=["res://.godot/imported/tide_zh_CN.fnt-1628249b805622a8fed7e5fce35a51a6.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2
