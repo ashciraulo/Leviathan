@@ -1,0 +1,85 @@
+{
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "cue": "region_frostspine",
+ "lufs": -18.0,
+ "parts": {
+  "epiano_glass": {
+   "insert": 2,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 250,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_pad": {
+   "insert": 4,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bass_bowed": {
+   "insert": 8,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 350,
+     "gain": 2.5,
+     "q": 0.8
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_sparse": {
+   "insert": 5,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Frostspine (region_frostspine), v2. Built from templates\\ambient_sine_template5.flp (channels renamed locally: celesta = epiano_glass, celesta_b = epiano_glass #2, choir_soft = choir_pad, pad_warm = bass_bowed). epiano_glass on celesta (Analog Harp, insert 2; VCA decay ~5 s, edited in projects\\region_frostspine_v2raw.flp), choir_pad on choir_soft (Simple Ohh, insert 4; C4/C#4 an octave down), bass_bowed on pad_warm (12 Low Strings, Osc2 off, +12, insert 8), bell_sparse on celesta_b (in-tune Analog Harp clone, insert 5). Editable project: projects\\region_frostspine_v2b.flp."
+}

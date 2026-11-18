@@ -1,0 +1,86 @@
+{
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "cue": "dungeon_glacier",
+ "lufs": -18.0,
+ "parts": {
+  "bell_fm": {
+   "insert": 2,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "glass_bowed": {
+   "insert": 5,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "sub_drone": {
+   "insert": 8,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 30,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 350,
+     "gain": 2.5,
+     "q": 0.8
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "perc_tick": {
+   "insert": 1,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 400,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Hollow Glacier (dungeon_glacier), v3. templates\\ambient_sine_template7.flp: bell_fm on epiano_glass (Analog Harp, insert 2), glass_bowed on epiano_glass #2 (Analog Harp clone with attack ~0.3 s, sustain 6.8 of 10, release ~1.2 s; insert 5), sub_drone on bass_bowed (+12, insert 8), perc_tick on epiano_glass #3..#6 (decay ~0.2 s tick clones on insert 1; the patch ignores velocity, so maps/dungeon_glacier_fix.json routes velocity bands to clones at -5.7/-2.7/0/+2.1 dB). Editable project: projects\\dungeon_glacier_v3b.flp.",
+ "ceiling": -2.2
+}

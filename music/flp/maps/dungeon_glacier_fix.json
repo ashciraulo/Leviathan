@@ -1,0 +1,6 @@
+{
+ "perc_tick": {
+  "vel_channels": [[35, "epiano_glass #4"], [45, "epiano_glass #5"], [55, "epiano_glass #3"], [127, "epiano_glass #6"]],
+  "volume_db": {"epiano_glass #4": -5.7, "epiano_glass #5": -2.7, "epiano_glass #6": 2.1}
+ }
+}
