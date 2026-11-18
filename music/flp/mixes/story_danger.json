@@ -20,7 +20,7 @@
     },
     {
      "shape": "highcut",
-     "freq": 6000,
+     "freq": 4500,
      "db_oct": 12
     }
    ]
@@ -59,7 +59,7 @@
     {
      "shape": "bell",
      "freq": 2000,
-     "gain": 3.0,
+     "gain": 0.0,
      "q": 1.0
     },
     {

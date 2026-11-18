@@ -315,6 +315,11 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   wrong tom pitches. v4 builds from bar 6 with an octave-up ostinato layer, a 9-hit tom fill and brass lifts.
   `maps/story_danger_fix.json` moves the toms to the right keys and trims two ostinato keys. Open MINORs: brass 2 kHz
   bell -1.4 dB, strings highcut 4.5k, tom key 50 -> 54, a stick layer, pan.
+  v5 (PASS, `projects\story_danger_v5.flp`): key 50 plays 54 (F#2 +9 c); brass bell 0 dB and -1.4 dB, strings high cut
+  4.5 kHz (2-6 kHz share -18.5 -> -20.1); bar 13 lands with a short brass B3 and tom 98 (+2.3 dB over bars 14-16); the
+  eighth-bar accents land on time: advance_s 0.10 and every other ostinato note written 0.09 beat later (+46 -> +8 ms).
+  Open: Trumpfal's key 73 sounds only ~0.84 s however long it's written (re-attack bar 12's C#5 on beat 4); brass +1 dB
+  with a bars 11-12 2.5 kHz cut; toms on small speakers; strings lean left.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
@@ -367,10 +372,16 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   (577,293); a knob's value shows while the mouse is held down on it.
   - Chapel choir (`place_choir`): v3 FINE to 0 (PASS, unison variance left); v4 Osc2 an octave up (FREQ 0, Osc1
     is -12) at mixer 2.56, Osc1 ~7.0: h1 swing <=0.8 dB, notes within 2.2 dB, master 25-110 Hz <=1.8 dB.
-    `projects\place_choir_v4.flp`.
+    `projects\place_choir_v4.flp`. v5 (PASS, `projects\place_choir_v5.flp`): Osc2 1.84, FINE checked at 0.00; the
+    octave's colour across the 12 notes spans 6.4 dB (v4 13.4). B1's octave still sits ~+2 c (per-voice spread; no
+    Sync or Vintage in Analog Lab): the remaining fix is Osc2 off plus a +4-5 dB bell near 140 Hz on the pedal insert.
   - Ritual choir (`story_choir`): v13 Osc2 off, Osc1 7.32 (PASS, better than v8: drone partials +0.4..+0.9 c, 60-250
     Hz p90-p10 0.4-0.5 dB). v14 (built from `projects\story_choir_v13.flp`, so the plugin edit carries over) holds the
-    last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB.
+    last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB, but the seam stayed as low, because
+    the loop's first drone note rises from silence (VCA attack 288 ms) while re-strikes restart from the sounding level.
+    v15 (PASS, `projects\story_choir_v15.flp`): VCA attack 18 ms, VCF attack 10 ms; the seam's momentary low is now
+    level with bars 3/13 (-21.0), drone within 0.8 dB of steady after the restart, no click. Its Sustained Bells vary
+    per render: render twice if the four strikes are more than 3 dB apart (rchoir15 5.7 dB, rchoir15b 1.2 dB).
   - To keep an FL plugin edit across a rebuild, use the saved project as `--template` (channels then carry the part
     names, so the identity map `maps/story_choir_v9.json`).
 - **Hollows v7 (PASS):** the drone's A3/E4 octave layer plays on a clone channel `drone #2` (same insert) at +3 dB

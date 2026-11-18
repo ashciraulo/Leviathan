@@ -146,21 +146,33 @@ for b, sym in enumerate(CH):
         if b >= 6:  # B: more hits, harder
             hits = ((0, 45, 98), (0.75, 45, 72), (1.5, 47, 80), (2, 45, 94), (2.75, 47, 74), (3, 48, 80),
                     (3.25, 48, 76), (3.5, 50, 86), (3.75, 50, 90))
+        if b == 11:  # the fill into A' ends softer than its landing (review v4 MINOR 3)
+            hits = hits[:-1] + ((3.75, 50, 74),)
         for st, p, v in hits:
             toms.note(tb + st, 0.25, p, v)
     else:  # A': the ostinato goes back to the opening's eighths so the loop restarts without a jump
         for k in range(8):
             ost.note(tb + k * 0.5, 0.3, 47 + (7 if k % 4 == 2 else 0), 54 if k % 4 == 0 else 52)
-        for st, p, v in ((0, 45, 84), (2, 45, 76), (3.5, 50, 66)):
+        # Bar 13 lands: its downbeat tom at B's downbeat velocity (review v4 MINOR 3).
+        for st, p, v in ((0, 45, 98 if b == 12 else 84), (2, 45, 76), (3.5, 50, 66)):
             toms.note(tb + st, 0.25, p, v)
 # Phrase 4 diminished: F# E D B in eighths, rising in pitch each time; B answers it a bar later.
 for b, lift in ((2, 0), (4, 5), (6, 7), (8, 12), (10, 19)):
     brass.line(song.bar(b), [(54 + lift, 0.5), (52 + lift, 0.5), (50 + lift, 0.5), (47 + lift, 1.5)], legato=0.85)
 for b, line in ((7, [(59, 1.0), (61, 0.5), (62, 2.5)]), (9, [(62, 1.0), (64, 0.5), (66, 2.5)]),
                 (11, [(66, 0.5), (64, 0.5), (66, 0.5), (73, 2.5)])):
-    brass.line(song.bar(b), line, legato=0.9)
+    brass.line(song.bar(b), line, legato=0.99 if b == 11 else 0.9)  # bar 12's C#5 holds to the barline
+brass.note(song.bar(12), 0.5, 59, 84)  # a short B3 marks A' arriving (review v4 MINOR 3)
 for i, p in enumerate(song.parts):
     p.humanize(seed=3300 + i, time_q=0.006)
+# Staccato Blend's eighth-bar accents (beats 1 and 3 of bars 1-2 and 13-16) bloom ~40 ms late wherever they sit, and
+# velocity isn't the cause (review v4 MINOR 4). The fix map advances the whole ostinato 0.10 s (was 0.06), so every
+# other ostinato note is delayed 0.09 beat (40 ms at 134) here to stay where it was; the accents end up 40 ms early.
+for n in ost.notes:
+    b, beat = divmod(n[0], 4.0)
+    accent = (b < 2 or b >= 12) and min(beat % 2.0, 2.0 - beat % 2.0) < 0.05
+    if not accent:
+        n[0] += 0.09
 song.save()
 
 # ------------------------------------------------------------ story_sorrow
