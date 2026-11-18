@@ -370,7 +370,11 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
     `projects\place_choir_v4.flp`.
   - Ritual choir (`story_choir`): v13 Osc2 off, Osc1 7.32 (PASS, better than v8: drone partials +0.4..+0.9 c, 60-250
     Hz p90-p10 0.4-0.5 dB). v14 (built from `projects\story_choir_v13.flp`, so the plugin edit carries over) holds the
-    last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB.
+    last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB, but the seam stayed as low, because
+    the loop's first drone note rises from silence (VCA attack 288 ms) while re-strikes restart from the sounding level.
+    v15 (PASS, `projects\story_choir_v15.flp`): VCA attack 18 ms, VCF attack 10 ms; the seam's momentary low is now
+    level with bars 3/13 (-21.0), drone within 0.8 dB of steady after the restart, no click. Its Sustained Bells vary
+    per render: render twice if the four strikes are more than 3 dB apart (rchoir15 5.7 dB, rchoir15b 1.2 dB).
   - To keep an FL plugin edit across a rebuild, use the saved project as `--template` (channels then carry the part
     names, so the identity map `maps/story_choir_v9.json`).
 - **Hollows v7 (PASS):** the drone's A3/E4 octave layer plays on a clone channel `drone #2` (same insert) at +3 dB
