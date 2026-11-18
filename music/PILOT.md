@@ -315,6 +315,11 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   wrong tom pitches. v4 builds from bar 6 with an octave-up ostinato layer, a 9-hit tom fill and brass lifts.
   `maps/story_danger_fix.json` moves the toms to the right keys and trims two ostinato keys. Open MINORs: brass 2 kHz
   bell -1.4 dB, strings highcut 4.5k, tom key 50 -> 54, a stick layer, pan.
+  v5 (PASS, `projects\story_danger_v5.flp`): key 50 plays 54 (F#2 +9 c); brass bell 0 dB and -1.4 dB, strings high cut
+  4.5 kHz (2-6 kHz share -18.5 -> -20.1); bar 13 lands with a short brass B3 and tom 98 (+2.3 dB over bars 14-16); the
+  eighth-bar accents land on time: advance_s 0.10 and every other ostinato note written 0.09 beat later (+46 -> +8 ms).
+  Open: Trumpfal's key 73 sounds only ~0.84 s however long it's written (re-attack bar 12's C#5 on beat 4); brass +1 dB
+  with a bars 11-12 2.5 kHz cut; toms on small speakers; strings lean left.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
