@@ -127,16 +127,17 @@ assert len(CH) == song.bars == 16
 WAKE = "Eb4:2 Gb4:2 | Bb4:2 Ab4:2 | Eb4:4 | Gb4:2 Bb4:1 Db5:1 | Bb4:2 Gb4:2 | Ab4:4"  # phrase 7 backwards
 choir.line(0, bars(WAKE), legato=0.97)
 choir.line(song.bar(10), bars("Eb4:2 Gb4:2 | Bb4:2 Ab4:2 | Eb4:4 | Db5:2 Bb4:2 | Ab4:2 Gb4:2 | Eb4:4"), legato=0.97)
-# The loop seam: the last Eb4 keeps the 0.97 legato, softer, and the last drone chord releases half a beat early so
-# its ring folds over the restart. Both held to the end stepped -6.6 dB (v4); both released early left a 0.5 s hole
-# (v7). Notes can't run past the loop end (mtk clamps them).
+# The loop seam: the last Eb4 keeps the 0.97 legato, softer. Both held to the end stepped -6.6 dB (v4, with the
+# beating two-oscillator drone); both released early left a 0.5 s hole (v7). v8 released only the last drone chord
+# half a beat early; with v13's steady one-oscillator drone that 0.3 s dip was the only bass movement in the loop, so
+# v14 holds every drone chord 7.9 beats (review v13). Notes can't run past the loop end (mtk clamps them).
 choir.notes[-1][3] = 56
 for b in (6, 7, 8, 9):  # the bells answer: the same four notes, tolled low
     for k, p in enumerate([51, 54, 58, 56]):
         if (b - 6) == k:
             bells.note(song.bar(b), 3.9, p, 72)
 for b in range(0, 16, 2):
-    drone.chord(song.bar(b), 7.9 if b < 14 else 7.5, [39, 46], 50)  # the last one releases early (seam)
+    drone.chord(song.bar(b), 7.9, [39, 46], 50)  # all the same: v13's steady drone left the 7.5-beat seam dip exposed
 for i, p in enumerate(song.parts):
     p.humanize(seed=3000 + i, time_q=0.006, vel=3)
 song.save()
