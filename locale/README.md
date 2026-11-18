@@ -1,10 +1,10 @@
 # Text and translations
 
-Languages so far: English, Spanish (`es`), Brazilian Portuguese (`pt_BR`)
-and German (`de`). The translations were written by Claude and still want a
-native speaker's read before launch. Planned next: French, Russian,
-Simplified Chinese, Japanese and Korean (Cyrillic and CJK need new glyphs or
-a second font first).
+Languages so far: English, Spanish (`es`), Brazilian Portuguese (`pt_BR`),
+German (`de`), French (`fr`) and Russian (`ru`). The translations were
+written by Claude and still want a native speaker's read before launch.
+Planned next: Simplified Chinese, Japanese and Korean (CJK needs a second
+font first).
 
 Every piece of on-screen text lives in `strings.csv`: one row per key, one
 column per language. Code only ever uses keys (`"MENU_CONTINUE"`), never the
@@ -23,6 +23,12 @@ Keep a glossary per language for place names, item names and the terms of
 address. Wren is never gendered: in Spanish Wren is "guarda", in
 Portuguese "vigia", in German "Lampenwache" (or "Wache"); grown-ups call
 Wren "criatura" / "criança" / "Kind". Avoid gendered adjectives about Wren.
+French: "vigie", elders say "mon enfant", and nothing agrees with Wren
+(no prêt/prête, allé/allée). Russian: "Рен" and "Неттл" only ever in the
+nominative (an undeclined consonant name reads as a girl's, a declined one
+as a boy's), so write "Рен получает...", not "У Рен"; elders say "дитя"; no
+past-tense verbs or short adjectives with Wren as the subject. Nettle and
+Murmur are ungendered too ("Шёпот" declines as an ordinary noun).
 
 1. Add a column to `strings.csv` headed with the language code (`fr`, `de`,
    `es`, `pt_BR`, `ja`...). Fill in every row. Leave nothing empty: an empty
@@ -38,7 +44,8 @@ Wren "criatura" / "criança" / "Kind". Avoid gendered adjectives about Wren.
    font can't draw. The font covers English plus the accented letters of
    French, German, Spanish, Italian, Portuguese, Dutch, Danish, Norwegian,
    Swedish, Finnish and Icelandic (with ß, æ, ø, œ, ç, ð, þ, ¡, ¿, « »,
-   „ ‚ “ ” ‘ ’, …, dashes and no-break spaces).
+   „ ‚ “ ” ‘ ’, …, dashes and no-break spaces) and the Russian alphabet
+   with Ё, Й and №.
    Other letters go in `tools/font_glyphs.py` (`ACCENTED` for a base
    letter plus a mark, `EXTRA` for hand-drawn ones); then run
    `python3 tools/build_art.py`.
