@@ -1,0 +1,79 @@
+{
+ "cue": "region_gloamfen",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "celesta": {
+   "insert": 2,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "vibes_bowed": {
+   "insert": 5,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bass_fretless": {
+   "insert": 8,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_soft": {
+   "insert": 4,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 110,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Gloamfen (region_gloamfen). templates\\ambient_sine_template2.flp (12 Low Strings fixed: Osc2 off, Osc1 7.32): celesta = Analog Harp, vibes_bowed = Sustained Bells, bass_fretless = 12 Low Strings (+12), choir_soft = Simple Ohh. v2 (review v1): bass twin oscillator gone, choir C4/C#4/Eb4 played an octave down (warble), choir +2 dB so the B section drops less. v3 (review v2): Sustained Bells PITCH +9 c (its Bb3/C4/F4/Ab4 sit 7-11 c flat and beat against the choir), bass target -30, choir -25 with a 110 Hz low cut (the B section dropped 5.5 LU). v4 (review v3): templates\\ambient_sine_template4.flp (template3's struck celesta plus a bell_distant #2 clone on insert 5): Sustained Bells +9 c on bell_distant, and C#4/Eb4/F#4/A4 on the clone at -3 c, so every key sits within 2 c."
+}

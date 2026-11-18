@@ -1,0 +1,85 @@
+{
+ "cue": "dungeon_mire",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 28,
+   "db_oct": 12
+  }
+ ],
+ "comp_over_lufs": 14.0,
+ "parts": {
+  "bell_glass": {
+   "insert": 2,
+   "target": -24.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drone_low": {
+   "insert": 8,
+   "target": -32.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 350,
+     "gain": 2.5,
+     "q": 0.8
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_dark": {
+   "insert": 4,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "harp": {
+   "insert": 6,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 100,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Lantern Mire (dungeon_mire). templates\\ambient_sine_template2.flp (ambient_sine_template with 12 Low Strings fixed: Osc2 off, Osc1 7.32). v2 (review v1): bell melody on celesta (Analog Harp, insert 2: Sustained Bells swelled in 0.6 s late), harp line on guitar_nylon (insert 6), choir notes C4-Eb4 an octave down (Simple Ohh warbles there), drone -2 dB with +2.5 dB at 350 Hz for small speakers. v3 (review v2): templates\\ambient_sine_template3.flp (Analog Harp's VCA: sustain 0, decay 2.3 s, release 0.9 s, both voices, so the bell line strikes and decays); guitar D#4 (key 63, near silent in the sample) plays D#5; drone -3.5 dB, choir +2 dB."
+}
