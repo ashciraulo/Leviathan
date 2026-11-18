@@ -343,6 +343,14 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   A 7 kHz highcut at 12 dB/oct took the 2-6k share to -18.5 and >6k to -33.5: keep the steep 3 kHz cut (-20.0 / -49.9).
   Split stems for this template: bell_ember = brass_low + brass_dbl, bell_marrow = brass_hi, bell_tower = strings,
   sub_breath = toms, strings_low = rim. FL's Packs folder is mounted for the folder tools (`~/mnt/Packs`).
+  v13 (PASS): rim velocity +14 in bars 7-12 (B buried the toms under the brass), highcut 1.8k 24 dB/oct, pan +0.17
+  (L-R measures +dB = left: the rim needs pan right to sit with the toms), gain -5. 2-6k share -20.48.
+  v14 (`projects\story_danger_v14b.flp`, template `templates\story_danger_template_v5.flp`, maps `story_danger_v14*`):
+  Fruity Reeverb 2 after the Pro-Q on inserts 6 and 7 (0.8 s, size 25, low cut 250, high cut 4k, mod 0, ER 20%, wet
+  30%, SEP "50% separated"; SEP's type-in reads "x% merged" to the left of Original, so 140 made it mono). Brass
+  side/mid -70 -> -17.7 dB. Rim low cut 900 Hz 24 dB/oct and a -6 dB Q6 bell at 705 Hz (ring -3.8 -> -7.7 dB).
+  Templates saved from a built project have the parts' names (map v14 is identity); two channels are called brass_low,
+  and the build takes the later one (the one on insert 6). Reeverb knobs: right-click > Type in value.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
