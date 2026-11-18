@@ -360,3 +360,16 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - **FL tips from this batch:** ctrl+r (after clicking empty workspace) opens the export dialog directly; the File menu
   route sometimes missed and toggled channel-rack steps. In Analog Lab, typing in the search box leaks keys to FL
   (it played notes and loaded another preset): use the Types / Instruments filters with the mouse instead.
+- **12 Low Strings (Prophet-5) as a drone or organ pedal:** the preset's Osc2 has FINE +0.206 semitones (a +20 c twin
+  that throbs at 0.4-1.6 Hz on low notes), and its two free-running oscillators then set each note's level at random
+  (h1 swing up to 9.6 dB, note levels spread 5 dB). In Analog Lab: Explore, Edit Preset, Part 1 Open, hide the
+  macros (Controls), then Osc2 FREQ (330,352), FINE (372,352, double-click = 0), mixer OSC1 (535,293) / OSC2
+  (577,293); a knob's value shows while the mouse is held down on it.
+  - Chapel choir (`place_choir`): v3 FINE to 0 (PASS, unison variance left); v4 Osc2 an octave up (FREQ 0, Osc1
+    is -12) at mixer 2.56, Osc1 ~7.0: h1 swing <=0.8 dB, notes within 2.2 dB, master 25-110 Hz <=1.8 dB.
+    `projects\place_choir_v4.flp`.
+  - Ritual choir (`story_choir`): v13 Osc2 off, Osc1 7.32 (PASS, better than v8: drone partials +0.4..+0.9 c, 60-250
+    Hz p90-p10 0.4-0.5 dB). v14 (built from `projects\story_choir_v13.flp`, so the plugin edit carries over) holds the
+    last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB.
+  - To keep an FL plugin edit across a rebuild, use the saved project as `--template` (channels then carry the part
+    names, so the identity map `maps/story_choir_v9.json`).
