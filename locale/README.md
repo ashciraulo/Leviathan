@@ -1,10 +1,9 @@
 # Text and translations
 
 Languages so far: English, Spanish (`es`), Brazilian Portuguese (`pt_BR`),
-German (`de`), French (`fr`) and Russian (`ru`). The translations were
-written by Claude and still want a native speaker's read before launch.
-Planned next: Simplified Chinese, Japanese and Korean (CJK needs a second
-font first).
+German (`de`), French (`fr`), Russian (`ru`), Simplified Chinese (`zh_CN`),
+Japanese (`ja`) and Korean (`ko`). The translations were written by Claude
+and still want a native speaker's read before launch.
 
 Every piece of on-screen text lives in `strings.csv`: one row per key, one
 column per language. Code only ever uses keys (`"MENU_CONTINUE"`), never the
@@ -29,6 +28,10 @@ nominative (an undeclined consonant name reads as a girl's, a declined one
 as a boy's), so write "Рен получает...", not "У Рен"; elders say "дитя"; no
 past-tense verbs or short adjectives with Wren as the subject. Nettle and
 Murmur are ungendered too ("Шёпот" declines as an ordinary noun).
+Chinese: never 他/她 for Wren, Nettle or Murmur (use the name or 你); Wren
+is 雷恩, a keeper 守灯人. Japanese: never 彼/彼女 for them, and Nettle and
+Murmur use no first-person word; Wren is レン, a keeper 灯守り. Korean: never
+그/그녀 for them; Wren is 렌, a keeper 등지기, elders say 얘야.
 
 1. Add a column to `strings.csv` headed with the language code (`fr`, `de`,
    `es`, `pt_BR`, `ja`...). Fill in every row. Leave nothing empty: an empty
@@ -49,6 +52,10 @@ Murmur are ungendered too ("Шёпот" declines as an ordinary noun).
    Other letters go in `tools/font_glyphs.py` (`ACCENTED` for a base
    letter plus a mark, `EXTRA` for hand-drawn ones); then run
    `python3 tools/build_art.py`.
+   Chinese, Japanese and Korean letters come from Fusion Pixel instead:
+   after changing `zh_CN`, `ja` or `ko` text, run
+   `python3 tools/build_cjk_font.py` (needs `pip install fonttools brotli
+   pillow`). If Fusion Pixel lacks a rare letter, reword the line.
 
 ## Checks
 
