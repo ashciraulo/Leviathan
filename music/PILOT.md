@@ -357,6 +357,10 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   Pro-L --lufs-trim 1.6. 2-6k share -20.64, -17.20 LUFS. The room reverb lives in the template, not the mix JSON.
   v15 review PASS (the 2.8k cut cost the rim 1.2 dB outside B). v16 (`projects\story_danger_v16.flp`): rim gain +1,
   B boost +13. Phone sim drums vs mix 1-2/A/B/A' +6.9/-1.5/-2.4/+6.7 dB, 2-6k -20.61, -17.19 LUFS.
+  v17 (`projects\story_danger_v17.flp`): strings insert 5 stereo separation "50% merged" (the small knob at the
+  bottom-left of the strip; type "50% merged" by pasting, typed spaces drop). FL's 50% scales the side to 0.70 RMS.
+  Strings L-R by band 40-150/150-500/500-2k/2-6k: +5.4/+0.3/-2.1/-5.7 -> +4.9/+0.2/-1.7/-4.5; master 2-6k -3.5 -> -2.7.
+  Set in the saved project only: rebuilding from template v6 loses it. -17.44 LUFS.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
