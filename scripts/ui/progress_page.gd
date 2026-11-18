@@ -10,10 +10,11 @@ const NAME_W := 114.0
 ## Where each column of numbers starts, and how wide it is (errands asked,
 ## done, shards, stones, glass, chests). Asked only ever holds a number;
 ## stones and chests are widest, chests for "100/125". Kept tight so
-## long region names ("Altos de Ventolago") fit; a header may be as wide
-## as its column, never wider, in every language (tools/l10n.py checks).
-const COL_X := [128.0, 162.0, 196.0, 238.0, 282.0, 322.0]
-const COL_W := [34.0, 34.0, 42.0, 44.0, 40.0, 46.0]
+## long region names ("Altos de Ventolago") fit. Each cell holds its widest
+## number ("36/36", "126/126"); a header must leave a pixel spare so its
+## neighbours never touch, in every language (tools/l10n.py checks both).
+const COL_X := [128.0, 163.0, 199.0, 241.0, 286.0, 322.0]
+const COL_W := [35.0, 36.0, 42.0, 45.0, 36.0, 46.0]
 const HEAD_Y := 26.0
 const SUBHEAD_Y := 38.0
 const ROW_Y := 54.0

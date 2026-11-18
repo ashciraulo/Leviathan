@@ -120,8 +120,13 @@ def import_(code, src):
 
 # Fixed-width menu cells: the text must be no wider than this (pixels), or
 # MenuKit cuts it short with "..". Keep in step with progress_page.gd.
-CELL_LIMITS = {"PROGRESS_UNDERWAY": 34, "PROGRESS_DONE": 34, "PROGRESS_SHARDS": 42,
-    "PROGRESS_STONES": 44, "PROGRESS_GLASS": 40, "PROGRESS_CHESTS": 46}
+# Headers get the column width less one pixel, so neighbours never touch.
+PROGRESS_COLUMNS = {"PROGRESS_UNDERWAY": 35, "PROGRESS_DONE": 36, "PROGRESS_SHARDS": 42,
+    "PROGRESS_STONES": 45, "PROGRESS_GLASS": 36, "PROGRESS_CHESTS": 46}
+CELL_LIMITS = {key: width - 1 for key, width in PROGRESS_COLUMNS.items()}
+# The widest number each column shows (Completion totals), checked once.
+PROGRESS_NUMBERS = {"PROGRESS_UNDERWAY": "36", "PROGRESS_DONE": "36/36", "PROGRESS_SHARDS": "12/12",
+    "PROGRESS_STONES": "22/22", "PROGRESS_GLASS": "12/12", "PROGRESS_CHESTS": "126/126"}
 REGION_LIMIT = 114  # progress_page.gd NAME_W
 
 
@@ -152,9 +157,19 @@ def check(code):
     return 1 if bad else 0
 
 
+def check_numbers():
+    widths = advances()
+    bad = 0
+    for key, number in PROGRESS_NUMBERS.items():
+        if sum(widths.get(c, 11) for c in number) > PROGRESS_COLUMNS[key]:
+            print("NUMBERS %s: %s is wider than its %d px column" % (key, number, PROGRESS_COLUMNS[key]))
+            bad = 1
+    return bad
+
+
 def check_all():
     """Every translation's errors (for tools/check.sh); English included for the menu cells."""
-    return max([check(code) for code in read_rows()[0][1:]] or [0])
+    return max([check_numbers()] + [check(code) for code in read_rows()[0][1:]])
 
 
 if __name__ == "__main__":
