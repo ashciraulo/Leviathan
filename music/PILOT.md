@@ -357,6 +357,14 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   Pro-L --lufs-trim 1.6. 2-6k share -20.64, -17.20 LUFS. The room reverb lives in the template, not the mix JSON.
   v15 review PASS (the 2.8k cut cost the rim 1.2 dB outside B). v16 (`projects\story_danger_v16.flp`): rim gain +1,
   B boost +13. Phone sim drums vs mix 1-2/A/B/A' +6.9/-1.5/-2.4/+6.7 dB, 2-6k -20.61, -17.19 LUFS.
+  v17 (`projects\story_danger_v17.flp`): strings insert 5 stereo separation "50% merged" (the small knob at the
+  bottom-left of the strip; type "50% merged" by pasting, typed spaces drop). FL's 50% scales the side to 0.70 RMS.
+  Strings L-R by band 40-150/150-500/500-2k/2-6k: +5.4/+0.3/-2.1/-5.7 -> +4.9/+0.2/-1.7/-4.5; master 2-6k -3.5 -> -2.7.
+  Set in the saved project only: rebuilding from template v6 loses it. -17.44 LUFS.
+  v17 review PASS but the split stayed (narrowing scales every band alike). v18 (`projects\story_danger_v18.flp`): in
+  the strings' Pro-Q 4 (insert 5), per-channel shelves (band menu Stereo > Left/Right; double-click a knob to type):
+  low shelf 150 Hz Q0.71 L -3.5 / R +3.5, high shelf 1.8 kHz Q0.71 L +3 / R -3, output +7.6 dB (was +6.6).
+  Strings L-R 40-150/150-500/500-2k/2-6k +1.0/-0.8/-1.1/-1.4 (v17 +4.9/+0.2/-1.7/-4.5). -17.20 LUFS. Project only, not the JSON.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
@@ -428,6 +436,11 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
     v15 (PASS, `projects\story_choir_v15.flp`): VCA attack 18 ms, VCF attack 10 ms; the seam's momentary low is now
     level with bars 3/13 (-21.0), drone within 0.8 dB of steady after the restart, no click. Its Sustained Bells vary
     per render: render twice if the four strikes are more than 3 dB apart (rchoir15 5.7 dB, rchoir15b 1.2 dB).
+  - v16 (`projects\story_choir_v16.flp`, template `templates\story_choir_template_v2.flp` = v15 + a clone
+    `choir_unison #2`): a key test (one choir note per key, 58-70) showed sample zones 62-64 / 65-67 / 68-70; the
+    D4-E4 zone warbles, F4-G4 much less. Eb4 now plays F4 on the clone, PITCH -200 (-183 measured 20 c sharp), VOL
+    +2.5 dB (`maps/story_choir_v16_fix.json`). The bell's strikes are fixed per project load (two renders without
+    reloading came out identical), so reload before each re-render; render rchoir16 had a 2.7 dB spread.
   - To keep an FL plugin edit across a rebuild, use the saved project as `--template` (channels then carry the part
     names, so the identity map `maps/story_choir_v9.json`).
 - **Hollows v7 (PASS):** the drone's A3/E4 octave layer plays on a clone channel `drone #2` (same insert) at +3 dB
