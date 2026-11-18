@@ -155,6 +155,10 @@ CELL_LIMITS = {key: width - 1 for key, width in PROGRESS_COLUMNS.items()}
 PROGRESS_NUMBERS = {"PROGRESS_UNDERWAY": "36", "PROGRESS_DONE": "36/36", "PROGRESS_SHARDS": "12/12",
     "PROGRESS_STONES": "22/22", "PROGRESS_GLASS": "12/12", "PROGRESS_CHESTS": "126/126"}
 REGION_LIMIT = 114  # progress_page.gd NAME_W
+# The map's one-line info under the room name: map_page.gd INFO_PANEL width less 20.
+for _key in ("MAP_STONE_ASLEEP", "MAP_STONE_NO_FLY_INSIDE", "MAP_STONE_NEED_WAYSHELL", "MAP_STONE_FLY",
+        "MAP_YOU_ARE_HERE", "MAP_UNKNOWN_ROOM"):
+    CELL_LIMITS[_key] = 368 - 20
 
 
 def check(code):
