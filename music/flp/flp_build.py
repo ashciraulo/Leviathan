@@ -98,6 +98,12 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
         shift = t.get(part_name, t.get(name, 0)) if part_name == name else t.get(part_name, 0) + t.get(name, 0)
         part_notes = midi_notes(os.path.join(MUSIC, "midi", cue, part_name + ".mid"), scale)
         fix = (fixes or {}).get(part_name, {})
+        if fix.get("cap_at_next"):
+            # A long-ringing preset smears a stepwise line into clusters (Gale's tubular bell): end each note
+            # where the part's next note starts.
+            starts = sorted({st for st, _, _, _ in part_notes})
+            nxt = {a: b for a, b in zip(starts, starts[1:])}
+            part_notes = [(st, min(ln, nxt[st] - st) if st in nxt else ln, k, v) for st, ln, k, v in part_notes]
         if fix.get("advance_s"):
             # A preset with a slow attack (Staccato Blend peaks ~120 ms in) plays early so its swell lands on the
             # beat (miniboss review v4). A note pushed before 0 wraps to the loop end; finalize folds it back.

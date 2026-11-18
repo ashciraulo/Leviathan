@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/region_windmere.ogg-bd5a3bb640ff12e8b27f745db
 [params]
 
 loop=false
-loop_offset=0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

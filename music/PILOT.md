@@ -462,3 +462,53 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   v11 PASS, no MINORs (`projects\story_memory_v11.flp`): seam sub correlation +0.90 (v10 -0.95), no 25-75 Hz dip.
   Notes: the in-phase seam swells +4.5 dB in 25-75 Hz (end the last C#1 ~0.5 s earlier to level it); the fade reads
   only over bars 23-24.
+
+## The placeholder cues, made in FL (2026-11-18)
+The production tracker always listed 17 cues as not yet made in FL (their OGGs were the MIDI placeholders from PRs
+#85/#115). They are made in region/dungeon pairs, one PR per pair, in tracker order.
+- **12 Low Strings fixed in the templates:** `templates\ambient_sine_template2.flp` = ambient_sine_template with
+  pad_warm's Prophet-5 Osc2 mixer at 0.00 and Osc1 at 7.32 (as story_choir v13). Gloamfen v1 and Mire v1 failed
+  review on the stock preset's +20 c twin (bass/drone beating 17-21 dB at 0.6-1.4 Hz). Every template that uses
+  12 Low Strings low needs the same edit; Gale's brass_low got it inside `projects\dungeon_gale_v1c.flp`.
+- **Simple Ohh:** C4, C#4 and Eb4 warble (two layers at about -19 c and 0 c); `maps/<cue>_fix.json` plays them an
+  octave down ("play"). Gloamfen, Mire and Frostspine do this.
+- **Loudness trim:** with --lufs-trim 0, ambient_sine renders came out 4.3-5.6 dB over target; start at -4.5.
+- **Mire v2:** Sustained Bells peaks 0.6 s after note-on, too late for a 0.75 s melody, so the bell line moved to the
+  celesta channel (Analog Harp) and the harp line to guitar_nylon (insert 6, stem bell_ember).
+- **Gale:** boss_template3; the flute line is sung by Ah Voice (choir), bell_tubular on harp; its render runs 33 s past
+  the loop (the template's song length), which finalize folds back.
+- **Analog Harp decay:** the celesta channel's ARP Odyssey patch held like a flat sine (VCA decay 2 ms, full sustain).
+  `templates\ambient_sine_template3.flp` sets the VCA's decay so it rings like a struck bar; template4 adds a
+  `bell_sparse #2` clone (Frostspine). Templates saved from a built project carry part-named channels and its Pro-Q
+  gains: rename the channels back with flp_raw before building, and add the template's insert gain to stem_balance's
+  gain when the stems were rendered through it (Glacier v1b).
+- **Sustained Bells is out:** its keys are 3-12 c off in no pattern, so neither a PITCH knob nor a clone tunes it
+  (Gloamfen v2-v4 failed on it). template5 adds `celesta_b`, a clone of the in-tune Analog Harp on insert 5, and
+  Gloamfen's vibes play on it.
+- **cap_at_next** (fix option): ends each note where the part's next note starts, so a long-ringing bell doesn't stack
+  a stepwise line into a cluster (Gale's tubular bell).
+- **A fixed preset needs fresh gains:** the fixed 12 Low Strings is ~15 dB louder than stock, so Windmere v1 failed
+  with the pad 10 dB over the flute. Always set gains from stems rendered with the fixed preset.
+- **Stems from a template carry its gains:** a template saved from a built project keeps that project's Pro-Q output
+  gains, and split-mixer stems are post-insert. So stem_balance's gain is relative: new gain = the insert gain used
+  in that render + (target - measured), measured with the mix json's eq stripped (it is already in the stem).
+  Frostspine v1 and Gloamfen v5 came out with the bass 8-11 dB hot from skipping this; Glacier v1c, set this way,
+  measured within 0.1 dB of every target.
+- **Trims seen:** with gains set that way, ambient_sine templates need about +1.0 to +1.3; boss_template3 +1.5. (The
+  earlier -2.5 to -4.5 trims were making up for wrong part gains.)
+- **ceiling** (mix json): Pro-L 2's output ceiling, default -1.5. Glacier's ticks made the OGG peak 0.5 dB over the
+  master's -1.51, so it uses -2.2.
+- **Passed:** Mire v3 (`projects\dungeon_mire_v3b.flp`), Windmere v2 (`projects\region_windmere_v2.flp`; MINORs left:
+  pad ~4 dB hot, the snare reads as a low tom).
+- **template6** (`templates\ambient_sine_template6.flp`): template5 plus two more Analog Harp clones, renamed
+  locally to `celesta_bow` (insert 5: attack ~0.3 s, sustain 4.0 of 10, release ~1.2 s, for bowed vibes and glass:
+  Gloamfen v5 failed with the vibes ringing out like a second celesta) and `celesta_tick` (insert 1: decay ~0.2 s, a
+  pitched tick for Glacier, whose frame drum at key 75 read as a 268 Hz knock). In Analog Lab, a first press on an
+  ARP slider can jump it to the pointer; hover first, then drag and read the tooltip.
+- **Gale v3:** the tubular bell (stock Analog Harp, decay 2 ms and full sustain) now has decay 1.3 s, sustain 0 and
+  release ~0.4 s, edited in `projects\dungeon_gale_v3raw.flp`; strings high cut 4 kHz at 24 dB/oct.
+- **Frostspine v2:** built from template5 with the bell on the in-tune clone; the e-piano's VCA decay lengthened
+  to ~5 s in `projects\region_frostspine_v2raw.flp` (v1's melody died 23-26 dB within 2 s).
+- **Reload before rendering an Analog Lab edit:** Gale's stems rendered right after editing the bell's VCA still
+  played the old envelope (flat sustain); the same project reopened from disk rendered the new one, 6 dB quieter.
+  Save, reopen, then render stems for gains.

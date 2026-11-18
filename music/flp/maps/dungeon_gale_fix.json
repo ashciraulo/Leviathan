@@ -1,0 +1,36 @@
+{
+ "strings_runs": {
+  "advance_s": 0.04
+ },
+ "timpani": {
+  "keys": {
+   "47": {
+    "play": 35
+   },
+   "48": {
+    "play": 36
+   },
+   "49": {
+    "play": 37
+   },
+   "50": {
+    "play": 38
+   },
+   "51": {
+    "play": 39
+   },
+   "52": {
+    "play": 40
+   },
+   "53": {
+    "play": 41
+   }
+  }
+ },
+ "bass_arco": {
+  "advance_s": 0.12
+ },
+ "bell_tubular": {
+  "cap_at_next": true
+ }
+}
