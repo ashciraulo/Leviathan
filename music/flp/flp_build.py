@@ -119,6 +119,11 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
             k = fix.get("keys", {}).get(str(key + shift), {})
             if k.get("db"):
                 v += k["db"] / fix["db_per_vel"]
+            # "at_ticks": {"<start tick in the cue's ppq>": db}: one note softer, not every note on its key (Belfry v1b:
+            # the loop restarts 6.2 dB over its quiet last bars, over finalize's 6 dB seam limit).
+            at = fix.get("at_ticks", {}).get(str(round(start / scale)))
+            if at:
+                v += at / fix["db_per_vel"]
             v = max(1, min(fix.get("vel_cap", 128), round(v)))
             ch = k.get("channel", name)
             # A patch that ignores velocity (Glacier's tick, review v2 MAJOR): "vel_channels": [[max MIDI velocity,

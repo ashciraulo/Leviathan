@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/dungeon_belfry.ogg-59fd6ae91e2446b4bd6adf7a2a
 [params]
 
 loop=false
-loop_offset=0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

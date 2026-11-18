@@ -526,3 +526,22 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
 - **Sunken Verge:** Diamond bass Ab2 (key 44) is 8-12 dB hot and its partials disagree (-17 c fundamental, +5 c
   overtones); it plays G2 on the `bass_g3` clone at PITCH +108, -5 dB. Ample Guitar's lowest note is E2, so a harp Eb2
   is silent: play it an octave up. A harp Eb2 on bar 1 also made the seam step 9.6 dB; finalize caps seam steps at 8.
+- **Sunken Verge v2 (PASS):** MINORs left for the polish pass: the harp's Eb3 root and the F#3 after it share a string
+  in Ample Guitar (hammer-on: the root is cut and F#3 is 8 dB soft), so put keys 39 and 63 on a second Ample channel on
+  insert 6 and drop the root's -6 dB; Eb4 +7.5 c (PITCH about -8 on that channel); bright at 2-3 kHz (bells -5 dB at
+  2.75 kHz on the pluck, -3.5 dB at 2.2 kHz on the clarinet); bass F#2 +3.7 dB (`"42": db -3`); Pro-C dips the mids
+  1.7 dB on each bass note.
+- **belfry_template** (`templates\belfry_template.flp`): kiln_template3 with Ah Voice on choir (insert 4), Clock Bell
+  on timpani (insert 1), Analog Harp on bell_marrow (insert 7), Saint Eustache organ on harp (insert 2), 12 Low Strings
+  on brass_low (insert 8) with Osc2 at 0 and Osc1 at 7.32: the preset ships with a detuned second oscillator, zero it
+  on every project that uses it. Belfry, Tomb and both Maw cues are built on it; the drum (drum_taiko) renders on the
+  insert-3 stem labelled sub_breath.
+- **Belfry v1:** the loop restarts 6.2 dB over its quiet last bars (finalize's limit is 6). The new fix key
+  `at_ticks` ({"<start tick>": dB}) softens only bar 1's organ chord and bass note, which brought it to 5.6.
+- **Ossuary:** drum_hand's keys 50 and 52 play on the `drum_high` clone, so gate the summed drum stems. Gains must be
+  relative to the insert gain the stems were rendered with (v1 used absolute gains and came out at -9.8 LUFS).
+- **Belfry v2 (PASS):** the Clock Bell's loudest partial is a flat major tenth (ratio ~2.49); a -10 dB bell at 1.45 kHz
+  and a 3 kHz high cut on insert 1 make the fundamental lead. MINORs left: the tenth is still only 6-7 dB under (add a
+  -6 dB bell at 1.5 kHz Q 1.6 and a second 2.2 kHz high cut, or swap the bell); section D bright (-13.5 dB 2-6 kHz);
+  the organ's A3 (sent as key 69) sounds an octave high; the sketch lifts A' by 1.6 dB and the render doesn't (organ
+  and bass ignore velocity, so use a louder clone or automation); seam step 5.8 against the 6 dB limit.

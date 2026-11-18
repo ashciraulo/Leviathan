@@ -1,0 +1,80 @@
+{
+ "bass_upright": {
+  "vel_cap": 112,
+  "db_per_vel": 0.097,
+  "keys": {
+   "41": {
+    "db": -1.5
+   },
+   "52": {
+    "db": -2.3
+   },
+   "53": {
+    "db": -1.0
+   },
+   "43": {
+    "channel": "bass_soft"
+   },
+   "46": {
+    "channel": "bass_soft"
+   },
+   "47": {
+    "channel": "bass_soft",
+    "db": 1.6
+   },
+   "45": {
+    "channel": "bass_a2",
+    "play": 46
+   },
+   "55": {
+    "channel": "bass_g3",
+    "play": 53
+   },
+   "42": {
+    "channel": "bass_soft"
+   },
+   "40": {
+    "channel": "bass_a2",
+    "play": 41,
+    "db": 1.9
+   },
+   "39": {
+    "channel": "bass_a2",
+    "play": 40
+   },
+   "44": {
+    "channel": "bass_g3",
+    "play": 43
+   }
+  },
+  "pitch": {
+   "bass_a2": -108,
+   "bass_g3": 108
+  },
+  "volume_db": {
+   "bass_soft": -5.0,
+   "bass_a2": 0.0,
+   "bass_g3": -5.0
+  }
+ },
+ "clarinet_low": {
+  "pitch": {
+   "flute_wood": -17
+  }
+ },
+ "harp": {
+  "db_per_vel": 0.3,
+  "keys": {
+   "39": {
+    "play": 51,
+    "db": -6.0
+   },
+   "54": {
+    "db": -4.0
+   },
+   "63": {
+    "db": 5.0
+   }
+  }
+ }
+}
