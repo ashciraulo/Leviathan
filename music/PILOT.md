@@ -668,3 +668,10 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   strings get a -4.5 dB bell at 3.2 kHz Q 0.8 (+0.7 dB strings gain to keep their level), Pro-L trim 1.4. 2-6 kHz
   A -15.9 / C -14.3, C +1.41 LU over A. NITs: bar 40 sits exactly on -12 dB 2-6 kHz (brass_peak VOL +5.0 would give
   0.15 dB room); the cut takes ~0.5 dB off the strings' attack bite.
+- **Credits v4 (PASS, `projects\credits_v4.flp`, template `templates\credits_template3.flp`):** the last roll (bar 96)
+  is its own part `harp_end` on a clone of the struck harp at VOL -4 dB (renders -4.2 dB, same tone and tuning),
+  voiced F#4 A4 D5 so it ends on the root; the strings' D holds to the end. Bar 96 -18.6 LUFS (v3 -17.5); D in the
+  last bar -2.9 dB under the top pitch class (v3 -7). Open MINORs: bars 94-95 are still only 0.6 LU under 89-92 (the
+  level must come off the held chord: -4 dB string and choir clones or master automation); the hall tail after the
+  release is the choir's A/F# (D -8 dB: choir key 62 on a +4 dB clone with advance_s 0.2 would also help the late
+  choir keys); v3 MINORs 3-5 unchanged.

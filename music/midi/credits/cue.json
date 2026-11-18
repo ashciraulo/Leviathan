@@ -18,9 +18,9 @@
   },
   {
    "name": "harp",
-   "notes": 165,
+   "notes": 162,
    "low": 57,
-   "high": 69
+   "high": 68
   },
   {
    "name": "strings",
@@ -51,6 +51,12 @@
    "notes": 14,
    "low": 54,
    "high": 62
+  },
+  {
+   "name": "harp_end",
+   "notes": 3,
+   "low": 66,
+   "high": 74
   }
  ]
 }
