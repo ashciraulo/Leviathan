@@ -342,6 +342,21 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   dB from render to render (Soft Bells), so no key trim can level it, and the choir's chorus/phaser off changed
   nothing. v8 stays the shipped cue; `maps/story_choir_fix.json` (bell_soft clone) is kept for a future bell swap.
 - **Spring v4:** the Simple Ohh pad 3 dB lower (pad_glass -35 in `mixes/place_spring.json`), its v3 MINOR.
+- **The slow sine (Simple Sine, Synclavier-V) and the loop:** its preset envelope swells for ~29 s and releases for
+  ~18 s, far past the ~8 s render tail, so a note held to the loop end is cut mid-release and folds back as a 5-8 dB
+  step a few seconds into the loop (Hollows v5 review FAIL, Half-Remembered v4). Retriggering the same pitch instead
+  cancels itself (v3/v2). Fix: `templates\ambient_sine_template.flp` (saved from story_memory_v4b) has the sub_swell
+  channel's Synclavier AMP ENV OFFSET Attack and Release at about +0.5 (0.4 s attack, ~4 s release; the partial's own
+  envelope and the Time macro had no audible effect; offsets near 0 are instant). Its channels carry story_memory's
+  part names: celesta = Analog Harp, sub_swell = the sine, bell_distant = Sustained Bells, pad_warm = 12 Low Strings,
+  choir_soft = Simple Ohh (identity map, or `maps/place_cave_v6.json` for the cave).
+- **Hollows v4/v5:** one held drone chord (+ an A3/E4 octave layer), harp drips capped at the next drip, mix harp -24 /
+  drone -30 / bell -36.5. v5 fixed three v3 MINORs but failed on the envelope above; v6 rebuilds on the new template.
+- **Half-Remembered v3-v9:** pad restrikes on bar 8 and carries the chord root, the celesta caps semitone neighbours,
+  bell -38 with a 1.8 kHz high cut, same-pitch sub notes merged; v9 is on the new template.
+  Reviews: Hollows v6 PASS (1 MINOR: drone-only bars -34 LUFS on small speakers, raise the octave layer +3 dB),
+  Half-Remembered v9 PASS (open: choir C4/C#4 -14 c, no fade without automation; the sub's in-phase seam relies on
+  the humanize seed, so turn timing humanize off for the sub if the generator changes).
 - **FL tips from this batch:** ctrl+r (after clicking empty workspace) opens the export dialog directly; the File menu
   route sometimes missed and toggled channel-rack steps. In Analog Lab, typing in the search box leaks keys to FL
   (it played notes and loaded another preset): use the Types / Instruments filters with the mouse instead.

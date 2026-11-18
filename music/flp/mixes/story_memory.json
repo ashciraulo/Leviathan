@@ -60,7 +60,7 @@
   },
   "bell_distant": {
    "insert": 5,
-   "target": -33.0,
+   "target": -38.0,
    "eq": [
     {
      "shape": "lowcut",
@@ -69,7 +69,7 @@
     },
     {
      "shape": "highcut",
-     "freq": 2500,
+     "freq": 1800,
      "db_oct": 12
     }
    ]

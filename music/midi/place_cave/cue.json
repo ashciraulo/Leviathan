@@ -18,9 +18,9 @@
   },
   {
    "name": "drone",
-   "notes": 14,
+   "notes": 4,
    "low": 45,
-   "high": 57
+   "high": 64
   },
   {
    "name": "pluck_drip",
