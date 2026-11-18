@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://cs8wbuie3s5uu"
+path="res://.godot/imported/tide_ko.fnt-1538c10493418da3782848f450df7208.fontdata"
+
+[deps]
+
+source_file="res://assets/fonts/tide_ko.fnt"
+dest_files=["res://.godot/imported/tide_ko.fnt-1538c10493418da3782848f450df7208.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2
