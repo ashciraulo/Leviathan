@@ -180,6 +180,10 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
 - v5: stems on target, -20.18 LUFS, true peak -7.1 dBTP. Bass D3 (key 50) reads -12 c (reviewer: inaudible in a walk).
 - **Review v5 PASS.** Open MINORs: the marimba reads -7.5 c at the written octave (+1 c an octave up): channel PITCH
   about +7; 2-6 kHz share -18.3 dB (shaker -2 dB); the brushes could gain body from the frame drum ~12 dB under on 2 and 4.
+- **v6 (PASS, `projects\place_shop_v6.flp`):** the marimba (Analog Lab Emulator II Marimba) ignores the channel
+  PITCH knob (+7 changed nothing), so FL's Pitch Shifter (Music mode, +0.08 st) on its insert raises it +7 c; it adds a
+  faint warble to the 2-8 kHz ring (MINOR, 22-34 dB under the note). Brushes -2 dB (2-6k share -19.7). Render in SONG
+  mode: the project opened in PAT mode and the first render came out 3 s short.
 
 ## Lamplight, inside homes (2026-11-12)
 - **Template:** `templates\house_template2.flp` = lullaby_template with I Felt It (felt piano) on the old harp channel
