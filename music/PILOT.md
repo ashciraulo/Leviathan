@@ -351,6 +351,12 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   side/mid -70 -> -17.7 dB. Rim low cut 900 Hz 24 dB/oct and a -6 dB Q6 bell at 705 Hz (ring -3.8 -> -7.7 dB).
   Templates saved from a built project have the parts' names (map v14 is identity); two channels are called brass_low,
   and the build takes the later one (the one on insert 6). Reeverb knobs: right-click > Type in value.
+  v14 review PASS: room too quiet in the mix (wet 16 dB under dry), rim brightened the 2-6k share to -20.34.
+  v15 (`projects\story_danger_v15b.flp`, template `templates\story_danger_template_v6.flp`): Reeverb wet 60% on both
+  brass inserts (brass side/mid -10 dB); rim B-section boost +26 velocity, -9 dB Q0.8 bell at 2.8 kHz, gain -2;
+  Pro-L --lufs-trim 1.6. 2-6k share -20.64, -17.20 LUFS. The room reverb lives in the template, not the mix JSON.
+  v15 review PASS (the 2.8k cut cost the rim 1.2 dB outside B). v16 (`projects\story_danger_v16.flp`): rim gain +1,
+  B boost +13. Phone sim drums vs mix 1-2/A/B/A' +6.9/-1.5/-2.4/+6.7 dB, 2-6k -20.61, -17.19 LUFS.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
