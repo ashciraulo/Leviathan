@@ -545,3 +545,13 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   -6 dB bell at 1.5 kHz Q 1.6 and a second 2.2 kHz high cut, or swap the bell); section D bright (-13.5 dB 2-6 kHz);
   the organ's A3 (sent as key 69) sounds an octave high; the sketch lifts A' by 1.6 dB and the render doesn't (organ
   and bass ignore velocity, so use a louder clone or automation); seam step 5.8 against the 6 dB limit.
+- **Ossuary v2 (PASS):** v1 failed because the bone marimba sat ~7 dB over plan where it leads; stem_balance's whole-
+  stem median is set by its sparse knocks, so judge it over section B only (noted in the mix json). Fix-map keys are
+  looked up after the transpose. The marimba moves 0.145 dB per velocity step (0.33 at the bottom of the range), the
+  drums 0.234. v2's OGG peaked at -0.99 dBTP from a -1.52 master, so its ceiling is -2.0. MINORs left: quiet drone-only
+  intro (6 LU under the body), drum_hand 1.4 dB under plan, -18.9 LUFS (about +0.8 trim).
+- **Marrow Tomb:** stock Analog Harp has VCA decay 2 ms, sustain 10, release 3.3 s, so a "marimba" on it rings for
+  seconds; v2 sets both VCA rows to decay ~1.3 s, sustain 1.5, release 0.17 s (`projects\dungeon_tomb_v2a.flp`).
+- **Tomb v2 (PASS):** MINORs left: with sustain 1.5 the long marimba notes fade under drone and choir after ~0.6 s
+  (raise sustain to ~3-3.5 or decay to ~2.5 s, keep the 0.17 s release); drum accents dip the master 3.3 dB (100 Hz
+  side-chain high-pass on Pro-C); the frame drum is a 43 Hz thud (low cut 60-70 Hz, +3-4 dB at 150-250 Hz).

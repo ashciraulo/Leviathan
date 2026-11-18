@@ -1,0 +1,107 @@
+{
+ "cue": "region_ossuary",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "reed_duduk": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4500,
+     "db_oct": 24
+    }
+   ]
+  },
+  "drum_hand": {
+   "insert": 1,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 85,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_high": {
+   "insert": 7,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2800,
+     "gain": -6.0,
+     "q": 1.0
+    }
+   ]
+  },
+  "drone": {
+   "insert": 5,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "marimba_bone": {
+   "insert": 4,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 24
+    },
+    {
+     "shape": "bell",
+     "freq": 2500,
+     "gain": -5.5,
+     "q": 1.0
+    }
+   ]
+  }
+ },
+ "notes": "The Ossuary (region_ossuary). templates\\brinewood_template.flp: reed_duduk on flute_wood (Meadow Flute, insert 2), drum_hand low stroke on drum_frame (key 54, insert 1) and high/slap strokes on drum_high (Conga 1, insert 7) as Brinewood, drone on pad_strings (12 Low Strings +12, Osc2 off/Osc1 7.32 set in FL, insert 5), marimba_bone on reed_concertina (Emulator II Marimba -12, insert 4). v2 (review v1 MAJOR): the marimba sat ~7 dB over plan where it leads (stem_balance's median was set by the sparse knocks), so its insert is 6.8 dB lower and the knocks (written C3/Db3) 4 dB softer by velocity; fix keys are looked up after the transpose. Its preset moves 0.145 dB per velocity step, the drums 0.234. The low drum stroke plays key 53 (Eb2) instead of 54, which rang an E2 against C phrygian. v2b: ceiling -2.0 dBTP (v2's OGG peaked at -0.99 from a -1.52 master: the drum transients overshoot in the encode). DO NOT re-gain the marimba from stem_balance's whole-stem reading: its quiet knocks set the median (v2 reads -41 and would ask +12 dB, bringing back the v1 MAJOR). Judge it in section B (bars where it leads), where v2 measures -30.3.",
+ "ceiling": -2.0
+}
