@@ -120,6 +120,10 @@ func _draw() -> void:
 		for col in 2:
 			var x := KEY_X if col == 0 else PAD_X
 			var text := MenuKit.keyboard_name(action) if col == 0 else pad_text(action)
+			var cell_w: float = (PAD_X - KEY_X - 8) if col == 0 else (PANEL.end.x - PAD_X - 6)
+			# A long pad name ("D-pad up") that doesn't fit, in a longer language: use the short one.
+			if col == 1 and MenuKit.text_width(self, tr(text)) > cell_w:
+				text = MenuKit.pad_name(action)
 			var active := selected and col == _column
 			if active and _waiting:
 				text = "CONTROLS_PRESS" if int(Time.get_ticks_msec() / 300) % 2 == 0 else ""
@@ -130,7 +134,7 @@ func _draw() -> void:
 				draw_rect(Rect2(cell.position, Vector2(cell.size.x, 1)), Color(MenuKit.TEXT_HEAD, 0.35))
 				MenuKit.draw_text(self, "~", Vector2(x - 10, y), MenuKit.TEXT_HEAD)
 			MenuKit.draw_text(self, text, Vector2(x, y), MenuKit.TEXT_GOLD if active else color, HORIZONTAL_ALIGNMENT_LEFT, -1.0,
-				(PAD_X - KEY_X - 8) if col == 0 else (PANEL.end.x - PAD_X - 6))
+				cell_w)
 	if _scroll + VISIBLE_ROWS < _rows():
 		MenuKit.draw_text(self, "v", Vector2(PANEL.end.x - 18, PANEL.end.y - 16), MenuKit.TEXT_DIM)
 	if _scroll > 0:

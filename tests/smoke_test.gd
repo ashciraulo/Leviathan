@@ -6,7 +6,7 @@ extends Node
 
 const TEST_SLOT := 2
 ## Key prefixes of text that never reaches the dialogue box (_menu_text).
-const MENU_TEXT_PREFIXES: Array[String] = ["OPT_"]
+const MENU_TEXT_PREFIXES: Array[String] = ["OPT_", "CONTROLS_"]
 
 var _failures := PackedStringArray()
 var _checks := 0
@@ -800,11 +800,17 @@ func _test_villagers() -> void:
 	for child in game.get_children():
 		if child is DialogueBox:
 			fit_box = child
-	for who in Conversations.TALKS:
-		for branch: Dictionary in Conversations.TALKS[who]:
-			for page: Dictionary in Conversations.pages(who, branch):
-				var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
-				_check(lines <= DialogueBox.MAX_LINES, "%s fits the box (%d lines)" % [page["text"], lines])
+	# In every language: a translation that runs long would be split over
+	# two pages, which works but reads badly mid-sentence.
+	var was_locale := TranslationServer.get_locale()
+	for code in Settings.languages():
+		TranslationServer.set_locale(code)
+		for who in Conversations.TALKS:
+			for branch: Dictionary in Conversations.TALKS[who]:
+				for page: Dictionary in Conversations.pages(who, branch):
+					var lines := fit_box.lines_for(page["text"], page["portrait"] != null)
+					_check(lines <= DialogueBox.MAX_LINES, "%s (%s) fits the box (%d lines)" % [page["text"], code, lines])
+	TranslationServer.set_locale(was_locale)
 	for sign_name in ["SALTMARROW", "BARNACLE_WALL", "BRINEWOOD", "MILL_ROW", "BRINE_SPRING",
 			"ASHFALL_GATE", "BLEACHED_STRAND", "VERTEBRA_ROAD"]:
 		_check(fit_box.lines_for("SIGN_" + sign_name, false) <= DialogueBox.MAX_LINES, "the %s sign fits the box" % sign_name)
@@ -822,17 +828,20 @@ func _test_villagers() -> void:
 	# And every other string the game has: anything new (a carving line, a
 	# narrated find, a scene) can only reach the box in one piece. Menu and
 	# help text that is never shown there is left out by prefix.
-	var csv := FileAccess.open("res://locale/strings.csv", FileAccess.READ)
-	csv.get_csv_line()
 	var too_long: Array[String] = []
-	while not csv.eof_reached():
-		var row := csv.get_csv_line()
-		if row.size() < 2 or row[0] == "" or _menu_text(row[0]):
-			continue
-		# Key names filled in: "{key}" as both default item keys (a longer
-		# remapped name may run over onto another page, which the box allows).
-		if fit_box.lines_for(MenuKit.fill_keys(tr(row[0])), false) > DialogueBox.MAX_LINES:
-			too_long.append(row[0])
+	for code in Settings.languages():
+		TranslationServer.set_locale(code)
+		var csv := FileAccess.open("res://locale/strings.csv", FileAccess.READ)
+		csv.get_csv_line()
+		while not csv.eof_reached():
+			var row := csv.get_csv_line()
+			if row.size() < 2 or row[0] == "" or _menu_text(row[0]):
+				continue
+			# Key names filled in: "{key}" as both default item keys (a longer
+			# remapped name may run over onto another page, which the box allows).
+			if fit_box.lines_for(MenuKit.fill_keys(tr(row[0])), false) > DialogueBox.MAX_LINES:
+				too_long.append("%s (%s)" % [row[0], code])
+	TranslationServer.set_locale(was_locale)
 	_check(too_long.is_empty(), "every line the box can show fits it (too long: %s)" % ", ".join(too_long))
 	# Large text: the same box, one big line per page, long pages split.
 	var was_large := Settings.large_text

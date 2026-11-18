@@ -1,11 +1,28 @@
 # Text and translations
 
+Languages so far: English, Spanish (`es`), Brazilian Portuguese (`pt_BR`)
+and German (`de`). The translations were written by Claude and still want a
+native speaker's read before launch. Planned next: French, Russian,
+Simplified Chinese, Japanese and Korean (Cyrillic and CJK need new glyphs or
+a second font first).
+
 Every piece of on-screen text lives in `strings.csv`: one row per key, one
 column per language. Code only ever uses keys (`"MENU_CONTINUE"`), never the
 English words. Godot turns each column into a `strings.<code>.translation`
 file on import.
 
 ## Adding a language
+
+The easy way is `tools/l10n.py`: `export DIR` writes English as
+`DIR/en_NN.tsv` chunks of `KEY<tab>text` lines; translate each into
+`DIR/<code>_NN.tsv`, then `import <code> DIR` adds the column (it refuses
+missing, unknown or doubled keys) and `check <code>` compares placeholders
+with English and lists dialogue lines likely to need a third line.
+
+Keep a glossary per language for place names, item names and the terms of
+address. Wren is never gendered: in Spanish Wren is "guarda", in
+Portuguese "vigia", in German "Lampenwache" (or "Wache"); grown-ups call
+Wren "criatura" / "criança" / "Kind". Avoid gendered adjectives about Wren.
 
 1. Add a column to `strings.csv` headed with the language code (`fr`, `de`,
    `es`, `pt_BR`, `ja`...). Fill in every row. Leave nothing empty: an empty
@@ -28,6 +45,14 @@ file on import.
 
 ## Checks
 
+- `python3 tools/l10n.py check-all` (run by `tools/check.sh`) fails on
+  placeholders that differ from English and on text wider than a fixed menu
+  cell (the progress page's columns and region names).
+- The smoke test's villager checks lay out every conversation page and every
+  dialogue row in every language and fail on any that needs a third line.
+- `LEVIATHAN_LOCALE=de xvfb-run -a godot --rendering-driver opengl3 --path .
+  res://tests/menu_screenshots.tscn` saves the menus as `screenshots/de_*.png`
+  and prints `CUT (de): ...` for every label it had to cut short.
 - `python3 tools/check_strings.py` (also run by CI) fails if code uses a key
   that has no English text, a key is listed twice, or a row is empty.
   `-v` lists keys that no script names directly (most are built at runtime,

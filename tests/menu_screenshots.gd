@@ -13,12 +13,21 @@ const SCALE := 4
 
 var _out_dir := ""
 var _pseudo := false
+## LEVIATHAN_LOCALE=es (or any language code) shoots in that language,
+## with the code in front of each file name.
+var _lang_prefix := ""
 
 
 func _ready() -> void:
 	if PseudoText.requested():
 		_pseudo = true
 		PseudoText.enable()
+	var lang := OS.get_environment("LEVIATHAN_LOCALE")
+	if lang != "":
+		Settings.locale = lang
+		TranslationServer.set_locale(lang)
+		_lang_prefix = lang + "_"
+		MenuKit.audit = true  # list the text each screen had to cut short
 	_out_dir = ProjectSettings.globalize_path("res://").path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	_backup_saves()
@@ -188,6 +197,9 @@ func _ready() -> void:
 
 	_restore_saves()
 	print("MENU SCREENSHOTS DONE: " + _out_dir)
+	if MenuKit.audit:
+		for text in MenuKit.cut_texts:
+			print("CUT (%s): %s" % [_lang_prefix.trim_suffix("_"), tr(text)])
 	get_tree().quit(0)
 
 
@@ -251,6 +263,6 @@ func _capture(file_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var image := get_viewport().get_texture().get_image()
 	image.resize(image.get_width() * SCALE, image.get_height() * SCALE, Image.INTERPOLATE_NEAREST)
-	var path := _out_dir.path_join(("pseudo_" if _pseudo else "") + file_name + ".png")
+	var path := _out_dir.path_join(("pseudo_" if _pseudo else "") + _lang_prefix + file_name + ".png")
 	var err := image.save_png(path)
 	print("Saved %s (%s)" % [path, error_string(err)])

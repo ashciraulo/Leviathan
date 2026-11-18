@@ -5,13 +5,15 @@ extends MenuPage
 ## Completion). A region Wren hasn't set foot in yet shows as "???".
 
 const PANEL := Rect2(8, 22, 368, 174)
-const NAME_X := 16.0
-const NAME_W := 100.0
+const NAME_X := 14.0
+const NAME_W := 114.0
 ## Where each column of numbers starts, and how wide it is (errands asked,
 ## done, shards, stones, glass, chests). Asked only ever holds a number;
-## stones and chests are widest, chests for "100/125".
-const COL_X := [116.0, 150.0, 186.0, 230.0, 278.0, 318.0]
-const COL_W := [34.0, 36.0, 44.0, 48.0, 40.0, 48.0]
+## stones and chests are widest, chests for "100/125". Kept tight so
+## long region names ("Altos de Ventolago") fit; a header may be as wide
+## as its column, never wider, in every language (tools/l10n.py checks).
+const COL_X := [128.0, 162.0, 196.0, 238.0, 282.0, 322.0]
+const COL_W := [34.0, 34.0, 42.0, 44.0, 40.0, 46.0]
 const HEAD_Y := 26.0
 const SUBHEAD_Y := 38.0
 const ROW_Y := 54.0
