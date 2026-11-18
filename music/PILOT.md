@@ -320,6 +320,10 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   eighth-bar accents land on time: advance_s 0.10 and every other ostinato note written 0.09 beat later (+46 -> +8 ms).
   Open: Trumpfal's key 73 sounds only ~0.84 s however long it's written (re-attack bar 12's C#5 on beat 4); brass +1 dB
   with a bars 11-12 2.5 kHz cut; toms on small speakers; strings lean left.
+  v6 (PASS, `projects\story_danger_v6.flp`): bar 12's C#5 re-struck on beat 4 (brass beat 4 -35.5 -> -24.1 dB, no
+  click), brass +1 dB, strings high cut 4 kHz. 2-6 kHz share -19.93: the new C#5 sits at the top of Trumpfal's range
+  and brightens bar 12. Open MINORs: a -4 dB 2.5 kHz bell on the brass in bars 11-12 only (needs automation or a
+  clone channel on its own insert); toms on small speakers; the brass sounds lo-fi; strings lean left (+3.7 dB).
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
@@ -388,3 +392,14 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   (`maps/place_cave_fix.json` routes keys 57/64 there and sets its volume; template `templates\place_cave_v7_template.flp`,
   map `maps/place_cave_v7.json`). Drone-only bars on a 250 Hz high-pass: -30.4 LUFS (v6 -33.8). Open MINOR: muffled,
   the harp leads the drone by only +0.9 LU median (raise the harp +1 dB if it matters).
+  v8 (PASS, no MINORs, `projects\place_cave_v8.flp`): the v7 notes with the harp's mix target -23 (gain 2.4),
+  re-mixed with `flp_mix.py --lufs-trim 1.0`; no FL edit needed.
+- **Half-Remembered v10-v11:** the pad now carries each chord's root (Db above all) so the cue isn't heard as F minor
+  over the sub, and the fade thins the pad by voices (3, 2, then 1 above the root): the preset barely follows velocity.
+  The choir sings only chord tones the pad isn't holding (Simple Ohh's C4/C#4 sit ~14 c under the pad's unisons and
+  beat) and never a pitch-class semitone from a celesta note still ringing (v10's bar 16 G4 under Ab5). The sub is no
+  longer humanized, so its in-phase seam can't depend on the seed; unhumanized, the last C#1 (34.63 Hz) met the first
+  one in anti-phase at the seam (v10), so v11 starts it 13 ms later with the same end.
+  v11 PASS, no MINORs (`projects\story_memory_v11.flp`): seam sub correlation +0.90 (v10 -0.95), no 25-75 Hz dip.
+  Notes: the in-phase seam swells +4.5 dB in 25-75 Hz (end the last C#1 ~0.5 s earlier to level it); the fade reads
+  only over bars 23-24.
