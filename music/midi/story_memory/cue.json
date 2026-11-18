@@ -12,7 +12,7 @@
  "parts": [
   {
    "name": "pad_warm",
-   "notes": 47,
+   "notes": 44,
    "low": 49,
    "high": 63
   },
@@ -25,8 +25,8 @@
   {
    "name": "choir_soft",
    "notes": 32,
-   "low": 56,
-   "high": 63
+   "low": 58,
+   "high": 72
   },
   {
    "name": "bell_distant",

@@ -20,7 +20,7 @@
     },
     {
      "shape": "highcut",
-     "freq": 4500,
+     "freq": 4000,
      "db_oct": 12
     }
    ]

@@ -160,8 +160,9 @@ for b, sym in enumerate(CH):
 for b, lift in ((2, 0), (4, 5), (6, 7), (8, 12), (10, 19)):
     brass.line(song.bar(b), [(54 + lift, 0.5), (52 + lift, 0.5), (50 + lift, 0.5), (47 + lift, 1.5)], legato=0.85)
 for b, line in ((7, [(59, 1.0), (61, 0.5), (62, 2.5)]), (9, [(62, 1.0), (64, 0.5), (66, 2.5)]),
-                (11, [(66, 0.5), (64, 0.5), (66, 0.5), (73, 2.5)])):
-    brass.line(song.bar(b), line, legato=0.99 if b == 11 else 0.9)  # bar 12's C#5 holds to the barline
+                (11, [(66, 0.5), (64, 0.5), (66, 0.5), (73, 1.5), (73, 1.0)])):
+    # Trumpfal's C#5 sounds only ~0.84 s however long it is written, so bar 12's is re-struck on beat 4 (review v5).
+    brass.line(song.bar(b), line, legato=0.97 if b == 11 else 0.9)
 brass.note(song.bar(12), 0.5, 59, 84)  # a short B3 marks A' arriving (review v4 MINOR 3)
 for i, p in enumerate(song.parts):
     p.humanize(seed=3300 + i, time_q=0.006)
