@@ -71,8 +71,8 @@ def advances(code=None):
 # that closing punctuation stays with the letter before it (and opening
 # punctuation with the one after). Korean breaks at spaces like English.
 HAN_KANA = "\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
-CLOSE = "\u3001\u3002\uff0c\uff01\uff1f\uff1a\uff1b\u300d\u300f\uff09\u3011\u2026\u30fc\u3005\u309d\u309e\u30fd\u30fe!?.,:;)\u00bb"
-OPEN = "\u300c\u300e\uff08\u3010(\u00ab"
+CLOSE = "\u201d\u2019\u2014\u3041\u3043\u3045\u3047\u3049\u3063\u3083\u3085\u3087\u308e\u30a1\u30a3\u30a5\u30a7\u30a9\u30c3\u30e3\u30e5\u30e7\u30ee\u3001\u3002\uff0c\uff01\uff1f\uff1a\uff1b\u300d\u300f\uff09\u3011\u2026\u30fc\u3005\u309d\u309e\u30fd\u30fe!?.,:;)\u00bb"
+OPEN = "\u201c\u2018\u300c\u300e\uff08\u3010(\u00ab"
 UNIT = re.compile("[%s]?(?:[%s]|[^ %s%s]+?(?=[%s]|[ ]|$))[%s]*" % (OPEN, HAN_KANA, HAN_KANA, OPEN, HAN_KANA + OPEN, CLOSE))
 
 
