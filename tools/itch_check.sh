@@ -18,12 +18,14 @@ need web/index.wasm
 need web/index.pck
 need web/THIRD_PARTY_LICENSES.txt
 if ls "$dir"/web/*.import >/dev/null 2>&1; then echo "STRAY .import files in web/"; fail=1; fi
-files=$(find "$dir/web" -type f | wc -l)
-bytes=$(du -sb "$dir/web" | cut -f1)
-big=$(find "$dir/web" -type f -size +200M | wc -l)
-[ "$files" -le 1000 ] || { echo "web/ has $files files (itch allows 1000)"; fail=1; }
-[ "$bytes" -le 500000000 ] || { echo "web/ is $bytes bytes (itch allows 500 MB)"; fail=1; }
-[ "$big" -eq 0 ] || { echo "web/ has files over 200 MB"; fail=1; }
+if [ -d "$dir/web" ]; then
+  files=$(find "$dir/web" -type f | wc -l)
+  bytes=$(du -sb "$dir/web" | cut -f1)
+  big=$(find "$dir/web" -type f -size +200M | wc -l)
+  [ "$files" -le 1000 ] || { echo "web/ has $files files (itch allows 1000)"; fail=1; }
+  [ "$bytes" -le 500000000 ] || { echo "web/ is $bytes bytes (itch allows 500 MB)"; fail=1; }
+  [ "$big" -eq 0 ] || { echo "web/ has files over 200 MB"; fail=1; }
+fi
 
 need windows/Leviathan.exe
 need windows/THIRD_PARTY_LICENSES.txt

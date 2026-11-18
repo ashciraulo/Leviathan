@@ -112,7 +112,6 @@ jobs:
       TAG: ${{ inputs.release }}
       DRY_RUN: ${{ inputs.dry_run }}
       ITCH_GAME: ${{ vars.ITCH_GAME }}
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -124,6 +123,8 @@ jobs:
           path: channels/web
 
       - name: Get the release's desktop downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dl \
             --pattern Leviathan-windows.zip --pattern Leviathan-linux.tar.gz --pattern Leviathan-macos.zip
@@ -136,12 +137,18 @@ jobs:
       - name: Check every channel
         run: bash tools/itch_check.sh channels
 
+      # Artifacts drop file permissions, so the folders go in a tarball:
+      # the Linux and Mac programs stay runnable once unpacked.
+      - name: Pack what would be uploaded
+        if: env.DRY_RUN == 'true'
+        run: tar -cf itch-channels.tar channels
+
       - name: Keep what would be uploaded
         if: env.DRY_RUN == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: itch-channels-${{ inputs.release }}
-          path: channels
+          path: itch-channels.tar
           compression-level: 0
 
       - name: Install butler

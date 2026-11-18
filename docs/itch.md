@@ -27,21 +27,26 @@ Go to Actions > Upload to itch.io > Run workflow, and fill in the release tag
 
 - **Dry run** (on by default) builds and gathers everything and checks it with
   `tools/itch_check.sh`. It then attaches the four folders to the run as the
-  artifact `itch-channels-<tag>`, so you can download and try exactly what
-  would go up. Nothing is uploaded.
+  artifact `itch-channels-<tag>` (a tarball, so the Linux and Mac programs
+  keep their permissions), so you can unpack and try exactly what would go up.
+  Nothing is uploaded.
 - With Dry run off, the workflow pushes each folder with itch's `butler` tool
   to its own channel, tagged with the release's version:
 
-| Channel   | Contents                         | On itch.io, mark it as |
-|-----------|----------------------------------|------------------------|
-| `web`     | the browser build (`index.html`) | "This file will be played in the browser" |
-| `windows` | `Leviathan.exe` + licences       | Windows |
-| `linux`   | `Leviathan.x86_64` + licences    | Linux |
-| `mac`     | `Leviathan.app` + licences       | macOS |
+| Channel   | Contents                         |
+|-----------|----------------------------------|
+| `web`     | the browser build (`index.html`) |
+| `windows` | `Leviathan.exe` + licences       |
+| `linux`   | `Leviathan.x86_64` + licences    |
+| `mac`     | `Leviathan.app` + licences       |
 
 butler uploads only what changed since the last push, so later updates are
-small. After the first upload, open the page's Edit screen once to set the
-platform of each file as in the table.
+small, and it marks the Windows, Linux and macOS files by their channel names.
+After the first upload, open the page's Edit screen once and tick "This file
+will be played in the browser" on the `web` file.
+
+Releases from v0.6.0 on can be uploaded; older ones lack the licence file the
+downloads must carry.
 
 ## Page settings for the browser build
 
