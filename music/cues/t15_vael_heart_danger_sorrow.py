@@ -180,6 +180,13 @@ for n in ost.notes:
     accent = (b < 2 or b >= 12) and min(beat % 2.0, 2.0 - beat % 2.0) < 0.05
     if not accent:
         n[0] += 0.09
+# The climax (bars 11-12, counted from 1) sits at the top of Trumpfal's range and is the cue's brightest spot (review
+# v5-v9 MINOR): its brass plays on a clone routed to its own insert, which adds a 2.5 kHz cut. Moved after humanize so
+# every other note keeps its timing.
+brass_hi = song.part("brass_hi", program=57, vel=84)
+# The bounds sit 0.05 beat early: humanize leaves bar 11's downbeat C#5 a hair before the bar line (review v10).
+brass_hi.notes = [n for n in brass.notes if song.bar(10) - 0.05 <= n[0] < song.bar(12) - 0.05]
+brass.notes = [n for n in brass.notes if not song.bar(10) - 0.05 <= n[0] < song.bar(12) - 0.05]
 song.save()
 
 # ------------------------------------------------------------ story_sorrow
