@@ -675,3 +675,12 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   level must come off the held chord: -4 dB string and choir clones or master automation); the hall tail after the
   release is the choir's A/F# (D -8 dB: choir key 62 on a +4 dB clone with advance_s 0.2 would also help the late
   choir keys); v3 MINORs 3-5 unchanged.
+- **Wayshell Flight v6 (PASS, `projects\story_flight_v6c.flp`, template `templates\flight_template6.flp`):** the two
+  bronze clones play through their own insert 7 (the unused timpani insert, which already had Pro-Q 4; a rack row's
+  insert box changes with the mouse wheel) as mix part `bronze_layer` in `mixes/story_flight_v6.json`: 300 Hz
+  24 dB/oct low-cut and a -8 dB bell at 622 Hz Q 4. Bar 22's D#5 went from +0.1 to -9.6 dB under the rest; horn 20-250 Hz
+  share -25.8 (v5 -14.2). The cut cost the horn 0.9 dB, so the horn and bronze gains are 10.7. stem_balance now reads
+  the Mellotron alone on the horn stem (it asks +0.8 dB: don't apply it). Open MINORs: the bronze's free-running sub
+  layer lands differently each render, and here swells a 2.5 f0 B#5 (1038 Hz) at bar 22 to +7-10 dB over the rest
+  late in the note (the real fix is a preset without the sub layer; a -6 dB bell at 1038 Hz is a stopgap); the A'
+  mix-level 1-3 kHz lift is still 0 dB; v5's other MINORs.
