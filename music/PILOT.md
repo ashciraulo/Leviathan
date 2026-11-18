@@ -373,3 +373,7 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
     last drone chord 7.9 beats like the rest: the <200 Hz seam dip -40 -> -31 dB.
   - To keep an FL plugin edit across a rebuild, use the saved project as `--template` (channels then carry the part
     names, so the identity map `maps/story_choir_v9.json`).
+- **Hollows v7 (PASS):** the drone's A3/E4 octave layer plays on a clone channel `drone #2` (same insert) at +3 dB
+  (`maps/place_cave_fix.json` routes keys 57/64 there and sets its volume; template `templates\place_cave_v7_template.flp`,
+  map `maps/place_cave_v7.json`). Drone-only bars on a 250 Hz high-pass: -30.4 LUFS (v6 -33.8). Open MINOR: muffled,
+  the harp leads the drone by only +0.9 LU median (raise the harp +1 dB if it matters).
