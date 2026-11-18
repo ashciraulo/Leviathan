@@ -39,6 +39,11 @@ var _rooms := {}
 
 
 func _ready() -> void:
+	# LEVIATHAN_LOCALE=ja runs the whole thing in that language.
+	var lang := OS.get_environment("LEVIATHAN_LOCALE")
+	if lang != "":
+		Settings.locale = lang
+		TranslationServer.set_locale(lang)
 	SaveManager.current_slot = TEST_SLOT
 	SaveManager.set_aside(TEST_SLOT, "playthroughbackup")
 	SaveManager.delete_save()
