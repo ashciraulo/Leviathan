@@ -662,3 +662,16 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   still missing at 1-3 kHz (-0.1 dB vs the +1 test); the bronze's sub-octave series rose 1-4 dB, so bar 22's D#5 sits
   +3 dB over the mix at 622 Hz (listen: if it reads as a second voice, it is a MAJOR; a 300 Hz lowcut on a separate
   bronze insert would fix it); the bronze's late edge and fade, tuning scatter, and v4's strings/choir/harp MINORs.
+- **Heart v4 (PASS, no MINORs, `projects\boss_heart_v4b.flp`, template `templates\heart_template3.flp`):** brass_c
+  keys 85-86 (the D6/C#6 peaks) go to a clone `brass_peak` at VOL +5.5 (renders +2.66 dB over brass_c's +3.5: FL's
+  VOL steps aren't dB-linear) via `"keys": {"85": {"channel": "brass_peak"}}` in `maps/boss_heart_v4_fix.json`; the
+  strings get a -4.5 dB bell at 3.2 kHz Q 0.8 (+0.7 dB strings gain to keep their level), Pro-L trim 1.4. 2-6 kHz
+  A -15.9 / C -14.3, C +1.41 LU over A. NITs: bar 40 sits exactly on -12 dB 2-6 kHz (brass_peak VOL +5.0 would give
+  0.15 dB room); the cut takes ~0.5 dB off the strings' attack bite.
+- **Credits v4 (PASS, `projects\credits_v4.flp`, template `templates\credits_template3.flp`):** the last roll (bar 96)
+  is its own part `harp_end` on a clone of the struck harp at VOL -4 dB (renders -4.2 dB, same tone and tuning),
+  voiced F#4 A4 D5 so it ends on the root; the strings' D holds to the end. Bar 96 -18.6 LUFS (v3 -17.5); D in the
+  last bar -2.9 dB under the top pitch class (v3 -7). Open MINORs: bars 94-95 are still only 0.6 LU under 89-92 (the
+  level must come off the held chord: -4 dB string and choir clones or master automation); the hall tail after the
+  release is the choir's A/F# (D -8 dB: choir key 62 on a +4 dB clone with advance_s 0.2 would also help the late
+  choir keys); v3 MINORs 3-5 unchanged.
