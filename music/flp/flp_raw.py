@@ -131,6 +131,15 @@ class Flp:
         struct.pack_into("<i", data, 8, int(units))
         self.events[idx[0]][1] = bytes(data)
 
+    def set_channel_pan(self, iid: int, raw: int) -> None:
+        """The channel's PAN knob, raw 0-12800 (6400 = centre, higher = right)."""
+        idx = self.channel_events(iid, LEVELS)
+        if not idx:
+            raise LookupError(f"channel {iid} has no levels event")
+        data = bytearray(self.events[idx[0]][1])
+        struct.pack_into("<i", data, 0, int(raw))
+        self.events[idx[0]][1] = bytes(data)
+
     def set_channel_volume(self, iid: int, raw: int) -> None:
         """The channel's VOL knob, raw 0-12800 (10000 = FL's default 78%)."""
         idx = self.channel_events(iid, LEVELS)

@@ -73,6 +73,7 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
     A sample that is inharmonic (its partials disagree, so no retune fixes it):
     "play": 46 sends the neighbouring key to the clone, whose PITCH knob moves
     it to the written note.
+    A preset that leans to one side: "pan": {"channel": 0.2} moves its PAN knob (-1 left .. +1 right).
     A preset with a slow attack: "advance_s": 0.05 plays the part that much early
     (a note before 0 wraps to the loop end; in a cue with an intro it starts at 0)."""
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
@@ -124,6 +125,8 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
             flp.set_channel_pitch(names[ch], units)
         for ch, db in fix.get("volume_db", {}).items():
             flp.set_channel_volume(names[ch], round(VOL_DEFAULT * 10 ** (db / VOL_DB_PER_DECADE)))
+        for ch, pan in fix.get("pan", {}).items():  # -1 hard left .. +1 hard right (danger's strings leaned left)
+            flp.set_channel_pan(names[ch], round(6400 + 6400 * pan))
     flp.set_notes(pattern, notes)
     if not audition:  # mapped channels take the part's name, so the .flp reads plainly in FL
         for part_name, name in targets:
