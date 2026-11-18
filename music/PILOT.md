@@ -518,3 +518,11 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
 - **Reload before rendering an Analog Lab edit:** Gale's stems rendered right after editing the bell's VCA still
   played the old envelope (flat sustain); the same project reopened from disk rendered the new one, 6 dB quieter.
   Save, reopen, then render stems for gains.
+- **Glacier v3 (PASS):** `templates\ambient_sine_template7.flp` = template6 with the bowed clone's sustain raised to 6.8 of 10
+  (v2's glass sank 8 dB by 1.5 s) and three more tick clones (`epiano_glass #4..#6`, insert 1). Analog Harp ignores velocity,
+  so the tick's velocity bands go to the clones at -5.7/-2.7/0/+2.1 dB (`vel_channels` in the fix map, new in flp_build):
+  0.28 dB per step against the sketch's 0.30, and D builds +1.95 LU over C. Open MINOR: dark (2-6 kHz -29.9 dB vs the
+  sketch's -17.3) because the bell is a near-sine.
+- **Sunken Verge:** Diamond bass Ab2 (key 44) is 8-12 dB hot and its partials disagree (-17 c fundamental, +5 c
+  overtones); it plays G2 on the `bass_g3` clone at PITCH +108, -5 dB. Ample Guitar's lowest note is E2, so a harp Eb2
+  is silent: play it an octave up. A harp Eb2 on bar 1 also made the seam step 9.6 dB; finalize caps seam steps at 8.

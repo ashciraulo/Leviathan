@@ -121,6 +121,12 @@ def build(template: str, cue: str, out: str, pattern: int = 1, mapping: dict | N
                 v += k["db"] / fix["db_per_vel"]
             v = max(1, min(fix.get("vel_cap", 128), round(v)))
             ch = k.get("channel", name)
+            # A patch that ignores velocity (Glacier's tick, review v2 MAJOR): "vel_channels": [[max MIDI velocity,
+            # channel], ...] sends each note to the first clone whose band holds it; the clones' "volume_db" set the steps.
+            for top, band_ch in fix.get("vel_channels", []):
+                if vel <= top:
+                    ch = band_ch
+                    break
             if ch not in names:
                 raise SystemExit(f"template has no channel named {ch!r} for key {key + shift} of {part_name}")
             # "play": a neighbouring sample stands in for a bad one (Diamond's A2 and G3
