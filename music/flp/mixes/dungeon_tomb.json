@@ -1,0 +1,78 @@
+{
+ "cue": "dungeon_tomb",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "marimba_bone": {
+   "insert": 7,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drone_low": {
+   "insert": 8,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_frame": {
+   "insert": 3,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir_dark": {
+   "insert": 4,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Marrow Tomb (dungeon_tomb). Built on templates\\belfry_template.flp: marimba_bone on bell_marrow (Analog Harp, insert 7), drone_low on brass_low (12 Low Strings, Osc2 off, +12, insert 8), drum_frame on drum_taiko (insert 3, key 41 plays 42 as in Cinderreach), choir_dark on choir (Ah Voice, insert 4). v2 (review v1 MAJOR): the Analog Harp marimba rang for seconds (VCA decay 2 ms, sustain 10, release 3.3 s); both VCA rows now decay 1.3 s, sustain 1.5 of 10, release 0.17 s, edited in projects\\dungeon_tomb_v2a.flp, and its insert is 9.5 dB higher to keep its level."
+}
