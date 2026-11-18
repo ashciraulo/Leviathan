@@ -12,9 +12,9 @@
  "parts": [
   {
    "name": "pad_warm",
-   "notes": 36,
-   "low": 51,
-   "high": 61
+   "notes": 47,
+   "low": 49,
+   "high": 63
   },
   {
    "name": "celesta",
@@ -36,7 +36,7 @@
   },
   {
    "name": "sub_swell",
-   "notes": 12,
+   "notes": 7,
    "low": 25,
    "high": 34
   }

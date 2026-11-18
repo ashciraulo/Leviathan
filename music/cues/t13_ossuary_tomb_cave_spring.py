@@ -106,11 +106,15 @@ assert len(CH) == song.bars == 24
 DRIPS = [(4, 0.5, 72), (5, 2.5, 74), (6, 1.0, 76), (7, 3.0, 79), (8, 0.0, 78), (9, 2.0, 74), (10, 1.5, 72),
          (11, 3.5, 76), (12, 0.5, 77), (13, 2.0, 72), (14, 1.0, 79), (15, 3.0, 74), (16, 0.5, 76), (17, 2.5, 72),
          (18, 1.0, 78), (19, 3.0, 74)]
-for b, s, p in DRIPS:
-    harm.note(song.bar(b) + s, 2.5, p + 12, 50)
-    drips.note(song.bar(b) + s + 0.75, 0.3, p, 30)  # its faint echo, lower
-for b in range(0, 24, 4):
-    drone.chord(song.bar(b), 15.9, [45, 52] if CH[b] == "Am" else [45, 52, 57], 46)
+# Each harmonic rings until the next drip at most, so neighbours a semitone apart never sound together (review v3).
+starts = [song.bar(b) + s for b, s, _ in DRIPS] + [song.bar(24)]
+for i, (b, s, p) in enumerate(DRIPS):
+    harm.note(starts[i], min(2.5, starts[i + 1] - starts[i] - 0.1), p + 12, 50)
+    drips.note(starts[i] + 0.75, 0.3, p, 30)  # its faint echo, lower
+# The drone holds A2+E3 through the whole loop: 4-bar retriggers of the slow sine dipped up to 14 dB, and bar 22 was
+# a hole (review v3). An A3+E4 octave layer, softer, gives the pure sine partials small speakers can play.
+drone.chord(0, song.bar(24) - 0.1, [45, 52], 46)
+drone.chord(0, song.bar(24) - 0.1, [57, 64], 30)
 for i, p in enumerate(song.parts):
     p.humanize(seed=2500 + i, time_q=0.01, vel=3)
 song.save()
