@@ -96,6 +96,22 @@
      "db_oct": 12
     }
    ]
+  },
+  "drum_rim": {
+   "insert": 8,
+   "target": -41.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 1000,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 24
+    }
+   ]
   }
  },
  "notes": "Built from projects\\miniboss_v7.flp: ostinato = Staccato Blend (60 ms early), toms as the miniboss (keys a minor third down), the brass line on Trumpfal (12 Low Strings can't play eighths)."

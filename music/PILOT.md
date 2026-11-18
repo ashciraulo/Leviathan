@@ -336,6 +336,13 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   bars 11-12 (part `brass_hi`, moved after humanize with bounds 0.05 beat early, else bar 11's downbeat stays behind)
   plays on a clone routed to insert 7 with a -4 dB 2.5 kHz bell. 2-6 kHz share -20.86, bar 11 -18.0, bar 12 -16.9.
   Open MINORs: toms on small speakers (rim layer), strings image split by frequency, brass mono and dry.
+  v12 (`projects\story_danger_v12b.flp`, template `templates\story_danger_template_v3.flp`): part `drum_rim` copies
+  every tom hit (after humanize, same velocity) to a sampler clone of the toms holding FL's stock
+  `Packs\Drums (ModeAudio)\Rims\Fracture Rim 01.wv`, key 60, insert 8 (stem `strings_low`), lowcut 1k, highcut 3k
+  24 dB/oct, gain -9. Tom hits +5.4 dB over the rest in 400-5k (median 40 ms after the hit); rim 16 dB under the toms.
+  A 7 kHz highcut at 12 dB/oct took the 2-6k share to -18.5 and >6k to -33.5: keep the steep 3 kHz cut (-20.0 / -49.9).
+  Split stems for this template: bell_ember = brass_low + brass_dbl, bell_marrow = brass_hi, bell_tower = strings,
+  sub_breath = toms, strings_low = rim. FL's Packs folder is mounted for the folder tools (`~/mnt/Packs`).
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.
