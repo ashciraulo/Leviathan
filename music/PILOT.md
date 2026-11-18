@@ -327,6 +327,11 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   v7 (PASS, `projects\story_danger_v7.flp`): the strings channel's PAN 20% right (`"pan"` in the fix JSON, new in
   `flp_build.py`): strings L-R +3.7 -> +1.1 dB, master +0.8 -> -0.1. Don't pan further: the preset's image depends on
   frequency (v7: 40-150 Hz +5.7, 2-6 kHz -6.0), so more pan tips the top right; narrowing the strings would fix the split.
+  v8/v9 (PASS, `projects\story_danger_v9.flp`, template `templates\story_danger_template.flp`): held brass notes
+  from C#4 up get an octave below (part `brass_dbl`, 6 notes) on a clone channel `brass_low #2` 7 dB down (maps
+  `story_danger_v9*.json`). Velocity barely moves Trumpfal: v8 doubled on the same channel at velocity -14 and the
+  double came out level with the note, masking the toms. v9: doubles -6.3..-7.3 dB under their notes, toms lead by 11 dB.
+  The gate can't check `brass_dbl` (shares the brass insert). Open: a 2.5 kHz brass cut in bars 11-12; toms rim layer.
 - **Ritual choir (`story_choir`, v8 PASS):** built from `projects\title_v10.flp` (Simple Ohh unison, Sustained Bells
   low, 12 Low Strings +12 drone). v3's PITCH -18 and bell -12 came from a bad home-made pitch read (`harm.py`): trust
   the reviewers' measurements over it. Loop seam: notes are clamped at the loop end, so nothing can ring across it.

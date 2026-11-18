@@ -164,6 +164,12 @@ for b, line in ((7, [(59, 1.0), (61, 0.5), (62, 2.5)]), (9, [(62, 1.0), (64, 0.5
     # Trumpfal's C#5 sounds only ~0.84 s however long it is written, so bar 12's is re-struck on beat 4 (review v5).
     brass.line(song.bar(b), line, legato=0.97 if b == 11 else 0.9)
 brass.note(song.bar(12), 0.5, 59, 84)  # a short B3 marks A' arriving (review v4 MINOR 3)
+# Trumpfal alone reads as a lo-fi horn (its sub-octave is -15 dB, review v4-v7 MINOR): held notes from C#4 up get an
+# octave below on their own part, played by a brass clone ~7 dB down (velocity barely moves Trumpfal: at -14 the
+# double came out level with the note, review v8). Lower doubles (bar 7's F#2) sat on the tom fill.
+brass_dbl = song.part("brass_dbl", program=57, vel=84)
+for st, ln, k, v in [tuple(n[:4]) for n in brass.notes if n[1] >= 0.9 and n[2] >= 61]:
+    brass_dbl.note(st, ln, k - 12, v)
 for i, p in enumerate(song.parts):
     p.humanize(seed=3300 + i, time_q=0.006)
 # Staccato Blend's eighth-bar accents (beats 1 and 3 of bars 1-2 and 13-16) bloom ~40 ms late wherever they sit, and
