@@ -142,8 +142,11 @@ def main() -> None:
     fab_set(ev[comp][1], 2, 0.6)                     # ratio 2:1
     fab_set(ev[comp][1], 14, 0)                      # auto gain off
     fab_set(ev[lim][1], 0, gain)
-    fab_set(ev[lim][1], 18, -1.5)  # -1.5, not -1.1: the OGG encode overshoots by up to 0.3 dB (review of the bells v1)
-    print(f"mix {pre:.2f} LUFS -> Pro-C threshold {pre + over:.1f}, Pro-L gain {gain:+.2f} dB, ceiling -1.5 dBTP")
+    # -1.5, not -1.1: the OGG encode overshoots by up to 0.3 dB (review of the bells v1). A cue of sharp ticks can
+    # overshoot by 0.5 dB (Glacier v1: -1.51 master, -1.04 OGG), so the mix json may set a lower "ceiling".
+    ceiling = mix.get("ceiling", -1.5)
+    fab_set(ev[lim][1], 18, ceiling)
+    print(f"mix {pre:.2f} LUFS -> Pro-C threshold {pre + over:.1f}, Pro-L gain {gain:+.2f} dB, ceiling {ceiling} dBTP")
     write(dst, head, ev)
 
 

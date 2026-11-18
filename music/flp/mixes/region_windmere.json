@@ -1,0 +1,112 @@
+{
+ "cue": "region_windmere",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 32,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "strings_pizz": {
+   "insert": 6,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 70,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "flute": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "drum_snare": {
+   "insert": 1,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 60,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 125,
+     "gain": -4,
+     "q": 1.0
+    },
+    {
+     "shape": "bell",
+     "freq": 2500,
+     "gain": 3,
+     "q": 0.8
+    },
+    {
+     "shape": "highshelf",
+     "freq": 8000,
+     "gain": -6
+    }
+   ]
+  },
+  "pad_strings": {
+   "insert": 5,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "harp": {
+   "insert": 4,
+   "target": -33.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2000,
+     "gain": -3,
+     "q": 1.4
+    },
+    {
+     "shape": "highcut",
+     "freq": 3500,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Windmere Heights (region_windmere). templates\\saltmarrow_template8.flp: strings_pizz on guitar_nylon (Ample Guitar M Lite, insert 6), flute on flute_wood (Meadow Flute, insert 2), drum_snare on drum_frame (MA Harpers Tom, key 38 +22 = 60, insert 1), pad_strings on pad_strings (12 Low Strings +12, insert 5), the harp line on reed_concertina (Accordion, insert 4). v2 (review v1): the pad's gain came from the stock-preset stem; with Osc2 off and Osc1 at 7.32 it plays ~15 dB louder, so its gain drops 15.5 dB. Accordion -3 dB, frame drum -4 dB at 125 Hz and +3 dB at 2.5 kHz, guitar low cut 70 Hz, flute high cut 3.5 kHz at 12 dB/oct. Built from projects\\region_windmere_v1c.flp (the pad fix lives in that project)."
+}

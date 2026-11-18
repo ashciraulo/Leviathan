@@ -1,0 +1,94 @@
+{
+ "cue": "dungeon_gale",
+ "lufs": -18.0,
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ],
+ "parts": {
+  "strings_runs": {
+   "insert": 5,
+   "target": -26.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 24
+    }
+   ]
+  },
+  "flute": {
+   "insert": 4,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "timpani": {
+   "insert": 1,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_tubular": {
+   "insert": 2,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bass_arco": {
+   "insert": 8,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 30,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "The Gale Spire (dungeon_gale). templates\\boss_template3.flp: strings_runs on strings_ostinato (Staccato Blend, insert 5), the flute line on choir (Ah Voice, insert 4: a wordless wind voice), timpani on timpani (Gong & Timpani, +1, insert 1), bell_tubular on harp (insert 2), bass_arco on brass_low (12 Low Strings +12, insert 8). v2 (review v1): built on projects\\dungeon_gale_v1c.flp (bass Osc2 off, Osc1 7.32); levels from stems of that project rendered with every part at 0 dB (v1's came from the stock-bass render and missed by 10 dB); bell notes end at the next bell note (cap_at_next), timpani keys 47-53 play an octave down, bass advance 0.12 s."
+}
