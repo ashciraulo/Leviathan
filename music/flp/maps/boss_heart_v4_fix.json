@@ -1,0 +1,1 @@
+{"strings_full": {"advance_s": 0.06}, "strings_c": {"advance_s": 0.06, "volume_db": {"strings_c": 1.5}}, "choir_c": {"volume_db": {"choir_c": 2.0}}, "brass_c": {"volume_db": {"brass_c": 3.5, "brass_peak": 5.5}, "keys": {"85": {"channel": "brass_peak"}, "86": {"channel": "brass_peak"}}}}

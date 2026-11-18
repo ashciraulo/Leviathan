@@ -662,3 +662,9 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   still missing at 1-3 kHz (-0.1 dB vs the +1 test); the bronze's sub-octave series rose 1-4 dB, so bar 22's D#5 sits
   +3 dB over the mix at 622 Hz (listen: if it reads as a second voice, it is a MAJOR; a 300 Hz lowcut on a separate
   bronze insert would fix it); the bronze's late edge and fade, tuning scatter, and v4's strings/choir/harp MINORs.
+- **Heart v4 (PASS, no MINORs, `projects\boss_heart_v4b.flp`, template `templates\heart_template3.flp`):** brass_c
+  keys 85-86 (the D6/C#6 peaks) go to a clone `brass_peak` at VOL +5.5 (renders +2.66 dB over brass_c's +3.5: FL's
+  VOL steps aren't dB-linear) via `"keys": {"85": {"channel": "brass_peak"}}` in `maps/boss_heart_v4_fix.json`; the
+  strings get a -4.5 dB bell at 3.2 kHz Q 0.8 (+0.7 dB strings gain to keep their level), Pro-L trim 1.4. 2-6 kHz
+  A -15.9 / C -14.3, C +1.41 LU over A. NITs: bar 40 sits exactly on -12 dB 2-6 kHz (brass_peak VOL +5.0 would give
+  0.15 dB room); the cut takes ~0.5 dB off the strings' attack bite.
