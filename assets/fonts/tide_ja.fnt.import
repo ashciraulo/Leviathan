@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://dfqd2gcsu7rng"
+path="res://.godot/imported/tide_ja.fnt-a79a3bb24941a7a024fbbdf65d3a4310.fontdata"
+
+[deps]
+
+source_file="res://assets/fonts/tide_ja.fnt"
+dest_files=["res://.godot/imported/tide_ja.fnt-a79a3bb24941a7a024fbbdf65d3a4310.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

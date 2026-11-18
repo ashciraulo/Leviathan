@@ -52,26 +52,53 @@ def write_rows(rows):
         csv.writer(f, lineterminator="\n").writerows(rows)
 
 
-def advances():
+def advances(code=None):
+    """Letter widths in Tide, plus its CJK companion for zh_CN, ja and ko."""
     widths = {}
-    for line in open(FNT, encoding="utf-8"):
-        m = re.match(r"char id=(\d+) .*xadvance=(-?\d+)", line)
-        if m:
-            widths[chr(int(m.group(1)))] = int(m.group(2))
+    fonts = [FNT]
+    cjk = os.path.join(ROOT, "assets", "fonts", "tide_%s.fnt" % code)
+    if code and os.path.exists(cjk):
+        fonts.append(cjk)
+    for path in fonts:
+        for line in open(path, encoding="utf-8"):
+            m = re.match(r"char id=(\d+) .*xadvance=(-?\d+)", line)
+            if m:
+                widths.setdefault(chr(int(m.group(1))), int(m.group(2)))
     return widths
+
+
+# Chinese characters and kana can break between any two letters, except
+# that closing punctuation stays with the letter before it (and opening
+# punctuation with the one after). Korean breaks at spaces like English.
+HAN_KANA = "\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
+CLOSE = "\u201d\u2019\u2014\u3041\u3043\u3045\u3047\u3049\u3063\u3083\u3085\u3087\u308e\u30a1\u30a3\u30a5\u30a7\u30a9\u30c3\u30e3\u30e5\u30e7\u30ee\u3001\u3002\uff0c\uff01\uff1f\uff1a\uff1b\u300d\u300f\uff09\u3011\u2026\u30fc\u3005\u309d\u309e\u30fd\u30fe!?.,:;)\u00bb"
+OPEN = "\u201c\u2018\u300c\u300e\uff08\u3010(\u00ab"
+UNIT = re.compile("[%s]?(?:[%s]|[^ %s%s]+?(?=[%s]|[ ]|$))[%s]*" % (OPEN, HAN_KANA, HAN_KANA, OPEN, HAN_KANA + OPEN, CLOSE))
+
+
+def units(text):
+    """The text cut where a line may break, each piece with the space before it."""
+    out, pos = [], 0
+    for word in text.split(" "):
+        pieces = UNIT.findall(word) if re.search("[%s]" % HAN_KANA, word) else [word]
+        if "".join(pieces) != word:
+            pieces = [word]
+        for n, piece in enumerate(pieces):
+            out.append(((" " if out and n == 0 else ""), piece))
+    return out
 
 
 def line_count(text, width, widths):
     def w(s):
         return sum(widths.get(c, 11) for c in s)
     lines, cur = 1, ""
-    for word in text.split(" "):
-        trial = word if cur == "" else cur + " " + word
+    for sep, piece in units(text):
+        trial = piece if cur == "" else cur + sep + piece
         if w(trial) <= width or cur == "":
             cur = trial
         else:
             lines += 1
-            cur = word
+            cur = piece
     return lines
 
 
@@ -133,7 +160,7 @@ REGION_LIMIT = 114  # progress_page.gd NAME_W
 def check(code):
     rows = read_rows()
     col = rows[0].index(code)
-    widths = advances()
+    widths = advances(code)
     bad, long = [], []
     for row in rows[1:]:
         key, en, tr = row[0], row[1], row[col]

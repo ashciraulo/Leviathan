@@ -10,6 +10,7 @@ e.g. "ITEM_" + id).
 """
 
 import csv
+import glob
 import os
 import re
 import sys
@@ -51,6 +52,14 @@ def missing_glyphs():
     """Letters in any column of strings.csv that the Tide font lacks."""
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     from font_glyphs import GLYPHS
+    # Chinese, Japanese and Korean letters come from Tide's companion fonts
+    # (tools/build_cjk_font.py), which Settings hangs behind Tide.
+    drawn = set(GLYPHS)
+    for path in glob.glob(os.path.join(ROOT, "assets", "fonts", "tide_*.fnt")):
+        for line in open(path, encoding="utf-8"):
+            m = re.match(r"char id=(\d+) ", line)
+            if m:
+                drawn.add(chr(int(m.group(1))))
     problems = []
     with open(os.path.join(ROOT, "locale", "strings.csv"), newline="", encoding="utf-8") as f:
         rows = list(csv.reader(f))
@@ -66,10 +75,10 @@ def missing_glyphs():
                 if token != "key" and token not in ACTIONS:
                     problems.append("line %d: %s names {%s}, which is not an action" % (n, row[0], token))
             shown = KEY_TOKEN.sub("", text).replace("\\n", "")
-            missing = sorted({ch for ch in shown if ch not in GLYPHS and ch not in "\n\t"})
+            missing = sorted({ch for ch in shown if ch not in drawn and ch not in "\n\t"})
             if missing:
                 lang = header[col] if col < len(header) else "column %d" % col
-                problems.append("line %d: %s (%s) uses letters the font lacks: %s"
+                problems.append("line %d: %s (%s) uses letters the font lacks (run tools/build_cjk_font.py for CJK): %s"
                                 % (n, row[0], lang, " ".join("%s (U+%04X)" % (c, ord(c)) for c in missing)))
     return problems
 
