@@ -27,6 +27,12 @@
    "notes": 32,
    "low": 47,
    "high": 73
+  },
+  {
+   "name": "brass_dbl",
+   "notes": 6,
+   "low": 50,
+   "high": 61
   }
  ]
 }
