@@ -1,0 +1,109 @@
+{
+ "cue": "boss_vael",
+ "lufs": -17.0,
+ "parts": {
+  "strings_ostinato": {
+   "insert": 5,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "choir": {
+   "insert": 4,
+   "target": -25.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "organ": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 4000,
+     "db_oct": 24
+    }
+   ]
+  },
+  "timpani": {
+   "insert": 7,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_church": {
+   "insert": 1,
+   "target": -31.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 1200,
+     "gain": -12.0,
+     "q": 1.2
+    },
+    {
+     "shape": "highcut",
+     "freq": 2200,
+     "db_oct": 24
+    }
+   ]
+  },
+  "strings_high": {
+   "insert": 8,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 150,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "Vael (boss_vael). Built on templates\\vael_template.flp (belfry_template + Gong & Timpani on sub_breath, insert 7): choir on Ah Voice (4), organ on Saint Eustache (harp, +12, insert 2), strings_ostinato on Staccato Blend (5, advance 0.06), timpani on Gong & Timpani (+1), bell_church on Clock Bell (timpani channel, insert 1, tenth notched per the Belfry review), strings_high on 12 Low Strings (brass_low, +12, insert 8, advance 0.12). v2: the timpani's +1 is keyed by its channel (sub_breath), since flp_build applies a transpose keyed by a channel name to any part on that channel (v1's bell sounded a semitone sharp); the strings_up PITCH knob moves ~1 c per unit (key 51 sounds +12 c on its harmonics, so -12)."
+}
