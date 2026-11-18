@@ -24,10 +24,11 @@ address. Wren is never gendered: in Spanish Wren is "guarda", in
 Portuguese "vigia", in German "Lampenwache" (or "Wache"); grown-ups call
 Wren "criatura" / "criança" / "Kind". Avoid gendered adjectives about Wren.
 French: "vigie", elders say "mon enfant", and nothing agrees with Wren
-(no prêt/prête, allé/allée). Russian: "Рен" (never declined), elders say
-"дитя"; no past-tense verbs or short adjectives with Wren as the subject
-(use the present, the passive or "У Рен теперь..."). Nettle and Murmur are
-ungendered too.
+(no prêt/prête, allé/allée). Russian: "Рен" and "Неттл" only ever in the
+nominative (an undeclined consonant name reads as a girl's, a declined one
+as a boy's), so write "Рен получает...", not "У Рен"; elders say "дитя"; no
+past-tense verbs or short adjectives with Wren as the subject. Nettle and
+Murmur are ungendered too ("Шёпот" declines as an ordinary noun).
 
 1. Add a column to `strings.csv` headed with the language code (`fr`, `de`,
    `es`, `pt_BR`, `ja`...). Fill in every row. Leave nothing empty: an empty
