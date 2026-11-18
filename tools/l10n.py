@@ -88,13 +88,18 @@ def units(text):
     return out
 
 
-def line_count(text, width, widths):
+def line_count(text, width, widths, trailing=0):
+    """Lines text wraps to. trailing: extra room a line needs past its last
+    word when more text follows (MenuKit.draw_wrapped's Godot layout breaks
+    once the following space no longer fits; checked against the game)."""
     def w(s):
         return sum(widths.get(c, 11) for c in s)
     lines, cur = 1, ""
-    for sep, piece in units(text):
+    pieces = units(text)
+    for n, (sep, piece) in enumerate(pieces):
         trial = piece if cur == "" else cur + sep + piece
-        if w(trial) <= width or cur == "":
+        room = trailing if n < len(pieces) - 1 else 0
+        if w(trial) + room <= width or cur == "":
             cur = trial
         else:
             lines += 1
@@ -190,7 +195,7 @@ def check(code):
         if limit and sum(widths.get(c, 11) for c in tr) > limit:
             bad.append("%s: wider than its %d px menu cell: %s" % (key, limit, tr))
         wrap = wrap_limit(key)
-        if wrap and line_count(tr, wrap, widths) > 2:
+        if wrap and line_count(tr, wrap, widths, widths.get(" ", 4)) > 2:
             bad.append("%s: more than two lines at %d px: %s" % (key, wrap, tr))
         if key.startswith(MENU_PREFIXES):
             continue
