@@ -692,3 +692,12 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   MINORs: the ring after the release is still the choir's A/F# (D -7.7 dB: a choir_end key-62 clone at +4 dB with
   advance_s 0.2); the bass now re-articulates at bar 94 (lengthen the bar-93 bass_arco note to 3.1 beats); the last
   roll stands 0.9 LU over bar 95 (harp_end -6 to -7 dB would seat it); v3 MINORs 3-5.
+- **Wayshell Flight v7 (PASS, `projects\story_flight_v7.flp`, template `templates\flight_template6.flp`, mix
+  `mixes/story_flight_v7.json`):** the bronze_layer insert keeps only 1.5-6 kHz (24 dB/oct low-cut at 1500 Hz, no
+  622 Hz bell), so the patch's free-running sub-octave series (0.5/1.5/2.5 f0) is under the rest on all 27 horn notes:
+  bar 22's D#5 -30 dB, B#5 -16 dB (v6 -9 / +2, peaks +14). A' still lifts (horn +3.1 dB over A). Cost: the bronze
+  lost 5.8 dB and with it the horn's 1-2 kHz presence and h2/h3 body (5-6 dB less against the mix), and the climax
+  horn (bars 21-24) sits -6.4 dB under the rest (test >= -6). Above 1.5 kHz the bronze is still a sub-octave voice
+  (its 3.5 f0 G6 stands 18-21 dB over the rest on bars 2.33 and 18.33): only a preset without the sub layer removes
+  it. Open MINORs: horn presence (a +3 dB bell at 1.1 kHz Q 1 on insert 6), climax lift (A' horn +1 dB), the A'
+  mix-level 1-3 kHz lift (+0.2 vs +1.0), v6's bronze swell, strings +6.5 c, late choir keys 62-64, hot harp glissandi.
