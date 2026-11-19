@@ -1,0 +1,46 @@
+{
+ "cue": "jingle_item",
+ "lufs": -16.0,
+ "parts": {
+  "harp": {
+   "insert": 5,
+   "target": -29.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_point": {
+   "insert": 1,
+   "target": -42.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 400,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 9000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "jingle_item v3: built on templates\\house_template2.flp; harp = piano_felt (I Felt It, insert 5), bell_point = box_shine (glockenspiel, insert 1). Review v2 MAJOR 2: the nylon guitar choked at note-off.",
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ]
+}

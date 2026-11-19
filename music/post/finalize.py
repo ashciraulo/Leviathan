@@ -34,7 +34,7 @@ import soundfile
 MUSIC = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(MUSIC)
 sys.path.insert(0, MUSIC)
-from track_sheet import CUES  # noqa: E402
+from track_sheet import CUES, JINGLES  # noqa: E402
 
 TOLERANCE_LU = 1.0
 TP_MAX = -1.0
@@ -54,7 +54,9 @@ def momentary(x: np.ndarray, rate: int, at: int) -> tuple[float, float]:
 
 
 def finalize(cue: str, render: str, write: bool = False) -> dict:
-    spec = {c["id"]: c for c in CUES}[cue]
+    # Jingles (track_sheet.JINGLES) are one-shots at -16 LUFS that ship as audio/sfx/<cue>.ogg.
+    jingle = cue in {j[0] for j in JINGLES}
+    spec = {"id": cue, "loop": False, "lufs": -16.0} if jingle else {c["id"]: c for c in CUES}[cue]
     meta = json.load(open(os.path.join(MUSIC, "midi", cue, "cue.json")))
     audio, rate = soundfile.read(render, always_2d=True)
     assert rate == 44100, f"render is {rate} Hz; FL should export 44.1 kHz"
@@ -160,7 +162,7 @@ def finalize(cue: str, render: str, write: bool = False) -> dict:
                         f"(the cue's downbeats step up to {report['bar_step_p90_db']} dB)")
     report["problems"] = problems
     if write and not problems:
-        path = os.path.join(ROOT, "audio", "music", f"{cue}.ogg")
+        path = os.path.join(ROOT, "audio", "sfx" if jingle else "music", f"{cue}.ogg")
         pcm = np.clip(out, -1, 1).astype("<f4").tobytes()
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "f32le", "-ar", str(rate), "-ac", "2", "-i", "-",
                         "-c:a", "libvorbis", "-q:a", "5", path], input=pcm, check=True)

@@ -1,0 +1,30 @@
+{
+ "cue": "jingle_bell",
+ "lufs": -16.0,
+ "parts": {
+  "bell_point": {
+   "insert": 1,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "jingle_bell: built on templates\\credits_template5.flp (map maps/jingle_bell.json).",
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ]
+}

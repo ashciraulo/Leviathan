@@ -24,13 +24,13 @@
   },
   {
    "name": "strings",
-   "notes": 210,
+   "notes": 208,
    "low": 50,
    "high": 64
   },
   {
    "name": "choir",
-   "notes": 90,
+   "notes": 87,
    "low": 55,
    "high": 66
   },
@@ -42,7 +42,7 @@
   },
   {
    "name": "bass_arco",
-   "notes": 86,
+   "notes": 85,
    "low": 38,
    "high": 47
   },
@@ -57,6 +57,24 @@
    "notes": 3,
    "low": 66,
    "high": 74
+  },
+  {
+   "name": "bass_end",
+   "notes": 1,
+   "low": 38,
+   "high": 38
+  },
+  {
+   "name": "strings_end",
+   "notes": 2,
+   "low": 57,
+   "high": 62
+  },
+  {
+   "name": "choir_end",
+   "notes": 3,
+   "low": 57,
+   "high": 66
   }
  ]
 }

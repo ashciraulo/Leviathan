@@ -261,6 +261,12 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   the ostinato octaves there); trumpet 2-6 kHz still ~5 dB hotter in D (take +0.9 dB on horns per stem_balance); the
   taiko needs a stick layer for 2-6 kHz; the C timpani read as F/Eb above 150 Hz on small speakers (narrow cut near
   700 Hz); ostinato low keys ~26 ms late.
+- v11 (PASS, `projects\boss_v11.flp`): in D the ostinato plays its root instead of the octave on the long-melody bars
+  (`D_LONG`, same note count so the humanize seeds hold). The choir now sits at or above the rest in 1-5 kHz in 7 of
+  9 long-note tails (v10 5). The hand-off dip (bars 35, 42, 46: 12.6 / 16.2 / 13.4 dB) is unchanged: it is the
+  trumpet sample dying in a trough of Ah Voice's own wobble. Fix: a shared ~1 s room on the trumpet and choir
+  inserts (low cut 250, high cut 4k, 30-40% wet) or choir automation +3-4 dB on the second half of each long note.
+  gate now reads brass_low key 41 at +13 c (v10 +10, limit 12; render variance on an unchanged part).
 
 ## The Bell Kiln, dungeon 2 (2026-11-12)
 - **Template:** `templates\kiln_template3.flp` (shared with Cinderreach): boss_template3 with harp = Saint Eustache
@@ -675,3 +681,72 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   level must come off the held chord: -4 dB string and choir clones or master automation); the hall tail after the
   release is the choir's A/F# (D -8 dB: choir key 62 on a +4 dB clone with advance_s 0.2 would also help the late
   choir keys); v3 MINORs 3-5 unchanged.
+- **Wayshell Flight v6 (PASS, `projects\story_flight_v6c.flp`, template `templates\flight_template6.flp`):** the two
+  bronze clones play through their own insert 7 (the unused timpani insert, which already had Pro-Q 4; a rack row's
+  insert box changes with the mouse wheel) as mix part `bronze_layer` in `mixes/story_flight_v6.json`: 300 Hz
+  24 dB/oct low-cut and a -8 dB bell at 622 Hz Q 4. Bar 22's D#5 went from +0.1 to -9.6 dB under the rest; horn 20-250 Hz
+  share -25.8 (v5 -14.2). The cut cost the horn 0.9 dB, so the horn and bronze gains are 10.7. stem_balance now reads
+  the Mellotron alone on the horn stem (it asks +0.8 dB: don't apply it). Open MINORs: the bronze's free-running sub
+  layer lands differently each render, and here swells a 2.5 f0 B#5 (1038 Hz) at bar 22 to +7-10 dB over the rest
+  late in the note (the real fix is a preset without the sub layer; a -6 dB bell at 1038 Hz is a stopgap); the A'
+  mix-level 1-3 kHz lift is still 0 dB; v5's other MINORs.
+- **Credits v5 (PASS, `projects\credits_v5.flp`, template `templates\credits_template4.flp`):** the held closing chord
+  (bar 93 on) moves to its own parts `bass_end`, `strings_end`, `choir_end`, on clones of their parents at VOL -4 dB
+  (`maps/credits_v5*.json`; the clones keep the parents' +12 transpose and advance_s). Bars 94-96 now sit 3.1 LU under
+  89-92 (v4 0.6), only just over the 3 LU line (render variance ~0.4 LU); bars 95-96 alone sit 4.0 under. The drop
+  eases in under the unchanged bar-94 harp roll. The strings clone renders -4.8 dB and a little brighter. Open
+  MINORs: the ring after the release is still the choir's A/F# (D -7.7 dB: a choir_end key-62 clone at +4 dB with
+  advance_s 0.2); the bass now re-articulates at bar 94 (lengthen the bar-93 bass_arco note to 3.1 beats); the last
+  roll stands 0.9 LU over bar 95 (harp_end -6 to -7 dB would seat it); v3 MINORs 3-5.
+- **Wayshell Flight v7 (PASS, `projects\story_flight_v7.flp`, template `templates\flight_template6.flp`, mix
+  `mixes/story_flight_v7.json`):** the bronze_layer insert keeps only 1.5-6 kHz (24 dB/oct low-cut at 1500 Hz, no
+  622 Hz bell), so the patch's free-running sub-octave series (0.5/1.5/2.5 f0) is under the rest on all 27 horn notes:
+  bar 22's D#5 -30 dB, B#5 -16 dB (v6 -9 / +2, peaks +14). A' still lifts (horn +3.1 dB over A). Cost: the bronze
+  lost 5.8 dB and with it the horn's 1-2 kHz presence and h2/h3 body (5-6 dB less against the mix), and the climax
+  horn (bars 21-24) sits -6.4 dB under the rest (test >= -6). Above 1.5 kHz the bronze is still a sub-octave voice
+  (its 3.5 f0 G6 stands 18-21 dB over the rest on bars 2.33 and 18.33): only a preset without the sub layer removes
+  it. Open MINORs: horn presence (a +3 dB bell at 1.1 kHz Q 1 on insert 6), climax lift (A' horn +1 dB), the A'
+  mix-level 1-3 kHz lift (+0.2 vs +1.0), v6's bronze swell, strings +6.5 c, late choir keys 62-64, hot harp glissandi.
+- **Credits v6 (PASS, `projects\credits_v6.flp`, template `templates\credits_template5.flp`):** the bar-93 bass note
+  is 3.1 beats so it overlaps bass_end (the barline dip fell from 4.7 to 2.3 dB); choir_end's D4 plays on its own
+  clone `choir_end_d` at VOL 0 dB (key route in `maps/credits_v6_fix.json`) and choir_end plays 0.2 s early; harp_end
+  -6.5 dB (bar 96 now level with bar 95). Close 3.18 LU under bars 89-92. Measured on the chord's fundamentals
+  (180-620 Hz) D leads the ring (v5 -5.0); a full-band pitch-class measure counts the D's 3rd harmonic (880 Hz, on the
+  choir's formant) as A, so don't judge the root that way. A louder D clone breaks the 3 LU drop (+1.5: 2.65 LU, +4:
+  1.97). Open MINOR 6: Ah Voice drops held voices 15-25 dB at random ~5 s into a long chord (3 of 10 renders), so the
+  tail isn't repeatable: cut choir_end's A3 from 9 to 6 beats (F#4 to 7.5) and let the strings carry the root; accept
+  when two renders agree. v3 MINORs 3-5 unchanged.
+- **Wayshell Flight v8 (PASS, `projects\story_flight_v8.flp`, template `templates\flight_template7.flp`, mix
+  `mixes/story_flight_v8.json`):** a +3 dB bell at 1.1 kHz Q 1 on the Mellotron (insert 6), and the A' horn on its
+  own Mellotron clone `brass_a2` (+1.3 dB VOL, same insert) with bronze_hot at -20 (`maps/story_flight_v8_fix.json`,
+  build with `--audition "...;horns_french=brass,bronze;horns_a2=brass_a2,bronze_hot;..."`). Climax horn (bars 21-24)
+  -3.7 dB against the rest (v7 -6.4): closed. But it overshoots: in bars 19-24 the horn is level with the strings'
+  top line (v7 -3.0) and leans darker than A; the bell lifts every horn note ~1 dB, brass_a2's +1.3 rendered ~+1.5.
+  The bell won back only a third of the lost h2 and none of h3 or 1-2 kHz presence: that was the bronze's, and needs
+  a bronze preset without the sub layer (then a 300 Hz cut). Open: brass_a2 to 0 dB (v9), bronze swell, A' 1-3 kHz
+  mix lift -0.4 (test +1.0), strings +6.5 c, late choir keys 62-64, hot harp glissandi.
+
+## The seven jingles, made in FL (2026-11-19)
+
+- Built from `cues/t17_jingles.py` with flp_build. Six on the credits template (harp, struck bell, choir, low
+  strings), clear on the heart template (brass, timpani, bells). Maps and mixes are `flp/maps|mixes/jingle_*.json`.
+- One render to measure, then one `--lufs-trim` rebuild: v1 read -14.5 to -26.6 LUFS (the lone-bell jingles were
+  ~10 LU short), v2 landed -15.6 to -16.7. game_over v1 was on target and shipped as rendered.
+- Every stem passes gate_stems. True peak -2.6 dBTP or lower.
+- `post/finalize.py` writes jingles to `audio/sfx/<id>.ogg`. The game loads that before the old generated `.wav`.
+  The OGGs are kept out of LFS (`.gitattributes`), like the music.
+- **Review v1 FAIL -> v2:** clear cut off (the heart template's brass sounds ~1.3 s whatever the written length: the
+  cadence chord is now 1.5 beats and the bell rings on); item, pearl and puzzle shared the Analog Harp (item now on
+  guitar_nylon, insert 6; puzzle on brinewood_template's Emulator II Marimba with its chord on the kalimba channel,
+  insert 6, 16 dB down: this marimba moves only 0.125 dB per velocity step, so velocity can't balance a chord);
+  pearl's choir 9 dB down. Loudness trims are not linear through Pro-L: item needed three tries (+4.75 -> -14.4,
+  +3.15 -> -17.3, +3.9 -> -15.7).
+- **FL gotchas this round:** computer_open_application on FL can show the Welcome screen / reload FL; render Mode
+  resets to "Pattern" on the brinewood template (set Full song every time); after a restart Ctrl+O opens in the
+  Driftwood FM folder, so always type the full projects path.
+- **Review v2 FAIL -> v3:** clear's brass still cut off (Trumpfal can't hold a note at all): the brass is now a short
+  stab and a new `strings` part (strings_full, insert 5, boss_heart's EQ) plus the marrow bell carry the 4-beat tail.
+  item's nylon guitar thumped on release and collapsed its chord: moved to house_template2's felt piano (insert 5)
+  with the glockenspiel (insert 1), 2-bar cue, notes held past their natural decay. Item trim 6.3 -> -16.0 LUFS
+  (trim 0 read -20.9, trim 5 read -17.3).
+- Computer-use approvals expire after 24 h: re-request FL Studio 2025 (with clipboard) when calls start failing.

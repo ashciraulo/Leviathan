@@ -29,6 +29,9 @@ bells = song.part("bell_point", program=14, vel=80)
 bass = song.part("bass_arco", program=43, vel=64)
 cello = song.part("cello", program=42, vel=66)
 harp_end = song.part("harp_end", program=46, vel=36)  # v4: the last roll, on a quieter clone (added last: seeds kept)
+bass_end = song.part("bass_end", program=43, vel=50)  # v5: the held close chord, on quieter clones
+strings_end = song.part("strings_end", program=48, vel=40)
+choir_end = song.part("choir_end", program=52, vel=32)
 sec = sections([("A", 0), ("B", 16), ("LUL", 32), ("EIGHTH", 48), ("MED", 56), ("CLOSE", 88)])
 TUNE_A = ("F#5:2 E5:1 | D5:2 A4:1 | B4:2 D5:1 | A4:3 | G4:1 A4:1 B4:1 | D5:2 E5:1 | F#5:2 E5:1 | E5:3 | "
           "F#5:2 A5:1 | G5:2 E5:1 | D5:1 E5:1 F#5:1 | B4:3 | G4:2 B4:1 | A4:2 D5:1 | E5:2 C#5:1 | D5:3")
@@ -72,18 +75,21 @@ for b, sym in enumerate(CH):
     if b >= 92:  # the close (v1/v2 review MAJOR: it stopped, then ended on a thin pluck): bar 92 as written, then one
         # held chord that thins out (bass, then strings, then the choir past the end) under two harp rolls
         if b == 92:
-            bass.note(tb, 2.9, root, 50)
+            # v6 (v5 review NIT: the bass re-struck at bar 94 when the held chord moved to bass_end): overlap it
+            bass.note(tb, 3.1, root, 50)
             choir.chord(tb, 2.9, voicing(sym, 55, 67)[:3], 32)
             for k, p in enumerate(voicing(sym, 57, 74)[:3]):
                 harp.note(tb + k * 0.25, 2.5, p, 42)
         elif b == 93:  # the voices leave one by one (v3a held them all to the end, so bar 95 sat level with 92):
             # bass at bar 95, strings half a bar later, the choir a bar past the written end into the render's room
-            bass.note(tb, 6.0, root, 50)
+            # v5 (v4 review MINOR 1: bars 94-95 sat only 0.6 LU under 89-92, and these patches ignore velocity): the held
+            # chord plays on *_end parts, -4 dB clones in FL
+            bass_end.note(tb, 6.0, root, 50)
             # v4 (v3 review MINOR 2: the final ring was light on its root): the strings' D4 holds to the end
             lo, hi = voicing(sym, 57, 74)[:2]
-            strings.note(tb, 7.5, lo, 40)
-            strings.note(tb, 9.0, hi, 40)
-            choir.chord(tb, 11.0, voicing(sym, 55, 67)[:3], 32)
+            strings_end.note(tb, 7.5, lo, 40)
+            strings_end.note(tb, 9.0, hi, 40)
+            choir_end.chord(tb, 11.0, voicing(sym, 55, 67)[:3], 32)
             for k, p in enumerate(voicing(sym, 57, 74)[:3]):
                 harp.note(tb + k * 0.33, 6.0, p, 40)
         elif b == 95:  # v4 (v3 review MINORs 1-2): the last roll is on harp_end (a -4 dB clone in FL, as the harp

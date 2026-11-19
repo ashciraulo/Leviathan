@@ -27,10 +27,12 @@ def jingle(jid, tempo, n_bars, build, meter="4/4"):
 
 
 def item(s):  # phrase 1's first three notes, rising to a held fifth: D F# G -> A
+    # v3 (review v2 MAJOR 2): felt piano and glockenspiel in FL; the held notes run past their decay (to 8 q) so
+    # no note-off lands while they still sound.
     harp, bell = s.part("harp", program=46, vel=80), s.part("bell_point", program=14, vel=86)
-    harp.line(0, seq("D5:0.5 F#5:0.5 G5:0.5 A5:2.5"), legato=1.0)
-    bell.note(1.5, 2.5, 81, 90)
-    harp.chord(1.5, 2.5, voicing("D", 50, 66)[:3], 64, roll=0.05)
+    harp.line(0, seq("D5:0.5 F#5:0.5 G5:0.5 A5:6.5"), legato=1.0)
+    bell.note(1.5, 6.5, 81, 90)
+    harp.chord(1.5, 6.5, voicing("D", 50, 66)[:3], 64, roll=0.05)
 
 
 def pearl(s):  # phrase 5's leap D F# A D', then a shimmer
@@ -46,14 +48,18 @@ def secret(s):  # four rising notes from phrase 3: F G A C
 
 
 def clear(s):  # phrase 7's cadence (G A F D) in major, brass, timpani and bell
+    # v3 (review v2 MAJOR 1): the brass (Trumpfal) can't hold a note, so it only strikes the cadence; the held D chord
+    # is on strings, which release on their own, and the bell rings over them.
     brass = s.part("horns_brass", program=61, vel=88)
     timp = s.part("timpani", program=47, vel=90)
     bell = s.part("bell_marrow", program=14, vel=86)
-    brass.line(0, seq("G4:0.5 A4:0.5 F#4:1 D5:4"), legato=0.95)
-    brass.chord(2, 4.0, [62, 66, 69], 80)
+    strings = s.part("strings", program=48, vel=72)
+    brass.line(0, seq("G4:0.5 A4:0.5 F#4:1 D5:0.75"), legato=0.95)
+    brass.chord(2, 0.75, [62, 66, 69], 76)
+    strings.chord(2, 4.0, [50, 57, 62, 66, 69], 74)
     for st, v in ((0, 70), (1, 76), (2, 100)):
         timp.note(st, 0.5, 38, v)
-    bell.note(2, 4.0, 86, 84)  # ends at 6 q, well inside the 2 bars
+    bell.note(2, 4.0, 86, 96)
 
 
 def bell_fallback(s):  # one strike of the point bell and its fifth
@@ -70,13 +76,16 @@ def game_over(s):  # phrase 4 falling, unresolved: A G F, held on E
     bell.note(0, 3.0, 69, 62)
 
 
-def puzzle(s):  # two notes, a fourth up
-    mar = s.part("marimba", program=12, vel=88)
-    mar.line(0, [(69, 0.5), (74, 1.5)], legato=1.2)
-    mar.chord(0.5, 1.5, [57, 61, 64], 60)
+def puzzle(s):  # two notes, a fourth up, landing on the tonic
+    # v2 (review v1 MAJOR 4): E5 -> A5 over A major (was A4 -> D5, a buried sus4), the chord well under the melody.
+    # The chord is its own part (kalimba in FL) so its insert sets it well under the marimba's landing note.
+    mar = s.part("marimba", program=12, vel=96)
+    chord = s.part("kalimba", program=108, vel=60)
+    mar.line(0, [(76, 0.5), (81, 1.5)], legato=1.2)
+    chord.chord(0.5, 1.5, [57, 61, 64], 60)
 
 
-jingle("jingle_item", 100, 1, item)
+jingle("jingle_item", 100, 2, item)  # v3: 2 bars so the held notes can outlast their decay
 jingle("jingle_pearl", 96, 1, pearl)
 jingle("jingle_secret", 120, 1, secret)
 jingle("jingle_clear", 90, 2, clear)

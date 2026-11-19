@@ -12,9 +12,15 @@
  "parts": [
   {
    "name": "marimba",
-   "notes": 5,
+   "notes": 2,
+   "low": 76,
+   "high": 81
+  },
+  {
+   "name": "kalimba",
+   "notes": 3,
    "low": 57,
-   "high": 74
+   "high": 64
   }
  ]
 }
