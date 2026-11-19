@@ -3,23 +3,45 @@
  "lufs": -16.0,
  "parts": {
   "marimba": {
-   "insert": 2,
+   "insert": 4,
    "target": -28.0,
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 100,
+     "freq": 120,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2500,
+     "gain": -3.5,
+     "q": 1.0
+    },
+    {
+     "shape": "highcut",
+     "freq": 3000,
+     "db_oct": 24
+    }
+   ]
+  },
+  "kalimba": {
+   "insert": 6,
+   "target": -32.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
      "db_oct": 12
     },
     {
      "shape": "highcut",
-     "freq": 8000,
+     "freq": 5000,
      "db_oct": 12
     }
    ]
   }
  },
- "notes": "jingle_puzzle: built on templates\\credits_template5.flp (map maps/jingle_puzzle.json).",
+ "notes": "jingle_puzzle v2: built on templates\\brinewood_template.flp (map maps/jingle_puzzle.json, Emulator II Marimba on reed_concertina, -12). The chord plays on the kalimba channel (insert 6) so it sits under the landing note (review v1 MAJOR 4).",
  "master_eq": [
   {
    "shape": "lowcut",

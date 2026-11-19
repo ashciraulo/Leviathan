@@ -49,8 +49,10 @@ def clear(s):  # phrase 7's cadence (G A F D) in major, brass, timpani and bell
     brass = s.part("horns_brass", program=61, vel=88)
     timp = s.part("timpani", program=47, vel=90)
     bell = s.part("bell_marrow", program=14, vel=86)
-    brass.line(0, seq("G4:0.5 A4:0.5 F#4:1 D5:4"), legato=0.95)
-    brass.chord(2, 4.0, [62, 66, 69], 80)
+    # v2 (review v1 MAJOR 1): the brass preset sounds only ~1.3 s however long a note is written, so the cadence
+    # chord is 1.5 beats and releases while it still sounds; the bell rings on over it.
+    brass.line(0, seq("G4:0.5 A4:0.5 F#4:1 D5:1.5"), legato=0.95)
+    brass.chord(2, 1.5, [62, 66, 69], 80)
     for st, v in ((0, 70), (1, 76), (2, 100)):
         timp.note(st, 0.5, 38, v)
     bell.note(2, 4.0, 86, 84)  # ends at 6 q, well inside the 2 bars
@@ -70,10 +72,13 @@ def game_over(s):  # phrase 4 falling, unresolved: A G F, held on E
     bell.note(0, 3.0, 69, 62)
 
 
-def puzzle(s):  # two notes, a fourth up
-    mar = s.part("marimba", program=12, vel=88)
-    mar.line(0, [(69, 0.5), (74, 1.5)], legato=1.2)
-    mar.chord(0.5, 1.5, [57, 61, 64], 60)
+def puzzle(s):  # two notes, a fourth up, landing on the tonic
+    # v2 (review v1 MAJOR 4): E5 -> A5 over A major (was A4 -> D5, a buried sus4), the chord well under the melody.
+    # The chord is its own part (kalimba in FL) so its insert sets it well under the marimba's landing note.
+    mar = s.part("marimba", program=12, vel=96)
+    chord = s.part("kalimba", program=108, vel=60)
+    mar.line(0, [(76, 0.5), (81, 1.5)], legato=1.2)
+    chord.chord(0.5, 1.5, [57, 61, 64], 60)
 
 
 jingle("jingle_item", 100, 1, item)

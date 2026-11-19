@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/jingle_pearl.ogg-83d092bd541b80fc7a695f979016
 [params]
 
 loop=false
-loop_offset=0.0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

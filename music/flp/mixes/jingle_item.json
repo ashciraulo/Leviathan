@@ -3,7 +3,7 @@
  "lufs": -16.0,
  "parts": {
   "harp": {
-   "insert": 2,
+   "insert": 6,
    "target": -28.0,
    "eq": [
     {
@@ -35,7 +35,7 @@
    ]
   }
  },
- "notes": "jingle_item: built on templates\\credits_template5.flp (map maps/jingle_item.json).",
+ "notes": "jingle_item v2: built on templates\\credits_template5.flp; the harp plays on guitar_nylon (review v1 MAJOR 2).",
  "master_eq": [
   {
    "shape": "lowcut",

@@ -735,3 +735,12 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
 - Every stem passes gate_stems. True peak -2.6 dBTP or lower.
 - `post/finalize.py` writes jingles to `audio/sfx/<id>.ogg`. The game loads that before the old generated `.wav`.
   The OGGs are kept out of LFS (`.gitattributes`), like the music.
+- **Review v1 FAIL -> v2:** clear cut off (the heart template's brass sounds ~1.3 s whatever the written length: the
+  cadence chord is now 1.5 beats and the bell rings on); item, pearl and puzzle shared the Analog Harp (item now on
+  guitar_nylon, insert 6; puzzle on brinewood_template's Emulator II Marimba with its chord on the kalimba channel,
+  insert 6, 16 dB down: this marimba moves only 0.125 dB per velocity step, so velocity can't balance a chord);
+  pearl's choir 9 dB down. Loudness trims are not linear through Pro-L: item needed three tries (+4.75 -> -14.4,
+  +3.15 -> -17.3, +3.9 -> -15.7).
+- **FL gotchas this round:** computer_open_application on FL can show the Welcome screen / reload FL; render Mode
+  resets to "Pattern" on the brinewood template (set Full song every time); after a restart Ctrl+O opens in the
+  Driftwood FM folder, so always type the full projects path.

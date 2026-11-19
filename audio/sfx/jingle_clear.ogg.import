@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/jingle_clear.ogg-efd7ba9b644e1d4fc163d78635bb
 [params]
 
 loop=false
-loop_offset=0.0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4
