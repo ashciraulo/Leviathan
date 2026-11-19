@@ -89,7 +89,10 @@ for b, sym in enumerate(CH):
             lo, hi = voicing(sym, 57, 74)[:2]
             strings_end.note(tb, 7.5, lo, 40)
             strings_end.note(tb, 9.0, hi, 40)
-            choir_end.chord(tb, 11.0, voicing(sym, 55, 67)[:3], 32)
+            # v7 (v6 review MINOR 6: Ah Voice drops held voices at random ~5 s in, so the ring changed per render): the
+            # choir thins by length, the A3 first, the F#4 next, and only the D4 rings on with the strings' root
+            for p in voicing(sym, 55, 67)[:3]:
+                choir_end.note(tb, {57: 6.0, 66: 7.5}.get(p, 9.0), p, 32)  # the D4 to the song end (FL cut 11 to 9 anyway)
             for k, p in enumerate(voicing(sym, 57, 74)[:3]):
                 harp.note(tb + k * 0.33, 6.0, p, 40)
         elif b == 95:  # v4 (v3 review MINORs 1-2): the last roll is on harp_end (a -4 dB clone in FL, as the harp
