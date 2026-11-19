@@ -152,6 +152,7 @@ A2 = ["Cm", "Ab", "Fm", "G", "G", "G"]
 CH = INTRO + A + B + C + D + A2
 assert len(CH) == song.bars == 56
 SEC = [("INTRO", 0), ("A", 2), ("B", 18), ("C", 26), ("D", 34), ("A2", 50)]
+D_LONG = {34, 35, 37, 39, 41, 43, 45, 48, 49}  # D bars (0-based) whose melody holds a dotted half or longer
 
 
 def section(b):
@@ -183,6 +184,8 @@ for b, sym in enumerate(CH):
     # Ostinato: sixteenths on the root with a rising turn; silent in C.
     if sec != "C":
         fig = [0, 0, 12, 0, 7, 0, 12, 8 if "m" in sym else 7] * 2  # review v7: +8 on Ab/Db gave E and A
+        if b in D_LONG:  # v11 (review v10 MINOR 6): the octaves covered the choir's tail of each long melody note
+            fig = [0 if iv == 12 else iv for iv in fig]  # same note count, so the humanize seeds are kept
         for k, iv in enumerate(fig):
             ost.note(t + k * 0.25, 0.18, 48 + (bass_of(sym) - 48) % 12 + iv, 104 if k % 4 == 0 else 66)
 for b in range(2, 18, 2):  # A: brass answers the ostinato

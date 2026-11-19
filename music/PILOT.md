@@ -261,6 +261,12 @@ Ash chose the sampled Kontakt upright over the in-tune Analog Lab bass, which ig
   the ostinato octaves there); trumpet 2-6 kHz still ~5 dB hotter in D (take +0.9 dB on horns per stem_balance); the
   taiko needs a stick layer for 2-6 kHz; the C timpani read as F/Eb above 150 Hz on small speakers (narrow cut near
   700 Hz); ostinato low keys ~26 ms late.
+- v11 (PASS, `projects\boss_v11.flp`): in D the ostinato plays its root instead of the octave on the long-melody bars
+  (`D_LONG`, same note count so the humanize seeds hold). The choir now sits at or above the rest in 1-5 kHz in 7 of
+  9 long-note tails (v10 5). The hand-off dip (bars 35, 42, 46: 12.6 / 16.2 / 13.4 dB) is unchanged: it is the
+  trumpet sample dying in a trough of Ah Voice's own wobble. Fix: a shared ~1 s room on the trumpet and choir
+  inserts (low cut 250, high cut 4k, 30-40% wet) or choir automation +3-4 dB on the second half of each long note.
+  gate now reads brass_low key 41 at +13 c (v10 +10, limit 12; render variance on an unchanged part).
 
 ## The Bell Kiln, dungeon 2 (2026-11-12)
 - **Template:** `templates\kiln_template3.flp` (shared with Cinderreach): boss_template3 with harp = Saint Eustache
