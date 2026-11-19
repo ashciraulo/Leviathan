@@ -13,7 +13,7 @@ dest_files=["res://.godot/imported/jingle_game_over.ogg-a434435dbd9f96de2c3153a2
 [params]
 
 loop=false
-loop_offset=0.0
+loop_offset=0.000000
 bpm=0
 beat_count=0
 bar_beats=4

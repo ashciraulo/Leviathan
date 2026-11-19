@@ -31,10 +31,11 @@ def item(s):  # phrase 1's first three notes, rising to a held fifth: D F# G -> 
     # no note-off lands while they still sound.
     harp, bell = s.part("harp", program=46, vel=80), s.part("bell_point", program=14, vel=86)
     # v4 (review v3 MINOR 1/2/8): melody an octave lower (the felt piano's stereo spread goes out of phase above
-    # C5), held to 5 q so the jingle and its music duck end sooner.
-    harp.line(0, seq("D4:0.5 F#4:0.5 G4:0.5 A4:3.5"), legato=1.0)
-    bell.note(1.5, 3.5, 81, 90)
-    harp.chord(1.5, 3.5, voicing("D", 50, 66)[:3], 60, roll=0.05)
+    # C5). Held to 8 q again: a 5 q hold put the patch's release click (review v4 MAJOR 1) where the piano is
+    # still -30 dBFS; at 8 q it lands ~-49 dBFS and is masked.
+    harp.line(0, seq("D4:0.5 F#4:0.5 G4:0.5 A4:6.5"), legato=1.0)
+    bell.note(1.5, 6.5, 81, 90)
+    harp.chord(1.5, 6.5, voicing("D", 50, 66)[:3], 60, roll=0.05)
 
 
 def pearl(s):  # phrase 5's leap D F# A D', then a shimmer
