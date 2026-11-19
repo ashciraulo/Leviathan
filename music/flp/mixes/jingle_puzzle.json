@@ -1,0 +1,30 @@
+{
+ "cue": "jingle_puzzle",
+ "lufs": -16.0,
+ "parts": {
+  "marimba": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 100,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "jingle_puzzle: built on templates\\credits_template5.flp (map maps/jingle_puzzle.json).",
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ]
+}

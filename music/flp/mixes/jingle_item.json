@@ -1,0 +1,46 @@
+{
+ "cue": "jingle_item",
+ "lufs": -16.0,
+ "parts": {
+  "harp": {
+   "insert": 2,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 100,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_point": {
+   "insert": 1,
+   "target": -30.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "jingle_item: built on templates\\credits_template5.flp (map maps/jingle_item.json).",
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ]
+}

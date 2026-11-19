@@ -1,0 +1,67 @@
+{
+ "cue": "jingle_clear",
+ "lufs": -16.0,
+ "parts": {
+  "horns_brass": {
+   "insert": 6,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 90,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 2500,
+     "gain": -3.0,
+     "q": 0.9
+    },
+    {
+     "shape": "bell",
+     "freq": 3200,
+     "gain": -6.0,
+     "q": 0.8
+    },
+    {
+     "shape": "highcut",
+     "freq": 5500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "timpani": {
+   "insert": 7,
+   "target": -27.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 40,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 5000,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_marrow": {
+   "insert": 2,
+   "target": -31.5,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 200,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 7000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "jingle_clear: built on templates\\heart_template2.flp (map maps/jingle_clear.json)."
+}

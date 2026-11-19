@@ -1,0 +1,46 @@
+{
+ "cue": "jingle_game_over",
+ "lufs": -16.0,
+ "parts": {
+  "strings_low": {
+   "insert": 8,
+   "target": -28.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 35,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 2500,
+     "db_oct": 12
+    }
+   ]
+  },
+  "bell_point": {
+   "insert": 1,
+   "target": -32.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 300,
+     "db_oct": 12
+    },
+    {
+     "shape": "highcut",
+     "freq": 8000,
+     "db_oct": 12
+    }
+   ]
+  }
+ },
+ "notes": "jingle_game_over: built on templates\\credits_template5.flp (map maps/jingle_game_over.json).",
+ "master_eq": [
+  {
+   "shape": "lowcut",
+   "freq": 30,
+   "db_oct": 12
+  }
+ ]
+}
