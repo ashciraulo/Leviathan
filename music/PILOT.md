@@ -751,8 +751,19 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   (trim 0 read -20.9, trim 5 read -17.3).
 - Computer-use approvals expire after 24 h: re-request FL Studio 2025 (with clipboard) when calls start failing.
 - **Polish after review v3 (PASS, 8 MINORs):** item v4 melody an octave lower (D4-A4; the felt piano's stereo spread is
-  worse up high) (held 5 q at first, but that moved the patch's release click to where the piano is still -30 dBFS: review v4 MAJOR 1; back to 8 q, click masked); puzzle kalimba -5 dB, not -16 (14 dB under
+  worse up high) (held 5 q at first, but that moved the patch's release click to where the piano is still -30 dBFS: review v4 MAJOR 1; back to 8 q, review v5 finds no click); puzzle kalimba -5 dB, not -16 (14 dB under
   the marimba, was 25.5); game_over v2 holds D2 A2 only (its E3 rubbed the melody's F3) with the bell +6 dB (9 dB under
   the strings, was 16). The game_over "brass_low" channel is the 12 Low Strings preset, so its strings are real.
   The jingles were built on credits_template5 with channels renamed by hand; rebuild game_over from
   `work/jingle_game_over_notes.flp` as the template, since the maps name the renamed channels.
+
+## Polish after the jingles (2026-11-19)
+- **Credits v7 (PASS, `projects\credits_v7.flp`):** the last choir chord thins by length (A3 6 beats, F#4 7.5, D4 to
+  the song end), so Ah Voice's random dropouts can't change the ring: three renders agree within ~1.5 dB at the close,
+  D leads the ring 4-8 dB, close drop 3.4-3.6 LU. Shipped cr7c.
+- **Wayshell Flight v9/v10 (PASS, `projects\story_flight_v9.flp`):** brass_a2 back to 0 dB (`maps/story_flight_v9_fix.json`)
+  closes v8's climax-horn overshoot (bars 21-24 horn -5.3 dB against the rest). v10 is a re-render so master and stems
+  come from one pass. To stem-check a master, model the master bus's 30 Hz low-cut first.
+- Device ffmpeg on the render folder is slow (a 55 MB WAV can take >45 s and the bridge times out, leaving a truncated
+  FLAC). Stage the WAVs and convert in the container instead, then delete the WAVs on the PC.
+- Ash (2026-11-19): stop polishing. The leftover MINORs are listed for Ash in `listen/` (MP3 per cue) to decide.

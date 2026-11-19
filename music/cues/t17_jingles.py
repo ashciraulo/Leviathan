@@ -32,7 +32,7 @@ def item(s):  # phrase 1's first three notes, rising to a held fifth: D F# G -> 
     harp, bell = s.part("harp", program=46, vel=80), s.part("bell_point", program=14, vel=86)
     # v4 (review v3 MINOR 1/2/8): melody an octave lower (the felt piano's stereo spread goes out of phase above
     # C5). Held to 8 q again: a 5 q hold put the patch's release click (review v4 MAJOR 1) where the piano is
-    # still -30 dBFS; at 8 q it lands ~-49 dBFS and is masked.
+    # still -30 dBFS; at 8 q it lands ~-43 dBFS and review v5 finds no click.
     harp.line(0, seq("D4:0.5 F#4:0.5 G4:0.5 A4:6.5"), legato=1.0)
     bell.note(1.5, 6.5, 81, 90)
     harp.chord(1.5, 6.5, voicing("D", 50, 66)[:3], 60, roll=0.05)
