@@ -684,3 +684,11 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   layer lands differently each render, and here swells a 2.5 f0 B#5 (1038 Hz) at bar 22 to +7-10 dB over the rest
   late in the note (the real fix is a preset without the sub layer; a -6 dB bell at 1038 Hz is a stopgap); the A'
   mix-level 1-3 kHz lift is still 0 dB; v5's other MINORs.
+- **Credits v5 (PASS, `projects\credits_v5.flp`, template `templates\credits_template4.flp`):** the held closing chord
+  (bar 93 on) moves to its own parts `bass_end`, `strings_end`, `choir_end`, on clones of their parents at VOL -4 dB
+  (`maps/credits_v5*.json`; the clones keep the parents' +12 transpose and advance_s). Bars 94-96 now sit 3.1 LU under
+  89-92 (v4 0.6), only just over the 3 LU line (render variance ~0.4 LU); bars 95-96 alone sit 4.0 under. The drop
+  eases in under the unchanged bar-94 harp roll. The strings clone renders -4.8 dB and a little brighter. Open
+  MINORs: the ring after the release is still the choir's A/F# (D -7.7 dB: a choir_end key-62 clone at +4 dB with
+  advance_s 0.2); the bass now re-articulates at bar 94 (lengthen the bar-93 bass_arco note to 3.1 beats); the last
+  roll stands 0.9 LU over bar 95 (harp_end -6 to -7 dB would seat it); v3 MINORs 3-5.
