@@ -725,3 +725,13 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   The bell won back only a third of the lost h2 and none of h3 or 1-2 kHz presence: that was the bronze's, and needs
   a bronze preset without the sub layer (then a 300 Hz cut). Open: brass_a2 to 0 dB (v9), bronze swell, A' 1-3 kHz
   mix lift -0.4 (test +1.0), strings +6.5 c, late choir keys 62-64, hot harp glissandi.
+
+## The seven jingles, made in FL (2026-11-19)
+
+- Built from `cues/t17_jingles.py` with flp_build. Six on the credits template (harp, struck bell, choir, low
+  strings), clear on the heart template (brass, timpani, bells). Maps and mixes are `flp/maps|mixes/jingle_*.json`.
+- One render to measure, then one `--lufs-trim` rebuild: v1 read -14.5 to -26.6 LUFS (the lone-bell jingles were
+  ~10 LU short), v2 landed -15.6 to -16.7. game_over v1 was on target and shipped as rendered.
+- Every stem passes gate_stems. True peak -2.6 dBTP or lower.
+- `post/finalize.py` writes jingles to `audio/sfx/<id>.ogg`. The game loads that before the old generated `.wav`.
+  The OGGs are kept out of LFS (`.gitattributes`), like the music.
