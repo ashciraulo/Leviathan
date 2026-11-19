@@ -710,3 +710,12 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   1.97). Open MINOR 6: Ah Voice drops held voices 15-25 dB at random ~5 s into a long chord (3 of 10 renders), so the
   tail isn't repeatable: cut choir_end's A3 from 9 to 6 beats (F#4 to 7.5) and let the strings carry the root; accept
   when two renders agree. v3 MINORs 3-5 unchanged.
+- **Wayshell Flight v8 (PASS, `projects\story_flight_v8.flp`, template `templates\flight_template7.flp`, mix
+  `mixes/story_flight_v8.json`):** a +3 dB bell at 1.1 kHz Q 1 on the Mellotron (insert 6), and the A' horn on its
+  own Mellotron clone `brass_a2` (+1.3 dB VOL, same insert) with bronze_hot at -20 (`maps/story_flight_v8_fix.json`,
+  build with `--audition "...;horns_french=brass,bronze;horns_a2=brass_a2,bronze_hot;..."`). Climax horn (bars 21-24)
+  -3.7 dB against the rest (v7 -6.4): closed. But it overshoots: in bars 19-24 the horn is level with the strings'
+  top line (v7 -3.0) and leans darker than A; the bell lifts every horn note ~1 dB, brass_a2's +1.3 rendered ~+1.5.
+  The bell won back only a third of the lost h2 and none of h3 or 1-2 kHz presence: that was the bronze's, and needs
+  a bronze preset without the sub layer (then a 300 Hz cut). Open: brass_a2 to 0 dB (v9), bronze swell, A' 1-3 kHz
+  mix lift -0.4 (test +1.0), strings +6.5 c, late choir keys 62-64, hot harp glissandi.
