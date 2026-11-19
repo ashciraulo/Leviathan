@@ -744,3 +744,9 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
 - **FL gotchas this round:** computer_open_application on FL can show the Welcome screen / reload FL; render Mode
   resets to "Pattern" on the brinewood template (set Full song every time); after a restart Ctrl+O opens in the
   Driftwood FM folder, so always type the full projects path.
+- **Review v2 FAIL -> v3:** clear's brass still cut off (Trumpfal can't hold a note at all): the brass is now a short
+  stab and a new `strings` part (strings_full, insert 5, boss_heart's EQ) plus the marrow bell carry the 4-beat tail.
+  item's nylon guitar thumped on release and collapsed its chord: moved to house_template2's felt piano (insert 5)
+  with the glockenspiel (insert 1), 2-bar cue, notes held past their natural decay. Item trim 6.3 -> -16.0 LUFS
+  (trim 0 read -20.9, trim 5 read -17.3).
+- Computer-use approvals expire after 24 h: re-request FL Studio 2025 (with clipboard) when calls start failing.

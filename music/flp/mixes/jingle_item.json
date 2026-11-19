@@ -3,39 +3,39 @@
  "lufs": -16.0,
  "parts": {
   "harp": {
-   "insert": 6,
-   "target": -28.0,
+   "insert": 5,
+   "target": -29.0,
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 100,
+     "freq": 45,
      "db_oct": 12
     },
     {
      "shape": "highcut",
-     "freq": 8000,
+     "freq": 5000,
      "db_oct": 12
     }
    ]
   },
   "bell_point": {
    "insert": 1,
-   "target": -30.0,
+   "target": -42.0,
    "eq": [
     {
      "shape": "lowcut",
-     "freq": 300,
+     "freq": 400,
      "db_oct": 12
     },
     {
      "shape": "highcut",
-     "freq": 8000,
+     "freq": 9000,
      "db_oct": 12
     }
    ]
   }
  },
- "notes": "jingle_item v2: built on templates\\credits_template5.flp; the harp plays on guitar_nylon (review v1 MAJOR 2).",
+ "notes": "jingle_item v3: built on templates\\house_template2.flp; harp = piano_felt (I Felt It, insert 5), bell_point = box_shine (glockenspiel, insert 1). Review v2 MAJOR 2: the nylon guitar choked at note-off.",
  "master_eq": [
   {
    "shape": "lowcut",

@@ -27,6 +27,12 @@
    "notes": 1,
    "low": 86,
    "high": 86
+  },
+  {
+   "name": "strings",
+   "notes": 5,
+   "low": 50,
+   "high": 69
   }
  ]
 }

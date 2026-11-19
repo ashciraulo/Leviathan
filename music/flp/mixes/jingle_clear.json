@@ -61,7 +61,29 @@
      "db_oct": 12
     }
    ]
+  },
+  "strings": {
+   "insert": 5,
+   "target": -25.0,
+   "eq": [
+    {
+     "shape": "lowcut",
+     "freq": 45,
+     "db_oct": 12
+    },
+    {
+     "shape": "bell",
+     "freq": 3200,
+     "gain": -4.5,
+     "q": 0.8
+    },
+    {
+     "shape": "highcut",
+     "freq": 6000,
+     "db_oct": 12
+    }
+   ]
   }
  },
- "notes": "jingle_clear: built on templates\\heart_template2.flp (map maps/jingle_clear.json)."
+ "notes": "jingle_clear: built on templates\\heart_template2.flp (map maps/jingle_clear.json). v3: the held chord on strings_full (insert 5); the brass only strikes (review v2 MAJOR 1)."
 }
