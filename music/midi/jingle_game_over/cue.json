@@ -12,7 +12,7 @@
  "parts": [
   {
    "name": "strings_low",
-   "notes": 7,
+   "notes": 6,
    "low": 38,
    "high": 57
   },

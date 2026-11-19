@@ -30,9 +30,11 @@ def item(s):  # phrase 1's first three notes, rising to a held fifth: D F# G -> 
     # v3 (review v2 MAJOR 2): felt piano and glockenspiel in FL; the held notes run past their decay (to 8 q) so
     # no note-off lands while they still sound.
     harp, bell = s.part("harp", program=46, vel=80), s.part("bell_point", program=14, vel=86)
-    harp.line(0, seq("D5:0.5 F#5:0.5 G5:0.5 A5:6.5"), legato=1.0)
-    bell.note(1.5, 6.5, 81, 90)
-    harp.chord(1.5, 6.5, voicing("D", 50, 66)[:3], 64, roll=0.05)
+    # v4 (review v3 MINOR 1/2/8): melody an octave lower (the felt piano's stereo spread goes out of phase above
+    # C5), held to 5 q so the jingle and its music duck end sooner.
+    harp.line(0, seq("D4:0.5 F#4:0.5 G4:0.5 A4:3.5"), legato=1.0)
+    bell.note(1.5, 3.5, 81, 90)
+    harp.chord(1.5, 3.5, voicing("D", 50, 66)[:3], 60, roll=0.05)
 
 
 def pearl(s):  # phrase 5's leap D F# A D', then a shimmer
@@ -72,7 +74,8 @@ def game_over(s):  # phrase 4 falling, unresolved: A G F, held on E
     strings = s.part("strings_low", program=48, vel=70)
     bell = s.part("bell_point", program=14, vel=70)
     strings.line(0, seq("A3:1 G3:1 F3:1 E3:3"), legato=0.98)
-    strings.chord(2, 4.0, [38, 45, 52], 56)
+    # v2 (review MINOR 3): the held chord is D2 A2 only; its E3 rubbed against the melody's F3 for a whole beat.
+    strings.chord(2, 4.0, [38, 45], 56)
     bell.note(0, 3.0, 69, 62)
 
 
