@@ -75,7 +75,8 @@ for b, sym in enumerate(CH):
     if b >= 92:  # the close (v1/v2 review MAJOR: it stopped, then ended on a thin pluck): bar 92 as written, then one
         # held chord that thins out (bass, then strings, then the choir past the end) under two harp rolls
         if b == 92:
-            bass.note(tb, 2.9, root, 50)
+            # v6 (v5 review NIT: the bass re-struck at bar 94 when the held chord moved to bass_end): overlap it
+            bass.note(tb, 3.1, root, 50)
             choir.chord(tb, 2.9, voicing(sym, 55, 67)[:3], 32)
             for k, p in enumerate(voicing(sym, 57, 74)[:3]):
                 harp.note(tb + k * 0.25, 2.5, p, 42)

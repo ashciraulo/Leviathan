@@ -701,3 +701,12 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   (its 3.5 f0 G6 stands 18-21 dB over the rest on bars 2.33 and 18.33): only a preset without the sub layer removes
   it. Open MINORs: horn presence (a +3 dB bell at 1.1 kHz Q 1 on insert 6), climax lift (A' horn +1 dB), the A'
   mix-level 1-3 kHz lift (+0.2 vs +1.0), v6's bronze swell, strings +6.5 c, late choir keys 62-64, hot harp glissandi.
+- **Credits v6 (PASS, `projects\credits_v6.flp`, template `templates\credits_template5.flp`):** the bar-93 bass note
+  is 3.1 beats so it overlaps bass_end (the barline dip fell from 4.7 to 2.3 dB); choir_end's D4 plays on its own
+  clone `choir_end_d` at VOL 0 dB (key route in `maps/credits_v6_fix.json`) and choir_end plays 0.2 s early; harp_end
+  -6.5 dB (bar 96 now level with bar 95). Close 3.18 LU under bars 89-92. Measured on the chord's fundamentals
+  (180-620 Hz) D leads the ring (v5 -5.0); a full-band pitch-class measure counts the D's 3rd harmonic (880 Hz, on the
+  choir's formant) as A, so don't judge the root that way. A louder D clone breaks the 3 LU drop (+1.5: 2.65 LU, +4:
+  1.97). Open MINOR 6: Ah Voice drops held voices 15-25 dB at random ~5 s into a long chord (3 of 10 renders), so the
+  tail isn't repeatable: cut choir_end's A3 from 9 to 6 beats (F#4 to 7.5) and let the strings carry the root; accept
+  when two renders agree. v3 MINORs 3-5 unchanged.
