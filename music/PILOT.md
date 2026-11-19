@@ -750,3 +750,9 @@ The production tracker always listed 17 cues as not yet made in FL (their OGGs w
   with the glockenspiel (insert 1), 2-bar cue, notes held past their natural decay. Item trim 6.3 -> -16.0 LUFS
   (trim 0 read -20.9, trim 5 read -17.3).
 - Computer-use approvals expire after 24 h: re-request FL Studio 2025 (with clipboard) when calls start failing.
+- **Polish after review v3 (PASS, 8 MINORs):** item v4 melody an octave lower (D4-A4; the felt piano's stereo spread is
+  worse up high) (held 5 q at first, but that moved the patch's release click to where the piano is still -30 dBFS: review v4 MAJOR 1; back to 8 q, click masked); puzzle kalimba -5 dB, not -16 (14 dB under
+  the marimba, was 25.5); game_over v2 holds D2 A2 only (its E3 rubbed the melody's F3) with the bell +6 dB (9 dB under
+  the strings, was 16). The game_over "brass_low" channel is the 12 Low Strings preset, so its strings are real.
+  The jingles were built on credits_template5 with channels renamed by hand; rebuild game_over from
+  `work/jingle_game_over_notes.flp` as the template, since the maps name the renamed channels.
