@@ -102,6 +102,7 @@ jobs:
           name: itch-web
           path: export/web
           compression-level: 0
+          retention-days: 1
 
   upload:
     name: Upload to itch.io
@@ -150,6 +151,7 @@ jobs:
           name: itch-channels-${{ inputs.release }}
           path: itch-channels.tar
           compression-level: 0
+          retention-days: 3
 
       - name: Install butler
         if: env.DRY_RUN != 'true'

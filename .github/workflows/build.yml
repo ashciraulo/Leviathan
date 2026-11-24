@@ -8,8 +8,11 @@ name: Build PC
 # downloads attached; the newest is always at
 #   https://github.com/ashciraulo/Leviathan/releases/latest
 # Run it from the Actions tab (Build PC > Run workflow) for builds on demand:
-# they're attached to the run as downloadable artifacts. Fill in "release"
-# (say v0.2.0) there to publish them as that release, tag and all.
+# they're attached to the run as downloadable artifacts for 3 days. Fill in
+# "release" (say v0.2.0) there to publish them as that release, tag and all.
+# On a push the builds only exist to be booted, so the run deletes them once
+# the boot checks pass (they'd otherwise fill the Actions storage quota:
+# ~200 MB a push). Releases keep their own copies.
 
 on:
   workflow_dispatch:
@@ -122,18 +125,21 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Leviathan-windows
+          retention-days: ${{ github.event_name == 'workflow_dispatch' && 3 || 1 }}
           path: dist/Leviathan-windows.zip
           compression-level: 0
 
       - uses: actions/upload-artifact@v4
         with:
           name: Leviathan-linux
+          retention-days: ${{ github.event_name == 'workflow_dispatch' && 3 || 1 }}
           path: dist/Leviathan-linux.tar.gz
           compression-level: 0
 
       - uses: actions/upload-artifact@v4
         with:
           name: Leviathan-macos
+          retention-days: ${{ github.event_name == 'workflow_dispatch' && 3 || 1 }}
           path: dist/Leviathan-macos.zip
           compression-level: 0
 
@@ -257,3 +263,25 @@ jobs:
             dist/Leviathan-windows.zip
             dist/Leviathan-macos.zip
             dist/Leviathan-linux.tar.gz
+
+  cleanup:
+    # A push's builds are only needed by the boot jobs above. Deleting them
+    # here keeps ~200 MB a push out of the Actions storage quota. A failed
+    # run keeps them for a day (retention-days above) to look into.
+    name: Delete the push's builds
+    needs: [boot, release]
+    if: ${{ github.event_name == 'push' && !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Delete this run's artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --paginate \
+            --jq '.artifacts[] | select(.name | startswith("Leviathan-")) | "\(.id) \(.name)"' |
+          while read -r id name; do
+            echo "Deleting $name"
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"
+          done
