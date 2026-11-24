@@ -43,9 +43,9 @@ downloads a file as a `.json` to keep, and **Import** puts one back (into an
 empty file). The desktop builds have the same buttons, so a journey can move
 between the browser and a PC.
 
-The **Leviathan-web** download can't be opened by double-clicking
-`index.html`: browsers only run the game from a web address, and the page
-says so. To play the download, run `python3 -m http.server` in its folder and
+The **Leviathan-web** download (kept for a day after each run) can't be
+opened by double-clicking `index.html`: browsers only run the game from a web
+address, and the page says so. To play the download, run `python3 -m http.server` in its folder and
 open <http://localhost:8000>, or upload the folder to any static host.
 
 Every pull request exports the web build and boots it in headless Chromium

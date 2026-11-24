@@ -106,6 +106,9 @@ jobs:
         with:
           name: screenshots
           path: screenshots/*.png
+          # A week is plenty: threads copy the shots worth keeping to the
+          # project files, and old ones only use Actions storage.
+          retention-days: 7
           if-no-files-found: warn
 
   playthrough:

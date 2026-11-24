@@ -134,6 +134,7 @@ jobs:
             web_title.png
             web_saves.png
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Time every room in a browser
         # On main a slow room shouldn't hold back publishing the game; other
@@ -154,12 +155,16 @@ jobs:
           name: web-perf
           path: web_perf/
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Keep the build
         uses: actions/upload-artifact@v4
         with:
           name: Leviathan-web
           path: export/web/
+          # ~60 MB a push. The hosted page is the way to play it, so the
+          # download only needs to last a day.
+          retention-days: 1
 
       - name: Prepare the Pages site
         if: github.ref == 'refs/heads/main'
